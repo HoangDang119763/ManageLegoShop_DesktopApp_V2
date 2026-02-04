@@ -36,38 +36,37 @@ CREATE TABLE `status` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-INSERT INTO `status` (`id`, `name`, `description`, `type`) VALUES 
+INSERT INTO `status` (`name`, `description`, `type`) VALUES 
 -- Nhóm Nhân Viên - Employee
-(1, 'Active', 'Đang làm việc', 'EMPLOYEE'),
-(2, 'Inactive', 'Đã nghỉ việc', 'EMPLOYEE'),
-(3, 'On Leave', 'Đang nghỉ phép', 'EMPLOYEE'),
+('Active', 'Đang làm việc', 'EMPLOYEE'),
+('Inactive', 'Đã nghỉ việc', 'EMPLOYEE'),
+('On_Leave', 'Đang nghỉ phép', 'EMPLOYEE'),
 -- Nhóm Tài Khoản - Account
-(4, 'Active', 'Được phép đăng nhập', 'ACCOUNT'),
-(5, 'Locked', 'Bị khóa (do sai pass/vi phạm)', 'ACCOUNT'),
-(6, 'Suspended', 'Tạm ngưng sử dụng', 'ACCOUNT'),
+('Active', 'Được phép đăng nhập', 'ACCOUNT'),
+('Locked', 'Bị khóa (do sai pass/vi phạm)', 'ACCOUNT'),
 -- Nhóm Sản Phẩm - Product
-(7, 'Active', 'Đang kinh doanh', 'PRODUCT'),
-(8, 'Inactive', 'Ngừng kinh doanh', 'PRODUCT'),
+('Active', 'Đang kinh doanh', 'PRODUCT'),
+('Inactive', 'Ngừng kinh doanh', 'PRODUCT'),
 -- Nhóm Thể Loại - Category
-(9, 'Active', 'Hoạt động', 'CATEGORY'),
-(10, 'Inactive', 'Vô hiệu', 'CATEGORY'),
+('Active', 'Hoạt động', 'CATEGORY'),
+('Inactive', 'Vô hiệu', 'CATEGORY'),
 -- Nhóm Nhà Cung Cấp - Supplier
-(11, 'Active', 'Hoạt động', 'SUPPLIER'),
-(12, 'Inactive', 'Vô hiệu', 'SUPPLIER'),
+('Active', 'Hoạt động', 'SUPPLIER'),
+('Inactive', 'Vô hiệu', 'SUPPLIER'),
 -- Nhóm Khách Hàng - Customer 
-(13, 'Active', 'Khách hàng thân thiết', 'CUSTOMER'),
-(14, 'Inactive', 'Khách hàng ngưng tương tác', 'CUSTOMER'),
+('Active', 'Hoạt động', 'CUSTOMER'),
+('Inactive', 'Ngưng tương tác', 'CUSTOMER'),
 -- Nhóm Hóa Đơn - Invoice 
-(15, 'Completed', 'Giao dịch thành công', 'INVOICE'),
-(16, 'Canceled', 'Giao dịch đã bị hủy bỏ', 'INVOICE'),
+('Completed', 'Giao dịch thành công', 'INVOICE'),
+('Canceled', 'Giao dịch đã bị hủy bỏ', 'INVOICE'),
 -- Nhóm Phiếu nhập - Import 
-(17, 'Completed', 'Giao dịch thành công', 'IMPORT'),
-(18, 'Canceled', 'Giao dịch đã bị hủy bỏ', 'IMPORT'),
+('Completed', 'Giao dịch thành công', 'IMPORT'),
+('Canceled', 'Giao dịch đã bị hủy bỏ', 'IMPORT'),
 -- Nhóm Xin nghỉ phép - Leave Request
-(19, 'PENDING', 'Đơn đang chờ quản lý phê duyệt', 'LEAVE_REQUEST'),
-(20, 'APPROVED', 'Đơn đã được chấp thuận', 'LEAVE_REQUEST'),
-(21, 'REJECTED', 'Đơn bị từ chối', 'LEAVE_REQUEST'),
-(22, 'CANCELED', 'Đơn đã bị hủy bởi nhân viên', 'LEAVE_REQUEST');
+('PENDING', 'Đơn đang chờ quản lý phê duyệt', 'LEAVE_REQUEST'),
+('APPROVED', 'Đơn đã được chấp thuận', 'LEAVE_REQUEST'),
+('REJECTED', 'Đơn bị từ chối', 'LEAVE_REQUEST'),
+('CANCELED', 'Đơn đã bị hủy bởi nhân viên', 'LEAVE_REQUEST');
 
 -- Tạo bảng Role
 CREATE TABLE `role` (
@@ -83,20 +82,22 @@ CREATE TABLE `role` (
   FOREIGN KEY (`salary_id`) REFERENCES `salary` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Chèn dữ liệu vào bảng Role mà không có cột status_id
 INSERT INTO `role` (`id`, `name`, `description`, `start_experience`, `end_experience`, `salary_id`) VALUES
--- Nhóm Bán hàng (Phân 3 bậc)
-(1, 'Nhân viên bán hàng (Bậc 1)', 'Nhân viên mới, thực hiện bán hàng cơ bản', 0, 1, 13),
-(2, 'Nhân viên bán hàng (Bậc 2)', 'Nhân viên đã có kinh nghiệm, tư vấn dòng LEGO chuyên sâu', 1, 3, 12),
-(3, 'Nhân viên bán hàng (Bậc 3)', 'Nhân viên nòng cốt, hỗ trợ đào tạo người mới', 3, 5, 11),
--- Nhóm Kho (Phân 2 bậc)
-(4, 'Nhân viên kho (Bậc 1)', 'Thực hiện sắp xếp và kiểm đếm hàng hóa', 0, 2, 9),
-(5, 'Nhân viên kho (Bậc 2)', 'Quản lý nhập xuất, chịu trách nhiệm tồn kho', 2, 5, 8),
--- Nhóm Quản lý
-(6, 'Trưởng nhóm bán hàng', 'Giám sát ca làm việc và hỗ trợ thanh toán phức tạp', 2, 4, 10),
-(7, 'Quản lý cửa hàng', 'Điều hành toàn diện hoạt động cửa hàng', 4, 15, 8),
--- Cấp cao nhất
-(8, 'Tổng giám đốc', 'Chủ cửa hàng/Điều hành cao cấp', 10, 30, 1);
+-- Cấp điều hành cao nhất
+(1, 'Tổng giám đốc', 'Chủ cửa hàng/Điều hành cao cấp', 10, 30, 1),
+
+-- Cấp quản lý trực tiếp
+(2, 'Quản lý cửa hàng', 'Điều hành toàn diện hoạt động cửa hàng', 4, 15, 8),
+(3, 'Trưởng nhóm bán hàng', 'Giám sát ca làm việc và hỗ trợ thanh toán phức tạp', 2, 4, 10),
+
+-- Nhóm Bán hàng (Chuyên môn giảm dần)
+(4, 'Nhân viên bán hàng (Bậc 3)', 'Nhân viên nòng cốt, hỗ trợ đào tạo người mới', 3, 5, 11),
+(5, 'Nhân viên bán hàng (Bậc 2)', 'Nhân viên kinh nghiệm, tư vấn dòng LEGO chuyên sâu', 1, 3, 12),
+(6, 'Nhân viên bán hàng (Bậc 1)', 'Nhân viên mới, thực hiện bán hàng cơ bản', 0, 1, 13),
+
+-- Nhóm Kho
+(7, 'Nhân viên kho (Bậc 2)', 'Quản lý nhập xuất, chịu trách nhiệm tồn kho', 2, 5, 8),
+(8, 'Nhân viên kho (Bậc 1)', 'Thực hiện sắp xếp và kiểm đếm hàng hóa', 0, 2, 9);
 
 CREATE TABLE `module` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -179,53 +180,59 @@ CREATE TABLE `role_permission` (
    FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+-- Bước 2: Tạo "Phôi" (Mặc định tất cả 8 Role x 30 Quyền đều tắt - status = 0)
 INSERT INTO `role_permission` (`role_id`, `permission_id`, `status`)
-VALUES
-	(1,1,1),(1,2,1),(1,3,1),(1,4,1),(1,5,1),(1,6,1),(1,7,1),(1,8,1),(1,9,1),(1,10,1),(1,11,1),(1,12,1),(1,13,1),(1,14,1),(1,15,1),(1,16,1),(1,17,1),(1,18,1),(1,19,1),(1,20,1),(1,21,1),(1,22,1),(1,23,1),(1,24,1),(1,25,1),(1,26,1),(1,27,1),(1,28,1),(1,29,1),(1,30,1),(2,1,0),(2,2,0),(2,3,0),(2,4,0),(2,5,0),(2,6,0),(2,7,0),(2,8,0),(2,9,0),(2,10,1),(2,11,0),(2,12,0),(2,13,0),(2,14,0),(2,15,1),(2,16,1),(2,17,0),(2,18,0),(2,19,0),(2,20,0),(2,21,0),(2,22,0),(2,23,0),(2,24,0),(2,25,0),(2,26,0),(2,27,0),(2,28,0),(2,29,0),(2,30,0),(3,1,0),(3,2,0),(3,3,0),(3,4,1),(3,5,0),(3,6,0),(3,7,0),(3,8,0),(3,9,0),(3,10,0),(3,11,0),(3,12,0),(3,13,1),(3,14,1),(3,15,0),(3,16,0),(3,17,0),(3,18,0),(3,19,0),(3,20,0),(3,21,0),(3,22,0),(3,23,0),(3,24,0),(3,25,0),(3,26,0),(3,27,0),(3,28,0),(3,29,0),(3,30,0),(4,1,0),(4,2,0),(4,3,0),(4,4,1),(4,5,1),(4,6,1),(4,7,0),(4,8,0),(4,9,0),(4,10,0),(4,11,0),(4,12,0),(4,13,0),(4,14,0),(4,15,0),(4,16,0),(4,17,0),(4,18,0),(4,19,0),(4,20,0),(4,21,0),(4,22,0),(4,23,0),(4,24,0),(4,25,0),(4,26,0),(4,27,0),(4,28,0),(4,29,0),(4,30,0),(5,1,1),(5,2,1),(5,3,1),(5,4,1),(5,5,1),(5,6,1),(5,7,0),(5,8,0),(5,9,0),(5,10,0),(5,11,0),(5,12,0),(5,13,0),(5,14,0),(5,15,0),(5,16,0),(5,17,0),(5,18,0),(5,19,0),(5,20,0),(5,21,0),(5,22,0),(5,23,0),(5,24,0),(5,25,0),(5,26,0),(5,27,1),(5,28,1),(5,29,1),(5,30,0),(6,1,1),(6,2,1),(6,3,1),(6,4,1),(6,5,1),(6,6,1),(6,7,0),(6,8,0),(6,9,0),(6,10,0),(6,11,0),(6,12,0),(6,13,0),(6,14,0),(6,15,0),(6,16,0),(6,17,0),(6,18,0),(6,19,0),(6,20,0),(6,21,0),(6,22,0),(6,23,1),(6,24,1),(6,25,1),(6,26,1),(6,27,1),(6,28,1),(6,29,1),(6,30,1);
+SELECT r.id, p.id, 0
+FROM `role` r CROSS JOIN `permission` p;
 
--- 1. Tổng giám đốc (Role 8): Bật Full 1-30
-UPDATE `role_permission` SET `status` = 1 WHERE `role_id` = 8;
+-- Bước 3: Bật quyền (status = 1) theo thứ tự Role mới (1-8)
 
--- 2. Quản lý cửa hàng (Role 7): Quyền quản lý vận hành + Thống kê
+-- 1. Tổng giám đốc (New Role 1): Full 30 quyền
+UPDATE `role_permission` SET `status` = 1 WHERE `role_id` = 1;
+
+-- 2. Quản lý cửa hàng (New Role 2): Quản lý vận hành + Thống kê
 UPDATE `role_permission` SET `status` = 1 
-WHERE `role_id` = 7 AND `permission_id` IN (1,3, 4,6, 7,9, 10,12, 13,14, 15,16, 17,19, 20,22, 30);
+WHERE `role_id` = 2 AND `permission_id` IN (1,3, 4,6, 7,9, 10,12, 13,14, 15,16, 17,19, 20,22, 30);
 
--- 3. Trưởng nhóm bán hàng (Role 6): Bán hàng + Chăm sóc khách + Voucher
+-- 3. Trưởng nhóm bán hàng (New Role 3): Bán hàng + Khách hàng + Voucher + Sản phẩm
 UPDATE `role_permission` SET `status` = 1 
-WHERE `role_id` = 6 AND `permission_id` IN (4,6, 7,9, 13,14, 20,22);
+WHERE `role_id` = 3 AND `permission_id` IN (4,6, 7,9, 13,14, 20,22);
 
--- 4. Nhóm Bán hàng (Role 1, 2, 3): Chỉ tập trung Bán hàng & Khách hàng
+-- 4. Nhóm Bán hàng (New Role 4, 5, 6): Chỉ tập trung Bán hàng & Khách hàng
 UPDATE `role_permission` SET `status` = 1 
-WHERE `role_id` IN (1, 2, 3) AND `permission_id` IN (4, 6, 13, 14);
+WHERE `role_id` IN (4, 5, 6) AND `permission_id` IN (4, 6, 13, 14);
 
--- 5. Nhóm Kho (Role 4, 5): Quản lý Sản phẩm, Nhà cung cấp, Nhập hàng, Thể loại
+-- 5. Nhóm Kho (New Role 7, 8): Quản lý Sản phẩm, Nhà cung cấp, Nhập hàng, Thể loại
 UPDATE `role_permission` SET `status` = 1 
-WHERE `role_id` IN (4, 5) AND `permission_id` IN (7,9, 10,12, 15,16, 17,19);
+WHERE `role_id` IN (7, 8) AND `permission_id` IN (7,9, 10,12, 15,16, 17,19);
 
 CREATE TABLE `employee` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `first_name` VARCHAR(100) NOT NULL,
   `last_name` VARCHAR(100) NOT NULL,
   `phone` VARCHAR(15) NOT NULL,
-  `email` varchar(255) DEFAULT NULL,
+  `email` VARCHAR(255) DEFAULT NULL,
   `date_of_birth` DATE DEFAULT NULL,
-  `role_id` INT(11) DEFAULT NULL,
-  `status_id` INT NOT NULL,
-  `gender` varchar(255) DEFAULT NULL,
+  `gender` VARCHAR(255) DEFAULT NULL,
+  `role_id` INT(11) DEFAULT NULL,           -- Role hiện tại
+  `status_id` INT NOT NULL,                  -- Trạng thái (FK sang bảng status)
+  `account_id` INT DEFAULT NULL,
+  -- Các cờ hiệu cho nghiệp vụ Lương & Bảo hiểm
+  `is_health_insurance` TINYINT(1) DEFAULT '0',
+  `is_social_insurance` TINYINT(1) DEFAULT '0',
+  `is_unemployment_insurance` TINYINT(1) DEFAULT '0',
+  `is_personal_income_tax` TINYINT(1) DEFAULT '0',
+  `is_transportation_support` TINYINT(1) DEFAULT '0',
+  `is_accommodation_support` TINYINT(1) DEFAULT '0',
+  -- Theo dõi lịch sử thăng tiến/đổi chức vụ
+  `updated_role_at` TIMESTAMP NULL DEFAULT NULL, -- Ngày cập nhật Role gần nhất
+  `previous_role` INT DEFAULT NULL,              -- ID của Role cũ trước đó
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `account_id` int DEFAULT NULL,
-  `is_health_insurance` tinyint(1) DEFAULT '0',
-  `is_social_insurance` tinyint(1) DEFAULT '0',
-  `is_unemployment_insurance` tinyint(1) DEFAULT '0',
-  `is_personal_income_tax` tinyint(1) DEFAULT '0',
-  `is_transportation_support` tinyint(1) DEFAULT '0',
-  `is_accommodation_support` tinyint(1) DEFAULT '0',
-  `updated_position_at` timestamp NULL DEFAULT NULL,
-  `previous_position` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
-  FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE SET NULL,
-  FOREIGN KEY (`status_id`) REFERENCES `status` (`id`) -- Ràng buộc sang bảng status
+  CONSTRAINT `fk_employee_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_employee_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`),
+  CONSTRAINT `fk_employee_prev_role` FOREIGN KEY (`previous_role`) REFERENCES `role` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 INSERT INTO `employee` 

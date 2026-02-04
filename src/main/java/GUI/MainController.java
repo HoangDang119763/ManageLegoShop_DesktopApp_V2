@@ -46,7 +46,9 @@ public class MainController {
     private Button selectedButton = null;
     private static final MainController INSTANCE = new MainController();
 
-    public MainController() {}
+    public MainController() {
+    }
+
     public static MainController getInstance() {
         return INSTANCE;
     }
@@ -67,8 +69,9 @@ public class MainController {
 
     public void setupEventHandlers() {
         logoutBtn.setOnMouseClicked(e -> {
-            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn thoát?", "Thông báo xác nhận")) return;
-//            SessionManagerService.getInstance().logout();
+            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn thoát?", "Thông báo xác nhận"))
+                return;
+            // SessionManagerService.getInstance().logout();
             ParallelTransition animation = UiUtils.gI().createButtonAnimation(logoutBtn);
             animation.setOnFinished(event -> logout());
             animation.play();
@@ -85,6 +88,7 @@ public class MainController {
             RolePermissionBUS.getInstance().loadLocal();
             ModuleBUS.getInstance().loadLocal();
             PermissionBUS.getInstance().loadLocal();
+            StatusBUS.getInstance().loadLocal();
             isLoaded = true;
         }
     }
@@ -240,28 +244,28 @@ public class MainController {
     }
 
     // Navigate to others stage
-//    public void openStage(String fxmlFile) {
-//        try {
-//            FXMLLoader fxmlLoader = new FXMLLoader(LoginController.class.getResource(fxmlFile));
-//            Parent root = fxmlLoader.load(); // Gọi .load() để lấy root từ FXML
-//
-//
-//            Stage stage = new Stage();
-//            Scene scene = new Scene(root);
-//
-//            UiUtils.gI().makeWindowDraggable(root, stage);
-//            stage.initStyle(StageStyle.TRANSPARENT);
-//
-//            stage.setTitle("Lego Store");
-//            stage.setScene(scene);
-//
-//            stage.show();
-//            stage.requestFocus();
-//
-//        } catch (IOException e) {
-//            log.error("error", e);
-//        }
-//    }
+    // public void openStage(String fxmlFile) {
+    // try {
+    // FXMLLoader fxmlLoader = new
+    // FXMLLoader(LoginController.class.getResource(fxmlFile));
+    // Parent root = fxmlLoader.load(); // Gọi .load() để lấy root từ FXML
+    //
+    //
+    // Stage stage = new Stage();
+    // Scene scene = new Scene(root);
+    //
+    // UiUtils.gI().makeWindowDraggable(root, stage);
+    // stage.initStyle(StageStyle.TRANSPARENT);
+    //
+    // stage.setTitle("Lego Store");
+    // stage.setScene(scene);
+    //
+    // stage.show();
+    // stage.requestFocus();
+    //
+    // } catch (IOException e) {
+    // log.error("error", e);
+    // }
+    // }
 
 }
-

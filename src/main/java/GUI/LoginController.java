@@ -1,28 +1,17 @@
 package GUI;
 
-import BUS.EmployeeBUS;
 import DTO.AccountDTO;
 import SERVICE.LoginService;
-import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import lombok.extern.slf4j.Slf4j;
 import java.util.prefs.Preferences;
-
-
-import java.io.IOException;
 
 @Slf4j
 public class LoginController {
@@ -65,30 +54,39 @@ public class LoginController {
     }
 
     public void handleLogin() {
-        if (txtUsername.getText().isEmpty() || txtPassword.getText().isEmpty()) {
+        String username = txtUsername.getText();
+        String password = txtPassword.getText();
+
+        if (username.isEmpty() || password.isEmpty()) {
             NotificationUtils.showErrorAlert("Vui lòng điền tài khoản và mật khẩu", "Thông báo");
-        } else {
-            AccountDTO account = new AccountDTO(0, txtUsername.getText(), txtPassword.getText());
-            if(LoginService.getInstance().checkLogin(account)) {
-                NotificationUtils.showInfoAlert("Đăng nhập thành công!", "Thông báo");
+            return;
+        }
 
-                // Lưu hoặc xóa thông tin tài khoản
-                prefs.putBoolean("rememberMe", ckbRememberMe.isSelected()); // Lưu trạng thái checkbox
-                if (ckbRememberMe.isSelected()) {
-                    prefs.put("savedUsername", txtUsername.getText());
-                    prefs.put("savedPassword", txtPassword.getText());
-                } else {
-                    prefs.remove("savedUsername");
-                    prefs.remove("savedPassword");
-                }
+        AccountDTO account = new AccountDTO(-1, username, password, -1);
+        int loginResult = LoginService.getInstance().checkLogin(account);
+        if (loginResult > 0) { // Đăng nhập thành công (ID > 0)
+            NotificationUtils.showInfoAlert("Đăng nhập thành công!", "Thông báo");
 
-                // Tắt giao diện login (mở giao diện chọn chức năng)
-                loginBtn.getScene().getWindow().hide();
-                UiUtils.gI().openStage("/GUI/NavigatePermission.fxml", "Danh sách chức năng");
-//                openStage("/GUI/NavigatePermission.fxml");
+            // Xử lý Remember Me
+            prefs.putBoolean("rememberMe", ckbRememberMe.isSelected());
+            if (ckbRememberMe.isSelected()) {
+                prefs.put("savedUsername", username);
+                prefs.put("savedPassword", password);
             } else {
-                NotificationUtils.showErrorAlert("Đăng nhập thất bại!", "Thông báo");
+                prefs.remove("savedUsername");
+                prefs.remove("savedPassword");
             }
+
+            // Chuyển màn hình
+            loginBtn.getScene().getWindow().hide();
+            UiUtils.gI().openStage("/GUI/NavigatePermission.fxml", "Danh sách chức năng");
+
+        } else if (loginResult == -2) {
+            NotificationUtils.showErrorAlert("Tài khoản của bạn hiện đang bị khóa!", "Thông báo");
+        } else if (loginResult == -3) {
+            NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ!", "Thông báo");
+        } else {
+            NotificationUtils.showErrorAlert("Tài khoản hoặc mật khẩu không chính xác!", "Thông báo");
         }
     }
 }

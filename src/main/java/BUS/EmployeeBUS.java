@@ -5,7 +5,7 @@ import DAL.EmployeeDAL;
 import DTO.EmployeeDTO;
 import DTO.ProductDTO;
 import SERVICE.AuthorizationService;
-import SERVICE.ExcelService;
+// import SERVICE.ExcelService;
 import UTILS.AvailableUtils;
 import UTILS.ValidationUtils;
 
@@ -33,6 +33,17 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return null;
         for (EmployeeDTO employee : arrLocal) {
             if (Objects.equals(employee.getId(), id)) {
+                return new EmployeeDTO(employee);
+            }
+        }
+        return null;
+    }
+
+    public EmployeeDTO getByAccountIdLocal(int id) {
+        if (id <= 0)
+            return null;
+        for (EmployeeDTO employee : arrLocal) {
+            if (Objects.equals(employee.getAccountId(), id)) {
                 return new EmployeeDTO(employee);
             }
         }
@@ -160,7 +171,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
     }
 
     private boolean isValidEmployeeInput(EmployeeDTO obj) {
-        if (obj.getFirstName() == null || obj.getLastName() == null || obj.getSalary() == null) {
+        if (obj.getFirstName() == null || obj.getLastName() == null) {
             return false;
         }
 
@@ -175,12 +186,11 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return false;
         }
         return validator.validateVietnameseText100(obj.getFirstName()) &&
-                validator.validateVietnameseText100(obj.getLastName()) &&
-                validator.validateSalary(obj.getSalary(), 10, 2, false);
+                validator.validateVietnameseText100(obj.getLastName());
     }
 
     private boolean isInvalidEmployeeUpdate(EmployeeDTO obj, boolean allowAdvanceChange, boolean isAdvance) {
-        if (obj.getFirstName() == null || obj.getLastName() == null || (isAdvance && obj.getSalary() == null)) {
+        if (obj.getFirstName() == null || obj.getLastName() == null) {
             return true;
         }
 
@@ -198,8 +208,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         }
 
         return !validator.validateVietnameseText100(obj.getFirstName()) ||
-                !validator.validateVietnameseText100(obj.getLastName()) ||
-                (isAdvance && !validator.validateSalary(obj.getSalary(), 10, 2, false));
+                !validator.validateVietnameseText100(obj.getLastName());
     }
 
     public ArrayList<EmployeeDTO> filterEmployees(String searchBy, String keyword, int roleIdFilter, int statusFilter) {
@@ -258,7 +267,6 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         return existingEm != null &&
                 Objects.equals(existingEm.getFirstName(), validate.normalizeWhiteSpace(obj.getFirstName())) &&
                 Objects.equals(existingEm.getLastName(), validate.normalizeWhiteSpace(obj.getLastName())) &&
-                Objects.equals(existingEm.getSalary(), obj.getSalary()) &&
                 Objects.equals(existingEm.getDateOfBirth(), obj.getDateOfBirth()) &&
                 Objects.equals(existingEm.isStatus(), obj.isStatus()) &&
                 Objects.equals(existingEm.getRoleId(), obj.getRoleId());

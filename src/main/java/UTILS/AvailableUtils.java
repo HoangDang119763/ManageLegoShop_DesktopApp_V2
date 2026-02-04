@@ -151,4 +151,53 @@ public class AvailableUtils {
         return invoicesUsingDiscount.isEmpty();
     }
 
+    /**
+     * Lấy ID của status từ loại status và tên status
+     * 
+     * @param type       StatusType (CUSTOMER, PRODUCT, EMPLOYEE, SUPPLIER, ACCOUNT,
+     *                   CATEGORY, ...)
+     * @param statusEnum Enum chứa tên status (Status.Customer.ACTIVE,
+     *                   Status.Product.INACTIVE, ...)
+     * @return ID của status, hoặc 0 nếu không tìm thấy
+     */
+    public int getStatusIdByTypeAndName(StatusType type, Enum<?> statusEnum) {
+        if (type == null || statusEnum == null) {
+            return 0;
+        }
+
+        StatusDTO status = StatusBUS.getInstance().getByTypeAndStatusNameLocal(type, statusEnum);
+        return status != null ? status.getId() : 0;
+    }
+
+    /**
+     * Lấy tên status từ ID
+     * 
+     * @param statusId ID của status
+     * @return Tên status, hoặc null nếu không tìm thấy
+     */
+    public String getStatusNameById(int statusId) {
+        if (statusId <= 0) {
+            return null;
+        }
+
+        StatusDTO status = StatusBUS.getInstance().getByIdLocal(statusId);
+        return status != null ? status.getName() : null;
+    }
+
+    /**
+     * Kiểm tra xem status có tên cụ thể hay không
+     * 
+     * @param statusId     ID của status
+     * @param expectedName Tên kỳ vọng
+     * @return true nếu status name trùng với expectedName
+     */
+    public boolean isStatusName(int statusId, String expectedName) {
+        if (statusId <= 0 || expectedName == null) {
+            return false;
+        }
+
+        StatusDTO status = StatusBUS.getInstance().getByIdLocal(statusId);
+        return status != null && status.getName().equalsIgnoreCase(expectedName);
+    }
+
 }

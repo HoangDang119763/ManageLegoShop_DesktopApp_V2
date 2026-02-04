@@ -61,10 +61,10 @@ public class Status {
 
     // Enum cho Trạng thái Đơn nghỉ phép
     public enum LeaveRequest {
-        PENDING,    // Chờ duyệt
-        APPROVED,   // Đã duyệt
-        REJECTED,   // Từ chối (bởi quản lý)
-        CANCELED    // Nhân viên tự hủy
+        PENDING, // Chờ duyệt
+        APPROVED, // Đã duyệt
+        REJECTED, // Từ chối (bởi quản lý)
+        CANCELED // Nhân viên tự hủy
     }
 
     // Enum cho Mức độ của báo cáo
@@ -74,8 +74,14 @@ public class Status {
         LOW("Thấp");
 
         private final String displayName;
-        ReportLevel(String displayName) { this.displayName = displayName; }
-        public String getDisplayName() { return displayName; }
+
+        ReportLevel(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 
     // Enum cho Danh mục báo cáo
@@ -91,16 +97,22 @@ public class Status {
         SALES("Bán hàng");
 
         private final String displayName;
-        ReportCategory(String displayName) { this.displayName = displayName; }
-        public String getDisplayName() { return displayName; }
+
+        ReportCategory(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 
     // Enum cho mức độ phạt
     public enum FineLevel {
-        LEVEL_1("Vi phạm nhẹ", 50000.0),    // Phạt 50k
-        LEVEL_2("Vi phạm vừa", 200000.0),   // Phạt 200k
-        LEVEL_3("Vi phạm nặng", 500000.0),  // Phạt 500k
-        CUSTOM("Tùy chỉnh", 0.0);           // Số tiền nhập tay
+        LEVEL_1("Vi phạm nhẹ", 50000.0), // Phạt 50k
+        LEVEL_2("Vi phạm vừa", 200000.0), // Phạt 200k
+        LEVEL_3("Vi phạm nặng", 500000.0), // Phạt 500k
+        CUSTOM("Tùy chỉnh", 0.0); // Số tiền nhập tay
 
         private final String description;
         private final double defaultAmount;
@@ -110,7 +122,12 @@ public class Status {
             this.defaultAmount = defaultAmount;
         }
 
-        public String getDescription() { return description; }
-        public double getDefaultAmount() { return defaultAmount; }
+        public String getDescription() {
+            return description;
+        }
+
+        public double getDefaultAmount() {
+            return defaultAmount;
+        }
     }
 }

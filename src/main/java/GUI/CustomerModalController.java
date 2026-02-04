@@ -1,14 +1,19 @@
 package GUI;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import BUS.CustomerBUS;
-import BUS.SupplierBUS;
+import BUS.StatusBUS;
 import DTO.CustomerDTO;
+import DTO.StatusDTO;
+import ENUM.StatusType;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.util.StringConverter;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -20,16 +25,26 @@ import lombok.Getter;
 
 public class CustomerModalController {
     // FXML Controls
-    @FXML public Label modalName;
-    @FXML public TextField txtCustomerId;
-    @FXML public TextField txtFirstName;
-    @FXML public TextField txtLastName;
-    @FXML public DatePicker dateOfBirth;
-    @FXML public TextField txtPhone;
-    @FXML public TextField txtAddress;
-    @FXML public Button closeBtn;
-    @FXML public Button saveBtn;
-    @FXML public ComboBox<String> cbSelectStatus; 
+    @FXML
+    public Label modalName;
+    @FXML
+    public TextField txtCustomerId;
+    @FXML
+    public TextField txtFirstName;
+    @FXML
+    public TextField txtLastName;
+    @FXML
+    public DatePicker dateOfBirth;
+    @FXML
+    public TextField txtPhone;
+    @FXML
+    public TextField txtAddress;
+    @FXML
+    public Button closeBtn;
+    @FXML
+    public Button saveBtn;
+    @FXML
+    public ComboBox<StatusDTO> cbSelectStatus;
 
     // State variables
     @Getter
@@ -49,18 +64,39 @@ public class CustomerModalController {
     }
 
     private void loadComboBox() {
-        cbSelectStatus.getItems().addAll("Hoạt động", "Ngưng hoạt động");
+        StatusBUS statusBus = StatusBUS.getInstance();
+        ArrayList<StatusDTO> statusOptions = statusBus.getByTypeLocal(StatusType.CUSTOMER);
+
+        // 1. Đổ trực tiếp danh sách DTO vào ComboBox (Thay vì String)
+        ObservableList<StatusDTO> options = FXCollections.observableArrayList(statusOptions);
+        cbSelectStatus.setItems(options);
+
+        // 2. Định nghĩa: Hiển thị description nhưng giữ nguyên đối tượng DTO bên dưới
+        cbSelectStatus.setConverter(new StringConverter<StatusDTO>() {
+            @Override
+            public String toString(StatusDTO status) {
+                return (status == null) ? "" : status.getDescription();
+            }
+
+            @Override
+            public StatusDTO fromString(String string) {
+                return null; // Không cần thiết khi chỉ chọn từ danh sách
+            }
+        });
+
         cbSelectStatus.getSelectionModel().selectFirst();
     }
 
     public void setTypeModal(int type) {
-        if (type != 0 && type != 1) handleClose();
+        if (type != 0 && type != 1)
+            handleClose();
         typeModal = type;
         if (typeModal == 0) {
             modalName.setText("Thêm khách hàng");
             txtCustomerId.setText(String.valueOf(CustomerBUS.getInstance().getAllLocal().size() + 1));
         } else {
-            if (customer == null) handleClose();
+            if (customer == null)
+                handleClose();
             modalName.setText("Sửa khách hàng");
         }
     }
@@ -71,18 +107,24 @@ public class CustomerModalController {
             txtCustomerId.setText(String.valueOf(customer.getId()));
             txtFirstName.setText(customer.getFirstName());
             txtLastName.setText(customer.getLastName());
-            LocalDateTime dateTime = customer.getDateOfBirth();
 
-            if (dateTime != null) {
-                LocalDate localDate = dateTime.toLocalDate();
-                dateOfBirth.setValue(localDate); 
+            if (customer.getDateOfBirth() != null) {
+                dateOfBirth.setValue(customer.getDateOfBirth());
             } else {
                 dateOfBirth.setValue(null);
             }
-            
+
             txtPhone.setText(customer.getPhone());
             txtAddress.setText(customer.getAddress());
-            cbSelectStatus.getSelectionModel().select(customer.isStatus() ? "Hoạt động" : "Ngưng hoạt động");
+            // Chọn status trong ComboBox dựa trên customer.statusId
+            if (cbSelectStatus.getItems() != null) {
+                for (StatusDTO status : cbSelectStatus.getItems()) {
+                    if (status.getId() == customer.getStatusId()) {
+                        cbSelectStatus.getSelectionModel().select(status);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -104,11 +146,11 @@ public class CustomerModalController {
             clearAndFocus(txtFirstName);
             isValid = false;
         }
-        
-        if(isValid && lastName.isEmpty()) {
+
+        if (isValid && lastName.isEmpty()) {
             NotificationUtils.showErrorAlert("Tên khách hàng không được để trống.", "Thông báo");
             clearAndFocus(txtLastName);
-            isValid = false; 
+            isValid = false;
         } else if (isValid && !validator.validateVietnameseText100(lastName)) {
             NotificationUtils.showErrorAlert("Tên không hợp lệ (tối đa 100 ký tự).", "Thông báo");
             clearAndFocus(txtLastName);
@@ -119,8 +161,9 @@ public class CustomerModalController {
             NotificationUtils.showErrorAlert("Số điện thoại không được để trống.", "Thông báo");
             clearAndFocus(txtPhone);
             isValid = false;
-        } else if(isValid && !validator.validateVietnamesePhoneNumber(phone)) {
-            NotificationUtils.showErrorAlert("Số điện thoại không hợp lệ(Số 0 đứng đầu và theo sau 9 ký tự)", "Thông báo");
+        } else if (isValid && !validator.validateVietnamesePhoneNumber(phone)) {
+            NotificationUtils.showErrorAlert("Số điện thoại không hợp lệ(Số 0 đứng đầu và theo sau 9 ký tự)",
+                    "Thông báo");
             clearAndFocus(txtPhone);
             isValid = false;
         }
@@ -134,13 +177,14 @@ public class CustomerModalController {
             isValid = false;
         }
 
-        //Kiem tra ngay sinh
+        // Kiem tra ngay sinh
         if (isValid) {
             LocalDate date = dateOfBirth.getValue();
             if (date != null) {
                 LocalDate today = LocalDate.now();
-                if(date.isAfter(today)){
-                    NotificationUtils.showErrorAlert("Ngày sinh không hợp lệ (ngày sinh không được lớn hơn ngày hiện tại)", "Thông báo");
+                if (date.isAfter(today)) {
+                    NotificationUtils.showErrorAlert(
+                            "Ngày sinh không hợp lệ (ngày sinh không được lớn hơn ngày hiện tại)", "Thông báo");
                     isValid = false;
                 }
             }
@@ -163,19 +207,21 @@ public class CustomerModalController {
             // Create CustomerDTO with ID 0, which will be replaced by the generated ID
             CustomerDTO temp = new CustomerDTO(-1, txtFirstName.getText().trim(),
                     txtLastName.getText().trim(), txtPhone.getText().trim(), txtAddress.getText().trim(),
-                    dateOfBirth.getValue() != null ? dateOfBirth.getValue().atStartOfDay() : null,
-                    cbSelectStatus.getValue().equals("Hoạt động"));
-            int insertResult = customerBus.insert(temp, SessionManagerService.getInstance().employeeRoleId(), SessionManagerService.getInstance().employeeLoginId());
+                    dateOfBirth.getValue() != null ? dateOfBirth.getValue() : null,
+                    cbSelectStatus.getValue().getId());
+            int insertResult = customerBus.insert(temp, SessionManagerService.getInstance().employeeRoleId(),
+                    SessionManagerService.getInstance().employeeLoginId());
             switch (insertResult) {
                 case 1 -> {
                     isSaved = true;
                     handleClose();
                 }
-                case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi thêm khách hàng. Vui lòng thử lại.", "Thông báo");
+                case 2 ->
+                    NotificationUtils.showErrorAlert("Có lỗi khi thêm khách hàng. Vui lòng thử lại.", "Thông báo");
                 case 3 -> NotificationUtils.showErrorAlert("Đã có khách hàng trong cơ sở dữ liệu", "Thông báo");
                 case 4 -> NotificationUtils.showErrorAlert("Không có quyền thêm khách hàng.", "Thông báo");
                 case 5 -> NotificationUtils.showErrorAlert("Thêm khách hàng thất bại. Vui lòng thử lại.", "Thông báo");
-                case 6 -> NotificationUtils.showErrorAlert("Dữ liệu nhập không hợp lệ.","Thông báo");
+                case 6 -> NotificationUtils.showErrorAlert("Dữ liệu nhập không hợp lệ.", "Thông báo");
                 default -> NotificationUtils.showErrorAlert("Lỗi không xác định. Vui lòng thử lại.", "Thông báo");
             }
         }
@@ -186,20 +232,24 @@ public class CustomerModalController {
         if (isValidInput()) {
             CustomerDTO temp = new CustomerDTO(customer.getId(), txtFirstName.getText().trim(),
                     txtLastName.getText().trim(), txtPhone.getText().trim(), txtAddress.getText().trim(),
-                    dateOfBirth.getValue() != null ? dateOfBirth.getValue().atStartOfDay() : null,
-                    cbSelectStatus.getValue().equals("Hoạt động"));
-            int updateResult = customerBus.update(temp, SessionManagerService.getInstance().employeeRoleId(), SessionManagerService.getInstance().employeeLoginId());
+                    dateOfBirth.getValue() != null ? dateOfBirth.getValue() : null,
+                    cbSelectStatus.getValue().getId());
+            int updateResult = customerBus.update(temp, SessionManagerService.getInstance().employeeRoleId(),
+                    SessionManagerService.getInstance().employeeLoginId());
             switch (updateResult) {
                 case 1 -> {
                     isSaved = true;
                     handleClose();
                 }
-                case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi cập nhật thông tin khách hàng. Vui lòng thử lại", "Lỗi");
+                case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi cập nhật thông tin khách hàng. Vui lòng thử lại",
+                        "Lỗi");
                 case 3 -> NotificationUtils.showErrorAlert("Thông tin khách hàng bị trùng lặp.", "Lỗi");
-                case 4 -> NotificationUtils.showErrorAlert("Không có quyền cập nhật thông tin khách hàng.", "Thông báo.");
-                case 5 -> NotificationUtils.showErrorAlert("Không thể cập nhật thông tin khách hàng. Vui lòng thử lại.", "Lỗi");
+                case 4 ->
+                    NotificationUtils.showErrorAlert("Không có quyền cập nhật thông tin khách hàng.", "Thông báo.");
+                case 5 -> NotificationUtils.showErrorAlert("Không thể cập nhật thông tin khách hàng. Vui lòng thử lại.",
+                        "Lỗi");
                 case 6 -> NotificationUtils.showErrorAlert("Đầu vào không hợp lệ. Vui lòng thử lại.", "Thông báo");
-                case 7 -> NotificationUtils.showErrorAlert("Không thể xoá khách hàng mặc định.","Thông báo");
+                case 7 -> NotificationUtils.showErrorAlert("Không thể xoá khách hàng mặc định.", "Thông báo");
                 default -> NotificationUtils.showErrorAlert("Lỗi không xác định. Vui lòng thử lại.", "Lỗi");
             }
         }

@@ -73,6 +73,11 @@ public class CategoryDTO {
         this.updatedAt = updatedAt;
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
+
     // Helper methods cho JavaFX TableView hoặc CheckBox
     // Lưu ý: Không nên hardcode ID ở đây nữa.
     // Nên dùng statusBus để kiểm tra hoặc để logic này ở tầng BUS.

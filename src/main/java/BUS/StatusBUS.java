@@ -35,6 +35,20 @@ public class StatusBUS extends BaseBUS<StatusDTO, Integer> {
         return null;
     }
 
+    // Lấy các status theo type
+    public ArrayList<StatusDTO> getByTypeLocal(StatusType type) {
+        ArrayList<StatusDTO> result = new ArrayList<>();
+        if (type == null)
+            return result;
+
+        for (StatusDTO status : arrLocal) {
+            if (type.name().equalsIgnoreCase(status.getType())) {
+                result.add(new StatusDTO(status));
+            }
+        }
+        return result;
+    }
+
     // Lấy id của status theo Type và Status Enum
     // Sử dụng: statusBUS.getByIdLocal(StatusType.EMPLOYEE, Status.Employee.ACTIVE)
     public StatusDTO getByTypeAndStatusNameLocal(StatusType type, Enum<?> statusEnum) {
