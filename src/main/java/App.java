@@ -35,10 +35,8 @@ public class App extends Application {
         stage.show();
     }
 
-
     public static void main(String[] args) {
-//        System.out.println(PasswordUtils.getInstance().hashPassword("123456"));
+        System.out.println(PasswordUtils.getInstance().hashPassword("123456"));
         launch(args);
     }
 }
-

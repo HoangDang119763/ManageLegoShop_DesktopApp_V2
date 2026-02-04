@@ -3,7 +3,7 @@ package DTO;
 import java.time.LocalDateTime;
 
 public class AccountDTO {
-    private int employeeId;
+    private int id;
     private String username;
     private String password;
     private LocalDateTime createdAt;
@@ -14,9 +14,9 @@ public class AccountDTO {
     public AccountDTO() {
     }
 
-    public AccountDTO(int employeeId, String username, String password, LocalDateTime createdAt,
+    public AccountDTO(int id, String username, String password, LocalDateTime createdAt,
             LocalDateTime lastLogin, int statusId) {
-        this.employeeId = employeeId;
+        this.id = id;
         this.username = username;
         this.password = password;
         this.createdAt = createdAt;
@@ -24,9 +24,17 @@ public class AccountDTO {
         this.statusId = statusId;
     }
 
+    public AccountDTO(int id, String username, String password, int statusId) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.lastLogin = null;
+        this.statusId = statusId;
+    }
+
     public AccountDTO(AccountDTO other) {
         if (other != null) {
-            this.employeeId = other.employeeId;
+            this.id = other.id;
             this.username = other.username;
             this.password = other.password;
             this.createdAt = other.createdAt;
@@ -36,12 +44,12 @@ public class AccountDTO {
     }
 
     // Getters and Setters
-    public int getEmployeeId() {
-        return employeeId;
+    public int getId() {
+        return id;
     }
 
-    public void setEmployeeId(int employeeId) {
-        this.employeeId = employeeId;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getUsername() {
@@ -82,5 +90,9 @@ public class AccountDTO {
 
     public void setStatusId(int statusId) {
         this.statusId = statusId;
+    }
+
+    public void autoUpdateLastLogin() {
+        this.lastLogin = LocalDateTime.now();
     }
 }

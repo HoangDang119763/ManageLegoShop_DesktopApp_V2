@@ -38,9 +38,11 @@ public class AccountController implements IController {
     private String searchBy = "Mã nhân viên";
     private String keyword = "";
     private AccountDTO selectedAccount;
+
     @FXML
     public void initialize() {
-        if (AccountBUS.getInstance().isLocalEmpty()) AccountBUS.getInstance().loadLocal();
+        if (AccountBUS.getInstance().isLocalEmpty())
+            AccountBUS.getInstance().loadLocal();
         tblAccount.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS); // Tránh deprecated
         Platform.runLater(() -> tblAccount.getSelectionModel().clearSelection());
         hideButtonWithoutPermission();
@@ -57,8 +59,11 @@ public class AccountController implements IController {
 
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_username.setCellValueFactory(new PropertyValueFactory<>("username"));
-        tlb_col_fullName.setCellValueFactory(cellData -> new SimpleStringProperty(EmployeeBUS.getInstance().getByIdLocal(cellData.getValue().getEmployeeId()).getFirstName() + " " + EmployeeBUS.getInstance().getByIdLocal(cellData.getValue().getEmployeeId()).getLastName())
-        );
+        // tlb_col_fullName.setCellValueFactory(cellData -> new
+        // SimpleStringProperty(EmployeeBUS.getInstance().getByIdLocal(cellData.getValue().getEmployeeId()).getFirstName()
+        // + " " +
+        // EmployeeBUS.getInstance().getByIdLocal(cellData.getValue().getEmployeeId()).getLastName())
+        // );
         tlb_col_password.setCellValueFactory(cellData -> new SimpleStringProperty("********"));
         tblAccount.setItems(FXCollections.observableArrayList(accountBUS.getAllLocal()));
     }
@@ -67,7 +72,6 @@ public class AccountController implements IController {
         cbSearchBy.getItems().addAll("Mã nhân viên", "Tài khoản");
         cbSearchBy.getSelectionModel().selectFirst();
     }
-
 
     @Override
     public void setupListeners() {
@@ -97,8 +101,7 @@ public class AccountController implements IController {
     public void applyFilters() {
         AccountBUS accBUS = AccountBUS.getInstance();
         tblAccount.setItems(FXCollections.observableArrayList(
-                accBUS.filterAccounts(searchBy, keyword)
-        ));
+                accBUS.filterAccounts(searchBy, keyword)));
         tblAccount.getSelectionModel().clearSelection();
 
     }
@@ -119,9 +122,12 @@ public class AccountController implements IController {
         boolean canEdit = SessionManagerService.getInstance().hasPermission(29);
         boolean canDelete = SessionManagerService.getInstance().hasPermission(28);
 
-        if (!canAdd) functionBtns.getChildren().remove(addBtn);
-        if (!canEdit) functionBtns.getChildren().remove(editBtn);
-        if (!canDelete) functionBtns.getChildren().remove(deleteBtn);
+        if (!canAdd)
+            functionBtns.getChildren().remove(addBtn);
+        if (!canEdit)
+            functionBtns.getChildren().remove(editBtn);
+        if (!canDelete)
+            functionBtns.getChildren().remove(deleteBtn);
     }
 
     private void handleDelete() {
@@ -129,33 +135,37 @@ public class AccountController implements IController {
             NotificationUtils.showErrorAlert("Vui lòng chọn tài khoản", "Thông báo");
             return;
         }
-        if (selectedAccount.getEmployeeId() == SessionManagerService.getInstance().employeeLoginId()) {
-            NotificationUtils.showErrorAlert("Bạn không thể xóa tài khoản của chính mình.", "Thông báo");
+        // if (selectedAccount.getEmployeeId() ==
+        // SessionManagerService.getInstance().employeeLoginId()) {
+        // NotificationUtils.showErrorAlert("Bạn không thể xóa tài khoản của chính
+        // mình.", "Thông báo");
+        // return;
+        // }
+        if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa tài khoản này?", "Thông báo xác nhận"))
             return;
-        }
-        if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa tài khoản này?", "Thông báo xác nhận")) return;
 
-        int deleteResult = AccountBUS.getInstance().delete(selectedAccount.getEmployeeId(),SessionManagerService.getInstance().employeeRoleId(), SessionManagerService.getInstance().employeeLoginId());
+        int deleteResult = AccountBUS.getInstance().delete(-1, SessionManagerService.getInstance().employeeRoleId(),
+                SessionManagerService.getInstance().employeeLoginId());
         switch (deleteResult) {
-            case 1 ->
-            {
+            case 1 -> {
                 NotificationUtils.showInfoAlert("Xóa tài khoản thành công.", "Thông báo");
                 resetFilters();
             }
             case 2 ->
-                    NotificationUtils.showErrorAlert("Có lỗi khi xóa tài khoản. Vui lòng thử lại.", "Thông báo");
+                NotificationUtils.showErrorAlert("Có lỗi khi xóa tài khoản. Vui lòng thử lại.", "Thông báo");
             case 3 ->
-                    NotificationUtils.showErrorAlert("Không thể xóa tài khoản gốc.", "Thông báo");
+                NotificationUtils.showErrorAlert("Không thể xóa tài khoản gốc.", "Thông báo");
             case 4 ->
-                    NotificationUtils.showErrorAlert("Bạn không thể xóa tài khoản của chính mình.", "Thông báo");
+                NotificationUtils.showErrorAlert("Bạn không thể xóa tài khoản của chính mình.", "Thông báo");
             case 5 ->
-                    NotificationUtils.showErrorAlert("Bạn không có quyền \"Xóa tài khoản\" để thực hiện thao tác này.", "Thông báo");
+                NotificationUtils.showErrorAlert("Bạn không có quyền \"Xóa tài khoản\" để thực hiện thao tác này.",
+                        "Thông báo");
             case 6 ->
-                    NotificationUtils.showErrorAlert("Bạn không thể xóa chức vụ ngang quyền", "Thông báo");
+                NotificationUtils.showErrorAlert("Bạn không thể xóa chức vụ ngang quyền", "Thông báo");
             case 7 ->
-                    NotificationUtils.showErrorAlert("Xóa tài khoản thất bại. Vui lòng thử lại sau.", "Thông báo");
+                NotificationUtils.showErrorAlert("Xóa tài khoản thất bại. Vui lòng thử lại sau.", "Thông báo");
             default ->
-                    NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
+                NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
         }
     }
 
@@ -163,8 +173,7 @@ public class AccountController implements IController {
         AccountModalController modalController = UiUtils.gI().openStageWithController(
                 "/GUI/AccountModal.fxml",
                 controller -> controller.setTypeModal(0),
-                "Thêm tài khoản"
-        );
+                "Thêm tài khoản");
         if (modalController != null && modalController.isSaved()) {
             NotificationUtils.showInfoAlert("Thêm tài khoản thành công", "Thông báo");
             resetFilters();
@@ -182,8 +191,7 @@ public class AccountController implements IController {
                     controller.setTypeModal(1);
                     controller.setAccount(selectedAccount);
                 },
-                "Sửa tài khoản"
-        );
+                "Sửa tài khoản");
         if (modalController != null && modalController.isSaved()) {
             NotificationUtils.showInfoAlert("Sửa tài khoản thành công", "Thông báo");
             applyFilters();

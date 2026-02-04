@@ -8,7 +8,7 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
     private static final AccountDAL INSTANCE = new AccountDAL();
 
     private AccountDAL() {
-        super(ConnectApplication.getInstance().getConnectionFactory(), "account", "employee_id");
+        super(ConnectApplication.getInstance().getConnectionFactory(), "account", "id");
     }
 
     public static AccountDAL getInstance() {
@@ -32,22 +32,28 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
 
     @Override
     protected boolean shouldUseGeneratedKeys() {
-        return false;
+        return true;
+    }
+
+    @Override
+    protected void setGeneratedKey(AccountDTO obj, ResultSet generatedKeys) throws SQLException {
+        if (generatedKeys.next()) {
+            obj.setId(generatedKeys.getInt(1));
+        }
     }
 
     @Override
     protected String getInsertQuery() {
-        return "(id, username, password, created_at, last_login, status_id) VALUES (?, ?, ?, ?, ?, ?)";
+        return "(username, password, created_at, last_login, status_id) VALUES (?, ?, ?, ?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, AccountDTO obj) throws SQLException {
-        statement.setInt(1, obj.getEmployeeId());
-        statement.setString(2, obj.getUsername());
-        statement.setString(3, obj.getPassword());
-        statement.setObject(4, obj.getCreatedAt());
-        statement.setObject(5, obj.getLastLogin());
-        statement.setInt(6, obj.getStatusId());
+        statement.setString(1, obj.getUsername());
+        statement.setString(2, obj.getPassword());
+        statement.setObject(3, obj.getCreatedAt());
+        statement.setObject(4, obj.getLastLogin());
+        statement.setInt(5, obj.getStatusId());
     }
 
     @Override
@@ -60,6 +66,6 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
         statement.setString(1, obj.getPassword());
         statement.setObject(2, obj.getLastLogin());
         statement.setInt(3, obj.getStatusId());
-        statement.setInt(4, obj.getEmployeeId());
+        statement.setInt(4, obj.getId());
     }
 }

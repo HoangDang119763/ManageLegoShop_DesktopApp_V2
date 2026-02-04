@@ -2,9 +2,12 @@ package SERVICE;
 
 import BUS.AccountBUS;
 import BUS.EmployeeBUS;
+import BUS.StatusBUS;
 import DTO.AccountDTO;
 import DTO.EmployeeDTO;
+import ENUM.*;
 import ENUM.ServiceAccessCode;
+import UTILS.AvailableUtils;
 
 public class LoginService {
     private static final LoginService INSTANCE = new LoginService();
@@ -13,34 +16,60 @@ public class LoginService {
         return INSTANCE;
     }
 
-    public boolean checkLogin(AccountDTO account) {
+    public int checkLogin(AccountDTO account) {
         EmployeeBUS empBus = EmployeeBUS.getInstance();
         AccountBUS accBus = AccountBUS.getInstance();
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (statusBus.isLocalEmpty()) {
+            statusBus.loadLocal();
 
-        // Load Account nếu danh sách trống
-        if (accBus.isLocalEmpty())
+        }
+        // Load Account if the local list is empty
+        if (accBus.isLocalEmpty()) {
             accBus.loadLocal();
-        if (accBus.isLocalEmpty())
-            return false; // Kiểm tra lại sau khi load
+        }
 
-        // Kiểm tra đăng nhập
+        // Check again if the list is still empty after loading
+        if (accBus.isLocalEmpty()) {
+            return -1; // Accounts not available
+        }
+
+        // Check the login
         int currAcc = accBus.checkLogin(account.getUsername(), account.getPassword(),
                 ServiceAccessCode.LOGIN_SERVICE.getCode());
-        if (currAcc == -1)
-            return false;
 
-        // Load Employee nếu danh sách trống
-        if (empBus.isLocalEmpty())
+        // If login failed
+        if (currAcc < 0) {
+            return currAcc;
+        }
+
+        // Load Employee if the local list is empty
+        if (empBus.isLocalEmpty()) {
             empBus.loadLocal();
-        if (empBus.isLocalEmpty())
-            return false;
+        }
 
-        // Kiểm tra Employee
-        EmployeeDTO employee = empBus.getByIdLocal(currAcc);
+        // Check again if the list is still empty after loading
+        if (empBus.isLocalEmpty()) {
+            return -1; // Employees not available
+        }
+
+        // Get the Employee DTO by account ID
+        EmployeeDTO employee = empBus.getByAccountIdLocal(currAcc);
+
+        // Store the logged-in employee in session
         SessionManagerService.getInstance()
-                .setLoggedInEmployee(EmployeeBUS.getInstance().getByIdLocal(employee.getId()));
-        return employee.isStatus() && employee.getRoleId() != 0
-                && SessionManagerService.getInstance().numAllowedModules() != 0;
-    }
+                .setLoggedInEmployee(empBus.getByIdLocal(employee.getId()));
 
+        // Check employee status and role
+        boolean isActive = employee.getStatusId() == AvailableUtils.getInstance().getStatusIdByTypeAndName(
+                StatusType.EMPLOYEE, Status.Employee.ACTIVE);
+        System.out.println(AvailableUtils.getInstance().getStatusIdByTypeAndName(
+                StatusType.EMPLOYEE, Status.Employee.ACTIVE));
+        boolean hasValidRole = employee.getRoleId() != 0;
+        boolean hasAccess = SessionManagerService.getInstance().numAllowedModules() != 0;
+        if (!isActive || !hasValidRole || !hasAccess) {
+            return -3; // Employee inactive or invalid role or no access
+        }
+        return currAcc;
+    }
 }
