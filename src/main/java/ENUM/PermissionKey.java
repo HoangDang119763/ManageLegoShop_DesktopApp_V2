@@ -1,0 +1,30 @@
+package ENUM;
+
+public enum PermissionKey {
+    // Nhân viên
+    EMPLOYEE_ADD, EMPLOYEE_DELETE, EMPLOYEE_EDIT,
+
+    // Khách hàng
+    CUSTOMER_ADD, CUSTOMER_DELETE, CUSTOMER_EDIT,
+
+    // Sản phẩm
+    PRODUCT_ADD, PRODUCT_DELETE, PRODUCT_EDIT,
+
+    // Nhà cung cấp
+    SUPPLIER_ADD, SUPPLIER_DELETE, SUPPLIER_EDIT,
+
+    // Bán hàng & Nhập hàng
+    ORDER_CREATE, ORDER_VIEW,
+    IMPORT_CREATE, IMPORT_VIEW,
+
+    // Danh mục & Khuyến mãi
+    CATEGORY_ADD, CATEGORY_DELETE, CATEGORY_EDIT,
+    PROMOTION_ADD, PROMOTION_DELETE, PROMOTION_EDIT,
+
+    // Hệ thống & Tài khoản
+    ROLE_ADD, ROLE_DELETE, ROLE_EDIT, PERMISSION_EDIT,
+    ACCOUNT_ADD, ACCOUNT_DELETE, ACCOUNT_EDIT,
+
+    // Thống kê
+    STATISTICS_VIEW;
+}

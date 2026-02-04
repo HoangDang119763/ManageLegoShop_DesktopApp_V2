@@ -1,0 +1,61 @@
+package FACTORY;
+
+import DTO.RoleDTO;
+import INTERFACE.Builder;
+import java.time.LocalDateTime;
+
+public class RoleBuilder implements Builder<RoleDTO> {
+    private int id;
+    private String name;
+    private String description;
+    private int startExperience;
+    private int endExperience;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Integer salaryId;
+
+    public RoleBuilder id(int id) {
+        this.id = id;
+        return this;
+    }
+
+    public RoleBuilder name(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public RoleBuilder description(String description) {
+        this.description = description;
+        return this;
+    }
+
+    public RoleBuilder startExperience(int startExperience) {
+        this.startExperience = startExperience;
+        return this;
+    }
+
+    public RoleBuilder endExperience(int endExperience) {
+        this.endExperience = endExperience;
+        return this;
+    }
+
+    public RoleBuilder createdAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
+
+    public RoleBuilder updatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+        return this;
+    }
+
+    public RoleBuilder salaryId(Integer salaryId) {
+        this.salaryId = salaryId;
+        return this;
+    }
+
+    @Override
+    public RoleDTO build() {
+        return new RoleDTO(id, name, description, startExperience, endExperience, createdAt, updatedAt, salaryId);
+    }
+}
