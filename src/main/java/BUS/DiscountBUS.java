@@ -94,8 +94,8 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
         return filteredList;
     }
 
-    public int insert(DiscountDTO obj, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode() || obj == null)
+    public int insert(DiscountDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE || obj == null)
             return 2;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 20)
                 || !isValidateDiscountInput(obj)) {
@@ -113,8 +113,8 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
         return 1;
     }
 
-    public boolean delete(String code, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode() || code == null
+    public boolean delete(String code, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE || code == null
                 || code.isEmpty()) {
             return false;
         }

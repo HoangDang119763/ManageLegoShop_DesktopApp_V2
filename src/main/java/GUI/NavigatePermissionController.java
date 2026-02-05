@@ -19,39 +19,16 @@ public class NavigatePermissionController {
 
     // Init
     @FXML
-    public void initialize () {
+    public void initialize() {
         hideButtonWithoutPermission();
         setupEventHandlers();
     }
 
-    // Validate if this employee has specific perms or not !!!
-//    private void CheckPermission() {
-//        // lấy tài khoản đã đăng nhập
-//        SessionManagerService temp = SessionManagerService.getInstance();
-//        ArrayList<ModuleDTO> list = ModuleBUS.getInstance().getAll();
-//        System.out.println(temp.getAllowedModules());
-//        HashSet<Integer> allowModule = temp.getAllowedModules();
-//
-//        // có perms bán hàng, nhập kho ko (4 bán hàng, 5 nhập hàng) ?
-//        if (allowModule.contains(4))
-//            System.out.println(list.get(4).getName());
-//        else
-//            disableFunc(4);
-//        if (allowModule.contains(5))
-//            System.out.println(list.get(5).getName());
-//        else
-//            disableFunc(5);
-//
-//        //kiểm tra xem còn module nào khác không
-//        List<Integer> tempList =  allowModule.stream().filter(module -> module != 4 && module !=5).toList();
-//        if (tempList.isEmpty())
-//            disableFunc(0);
-//    }
-
     // Exit form
     private void setupEventHandlers() {
         closeBtn.setOnMouseClicked(e -> {
-            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn đăng xuất?", "Thông báo xác nhận")) return;
+            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn đăng xuất?", "Thông báo xác nhận"))
+                return;
             SessionManagerService.getInstance().logout();
             ParallelTransition animation = UiUtils.gI().createButtonAnimation(closeBtn);
             animation.setOnFinished(event -> ExitForm());
@@ -68,14 +45,6 @@ public class NavigatePermissionController {
         Platform.runLater(this::handleClose);
     }
 
-    private void disableFunc(int moduleID) {
-        if (moduleID == 4)
-            pItemPermissionSelling.setDisable(true);
-        if (moduleID == 5)
-            pItemPermissionImporting.setDisable(true);
-        if (moduleID == 0)
-            pItemPermissionAuth.setDisable(true);
-    }
     private void openSelling() {
         UiUtils.gI().openStage("/GUI/SellingProduct.fxml", "Bán hàng");
         handleClose();

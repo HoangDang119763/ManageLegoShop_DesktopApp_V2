@@ -231,9 +231,9 @@ public class DiscountModalController {
         switch (updateResult) {
             case 1 -> {
                 DetailDiscountBUS.getInstance().delete(txtDiscountCode.getText().trim(), 1,
-                        ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode(), 1);
+                        ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, 1);
                 DetailDiscountBUS.getInstance().createDetailDiscountByDiscountCode(txtDiscountCode.getText().trim(), 1,
-                        arrDetailDiscount, ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode(), 1);
+                        arrDetailDiscount, ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, 1);
 
                 isSaved = true;
                 handleClose();

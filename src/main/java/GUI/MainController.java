@@ -89,6 +89,7 @@ public class MainController {
             ModuleBUS.getInstance().loadLocal();
             PermissionBUS.getInstance().loadLocal();
             StatusBUS.getInstance().loadLocal();
+            AccountBUS.getInstance().loadLocal();
             isLoaded = true;
         }
     }
@@ -116,57 +117,52 @@ public class MainController {
         }
     }
 
+    // Đóng gói Metadata của Module
+    private record ModuleMetadata(int id, String name, String icon) {
+    }
+
     private void loadAllowedModules() {
-        List<Integer> orderedModules = Arrays.asList(3, 1, 2, 4, 7, 8, 5, 6, 9, 10, 11);
-
-        Map<Integer, String> moduleMap = new HashMap<>();
-        moduleMap.put(1, "Nhân viên");
-        moduleMap.put(2, "Khách hàng");
-        moduleMap.put(3, "Sản phẩm");
-        moduleMap.put(4, "Nhà cung cấp");
-        moduleMap.put(5, "Hóa đơn");
-        moduleMap.put(6, "Phiếu nhập");
-        moduleMap.put(7, "Thể loại");
-        moduleMap.put(8, "Khuyến mãi");
-        moduleMap.put(9, "Chức vụ");
-        moduleMap.put(10, "Tài khoản");
-        moduleMap.put(11, "Thống kê");
-
-        Map<String, String> moduleIcons = new HashMap<>();
-        moduleIcons.put("Nhân viên", "employee.png");
-        moduleIcons.put("Khách hàng", "customer.png");
-        moduleIcons.put("Sản phẩm", "product.png");
-        moduleIcons.put("Nhà cung cấp", "supplier.png");
-        moduleIcons.put("Hóa đơn", "invoice.png");
-        moduleIcons.put("Phiếu nhập", "import.png");
-        moduleIcons.put("Thể loại", "category.png");
-        moduleIcons.put("Khuyến mãi", "discount.png");
-        moduleIcons.put("Chức vụ", "role.png");
-        moduleIcons.put("Tài khoản", "account.png");
-        moduleIcons.put("Thống kê", "statistical.png");
+        // 1. Khởi tạo danh sách Module có thứ tự (ID, Name, Icon)
+        List<ModuleMetadata> allModules = Arrays.asList(
+                new ModuleMetadata(0, "Thông tin", "employee_info.png"),
+                new ModuleMetadata(3, "Sản phẩm", "product.png"),
+                new ModuleMetadata(1, "Nhân viên", "employee.png"),
+                new ModuleMetadata(2, "Khách hàng", "customer.png"),
+                new ModuleMetadata(4, "Nhà cung cấp", "supplier.png"),
+                new ModuleMetadata(7, "Thể loại", "category.png"),
+                new ModuleMetadata(8, "Khuyến mãi", "discount.png"),
+                new ModuleMetadata(5, "Hóa đơn", "invoice.png"),
+                new ModuleMetadata(6, "Phiếu nhập", "import.png"),
+                new ModuleMetadata(9, "Chức vụ", "role.png"),
+                new ModuleMetadata(10, "Tài khoản", "account.png"),
+                new ModuleMetadata(11, "Thống kê", "statistical.png"));
 
         groupBtn.getChildren().clear();
         List<Button> buttons = new ArrayList<>();
+        SessionManagerService session = SessionManagerService.getInstance();
 
-        // Thêm các module bình thường
-        for (Integer moduleId : orderedModules) {
-            if (SessionManagerService.getInstance().hasModuleAccess(moduleId)) {
-                String moduleName = moduleMap.get(moduleId);
-                buttons.add(createModuleButton(moduleName, moduleIcons.getOrDefault(moduleName, "default.png"),
-                        () -> handleModuleClick(moduleId, moduleName)));
+        // 2. Duyệt qua danh sách đã đóng gói
+        for (ModuleMetadata meta : allModules) {
+            // Module 0 (Thông tin nhân viên) luôn được phép truy cập
+            if (meta.id() == 0 || session.hasModuleAccess(meta.id())) {
+                Button btn = createModuleButton(
+                        meta.name(),
+                        meta.icon(),
+                        () -> handleModuleClick(meta.id(), meta.name()));
+                buttons.add(btn);
             }
         }
 
         groupBtn.getChildren().addAll(buttons);
 
         if (!buttons.isEmpty()) {
-            buttons.get(0).fire();
+            buttons.getFirst().fire();
         }
     }
 
     private Button createModuleButton(String text, String iconPath, Runnable action) {
         Button btn = new Button("   " + text);
-        btn.setPrefSize(174, 34);
+        btn.setPrefSize(194, 40);
         btn.getStyleClass().add("nav-btn");
 
         // Kiểm tra CSS trước khi thêm
@@ -222,6 +218,7 @@ public class MainController {
         }
 
         switch (moduleId) {
+            case 0 -> loadFXML("/GUI/EmployeeInfoUI.fxml");
             case 1 -> loadFXML("/GUI/EmployeeUI.fxml");
             case 2 -> loadFXML("/GUI/CustomerUI.fxml");
             case 3 -> loadFXML("/GUI/ProductUI.fxml");

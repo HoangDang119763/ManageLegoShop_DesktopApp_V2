@@ -24,8 +24,8 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
         return InvoiceDAL.getInstance().getAll();
     }
 
-    public boolean delete(Integer id, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE.getCode() || id == null || id <= 0)
+    public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || id == null || id <= 0)
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 14))
             return false;
@@ -48,8 +48,8 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
         return null;
     }
 
-    public boolean insert(InvoiceDTO obj, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE.getCode() || obj == null)
+    public boolean insert(InvoiceDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || obj == null)
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 13)
                 || !isValidateInvoiceInput(obj))

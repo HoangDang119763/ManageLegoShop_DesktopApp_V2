@@ -21,7 +21,7 @@ public class DiscountService {
         if (disBus.isLocalEmpty())
             disBus.loadLocal();
         int resultr = disBus.insert(discount, employee_roleId,
-                ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode(), employeeLoginId);
+                ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, employeeLoginId);
         if (resultr != 1) {
             return resultr;
         }
@@ -31,10 +31,10 @@ public class DiscountService {
         // Không quan trọng invoiceId của từng thằng trong list. vì sẽ set lại dưới
         // database
         if (!ddipBus.createDetailDiscountByDiscountCode(discount.getCode(), employee_roleId, list,
-                ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode(), employeeLoginId)) {
+                ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, employeeLoginId)) {
             // Rollback nếu lỗi
             ddipBus.delete(discount.getCode(), employee_roleId,
-                    ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode(), employeeLoginId);
+                    ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, employeeLoginId);
             return 2;
         }
 
@@ -50,7 +50,7 @@ public class DiscountService {
         ArrayList<DetailDiscountDTO> tempList = ddipBus.getAllDetailDiscountByDiscountIdLocal(discountCode);
 
         int resultrp = ddipBus.delete(discountCode, employee_roleId,
-                ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode(), employeeLoginId);
+                ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, employeeLoginId);
         if (resultrp != 1)
             return resultrp;
 
@@ -58,13 +58,13 @@ public class DiscountService {
             disBus.loadLocal();
 
         // Xóa role sau
-        if (!disBus.delete(discountCode, employee_roleId, ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode(),
+        if (!disBus.delete(discountCode, employee_roleId, ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE,
                 employeeLoginId)) {
             System.err.println("Failed to delete discount. Attempting to roll back role permissions.");
 
             // Khôi phục role_permission nếu role không xóa được
             return ddipBus.insertRollbackDetailDiscount(tempList, 1,
-                    ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode(), 1) ? 1 : 2;
+                    ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, 1) ? 1 : 2;
         }
 
         return 1;
