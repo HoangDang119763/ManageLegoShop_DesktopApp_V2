@@ -26,7 +26,7 @@ public class ImportService {
 
         if (impBus.isLocalEmpty())
             impBus.loadLocal();
-        if (!impBus.insert(imports, employee_roleId, ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode(),
+        if (!impBus.insert(imports, employee_roleId, ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE,
                 eployeeLoginId))
             return false;
 
@@ -35,9 +35,9 @@ public class ImportService {
         // Không quan trọng invoiceId của từng thằng trong list. vì sẽ set lại dưới
         // database
         if (!dimpBus.createDetailImportByImportId(imports.getId(), employee_roleId, list,
-                ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode(), eployeeLoginId)) {
+                ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE, eployeeLoginId)) {
             // Rollback nếu lỗi
-            impBus.delete(imports.getId(), employee_roleId, ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode(),
+            impBus.delete(imports.getId(), employee_roleId, ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE,
                     eployeeLoginId);
             return false;
         }

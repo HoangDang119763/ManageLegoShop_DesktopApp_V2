@@ -2,6 +2,7 @@ package GUI;
 
 import DTO.AccountDTO;
 import SERVICE.LoginService;
+import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import javafx.fxml.FXML;
@@ -58,14 +59,14 @@ public class LoginController {
         String password = txtPassword.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
-            NotificationUtils.showErrorAlert("Vui lòng điền tài khoản và mật khẩu", "Thông báo");
+            NotificationUtils.showErrorAlert(AppMessages.LOGIN_EMPTY_CREDENTIALS, AppMessages.DIALOG_TITLE);
             return;
         }
 
         AccountDTO account = new AccountDTO(-1, username, password, -1);
         int loginResult = LoginService.getInstance().checkLogin(account);
         if (loginResult > 0) { // Đăng nhập thành công (ID > 0)
-            NotificationUtils.showInfoAlert("Đăng nhập thành công!", "Thông báo");
+            NotificationUtils.showInfoAlert(AppMessages.LOGIN_SUCCESS, AppMessages.DIALOG_TITLE);
 
             // Xử lý Remember Me
             prefs.putBoolean("rememberMe", ckbRememberMe.isSelected());
@@ -82,11 +83,11 @@ public class LoginController {
             UiUtils.gI().openStage("/GUI/NavigatePermission.fxml", "Danh sách chức năng");
 
         } else if (loginResult == -2) {
-            NotificationUtils.showErrorAlert("Tài khoản của bạn hiện đang bị khóa!", "Thông báo");
+            NotificationUtils.showErrorAlert(AppMessages.LOGIN_ACCOUNT_LOCKED, AppMessages.DIALOG_TITLE);
         } else if (loginResult == -3) {
-            NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ!", "Thông báo");
+            NotificationUtils.showErrorAlert(AppMessages.LOGIN_EMPLOYEE_INVALID, AppMessages.DIALOG_TITLE);
         } else {
-            NotificationUtils.showErrorAlert("Tài khoản hoặc mật khẩu không chính xác!", "Thông báo");
+            NotificationUtils.showErrorAlert(AppMessages.LOGIN_INVALID_CREDENTIALS, AppMessages.DIALOG_TITLE);
         }
     }
 }

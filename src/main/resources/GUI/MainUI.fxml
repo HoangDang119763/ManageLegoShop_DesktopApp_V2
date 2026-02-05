@@ -15,9 +15,9 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="700.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainController">
+<AnchorPane prefHeight="700.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainController">
    <children>
-      <BorderPane prefHeight="700.0" prefWidth="1100.0">
+      <BorderPane prefHeight="700.0" prefWidth="1300.0">
          <top>
             <AnchorPane prefHeight="50.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                <children>
@@ -53,16 +53,25 @@
             </AnchorPane>
          </top>
          <left>
-            <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <AnchorPane minWidth="225.0" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                <children>
-                  <AnchorPane prefHeight="650.0" prefWidth="178.0" styleClass="nav-form" stylesheets="@../css/main.css">
+                  <AnchorPane minWidth="225.0" prefHeight="650.0" prefWidth="178.0" styleClass="nav-form" stylesheets="@../css/main.css">
                      <children>
-                        <Label fx:id="employeeLoginFullName" layoutX="68.0" layoutY="14.0" prefHeight="38.0" prefWidth="124.0" style="-fx-font-weight: 900;" text="Employee Login" textOverrun="CENTER_ELLIPSIS" AnchorPane.rightAnchor="8.0">
-                           <font>
-                              <Font name="Times New Roman Bold Italic" size="18.0" />
-                           </font>
-                        </Label>
-                        <Line endX="75.29290008544922" endY="-7.62939453125E-6" layoutX="112.0" layoutY="81.0" startX="-100.0" AnchorPane.leftAnchor="11.292892456054688" AnchorPane.rightAnchor="11.999984741210938" />
+                        <VBox layoutX="60.967185974121094" layoutY="14.0">
+                           <children>
+                              <Label fx:id="employeeLoginFullName" prefHeight="38.0" prefWidth="154.0" style="-fx-font-weight: 900;" text="Employee Login" textOverrun="CENTER_ELLIPSIS">
+                                 <font>
+                                    <Font name="Times New Roman Bold Italic" size="18.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="employeeRoleName" contentDisplay="CENTER" prefHeight="22.0" prefWidth="154.0" style="-fx-font-weight: 800;" text="Role" textFill="#30bac4" textOverrun="CENTER_ELLIPSIS">
+                                 <font>
+                                    <Font name="Arial" size="18.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </VBox>
+                        <Line endX="96.89288330078125" endY="-7.62939453125E-6" layoutX="112.0" layoutY="81.0" startX="-100.0" AnchorPane.bottomAnchor="568.692893230915" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="80.00000000000003" />
                         <Button layoutX="12.0" layoutY="515.0" mnemonicParsing="false" stylesheets="@../css/main.css">
                            <styleClass>
                               <String fx:value="logout" />
@@ -81,9 +90,9 @@
                               <Font name="System Bold" size="14.0" />
                            </font>
                         </Button>
-                        <VBox fx:id="groupBtn" layoutX="16.0" layoutY="91.0" prefHeight="457.0" prefWidth="168.0">
+                        <VBox fx:id="groupBtn" layoutX="16.0" layoutY="91.0" maxWidth="170.0" prefHeight="457.0" prefWidth="190.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="15.0">
                            <children>
-                              <Button alignment="BOTTOM_LEFT" mnemonicParsing="false" prefHeight="34.0" prefWidth="174.0" styleClass="nav-btn" stylesheets="@../css/main.css" text="   Sản phẩm" textFill="WHITE">
+                              <Button alignment="BOTTOM_LEFT" mnemonicParsing="false" prefHeight="40.0" prefWidth="207.0" styleClass="nav-btn" stylesheets="@../css/main.css" text="Thông tin" textFill="WHITE">
                                  <graphic>
                                     <ImageView fitHeight="25.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true" styleClass="icon">
                                        <image>
@@ -195,11 +204,6 @@
                               <Image url="@../images/icon/userlogo.png" />
                            </image>
                         </ImageView>
-                        <Label fx:id="employeeRoleName" layoutX="68.0" layoutY="52.0" prefHeight="20.0" prefWidth="96.0" style="-fx-font-weight: 800;" text="Role" textFill="#30bac4" textOverrun="CENTER_ELLIPSIS">
-                           <font>
-                              <Font name="Arial" size="18.0" />
-                           </font>
-                        </Label>
                      </children>
                   </AnchorPane>
                </children>

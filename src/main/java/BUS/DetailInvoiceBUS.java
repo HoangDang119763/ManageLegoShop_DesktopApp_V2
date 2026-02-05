@@ -20,8 +20,8 @@ public class DetailInvoiceBUS extends BaseBUS<DetailInvoiceDTO, Integer> {
         return DetailInvoiceDAL.getInstance().getAll();
     }
 
-    public boolean delete(Integer id, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE.getCode() || id == null || id <= 0)
+    public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || id == null || id <= 0)
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 14))
             return false;
@@ -46,8 +46,8 @@ public class DetailInvoiceBUS extends BaseBUS<DetailInvoiceDTO, Integer> {
     }
 
     public boolean createDetailInvoiceByInvoiceId(int invoiceId, int employee_roleId, ArrayList<DetailInvoiceDTO> list,
-            int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE.getCode() || list == null || list.isEmpty()
+            ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || list == null || list.isEmpty()
                 || invoiceId <= 0)
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 13)) {
@@ -62,9 +62,10 @@ public class DetailInvoiceBUS extends BaseBUS<DetailInvoiceDTO, Integer> {
         return true;
     }
 
-    public boolean insertRollbackDetailInvoice(ArrayList<DetailInvoiceDTO> list, int employee_roleId, int codeAccess,
+    public boolean insertRollbackDetailInvoice(ArrayList<DetailInvoiceDTO> list, int employee_roleId,
+            ServiceAccessCode codeAccess,
             int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE.getCode() || list == null || list.isEmpty())
+        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || list == null || list.isEmpty())
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 14)) {
             return false;

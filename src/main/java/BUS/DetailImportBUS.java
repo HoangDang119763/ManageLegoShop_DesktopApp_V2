@@ -20,8 +20,8 @@ public class DetailImportBUS extends BaseBUS<DetailImportDTO, Integer> {
         return DetailImportDAL.getInstance().getAll();
     }
 
-    public boolean delete(Integer id, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode() || id == null || id <= 0)
+    public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || id == null || id <= 0)
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 16)) {
             return false;
@@ -47,8 +47,8 @@ public class DetailImportBUS extends BaseBUS<DetailImportDTO, Integer> {
     }
 
     public boolean createDetailImportByImportId(int importId, int employee_roleId, ArrayList<DetailImportDTO> list,
-            int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode() || list == null || list.isEmpty()
+            ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || list == null || list.isEmpty()
                 || importId <= 0)
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 15)) {
@@ -63,9 +63,10 @@ public class DetailImportBUS extends BaseBUS<DetailImportDTO, Integer> {
         return true;
     }
 
-    public boolean insertRollbackDetailImport(ArrayList<DetailImportDTO> list, int employee_roleId, int codeAccess,
+    public boolean insertRollbackDetailImport(ArrayList<DetailImportDTO> list, int employee_roleId,
+            ServiceAccessCode codeAccess,
             int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode() || list == null || list.isEmpty())
+        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || list == null || list.isEmpty())
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 16)) {
             return false;

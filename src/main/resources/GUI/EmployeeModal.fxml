@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="400.0" prefWidth="480.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.EmployeeModalController">
+<AnchorPane prefHeight="400.0" prefWidth="480.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.EmployeeModalController">
     <children>
         <BorderPane prefHeight="425.0" prefWidth="600.0" style="-fx-border-color: #30bac4; -fx-border-width: 2px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -63,7 +63,7 @@
                                                 <Font size="20.0" />
                                             </font>
                                         </Label>
-                                        <TextField fx:id="txtFirstName" prefWidth="220.0" promptText="Nhập họ đệm" styleClass="textfield-">
+                                        <TextField fx:id="txtFirstName" prefWidth="220.0" promptText="Nhập họ đệm" styleClass="textfield-1">
                                             <font>
                                                 <Font size="16.0" />
                                             </font>

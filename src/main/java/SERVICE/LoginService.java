@@ -36,7 +36,7 @@ public class LoginService {
 
         // Check the login
         int currAcc = accBus.checkLogin(account.getUsername(), account.getPassword(),
-                ServiceAccessCode.LOGIN_SERVICE.getCode());
+                ServiceAccessCode.LOGIN_SERVICE);
 
         // If login failed
         if (currAcc < 0) {

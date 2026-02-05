@@ -22,8 +22,8 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
         return RoleDAL.getInstance().getAll();
     }
 
-    public boolean delete(Integer roleId, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE.getCode() || roleId == null || roleId <= 0)
+    public boolean delete(Integer roleId, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || roleId == null || roleId <= 0)
             return false;
 
         // Ngăn chặn tự xóa role của chính mình
@@ -65,8 +65,8 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
         return null;
     }
 
-    public int insert(RoleDTO obj, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE.getCode() || obj == null)
+    public int insert(RoleDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || obj == null)
             return 2;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 23))
             return 3;

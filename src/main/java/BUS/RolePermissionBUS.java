@@ -24,8 +24,8 @@ public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
         return RolePermissionDAL.getInstance().getAll();
     }
 
-    public int delete(Integer roleId, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE.getCode() || roleId == null || roleId <= 0) {
+    public int delete(Integer roleId, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || roleId == null || roleId <= 0) {
             return 2;
         }
 
@@ -107,9 +107,9 @@ public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
         return 1;
     }
 
-    public boolean createDefaultPermissionsForRole(int roleId, int employee_roleId, int codeAccess,
+    public boolean createDefaultPermissionsForRole(int roleId, int employee_roleId, ServiceAccessCode codeAccess,
             int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE.getCode() || roleId <= 0
+        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || roleId <= 0
                 || !hasPermission(employee_roleId, 23)
                 || AuthorizationService.getInstance().isInvalidUserRole(employeeLoginId, employee_roleId)) {
             return false;
@@ -124,8 +124,8 @@ public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
     }
 
     public boolean insertRollbackPermission(ArrayList<RolePermissionDTO> rolePermission, int employee_roleId,
-            int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE.getCode() || rolePermission == null
+            ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || rolePermission == null
                 || rolePermission.isEmpty() || !hasPermission(employee_roleId, 24)
                 || AuthorizationService.getInstance().isInvalidUserRole(employeeLoginId, employee_roleId)) {
             return false;

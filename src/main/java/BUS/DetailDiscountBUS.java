@@ -21,8 +21,8 @@ public class DetailDiscountBUS extends BaseBUS<DetailDiscountDTO, String> {
         return DetailDiscountDAL.getInstance().getAll();
     }
 
-    public int delete(String code, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode() || code == null || code.isEmpty())
+    public int delete(String code, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE || code == null || code.isEmpty())
             return 2;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 21)) {
             return 3;
@@ -52,8 +52,8 @@ public class DetailDiscountBUS extends BaseBUS<DetailDiscountDTO, String> {
     }
 
     public boolean createDetailDiscountByDiscountCode(String discountCode, int employee_roleId,
-            ArrayList<DetailDiscountDTO> list, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE.getCode() || list == null || list.isEmpty()
+            ArrayList<DetailDiscountDTO> list, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE || list == null || list.isEmpty()
                 || discountCode == null || discountCode.isEmpty())
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 20)) {
@@ -76,9 +76,10 @@ public class DetailDiscountBUS extends BaseBUS<DetailDiscountDTO, String> {
         return true;
     }
 
-    public boolean insertRollbackDetailDiscount(ArrayList<DetailDiscountDTO> list, int employee_roleId, int codeAccess,
+    public boolean insertRollbackDetailDiscount(ArrayList<DetailDiscountDTO> list, int employee_roleId,
+            ServiceAccessCode codeAccess,
             int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode() || list == null || list.isEmpty())
+        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || list == null || list.isEmpty())
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 21)) {
             return false;

@@ -143,9 +143,9 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
                 PasswordUtils.getInstance().verifyPassword(obj.getPassword(), existingAcc.getPassword());
     }
 
-    public int checkLogin(String username, String password, int codeAccess) {
+    public int checkLogin(String username, String password, ServiceAccessCode codeAccess) {
         // 1. Kiểm tra đầu vào cơ bản
-        if (codeAccess != ServiceAccessCode.LOGIN_SERVICE.getCode() || username == null || password == null) {
+        if (codeAccess != ServiceAccessCode.LOGIN_SERVICE || username == null || password == null) {
             return -1;
         }
 

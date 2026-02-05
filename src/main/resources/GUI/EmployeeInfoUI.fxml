@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="650.0" prefWidth="1074.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.EmployeeInfoController">
+   <children>
+      <BorderPane prefHeight="700.0" prefWidth="1150.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <center>
+            <HBox alignment="CENTER" spacing="15.0" BorderPane.alignment="CENTER">
+               <padding>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </padding>
+               <children>
+                  
+                  <VBox prefHeight="610.0" prefWidth="660.0" spacing="25.0" styleClass="white-bg, shadow" HBox.hgrow="ALWAYS">
+                     <padding>
+                        <Insets bottom="25.0" left="25.0" right="25.0" top="20.0" />
+                     </padding>
+                     <children>
+                        <VBox spacing="8.0">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                 <children>
+                                    <FontAwesomeIcon fill="#1f7d84" glyphName="ADDRESS_CARD" size="1.8em" />
+                                    <Label styleClass="label-header" text="HỒ SƠ NHÂN VIÊN" textFill="#1f7d84">
+                                       <font><Font name="System Bold" size="20.0" /></font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <Line endX="600.0" stroke="#eee" strokeWidth="2.0" />
+                           </children>
+                        </VBox>
+                        
+                        <GridPane hgap="15.0" vgap="15.0">
+                          <columnConstraints>
+                            <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="120.0" prefWidth="130.0" />
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+                            <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="100.0" prefWidth="110.0" />
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+                          </columnConstraints>
+                          <children>
+                              <Label styleClass="label-a" text="Mã nhân viên:" GridPane.rowIndex="0" />
+                              <TextField fx:id="lblEmployeeId" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                              <Label styleClass="label-a" text="Giới tính:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                              <TextField fx:id="lblGender" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+                              <Label styleClass="label-a" text="Họ đệm:" GridPane.rowIndex="1" />
+                              <TextField fx:id="lblFirstName" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label styleClass="label-a" text="Tên:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <TextField fx:id="lblLastName" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                              
+                              <Label styleClass="label-a" text="Ngày sinh:" GridPane.rowIndex="2" />
+                              <TextField fx:id="lblDateOfBirth" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Label styleClass="label-a" text="Điện thoại:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <TextField fx:id="lblPhone" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+
+                              <Label styleClass="label-a" text="Email:" GridPane.rowIndex="3" />
+                              <TextField fx:id="lblEmail" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <Label styleClass="label-a" text="Trạng thái:" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                              <TextField fx:id="lblStatus" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                              
+                              <Label styleClass="label-a" text="Vai trò:" GridPane.rowIndex="4" />
+                              <TextField fx:id="lblRoleName" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                          </children>
+                           <rowConstraints>
+                              <RowConstraints />
+                              <RowConstraints />
+                              <RowConstraints />
+                              <RowConstraints />
+                              <RowConstraints />
+                           </rowConstraints>
+                        </GridPane>
+
+                        <VBox spacing="8.0">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                 <children>
+                                    <FontAwesomeIcon fill="#1f7d84" glyphName="CHECK_SQUARE_ALT" size="1.8em" />
+                                    <Label styleClass="label-header" text="QUYỀN LỢI &amp; BẢO HIỂM" textFill="#1f7d84">
+                                       <font><Font name="System Bold" size="20.0" /></font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <Line endX="600.0" stroke="#eee" strokeWidth="2.0" />
+                           </children>
+                           <VBox.margin><Insets top="10.0" /></VBox.margin>
+                        </VBox>
+
+                        <GridPane hgap="30.0" vgap="15.0">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                          </columnConstraints>
+                          <children>
+                              <CheckBox fx:id="cbHealthIns" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm y tế" GridPane.rowIndex="0" />
+                              <CheckBox fx:id="cbSocialIns" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm xã hội" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                              <CheckBox fx:id="cbUnemploymentIns" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm thất nghiệp" GridPane.rowIndex="1" />
+                              <CheckBox fx:id="cbIncomeTax" mouseTransparent="true" styleClass="label-a" text="Thuế TN cá nhân" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <CheckBox fx:id="cbTransportSupport" mouseTransparent="true" styleClass="label-a" text="Hỗ trợ đi lại" GridPane.rowIndex="2" />
+                              <CheckBox fx:id="cbAccommSupport" mouseTransparent="true" styleClass="label-a" text="Hỗ trợ chỗ ở" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                          </children>
+                           <padding><Insets left="30.0" /></padding>
+                           <rowConstraints>
+                              <RowConstraints />
+                              <RowConstraints />
+                              <RowConstraints />
+                           </rowConstraints>
+                        </GridPane>
+                     </children>
+                  </VBox>
+
+                  <VBox maxWidth="355.0" prefHeight="610.0" prefWidth="355.0" spacing="25.0" styleClass="white-bg, shadow" HBox.hgrow="ALWAYS">
+                     <padding>
+                        <Insets bottom="25.0" left="25.0" right="25.0" top="20.0" />
+                     </padding>
+                     <children>
+                        <VBox spacing="8.0">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                 <children>
+                                    <FontAwesomeIcon fill="#1f7d84" glyphName="SHIELD" size="1.8em" />
+                                    <Label styleClass="label-header" text="BẢO MẬT TÀI KHOẢN" textFill="#1f7d84">
+                                       <font><Font name="System Bold" size="20.0" /></font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <Line endX="320.0" stroke="#eee" strokeWidth="2.0" />
+                           </children>
+                        </VBox>
+                        
+                        <VBox spacing="15.0">
+                           <children>
+                              <VBox spacing="5.0">
+                                 <children>
+                                    <Label styleClass="label-a" text="Tên đăng nhập:" />
+                                    <TextField fx:id="lblUsername" editable="false" focusTraversable="false" prefHeight="40.0" styleClass="textfield" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="5.0">
+                                 <children>
+                                    <Label styleClass="label-a" text="Mật khẩu cũ:" />
+                                    <PasswordField fx:id="txtOldPassword" prefHeight="40.0" promptText="Nhập mật khẩu cũ" styleClass="textfield" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="5.0">
+                                 <children>
+                                    <Label styleClass="label-a" text="Mật khẩu mới:" />
+                                    <PasswordField fx:id="txtNewPassword" prefHeight="40.0" promptText="Nhập mật khẩu mới" styleClass="textfield" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="5.0">
+                                 <children>
+                                    <Label styleClass="label-a" text="Xác nhận mật khẩu:" />
+                                    <PasswordField fx:id="txtConfirmPassword" prefHeight="40.0" promptText="Xác nhận lại mật khẩu" styleClass="textfield" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </VBox>
+
+                        <HBox alignment="BOTTOM_RIGHT" spacing="12.0">
+                           <children>
+                              <Button fx:id="btnChangePassword" mnemonicParsing="false" prefHeight="45.0" prefWidth="150.0" styleClass="action-btn" text="Đổi mật khẩu">
+                                 <graphic><FontAwesomeIcon fill="WHITE" glyphName="KEY" /></graphic>
+                              </Button>
+                              <Button fx:id="btnClear" mnemonicParsing="false" prefHeight="45.0" prefWidth="110.0" styleClass="action-btn" text="Làm mới">
+                                 <graphic><FontAwesomeIcon fill="WHITE" glyphName="REFRESH" /></graphic>
+                              </Button>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </center>
+      </BorderPane>
+   </children>
+</AnchorPane>

@@ -3,6 +3,7 @@ package GUI;
 import BUS.ProductBUS;
 import DTO.ProductDTO;
 import DTO.TempDetailInvoiceDTO;
+import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -21,12 +22,13 @@ public class SellingProductModalController {
     @FXML
     private TextField txtProductName;
     @FXML
-    private Button saveBtn,closeBtn;
+    private Button saveBtn, closeBtn;
     @Getter
     private boolean isSaved;
     private int typeModal;
     @Getter
     private TempDetailInvoiceDTO tempDetailInvoice;
+
     @FXML
     public void initialize() {
         setupListeners();
@@ -37,14 +39,16 @@ public class SellingProductModalController {
         closeBtn.setOnAction(e -> handleClose());
     }
 
-    //   add handle for selling here
+    // add handle for selling here
     public void setTypeModal(int type) {
-        if (type != 0 && type != 1) handleClose();
+        if (type != 0 && type != 1)
+            handleClose();
         typeModal = type;
         if (typeModal == 0) {
             modalName.setText("Thêm sản phẩm");
-        } else if (typeModal == 1){
-            if (tempDetailInvoice == null) handleClose();
+        } else if (typeModal == 1) {
+            if (tempDetailInvoice == null)
+                handleClose();
             modalName.setText("Sửa số lượng sản phẩm");
         }
     }
@@ -62,9 +66,8 @@ public class SellingProductModalController {
                 product.getId(),
                 product.getName(),
                 1,
-               product.getSellingPrice(),
-                BigDecimal.ZERO
-        );
+                product.getSellingPrice(),
+                BigDecimal.ZERO);
     }
 
     private boolean isValidInput() {
@@ -73,23 +76,24 @@ public class SellingProductModalController {
         int stockQuantity = ProductBUS.getInstance().getByIdLocal(tempDetailInvoice.getProductId()).getStockQuantity();
 
         if (quantity.isEmpty()) {
-            NotificationUtils.showErrorAlert("Số lượng không được để trống.", "Thông báo");
+            NotificationUtils.showErrorAlert(AppMessages.INVOICE_DETAIL_QUANTITY_EMPTY, AppMessages.DIALOG_TITLE);
             clearAndFocus(txtQuantity);
             isValid = false;
         } else {
             try {
                 int quantityValue = Integer.parseInt(quantity);
                 if (quantityValue < 1) {
-                    NotificationUtils.showErrorAlert("Số lượng phải lớn hơn hoặc bằng 1.", "Thông báo");
+                    NotificationUtils.showErrorAlert(AppMessages.INVOICE_DETAIL_QUANTITY_MIN, AppMessages.DIALOG_TITLE);
                     clearAndFocus(txtQuantity);
                     isValid = false;
                 } else if (quantityValue > stockQuantity) {
-                    NotificationUtils.showErrorAlert("Vượt quá số lượng tồn kho!", "Thông báo");
+                    NotificationUtils.showErrorAlert(AppMessages.INVOICE_DETAIL_QUANTITY_EXCEED,
+                            AppMessages.DIALOG_TITLE);
                     clearAndFocus(txtQuantity);
                     isValid = false;
                 }
             } catch (NumberFormatException e) {
-                NotificationUtils.showErrorAlert("Số lượng phải là số nguyên hợp lệ.", "Thông báo");
+                NotificationUtils.showErrorAlert(AppMessages.INVOICE_DETAIL_QUANTITY_INVALID, AppMessages.DIALOG_TITLE);
                 clearAndFocus(txtQuantity);
                 isValid = false;
             }
@@ -97,7 +101,6 @@ public class SellingProductModalController {
 
         return isValid;
     }
-
 
     private void handleSave() {
         if (typeModal == 0) {
@@ -118,16 +121,11 @@ public class SellingProductModalController {
                     tempDetailInvoice.getName(),
                     quantity,
                     price,
-                    totalPrice
-            );
+                    totalPrice);
 
-            if (temp != null) {
-                isSaved = true;
-                tempDetailInvoice = new TempDetailInvoiceDTO(temp);
-                handleClose();
-            } else {
-                NotificationUtils.showErrorAlert("Có lỗi khi thêm chi tiết hóa đơn. Vui lòng thử lại.", "Thông báo");
-            }
+            isSaved = true;
+            tempDetailInvoice = new TempDetailInvoiceDTO(temp);
+            handleClose();
         }
     }
 
@@ -136,7 +134,8 @@ public class SellingProductModalController {
             int quantity = Integer.parseInt(txtQuantity.getText().trim());
             isSaved = true;
             tempDetailInvoice.setQuantity(quantity);
-            tempDetailInvoice.setTotalPrice(tempDetailInvoice.getPrice().multiply(BigDecimal.valueOf(tempDetailInvoice.getQuantity())));
+            tempDetailInvoice.setTotalPrice(
+                    tempDetailInvoice.getPrice().multiply(BigDecimal.valueOf(tempDetailInvoice.getQuantity())));
             handleClose();
         }
     }

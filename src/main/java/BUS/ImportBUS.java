@@ -23,8 +23,8 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
         return ImportDAL.getInstance().getAll();
     }
 
-    public boolean delete(Integer id, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode() || id == null || id <= 0)
+    public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || id == null || id <= 0)
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 16)) {
             return false;
@@ -48,8 +48,8 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
         return null;
     }
 
-    public boolean insert(ImportDTO obj, int employee_roleId, int codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE.getCode() || obj == null)
+    public boolean insert(ImportDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
+        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || obj == null)
             return false;
         if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 15)
                 || !isValidateImportInput(obj)) {

@@ -21,7 +21,7 @@ public class InvoiceService {
 
         if (invBus.isLocalEmpty())
             invBus.loadLocal();
-        if (!invBus.insert(invoice, employee_roleId, ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE.getCode(),
+        if (!invBus.insert(invoice, employee_roleId, ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE,
                 eployeeLoginId)) {
             return false;
         }
@@ -31,9 +31,9 @@ public class InvoiceService {
         // Không quan trọng invoiceId của từng thằng trong list. vì sẽ set lại dưới
         // database
         if (!dinvBus.createDetailInvoiceByInvoiceId(invoice.getId(), employee_roleId, list,
-                ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE.getCode(), eployeeLoginId)) {
+                ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE, eployeeLoginId)) {
             // Rollback nếu lỗi
-            invBus.delete(invoice.getId(), employee_roleId, ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE.getCode(),
+            invBus.delete(invoice.getId(), employee_roleId, ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE,
                     eployeeLoginId);
             return false;
         }
