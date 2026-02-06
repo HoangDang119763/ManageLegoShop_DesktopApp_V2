@@ -1,4 +1,5 @@
 package DAL;
+
 import DTO.PermissionDTO;
 import DTO.RolePermissionDTO;
 
@@ -7,6 +8,7 @@ import java.util.ArrayList;
 
 public class PermissionDAL extends BaseDAL<PermissionDTO, Integer> {
     private static final PermissionDAL INSTANCE = new PermissionDAL();
+
     private PermissionDAL() {
         super(ConnectApplication.getInstance().getConnectionFactory(), "permission", "id");
     }
@@ -20,8 +22,8 @@ public class PermissionDAL extends BaseDAL<PermissionDTO, Integer> {
         return new PermissionDTO(
                 resultSet.getInt("id"),
                 resultSet.getString("name"),
-                resultSet.getInt("module_id")
-        );
+                resultSet.getString("permission_key"),
+                resultSet.getInt("module_id"));
     }
 
     @Override
@@ -44,7 +46,7 @@ public class PermissionDAL extends BaseDAL<PermissionDTO, Integer> {
         ArrayList<PermissionDTO> list = new ArrayList<>();
 
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setInt(1, moduleId);
             try (ResultSet resultSet = statement.executeQuery()) {

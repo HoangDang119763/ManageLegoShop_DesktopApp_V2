@@ -66,7 +66,13 @@ INSERT INTO `status` (`name`, `description`, `type`) VALUES
 ('PENDING', 'Đơn đang chờ quản lý phê duyệt', 'LEAVE_REQUEST'),
 ('APPROVED', 'Đơn đã được chấp thuận', 'LEAVE_REQUEST'),
 ('REJECTED', 'Đơn bị từ chối', 'LEAVE_REQUEST'),
-('CANCELED', 'Đơn đã bị hủy bởi nhân viên', 'LEAVE_REQUEST');
+('CANCELED', 'Đơn đã bị hủy bởi nhân viên', 'LEAVE_REQUEST'),
+-- Nhóm Lịch sử công tác - Working History
+('PENDING', 'Quyết định đang chờ cấp trên phê duyệt', 'WORKING_HISTORY'),
+('APPROVED', 'Quyết định đã được duyệt, chờ ngày có hiệu lực', 'WORKING_HISTORY'),
+('EFFECTIVE', 'Quyết định đã chính thức đi vào hiệu lực', 'WORKING_HISTORY'),
+('REJECTED', 'Quyết định bị cấp trên từ chối', 'WORKING_HISTORY'),
+('CANCELED', 'QVERTISE định đã bị hủy bỏ trước khi thực hiện', 'WORKING_HISTORY');
 
 -- Tạo bảng Role
 CREATE TABLE `role` (
@@ -118,7 +124,6 @@ INSERT INTO `module` (`id`, `name`) VALUES
 (10, 'Quản lý tài khoản'),
 (11, 'Thống kê');
 
-DROP TABLE IF EXISTS `permission`;
 CREATE TABLE `permission` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -128,48 +133,48 @@ CREATE TABLE `permission` (
   FOREIGN KEY (`module_id`) REFERENCES `module` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-INSERT INTO `permission` (`id`, `name`, `permission_key`, `module_id`) VALUES
+INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 -- Quản lý nhân viên
-(1, 'Thêm nhân viên', 'EMPLOYEE_ADD', 1),
-(2, 'Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
-(3, 'Sửa nhân viên', 'EMPLOYEE_EDIT', 1),
+('Thêm nhân viên', 'EMPLOYEE_INSERT', 1),
+('Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
+('Cập nhật nhân viên', 'EMPLOYEE_UPDATE', 1),
 -- Quản lý khách hàng
-(4, 'Thêm khách hàng', 'CUSTOMER_ADD', 2),
-(5, 'Xóa khách hàng', 'CUSTOMER_DELETE', 2),
-(6, 'Sửa khách hàng', 'CUSTOMER_EDIT', 2),
+('Thêm khách hàng', 'CUSTOMER_INSERT', 2),
+('Xóa khách hàng', 'CUSTOMER_DELETE', 2),
+('Cập nhật khách hàng', 'CUSTOMER_UPDATE', 2),
 -- Quản lý sản phẩm
-(7, 'Thêm sản phẩm', 'PRODUCT_ADD', 3),
-(8, 'Xóa sản phẩm', 'PRODUCT_DELETE', 3),
-(9, 'Sửa sản phẩm', 'PRODUCT_EDIT', 3),
+('Thêm sản phẩm', 'PRODUCT_INSERT', 3),
+('Xóa sản phẩm', 'PRODUCT_DELETE', 3),
+('Cập nhật sản phẩm', 'PRODUCT_UPDATE', 3),
 -- Quản lý nhà cung cấp
-(10, 'Thêm nhà cung cấp', 'SUPPLIER_ADD', 4),
-(11, 'Xóa nhà cung cấp', 'SUPPLIER_DELETE', 4),
-(12, 'Sửa nhà cung cấp', 'SUPPLIER_EDIT', 4),
+('Thêm nhà cung cấp', 'SUPPLIER_INSERT', 4),
+('Xóa nhà cung cấp', 'SUPPLIER_DELETE', 4),
+('Cập nhật nhà cung cấp', 'SUPPLIER_UPDATE', 4),
 -- Quản lý bán hàng
-(13, 'Tạo đơn hàng', 'ORDER_CREATE', 5),
-(14, 'Xem đơn hàng', 'ORDER_VIEW', 5),
+('Tạo đơn hàng', 'ORDER_CREATE', 5),
+('Xem đơn hàng', 'ORDER_VIEW', 5),
 -- Quản lý nhập hàng
-(15, 'Tạo phiếu nhập hàng', 'IMPORT_CREATE', 6),
-(16, 'Xem phiếu nhập hàng', 'IMPORT_VIEW', 6),
+('Tạo phiếu nhập hàng', 'IMPORT_CREATE', 6),
+('Xem phiếu nhập hàng', 'IMPORT_VIEW', 6),
 -- Quản lý thể loại
-(17, 'Thêm thể loại', 'CATEGORY_ADD', 7),
-(18, 'Xóa thể loại', 'CATEGORY_DELETE', 7),
-(19, 'Sửa thể loại', 'CATEGORY_EDIT', 7),
+('Thêm thể loại', 'CATEGORY_INSERT', 7),
+('Xóa thể loại', 'CATEGORY_DELETE', 7),
+('Cập nhật thể loại', 'CATEGORY_UPDATE', 7),
 -- Quản lý khuyến mãi
-(20, 'Thêm mã giảm giá', 'PROMOTION_ADD', 8),
-(21, 'Xóa mã giảm giá', 'PROMOTION_DELETE', 8),
-(22, 'Sửa mã giảm giá', 'PROMOTION_EDIT', 8),
+('Thêm mã giảm giá', 'PROMOTION_INSERT', 8),
+('Xóa mã giảm giá', 'PROMOTION_DELETE', 8),
+('Cập nhật mã giảm giá', 'PROMOTION_UPDATE', 8),
 -- Quản lý chức vụ & phân quyền
-(23, 'Thêm chức vụ', 'ROLE_ADD', 9),
-(24, 'Xóa chức vụ', 'ROLE_DELETE', 9),
-(25, 'Sửa chức vụ', 'ROLE_EDIT', 9),
-(26, 'Sửa phân quyền', 'PERMISSION_EDIT', 9),
+('Thêm chức vụ', 'ROLE_INSERT', 9),
+('Xóa chức vụ', 'ROLE_DELETE', 9),
+('Cập nhật chức vụ', 'ROLE_UPDATE', 9),
+('Cập nhật phân quyền', 'PERMISSION_UPDATE', 9),
 -- Quản lý tài khoản
-(27, 'Tạo tài khoản', 'ACCOUNT_ADD', 10),
-(28, 'Xóa tài khoản', 'ACCOUNT_DELETE', 10),
-(29, 'Sửa tài khoản', 'ACCOUNT_EDIT', 10),
+('Tạo tài khoản', 'ACCOUNT_INSERT', 10),
+('Xóa tài khoản', 'ACCOUNT_DELETE', 10),
+('Cập nhật tài khoản', 'ACCOUNT_UPDATE', 10),
 -- Thống kê
-(30, 'Xem thống kê', 'STATISTICS_VIEW', 11);
+('Xem thống kê', 'STATISTICS_VIEW', 11);
 
 CREATE TABLE `role_permission` (
   `role_id` int(11) NOT NULL,
@@ -214,42 +219,44 @@ CREATE TABLE `employee` (
   `email` VARCHAR(255) DEFAULT NULL,
   `date_of_birth` DATE DEFAULT NULL,
   `gender` VARCHAR(255) DEFAULT NULL,
-  `role_id` INT(11) DEFAULT NULL,           -- Role hiện tại
-  `status_id` INT NOT NULL,                  -- Trạng thái (FK sang bảng status)
+  `role_id` INT(11) DEFAULT NULL,
+  `status_id` INT NOT NULL,
   `account_id` INT DEFAULT NULL,
-  -- Các cờ hiệu cho nghiệp vụ Lương & Bảo hiểm
-  `is_health_insurance` TINYINT(1) DEFAULT '0',
+  -- Chỉ mã BHYT là dùng String
+  `health_ins_code` VARCHAR(50) DEFAULT NULL, 
+  -- Các cờ hiệu Boolean (0: Không, 1: Có)
   `is_social_insurance` TINYINT(1) DEFAULT '0',
   `is_unemployment_insurance` TINYINT(1) DEFAULT '0',
   `is_personal_income_tax` TINYINT(1) DEFAULT '0',
   `is_transportation_support` TINYINT(1) DEFAULT '0',
   `is_accommodation_support` TINYINT(1) DEFAULT '0',
-  -- Theo dõi lịch sử thăng tiến/đổi chức vụ
-  `updated_role_at` TIMESTAMP NULL DEFAULT NULL, -- Ngày cập nhật Role gần nhất
-  `previous_role` INT DEFAULT NULL,              -- ID của Role cũ trước đó
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   CONSTRAINT `fk_employee_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_employee_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`),
-  CONSTRAINT `fk_employee_prev_role` FOREIGN KEY (`previous_role`) REFERENCES `role` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_employee_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 INSERT INTO `employee` 
-(`first_name`, `last_name`, `phone`, `email`, `date_of_birth`, `role_id`, `status_id`, `gender`, `account_id`, `is_health_insurance`, `is_social_insurance`, `is_unemployment_insurance`, `is_personal_income_tax`, `is_transportation_support`, `is_accommodation_support`) 
+(
+  `first_name`, `last_name`, `phone`, `email`, `date_of_birth`, 
+  `role_id`, `status_id`, `gender`, `account_id`, 
+  `health_ins_code`, `is_social_insurance`, `is_unemployment_insurance`, 
+  `is_personal_income_tax`, `is_transportation_support`, `is_accommodation_support`
+) 
 VALUES 
-('Đặng Huy', 'Hoàng', '0123456789', 'hoang.dh@company.com', '2004-06-11', 1, 1, 'Nam', 1, 1, 1, 1, 1, 1, 1),
-('Nguyễn Thành', 'Long', '0987654321', 'long.nt@company.com', '2003-04-11', 2, 1, 'Nam', 2, 1, 1, 1, 1, 0, 0),
-('Tần Thiên', 'Lang', '0912345678', 'lang.tt@company.com', '2000-01-15', 3, 1, 'Nam', 3, 1, 1, 1, 0, 1, 0),
-('Lê Thị', 'Bích', '0933456789', 'bich.lt@company.com', '1988-02-20', 3, 1, 'Nữ', 4, 1, 0, 1, 1, 0, 1),
-('Phạm Minh', 'Chính', '0944567890', 'chinh.pm@company.com', '1985-03-25', 3, 1, 'Nam', 5, 1, 1, 0, 1, 1, 1),
-('Nguyễn Thị', 'Diệu', '0955678901', 'dieu.nt@company.com', '1992-04-30', 3, 1, 'Nữ', 6, 0, 0, 0, 1, 0, 0),
-('Đỗ Văn', 'Em', '0966789012', 'em.dv@company.com', '1995-05-05', 6, 1, 'Nam', 7, 1, 1, 1, 0, 0, 0),
-('Bùi Thị', 'Phượng', '0977890123', 'phuong.bt@company.com', '1993-06-10', 5, 1, 'Nữ', 8, 1, 1, 1, 1, 1, 0),
-('Ngô Minh', 'Giàu', '0988901234', 'giau.nm@company.com', '1991-07-15', 4, 1, 'Nam', 9, 1, 1, 1, 0, 1, 1),
-('Trịnh Văn', 'Hùng', '0999012345', 'hung.tv@company.com', '1989-08-20', 2, 2, 'Nam', 10, 1, 1, 1, 1, 0, 0),
-('Vũ Thị', 'Iến', '0900123456', 'ien.vt@company.com', '1994-09-25', 1, 1, 'Nữ', 11, 1, 1, 1, 1, 1, 1),
-('Lý Văn', 'Nam', '0911234567', 'nam.lv@company.com', '1996-10-30', 1, 1, 'Nam', 12, 1, 1, 1, 1, 0, 0);
+('Đặng Huy', 'Hoàng', '0123456789', 'hoang.dh@company.com', '2004-06-11', 1, 1, 'Nam', 1, 'HI-2026001', 1, 1, 1, 1, 1),
+('Nguyễn Thành', 'Long', '0987654321', 'long.nt@company.com', '2003-04-11', 2, 1, 'Nam', 2, 'HI-2026002', 1, 1, 1, 0, 0),
+('Tần Thiên', 'Lang', '0912345678', 'lang.tt@company.com', '2000-01-15', 3, 1, 'Nam', 3, 'HI-2026003', 1, 1, 0, 1, 0),
+('Lê Thị', 'Bích', '0933456789', 'bich.lt@company.com', '1988-02-20', 3, 1, 'Nữ', 4, 'HI-2026004', 0, 1, 1, 0, 1),
+('Phạm Minh', 'Chính', '0944567890', 'chinh.pm@company.com', '1985-03-25', 3, 1, 'Nam', 5, 'HI-2026005', 1, 0, 1, 1, 1),
+('Nguyễn Thị', 'Diệu', '0955678901', 'dieu.nt@company.com', '1992-04-30', 3, 1, 'Nữ', 6, NULL, 0, 0, 1, 0, 0),
+('Đỗ Văn', 'Em', '0966789012', 'em.dv@company.com', '1995-05-05', 6, 1, 'Nam', 7, 'HI-2026007', 1, 1, 0, 0, 0),
+('Bùi Thị', 'Phượng', '0977890123', 'phuong.bt@company.com', '1993-06-10', 5, 1, 'Nữ', 8, 'HI-2026008', 1, 1, 1, 1, 0),
+('Ngô Minh', 'Giàu', '0988901234', 'giau.nm@company.com', '1991-07-15', 4, 1, 'Nam', 9, 'HI-2026009', 1, 1, 0, 1, 1),
+('Trịnh Văn', 'Hùng', '0999012345', 'hung.tv@company.com', '1989-08-20', 2, 2, 'Nam', 10, 'HI-2026010', 1, 1, 1, 0, 0),
+('Vũ Thị', 'Iến', '0900123456', 'ien.vt@company.com', '1994-09-25', 1, 1, 'Nữ', 11, 'HI-2026011', 1, 1, 1, 1, 1),
+('Lý Văn', 'Nam', '0911234567', 'nam.lv@company.com', '1996-10-30', 1, 1, 'Nam', 12, 'HI-2026012', 1, 1, 1, 0, 0);
     
 -- Giữ nguyên cấu trúc bảng account
 CREATE TABLE `account` (
@@ -424,14 +431,14 @@ CREATE TABLE `product` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 INSERT INTO `product` (`id`, `name`, `stock_quantity`, `selling_price`, `import_price`, `status_id`, `description`, `image_url`, `category_id`) VALUES
-('SP00001', 'Naruto - 01', 38, 21000.00, 20000.00, 7, 'Minifigure nhân vật Naruto.', 'images/product/sp00001.png', 2),
-('SP00002', 'Naruto - 02', 37, 18900.00, 18000.00, 7, 'Minifigure Naruto trong trạng thái chiến đấu.', 'images/product/sp00002.png', 2),
-('SP00003', 'Sasuke Uchiha', 0, 0.00, 0.00, 8, 'Minifigure nhân vật Sasuke Uchiha từ series Naruto.', NULL, 2),
-('SP00004', 'Kakashi Hatake', 19, 15750.00, 15000.00, 7, 'Minifigure nhân vật Kakashi với Sharingan.', NULL, 2),
-('SP00005', 'Sakura Haruno', 20, 26250.00, 25000.00, 7, 'Minifigure nhân vật Sakura từ series Naruto.', NULL, 2),
-('SP00007', 'Darth Vader', 19, 42000.00, 40000.00, 7, 'Minifigure Darth Vader với lightsaber đỏ và mặt nạ.', NULL, 2),
-('SP00008', 'Iron Man Mark 85', 20, 31500.00, 30000.00, 7, 'Minifigure Iron Man trong bộ giáp Mark 85 từ Avengers: Endgame.', NULL, 2),
-('SP00010', 'Harry Potter', 19, 105000.00, 100000.00, 7, 'Minifigure Harry Potter với đũa phép và kính tròn.', NULL, 2),
+('SP00001', 'Naruto - 01', 38, 21000.00, 20000.00, 6, 'Minifigure nhân vật Naruto.', 'images/product/sp00001.png', 2),
+('SP00002', 'Naruto - 02', 37, 18900.00, 18000.00, 6, 'Minifigure Naruto trong trạng thái chiến đấu.', 'images/product/sp00002.png', 2),
+('SP00003', 'Sasuke Uchiha', 0, 0.00, 0.00, 6, 'Minifigure nhân vật Sasuke Uchiha từ series Naruto.', NULL, 2),
+('SP00004', 'Kakashi Hatake', 19, 15750.00, 15000.00, 6, 'Minifigure nhân vật Kakashi với Sharingan.', NULL, 2),
+('SP00005', 'Sakura Haruno', 20, 26250.00, 25000.00, 6, 'Minifigure nhân vật Sakura từ series Naruto.', NULL, 2),
+('SP00007', 'Darth Vader', 19, 42000.00, 40000.00, 6, 'Minifigure Darth Vader với lightsaber đỏ và mặt nạ.', NULL, 2),
+('SP00008', 'Iron Man Mark 85', 20, 31500.00, 30000.00, 6, 'Minifigure Iron Man trong bộ giáp Mark 85 từ Avengers: Endgame.', NULL, 2),
+('SP00010', 'Harry Potter', 19, 105000.00, 100000.00, 6, 'Minifigure Harry Potter với đũa phép và kính tròn.', NULL, 2),
 ('SP00011', 'LEGO Technic Bugatti Chiron', 20, 31500.00, 30000.00, 7, 'Mô hình kỹ thuật cao của siêu xe Bugatti Chiron.', NULL, 3),
 ('SP00014', 'LEGO Technic Race Car', 20, 47250.00, 45000.00, 7, 'Xe đua công thức 1 với động cơ pistons hoạt động.', NULL, 3),
 ('SP00019', 'LEGO Architecture Empire State Building', 0, 0.00, 0.00, 7, 'Mô hình chi tiết của tòa nhà Empire State.', NULL, 4),
@@ -729,3 +736,27 @@ SELECT
     IF(is_social_insurance = 1, 800000, 0),
     IF(is_unemployment_insurance = 1, 100000, 0)
 FROM `employee`;
+
+CREATE TABLE `working_history` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `employee_id` INT NOT NULL,           -- Nhân viên được điều chuyển
+  -- Theo dõi phòng ban (Nếu bạn có bảng department)
+  `old_department_id` INT DEFAULT NULL, 
+  `new_department_id` INT NOT NULL,
+  -- Theo dõi chức vụ (Role)
+  `old_role_id` INT DEFAULT NULL, 
+  `new_role_id` INT NOT NULL,
+  `effective_date` DATE NOT NULL,       -- Ngày quyết định có hiệu lực
+  `approver_id` INT DEFAULT NULL,      -- Người duyệt (FK ngược lại bảng employee)
+  `reason` TEXT,                        -- Lý do điều chuyển/thăng chức
+  `decision_number` VARCHAR(50),        -- Số quyết định (nếu có)
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `status_id` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  -- Các ràng buộc khóa ngoại
+  CONSTRAINT `fk_history_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`),
+  CONSTRAINT `fk_history_old_role` FOREIGN KEY (`old_role_id`) REFERENCES `role` (`id`),
+  CONSTRAINT `fk_history_new_role` FOREIGN KEY (`new_role_id`) REFERENCES `role` (`id`),
+  CONSTRAINT `fk_history_approver` FOREIGN KEY (`approver_id`) REFERENCES `employee` (`id`),
+  CONSTRAINT `fk_history_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

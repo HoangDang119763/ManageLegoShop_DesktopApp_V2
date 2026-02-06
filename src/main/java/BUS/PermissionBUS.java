@@ -5,7 +5,7 @@ import DTO.PermissionDTO;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class PermissionBUS extends BaseBUS <PermissionDTO, Integer> {
+public class PermissionBUS extends BaseBUS<PermissionDTO, Integer> {
     private static final PermissionBUS INSTANCE = new PermissionBUS();
 
     private PermissionBUS() {
@@ -21,10 +21,22 @@ public class PermissionBUS extends BaseBUS <PermissionDTO, Integer> {
     }
 
     public PermissionDTO getByIdLocal(int id) {
-        if (id <= 0) return null;
+        if (id <= 0)
+            return null;
         for (PermissionDTO permission : arrLocal) {
             if (Objects.equals(permission.getId(), id)) {
-                return new PermissionDTO (permission);
+                return new PermissionDTO(permission);
+            }
+        }
+        return null;
+    }
+
+    public PermissionDTO getByPermissionKeyLocal(String permissionKey) {
+        if (permissionKey == null || permissionKey.isEmpty())
+            return null;
+        for (PermissionDTO permission : arrLocal) {
+            if (permissionKey.equalsIgnoreCase(permission.getPermissionKey())) {
+                return new PermissionDTO(permission);
             }
         }
         return null;

@@ -4,7 +4,9 @@ import BUS.AccountBUS;
 import BUS.PermissionBUS;
 import BUS.RolePermissionBUS;
 import DTO.EmployeeDTO;
+import DTO.PermissionDTO;
 import DTO.RolePermissionDTO;
+import ENUM.PermissionKey;
 
 import java.util.HashSet;
 
@@ -12,11 +14,11 @@ public class SessionManagerService {
     private static SessionManagerService instance;
     private EmployeeDTO loggedInEmployee;
     private HashSet<Integer> allowedModules;
-    private HashSet<Integer> allowedPermissions;
+    private HashSet<String> allowedPermissionKeys;
 
     private SessionManagerService() {
         allowedModules = new HashSet<>();
-        allowedPermissions = new HashSet<>();
+        allowedPermissionKeys = new HashSet<>();
     }
 
     public static SessionManagerService getInstance() {
@@ -34,35 +36,53 @@ public class SessionManagerService {
     public void logout() {
         this.loggedInEmployee = null;
         allowedModules.clear();
-        allowedPermissions.clear();
+        allowedPermissionKeys.clear();
     }
 
     public boolean hasModuleAccess(int moduleId) {
         return allowedModules.contains(moduleId);
     }
 
-    public boolean hasPermission(int permissionId) {
-        return allowedPermissions.contains(permissionId);
+    public boolean hasPermission(PermissionKey permissionKey) {
+        if (permissionKey == null) {
+            return false;
+        }
+        return allowedPermissionKeys.contains(permissionKey.name());
+    }
+
+    public boolean hasPermission(String permissionKey) {
+        if (permissionKey == null || permissionKey.isEmpty()) {
+            return false;
+        }
+        return allowedPermissionKeys.contains(permissionKey);
     }
 
     private void loadPermissions() {
         allowedModules.clear();
-        allowedPermissions.clear();
-        if (loggedInEmployee == null) return;
+        allowedPermissionKeys.clear();
+        if (loggedInEmployee == null)
+            return;
 
         PermissionBUS permissionBUS = PermissionBUS.getInstance();
         RolePermissionBUS rolePermissionBUS = RolePermissionBUS.getInstance();
 
-        if (permissionBUS.isLocalEmpty()) permissionBUS.loadLocal();
-        if (rolePermissionBUS.isLocalEmpty()) rolePermissionBUS.loadLocal();
+        if (permissionBUS.isLocalEmpty())
+            permissionBUS.loadLocal();
+        if (rolePermissionBUS.isLocalEmpty())
+            rolePermissionBUS.loadLocal();
 
         for (RolePermissionDTO rp : rolePermissionBUS.getAllRolePermissionByRoleIdLocal(loggedInEmployee.getRoleId())) {
             if (rp.isStatus()) {
-                allowedPermissions.add(rp.getPermissionId());
-
-                // Chỉ lấy `moduleId` một lần
-                int moduleId = permissionBUS.getByIdLocal(rp.getPermissionId()).getModule_id();
-                allowedModules.add(moduleId);
+                // Lấy permission để có được permission_key
+                PermissionDTO permission = permissionBUS.getByIdLocal(rp.getPermissionId());
+                if (permission != null) {
+                    // Lưu permission key
+                    if (permission.getPermissionKey() != null && !permission.getPermissionKey().isEmpty()) {
+                        allowedPermissionKeys.add(permission.getPermissionKey());
+                    }
+                    // Lưu moduleId
+                    allowedModules.add(permission.getModule_id());
+                }
             }
         }
     }
@@ -78,13 +98,16 @@ public class SessionManagerService {
     public int employeeLoginId() {
         return loggedInEmployee.getId();
     }
+
     public int employeeRoleId() {
         return loggedInEmployee.getRoleId();
     }
 
     public boolean canManage() {
-        for (Integer permissionId : allowedPermissions) {
-            if (permissionId != 13 && permissionId != 15) {
+        // Có quyền quản lý nếu có quyền gì đó ngoài bán hàng (module 5) và nhập hàng
+        // (module 6)
+        for (Integer moduleId : allowedModules) {
+            if (moduleId != 5 && moduleId != 6) {
                 return true;
             }
         }
@@ -92,10 +115,10 @@ public class SessionManagerService {
     }
 
     public boolean canSelling() {
-        return hasPermission(13);
+        return hasModuleAccess(5);
     }
 
     public boolean canImporting() {
-        return hasPermission(15);
+        return hasModuleAccess(6);
     }
 }

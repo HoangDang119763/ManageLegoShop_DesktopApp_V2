@@ -63,8 +63,6 @@ public class LoginService {
         // Check employee status and role
         boolean isActive = employee.getStatusId() == AvailableUtils.getInstance().getStatusIdByTypeAndName(
                 StatusType.EMPLOYEE, Status.Employee.ACTIVE);
-        System.out.println(AvailableUtils.getInstance().getStatusIdByTypeAndName(
-                StatusType.EMPLOYEE, Status.Employee.ACTIVE));
         boolean hasValidRole = employee.getRoleId() != 0;
         boolean hasAccess = SessionManagerService.getInstance().numAllowedModules() != 0;
         if (!isActive || !hasValidRole || !hasAccess) {

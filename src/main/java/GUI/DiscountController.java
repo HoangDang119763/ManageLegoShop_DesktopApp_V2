@@ -1,29 +1,30 @@
 
-    package GUI;
+package GUI;
 
-    import BUS.DetailDiscountBUS;
-    import BUS.DiscountBUS;
-    import DTO.DetailDiscountDTO;
-    import DTO.DiscountDTO;
-    import INTERFACE.IController;
-    import SERVICE.DiscountService;
-    import SERVICE.SessionManagerService;
-    import UTILS.AvailableUtils;
-    import UTILS.NotificationUtils;
-    import UTILS.UiUtils;
-    import UTILS.ValidationUtils;
-    import javafx.application.Platform;
-    import javafx.beans.property.SimpleStringProperty;
-    import javafx.collections.FXCollections;
-    import javafx.fxml.FXML;
-    import javafx.scene.control.*;
-    import javafx.scene.control.cell.PropertyValueFactory;
-    import javafx.scene.layout.HBox;
+import BUS.DetailDiscountBUS;
+import BUS.DiscountBUS;
+import DTO.DetailDiscountDTO;
+import DTO.DiscountDTO;
+import ENUM.PermissionKey;
+import INTERFACE.IController;
+import SERVICE.DiscountService;
+import SERVICE.SessionManagerService;
+import UTILS.AvailableUtils;
+import UTILS.NotificationUtils;
+import UTILS.UiUtils;
+import UTILS.ValidationUtils;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 
-    import java.math.BigDecimal;
-    import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
-    public class DiscountController implements IController {
+public class DiscountController implements IController {
     @FXML
     private TableView<DiscountDTO> tblDiscount;
     @FXML
@@ -55,38 +56,41 @@
 
     @FXML
     public void initialize() {
-        if (DiscountBUS.getInstance().isLocalEmpty()) DiscountBUS.getInstance().loadLocal();
-        if (DetailDiscountBUS.getInstance().isLocalEmpty()) DetailDiscountBUS.getInstance().loadLocal();
+        if (DiscountBUS.getInstance().isLocalEmpty())
+            DiscountBUS.getInstance().loadLocal();
+        if (DetailDiscountBUS.getInstance().isLocalEmpty())
+            DetailDiscountBUS.getInstance().loadLocal();
         tblDiscount.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblDetailDiscount.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblDiscount.getSelectionModel().clearSelection());
         Platform.runLater(() -> tblDetailDiscount.getSelectionModel().clearSelection());
 
-
         hideButtonWithoutPermission();
-//        loadComboBox();
+        // loadComboBox();
         setupListeners();
 
         loadTable();
-//        applyFilters();
+        // applyFilters();
     }
+
     @Override
     public void loadTable() {
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         tlb_col_code.setCellValueFactory(new PropertyValueFactory<>("code"));
         tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
-        tlb_col_type.setCellValueFactory(cellData ->
-                formatCell(cellData.getValue().getType() == 0 ? "Phần trăm" : "Giảm cứng"));
-        tlb_col_startDate.setCellValueFactory(cellData ->
-                formatCell(validationUtils.formatDateTime(cellData.getValue().getStartDate())));
-        tlb_col_endDate.setCellValueFactory(cellData ->
-                formatCell(validationUtils.formatDateTime(cellData.getValue().getEndDate())));
+        tlb_col_type.setCellValueFactory(
+                cellData -> formatCell(cellData.getValue().getType() == 0 ? "Phần trăm" : "Giảm cứng"));
+        tlb_col_startDate.setCellValueFactory(
+                cellData -> formatCell(validationUtils.formatDateTime(cellData.getValue().getStartDate())));
+        tlb_col_endDate.setCellValueFactory(
+                cellData -> formatCell(validationUtils.formatDateTime(cellData.getValue().getEndDate())));
         UiUtils.gI().addTooltipToColumn(tlb_col_name, 10);
         tblDiscount.setItems(FXCollections.observableArrayList(DiscountBUS.getInstance().getAllLocal()));
     }
 
     public void loadSubTable(String discountCode) {
-        if (discountCode == null || discountCode.isEmpty()) return;
+        if (discountCode == null || discountCode.isEmpty())
+            return;
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         this.code.setText(selectedDiscount.getCode());
         this.name.setText(selectedDiscount.getName());
@@ -94,8 +98,8 @@
         this.startDate.setText(validationUtils.formatDateTime(selectedDiscount.getStartDate()));
         this.endDate.setText(validationUtils.formatDateTime(selectedDiscount.getEndDate()));
 
-        tlb_col_totalPriceInvoice.setCellValueFactory(cellData ->
-                formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPriceInvoice())));
+        tlb_col_totalPriceInvoice.setCellValueFactory(
+                cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPriceInvoice())));
         tlb_col_discountAmount.setCellValueFactory(cellData -> {
             BigDecimal discountValue = cellData.getValue().getDiscountAmount();
             if (!isNotSelectedDiscount() && selectedDiscount.getType() == 0) {
@@ -107,7 +111,8 @@
             }
         });
         UiUtils.gI().addTooltipToColumn(tlb_col_discountAmount, 10);
-        tblDetailDiscount.setItems(FXCollections.observableArrayList(DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountIdLocal(discountCode)));
+        tblDetailDiscount.setItems(FXCollections.observableArrayList(
+                DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountIdLocal(discountCode)));
         tblDetailDiscount.getSelectionModel().clearSelection();
     }
 
@@ -176,8 +181,7 @@
         DiscountAdvanceSearchModalController modalController = UiUtils.gI().openStageWithController(
                 "/GUI/DiscountAdvanceSearchModal.fxml",
                 null,
-                "Tiềm kiếm nâng cao"
-        );
+                "Tiềm kiếm nâng cao");
         if (modalController != null && modalController.isSaved()) {
             tblDiscount.setItems(FXCollections.observableArrayList(modalController.getFilteredDiscounts()));
             tblDiscount.getSelectionModel().clearSelection();
@@ -189,8 +193,7 @@
         DiscountModalController modalController = UiUtils.gI().openStageWithController(
                 "/GUI/DiscountModal.fxml",
                 controller -> controller.setTypeModal(0),
-                "Thêm khuyến mãi"
-        );
+                "Thêm khuyến mãi");
         if (modalController != null && modalController.isSaved()) {
             NotificationUtils.showInfoAlert("Thêm khuyến mãi thành công.", "Thông báo");
             resetFilters();
@@ -213,11 +216,10 @@
                     controller.setDiscount(selectedDiscount);
                     controller.setTypeModal(1);
                 },
-                "Sửa khuyến mãi"
-        );
+                "Sửa khuyến mãi");
         if (modalController != null && modalController.isSaved()) {
             NotificationUtils.showInfoAlert("Sửa khuyến mãi thành công.", "Thông báo");
-                resetFilters();
+            resetFilters();
         }
     }
 
@@ -230,38 +232,44 @@
             NotificationUtils.showErrorAlert("Khuyến mãi đã được sử dụng, không thể xóa.", "Thông báo");
             return;
         }
-        if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa khuyến mãi này?", "Thông báo xác nhận")) return;
+        if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa khuyến mãi này?", "Thông báo xác nhận"))
+            return;
 
-        int deleteResult = DiscountService.getInstance().deleteDiscountWithDetailDiscounts(selectedDiscount.getCode(),SessionManagerService.getInstance().employeeRoleId(), SessionManagerService.getInstance().employeeLoginId());
+        int deleteResult = DiscountService.getInstance().deleteDiscountWithDetailDiscounts(selectedDiscount.getCode(),
+                SessionManagerService.getInstance().employeeRoleId(),
+                SessionManagerService.getInstance().employeeLoginId());
 
         switch (deleteResult) {
-            case 1 ->
-            {
+            case 1 -> {
                 NotificationUtils.showInfoAlert("Xóa khuyến mãi thành công.", "Thông báo");
                 resetFilters();
             }
             case 2 ->
-                    NotificationUtils.showErrorAlert("Có lỗi khi xóa khuyến mãi. Vui lòng thử lại.", "Thông báo");
+                NotificationUtils.showErrorAlert("Có lỗi khi xóa khuyến mãi. Vui lòng thử lại.", "Thông báo");
             case 3 ->
-                    NotificationUtils.showErrorAlert("Bạn không có quyền \"Xóa khuyến mãi\" để thực hiện thao tác này.", "Thông báo");
+                NotificationUtils.showErrorAlert("Bạn không có quyền \"Xóa khuyến mãi\" để thực hiện thao tác này.",
+                        "Thông báo");
             case 4 ->
-                    NotificationUtils.showErrorAlert("Khuyến mãi đã được sử dụng, không thể xóa.", "Thông báo");
+                NotificationUtils.showErrorAlert("Khuyến mãi đã được sử dụng, không thể xóa.", "Thông báo");
             case 5 ->
-                    NotificationUtils.showErrorAlert("Xóa khuyến mãi thất bại. Vui lòng thử lại sau.", "Thông báo");
+                NotificationUtils.showErrorAlert("Xóa khuyến mãi thất bại. Vui lòng thử lại sau.", "Thông báo");
             default ->
-                    NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
+                NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
         }
     }
 
     @Override
     public void hideButtonWithoutPermission() {
-        boolean canAdd = SessionManagerService.getInstance().hasPermission(20);
-        boolean canEdit = SessionManagerService.getInstance().hasPermission(22);
-        boolean canDelete = SessionManagerService.getInstance().hasPermission(21);
+        boolean canAdd = SessionManagerService.getInstance().hasPermission(PermissionKey.PROMOTION_INSERT);
+        boolean canEdit = SessionManagerService.getInstance().hasPermission(PermissionKey.PROMOTION_UPDATE);
+        boolean canDelete = SessionManagerService.getInstance().hasPermission(PermissionKey.PROMOTION_DELETE);
 
-        if (!canAdd) functionBtns.getChildren().remove(addBtn);
-        if (!canEdit) functionBtns.getChildren().remove(editBtn);
-        if (!canDelete) functionBtns.getChildren().remove(deleteBtn);
+        if (!canAdd)
+            functionBtns.getChildren().remove(addBtn);
+        if (!canEdit)
+            functionBtns.getChildren().remove(editBtn);
+        if (!canDelete)
+            functionBtns.getChildren().remove(deleteBtn);
     }
 
     private boolean isNotSelectedDiscount() {

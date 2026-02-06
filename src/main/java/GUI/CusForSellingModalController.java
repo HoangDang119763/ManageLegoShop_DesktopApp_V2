@@ -6,6 +6,7 @@ import BUS.ProductBUS;
 import BUS.SupplierBUS;
 import DTO.CustomerDTO;
 import DTO.SupplierDTO;
+import ENUM.PermissionKey;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
@@ -33,22 +34,29 @@ public class CusForSellingModalController {
     private AnchorPane functionBtns;
     @FXML
     private TextField txtSearchCustomer;
-    @FXML private TableView<CustomerDTO> tblCustomer;
-    @FXML private TableColumn<CustomerDTO, Integer> tlb_col_id;
-    @FXML private TableColumn<CustomerDTO, String> tlb_col_firstName;
-    @FXML private TableColumn<CustomerDTO, String> tlb_col_lastName;
-    @FXML private TableColumn<CustomerDTO, String> tlb_col_dateOfBirth;
-    @FXML private TableColumn<CustomerDTO, String> tlb_col_phone;
-    @FXML private TableColumn<CustomerDTO, String> tlb_col_address;
+    @FXML
+    private TableView<CustomerDTO> tblCustomer;
+    @FXML
+    private TableColumn<CustomerDTO, Integer> tlb_col_id;
+    @FXML
+    private TableColumn<CustomerDTO, String> tlb_col_firstName;
+    @FXML
+    private TableColumn<CustomerDTO, String> tlb_col_lastName;
+    @FXML
+    private TableColumn<CustomerDTO, String> tlb_col_dateOfBirth;
+    @FXML
+    private TableColumn<CustomerDTO, String> tlb_col_phone;
+    @FXML
+    private TableColumn<CustomerDTO, String> tlb_col_address;
     @Getter
     private boolean isSaved;
     @Getter
     private CustomerDTO selectedCustomer;
 
     @FXML
-    public void initialize()
-    {
-        if  (CustomerBUS.getInstance().isLocalEmpty()) CustomerBUS.getInstance().loadLocal();
+    public void initialize() {
+        if (CustomerBUS.getInstance().isLocalEmpty())
+            CustomerBUS.getInstance().loadLocal();
         setOnMouseClicked();
         hideButtonWithoutPermission();
         loadTable();
@@ -59,8 +67,8 @@ public class CusForSellingModalController {
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_firstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         tlb_col_lastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
-        tlb_col_dateOfBirth.setCellValueFactory(cellData ->
-                new SimpleStringProperty(ValidationUtils.getInstance().formatDateTime(cellData.getValue().getDateOfBirth())));
+        tlb_col_dateOfBirth.setCellValueFactory(cellData -> new SimpleStringProperty(
+                ValidationUtils.getInstance().formatDateTime(cellData.getValue().getDateOfBirth())));
 
         tlb_col_phone.setCellValueFactory(new PropertyValueFactory<>("phone"));
         tlb_col_address.setCellValueFactory(new PropertyValueFactory<>("address"));
@@ -73,7 +81,7 @@ public class CusForSellingModalController {
         tblCustomer.setItems(FXCollections.observableArrayList(CustomerBUS.getInstance().filterCustomers("", "", 1)));
         tblCustomer.getSelectionModel().clearSelection();
     }
-    
+
     // Set click Event
     public void setOnMouseClicked() {
         btnExitGetCustomer.setOnAction(e -> handleClose());
@@ -84,7 +92,8 @@ public class CusForSellingModalController {
 
     // handle search
     private void handleSearch() {
-        tblCustomer.setItems(FXCollections.observableArrayList(CustomerBUS.getInstance().searchCustomerByPhone(txtSearchCustomer.getText().trim())));
+        tblCustomer.setItems(FXCollections.observableArrayList(
+                CustomerBUS.getInstance().searchCustomerByPhone(txtSearchCustomer.getText().trim())));
         tblCustomer.getSelectionModel().clearSelection();
     }
 
@@ -110,8 +119,7 @@ public class CusForSellingModalController {
         CustomerModalController modalController = UiUtils.gI().openStageWithController(
                 "/GUI/CustomerModal.fxml",
                 controller -> controller.setTypeModal(0),
-                "Thêm khách hàng"
-        );
+                "Thêm khách hàng");
         if (modalController != null && modalController.isSaved()) {
             NotificationUtils.showInfoAlert("Thêm khách hàng thành công", "Thông báo");
             loadTable();
@@ -119,9 +127,10 @@ public class CusForSellingModalController {
     }
 
     public void hideButtonWithoutPermission() {
-        boolean canAdd = SessionManagerService.getInstance().hasPermission(1);
+        boolean canAdd = SessionManagerService.getInstance().hasPermission(PermissionKey.CUSTOMER_INSERT);
 
-        if (!canAdd) functionBtns.getChildren().remove(addBtn);
+        if (!canAdd)
+            functionBtns.getChildren().remove(addBtn);
     }
 
     // check select customer

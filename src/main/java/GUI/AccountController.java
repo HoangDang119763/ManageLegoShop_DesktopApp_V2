@@ -3,6 +3,7 @@ package GUI;
 import BUS.AccountBUS;
 import BUS.EmployeeBUS;
 import DTO.AccountDTO;
+import ENUM.PermissionKey;
 import INTERFACE.IController;
 import SERVICE.RolePermissionService;
 import SERVICE.SessionManagerService;
@@ -118,9 +119,9 @@ public class AccountController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
-        boolean canAdd = SessionManagerService.getInstance().hasPermission(27);
-        boolean canEdit = SessionManagerService.getInstance().hasPermission(29);
-        boolean canDelete = SessionManagerService.getInstance().hasPermission(28);
+        boolean canAdd = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_INSERT);
+        boolean canEdit = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_UPDATE);
+        boolean canDelete = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_DELETE);
 
         if (!canAdd)
             functionBtns.getChildren().remove(addBtn);

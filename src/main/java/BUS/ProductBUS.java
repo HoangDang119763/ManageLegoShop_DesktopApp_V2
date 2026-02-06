@@ -3,6 +3,7 @@ package BUS;
 import DAL.ProductDAL;
 
 import DTO.ProductDTO;
+import ENUM.PermissionKey;
 import SERVICE.AuthorizationService;
 import UTILS.AvailableUtils;
 import UTILS.ValidationUtils;
@@ -47,7 +48,8 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         if (getByIdLocal(id).getStockQuantity() != 0)
             return 5;
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 8))
+        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId,
+                PermissionKey.PRODUCT_DELETE))
             return 3;
 
         if (!ProductDAL.getInstance().delete(id)) {
@@ -88,7 +90,8 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
             return 2;
         }
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 7))
+        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId,
+                PermissionKey.PRODUCT_INSERT))
             return 3;
 
         if (!AvailableUtils.getInstance().isValidCategory(obj.getCategoryId()))
@@ -165,7 +168,8 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
             return 2;
         }
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 9))
+        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId,
+                PermissionKey.PRODUCT_UPDATE))
             return 3;
 
         if (!isValidProductUpdate(obj))
@@ -196,7 +200,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
                 newProduct.setDescription(obj.getDescription());
                 newProduct.setImageUrl(obj.getImageUrl());
                 newProduct.setCategoryId(obj.getCategoryId());
-                newProduct.setStatus(obj.isStatus());
+                newProduct.setStatusId(obj.getStatusId());
                 System.out.println("Old: " + local.toString());
                 System.out.println("New: " + newProduct.toString());
                 arrLocal.set(i, newProduct);
@@ -347,7 +351,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
                 Objects.equals(existingPro.getName(), validate.normalizeWhiteSpace(obj.getName())) &&
                 Objects.equals(existingPro.getCategoryId(), obj.getCategoryId()) &&
                 Objects.equals(existingPro.getSellingPrice(), obj.getSellingPrice()) &&
-                Objects.equals(existingPro.isStatus(), obj.isStatus()) &&
+                Objects.equals(existingPro.getStatusId(), obj.getStatusId()) &&
                 Objects.equals(existingPro.getDescription(), validate.normalizeWhiteSpace(obj.getDescription())) &&
                 Objects.equals(existingPro.getImageUrl(), obj.getImageUrl());
     }
@@ -372,7 +376,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         for (ProductDTO pro : arrLocal) {
             boolean matchesSearch = true;
             boolean matchesCategory = (categoryIdFilter == -1) || (pro.getCategoryId() == categoryIdFilter);
-            boolean matchesStatus = (statusFilter == -1) || (pro.isStatus() == (statusFilter == 1));
+            boolean matchesStatus = (statusFilter == -1) || (pro.getStatusId() == statusFilter);
             boolean matchesPrice = true;
             boolean matchesStock = !inStockOnly || pro.getStockQuantity() > 0;
 
