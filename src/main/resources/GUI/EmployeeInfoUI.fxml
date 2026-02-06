@@ -34,9 +34,9 @@
                      <children>
                         <VBox spacing="8.0">
                            <children>
-                              <HBox alignment="CENTER_LEFT" spacing="10.0">
+                              <HBox spacing="10.0">
                                  <children>
-                                    <FontAwesomeIcon fill="#1f7d84" glyphName="ADDRESS_CARD" size="1.8em" />
+                                    <FontAwesomeIcon fill="#1f7d84" glyphName="USER" size="1.8em" />
                                     <Label styleClass="label-header" text="HỒ SƠ NHÂN VIÊN" textFill="#1f7d84">
                                        <font><Font name="System Bold" size="20.0" /></font>
                                     </Label>

@@ -2,33 +2,23 @@ package GUI;
 
 import BUS.*;
 import DTO.EmployeeDTO;
-import DTO.ProductDTO;
 import SERVICE.SessionManagerService;
 import UTILS.UiUtils;
 import javafx.animation.*;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
-import org.jboss.jandex.Main;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.util.*;
 
@@ -120,6 +110,21 @@ public class MainController {
     // Đóng gói Metadata của Module
     private record ModuleMetadata(int id, String name, String icon) {
     }
+
+    // Mapping Module ID → FXML Path
+    private static final Map<Integer, String> MODULE_FXML_MAP = Map.ofEntries(
+            Map.entry(0, "/GUI/EmployeeInfoUI.fxml"),
+            Map.entry(1, "/GUI/EmployeeUI.fxml"),
+            Map.entry(2, "/GUI/CustomerUI.fxml"),
+            Map.entry(3, "/GUI/ProductUI.fxml"),
+            Map.entry(4, "/GUI/SupplierUI.fxml"),
+            Map.entry(5, "/GUI/InvoiceUI.fxml"),
+            Map.entry(6, "/GUI/ImportUI.fxml"),
+            Map.entry(7, "/GUI/CategoryUI.fxml"),
+            Map.entry(8, "/GUI/DiscountUI.fxml"),
+            Map.entry(9, "/GUI/RoleUI.fxml"),
+            Map.entry(10, "/GUI/AccountUI.fxml"),
+            Map.entry(11, "/GUI/StatisticUI.fxml"));
 
     private void loadAllowedModules() {
         // 1. Khởi tạo danh sách Module có thứ tự (ID, Name, Icon)
@@ -217,19 +222,9 @@ public class MainController {
             }
         }
 
-        switch (moduleId) {
-            case 0 -> loadFXML("/GUI/EmployeeInfoUI.fxml");
-            case 1 -> loadFXML("/GUI/EmployeeUI.fxml");
-            case 2 -> loadFXML("/GUI/CustomerUI.fxml");
-            case 3 -> loadFXML("/GUI/ProductUI.fxml");
-            case 4 -> loadFXML("/GUI/SupplierUI.fxml");
-            case 5 -> loadFXML("/GUI/InvoiceUI.fxml");
-            case 6 -> loadFXML("/GUI/ImportUI.fxml");
-            case 7 -> loadFXML("/GUI/CategoryUI.fxml");
-            case 8 -> loadFXML("/GUI/DiscountUI.fxml");
-            case 9 -> loadFXML("/GUI/RoleUI.fxml");
-            case 10 -> loadFXML("/GUI/AccountUI.fxml");
-            case 11 -> loadFXML("/GUI/StatisticUI.fxml");
+        String fxmlPath = MODULE_FXML_MAP.get(moduleId);
+        if (fxmlPath != null) {
+            loadFXML(fxmlPath);
         }
     }
 
@@ -239,30 +234,5 @@ public class MainController {
             stage.close();
         }
     }
-
-    // Navigate to others stage
-    // public void openStage(String fxmlFile) {
-    // try {
-    // FXMLLoader fxmlLoader = new
-    // FXMLLoader(LoginController.class.getResource(fxmlFile));
-    // Parent root = fxmlLoader.load(); // Gọi .load() để lấy root từ FXML
-    //
-    //
-    // Stage stage = new Stage();
-    // Scene scene = new Scene(root);
-    //
-    // UiUtils.gI().makeWindowDraggable(root, stage);
-    // stage.initStyle(StageStyle.TRANSPARENT);
-    //
-    // stage.setTitle("Lego Store");
-    // stage.setScene(scene);
-    //
-    // stage.show();
-    // stage.requestFocus();
-    //
-    // } catch (IOException e) {
-    // log.error("error", e);
-    // }
-    // }
 
 }

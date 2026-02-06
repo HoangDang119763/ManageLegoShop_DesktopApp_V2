@@ -158,24 +158,17 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
                         .getStatusIdByTypeAndName(StatusType.ACCOUNT, Status.Account.LOCKED);
 
                 if (account.getStatusId() == lockedStatusId) {
-                    // System.out.println("Login failed: Account [" + username + "] is locked.");
                     return -2; // Tài khoản bị khóa
                 }
 
                 // 4. Nếu không khóa, mới kiểm tra mật khẩu
                 if (PasswordUtils.getInstance().verifyPassword(password, account.getPassword())) {
-                    // System.out.println("Login success: " + account.getUsername());
                     return account.getId(); // Đăng nhập thành công
                 } else {
-                    // System.out.println("Login failed: Wrong password for user [" + username +
-                    // "].");
                     return -1; // Sai mật khẩu
                 }
             }
         }
-
-        // 5. Chạy hết vòng lặp mà không return nghĩa là không thấy Username
-        System.out.println("Login failed: Username [" + username + "] does not exist.");
         return -1;
     }
 

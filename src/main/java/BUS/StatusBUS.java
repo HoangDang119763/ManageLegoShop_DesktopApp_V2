@@ -3,8 +3,6 @@ package BUS;
 import DAL.StatusDAL;
 import DTO.StatusDTO;
 import ENUM.StatusType;
-import SERVICE.AuthorizationService;
-import UTILS.ValidationUtils;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -36,7 +34,7 @@ public class StatusBUS extends BaseBUS<StatusDTO, Integer> {
     }
 
     // Lấy các status theo type
-    public ArrayList<StatusDTO> getByTypeLocal(StatusType type) {
+    public ArrayList<StatusDTO> getAllByTypeLocal(StatusType type) {
         ArrayList<StatusDTO> result = new ArrayList<>();
         if (type == null)
             return result;

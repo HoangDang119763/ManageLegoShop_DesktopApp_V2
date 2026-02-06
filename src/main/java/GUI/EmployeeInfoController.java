@@ -59,7 +59,6 @@ public class EmployeeInfoController {
             AccountBUS.getInstance().loadLocal();
         if (EmployeeBUS.getInstance().isLocalEmpty())
             EmployeeBUS.getInstance().loadLocal();
-        log.info("Khởi tạo Employee Info Controller");
         setupListeners();
         loadEmployeeInfo();
     }
@@ -98,14 +97,10 @@ public class EmployeeInfoController {
                 if (account != null) {
                     lblUsername.setText(account.getUsername());
                 }
-
-                log.info("Tải thông tin nhân viên thành công: {}", employee.getId());
             } else {
-                log.warn("Không tìm thấy thông tin nhân viên ID: {}", employee.getId());
                 NotificationUtils.showErrorAlert("Không thể tải thông tin nhân viên", AppMessages.DIALOG_TITLE);
             }
         } catch (Exception e) {
-            log.error("Lỗi khi tải thông tin nhân viên", e);
             NotificationUtils.showErrorAlert("Lỗi khi tải thông tin nhân viên. Vui lòng thử lại.",
                     AppMessages.DIALOG_TITLE);
         }

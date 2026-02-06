@@ -60,14 +60,32 @@ public class AppMessages {
      * Các thông báo liên quan đến quản lý sản phẩm và kho hàng
      */
     public static final String PRODUCT_NAME_EMPTY = "Tên sản phẩm không được để trống.";
-    public static final String PRODUCT_NAME_INVALID = "Tên sản phẩm không hợp lệ (tối đa 100 ký tự).";
-    public static final String PRODUCT_CATEGORY_EMPTY = "Loại sản phẩm không được để trống.";
-    public static final String PRODUCT_PRICE_EMPTY = "Giá sản phẩm không được để trống.";
-    public static final String PRODUCT_PRICE_INVALID = "Giá sản phẩm không hợp lệ.";
+    public static final String PRODUCT_NAME_INVALID = "Tên sản phẩm không hợp lệ (Tối đa 50 ký tự, chỉ chữ và số, \"_\", \"-\", \"/\").";
+    public static final String PRODUCT_DESCRIPTION_INVALID = "Mô tả không hợp lệ (Tối đa 65.400 ký tự, chỉ chữ và số, \"_\", \"-\", \"/\").";
+    public static final String PRODUCT_PRICE_EMPTY = "Giá bán không được để trống.";
+    public static final String PRODUCT_PRICE_INVALID = "Giá bạn không hợp lệ (tối đa 10 chữ số, 2 số thập phân, không âm hoặc bằng 0).";
+    public static final String PRODUCT_PRICE_NOT_NUMBER = "Giá bạn phải là số.";
+    public static final String PRODUCT_STATUS_REQUIRED = "Vui lòng chọn trạng thái";
+    public static final String PRODUCT_CATEGORY_REQUIRED = "Vui lòng chọn thể loại";
     public static final String PRODUCT_ADD_SUCCESS = "Thêm sản phẩm thành công";
+    public static final String PRODUCT_ADD_ERROR = "Có lỗi khi thêm sản phẩm. Vui lòng thử lại.";
+    public static final String PRODUCT_ADD_NO_PERMISSION = "Bạn không có quyền \"Thêm sản phẩm\" để thực hiện thao tác này.";
+    public static final String PRODUCT_ADD_INVALID_CATEGORY = "Thể loại không hợp lệ hoặc đã bị xóa";
+    public static final String PRODUCT_ADD_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
+    public static final String PRODUCT_ADD_FAILED = "Thêm sản phẩm thất bại. Vui lòng thử lại sau.";
+    public static final String PRODUCT_NO_SELECTION = "Vui lòng chọn sản phẩm";
+    public static final String PRODUCT_DELETE_WITH_STOCK = "Sản phẩm còn hàng tồn, không thể xóa!";
+    public static final String PRODUCT_DELETE_CONFIRM = "Bạn chắc muốn xóa sản phẩm này?";
     public static final String PRODUCT_DELETE_SUCCESS = "Xóa sản phẩm thành công!";
+    public static final String PRODUCT_DELETE_ERROR = "Có lỗi khi xóa sản phẩm. Vui lòng thử lại.";
+    public static final String PRODUCT_DELETE_NO_PERMISSION = "Bạn không có quyền \"Xóa sản phẩm\" để thực hiện thao tác này.";
+    public static final String PRODUCT_DELETE_FAILED = "Xóa sản phẩm thất bại. Vui lòng thử lại sau.";
     public static final String PRODUCT_UPDATE_SUCCESS = "Sửa sản phẩm thành công";
-    public static final String PRODUCT_ADD_NO_SELECTION = "Vui lòng chọn một sản phẩm để thêm!";
+    public static final String PRODUCT_UPDATE_ERROR = "Có lỗi khi cập nhật sản phẩm. Vui lòng thử lại.";
+    public static final String PRODUCT_UPDATE_NO_PERMISSION = "Bạn không có quyền \"Cập nhật sản phẩm\" để thực hiện thao tác này.";
+    public static final String PRODUCT_UPDATE_INVALID_DATA = "Dữ liệu đầu vào không hợp lệ";
+    public static final String PRODUCT_UPDATE_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
+    public static final String PRODUCT_UPDATE_FAILED = "Cập nhật sản phẩm thất bại. Vui lòng thử lại sau.";
 
     // ==================== MODULE NHÀ CUNG CẤP (SUPPLIER) ====================
     /**
@@ -125,6 +143,8 @@ public class AppMessages {
      * Các thông báo chung dùng cho nhiều module
      */
     public static final String DIALOG_TITLE = "Thông báo";
+    public static final String DIALOG_TITLE_CONFIRM = "Thông báo xác nhận";
+    public static final String GENERAL_REFRESH_SUCCESS = "Làm mới thành công";
     public static final String UNKNOWN_ERROR = "Lỗi không xác định. Vui lòng thử lại.";
     public static final String OPERATION_SUCCESS = "Thao tác thành công!";
     public static final String OPERATION_FAILED = "Thao tác thất bại!";

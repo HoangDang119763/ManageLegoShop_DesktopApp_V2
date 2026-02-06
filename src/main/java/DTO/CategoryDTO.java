@@ -21,6 +21,11 @@ public class CategoryDTO {
         this.updatedAt = updatedAt;
     }
 
+    public CategoryDTO(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     // Copy Constructor
     public CategoryDTO(CategoryDTO other) {
         if (other != null) {

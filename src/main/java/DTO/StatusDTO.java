@@ -19,6 +19,11 @@ public class StatusDTO {
         this.type = type;
     }
 
+    public StatusDTO(int id, String description) {
+        this.id = id;
+        this.description = description;
+    }
+
     public StatusDTO(StatusDTO other) {
         this.id = other.id;
         this.name = other.name;
@@ -56,5 +61,10 @@ public class StatusDTO {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return description;
     }
 }

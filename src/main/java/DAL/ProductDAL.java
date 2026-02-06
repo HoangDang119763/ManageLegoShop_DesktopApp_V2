@@ -23,15 +23,20 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
                 resultSet.getString("name"),
                 resultSet.getInt("stock_quantity"),
                 resultSet.getBigDecimal("selling_price"),
-                resultSet.getInt("status"),
+                resultSet.getBigDecimal("import_price"),
+                resultSet.getInt("status_id"),
                 resultSet.getString("description"),
                 resultSet.getString("image_url"),
-                resultSet.getInt("category_id"));
+                resultSet.getInt("category_id"),
+                resultSet.getTimestamp("created_at") != null ? resultSet.getTimestamp("created_at").toLocalDateTime()
+                        : null,
+                resultSet.getTimestamp("updated_at") != null ? resultSet.getTimestamp("updated_at").toLocalDateTime()
+                        : null);
     }
 
     @Override
     protected String getInsertQuery() {
-        return "(id, name, stock_quantity, selling_price, status_id, description, image_url, category_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(id, name, stock_quantity, selling_price, import_price, status_id, description, image_url, category_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -40,26 +45,31 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
         statement.setString(2, obj.getName());
         statement.setInt(3, obj.getStockQuantity());
         statement.setBigDecimal(4, obj.getSellingPrice());
-        statement.setInt(5, obj.getStatusId());
-        statement.setString(6, obj.getDescription());
-        statement.setString(7, obj.getImageUrl());
-        statement.setInt(8, obj.getCategoryId());
+        statement.setBigDecimal(5, obj.getImportPrice());
+        statement.setInt(6, obj.getStatusId());
+        statement.setString(7, obj.getDescription());
+        statement.setString(8, obj.getImageUrl());
+        statement.setInt(9, obj.getCategoryId());
+        statement.setObject(10, obj.getCreatedAt());
+        statement.setObject(11, obj.getUpdatedAt());
     }
 
     @Override
     protected String getUpdateQuery() {
-        return "SET name = ?, selling_price = ?, status_id = ?, description = ?, image_url = ?, category_id = ? WHERE id = ?";
+        return "SET name = ?, selling_price = ?, import_price = ?, status_id = ?, description = ?, image_url = ?, category_id = ?, updated_at = ? WHERE id = ?";
     }
 
     @Override
     protected void setUpdateParameters(PreparedStatement statement, ProductDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setBigDecimal(2, obj.getSellingPrice());
-        statement.setInt(3, obj.getStatusId());
-        statement.setString(4, obj.getDescription());
-        statement.setString(5, obj.getImageUrl());
-        statement.setInt(6, obj.getCategoryId());
-        statement.setString(7, obj.getId());
+        statement.setBigDecimal(3, obj.getImportPrice());
+        statement.setInt(4, obj.getStatusId());
+        statement.setString(5, obj.getDescription());
+        statement.setString(6, obj.getImageUrl());
+        statement.setInt(7, obj.getCategoryId());
+        statement.setObject(8, obj.getUpdatedAt());
+        statement.setString(9, obj.getId());
     }
 
     @Override
@@ -68,7 +78,7 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
     }
 
     public boolean updateProductQuantityAndSellingPrice(ArrayList<ProductDTO> list) {
-        String query = "UPDATE product SET stock_quantity = ?, selling_price = ? WHERE id = ?";
+        String query = "UPDATE product SET stock_quantity = ?, selling_price = ?, import_price = ?, updated_at = ? WHERE id = ?";
 
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
@@ -76,7 +86,9 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
             for (ProductDTO obj : list) {
                 statement.setInt(1, obj.getStockQuantity());
                 statement.setBigDecimal(2, obj.getSellingPrice());
-                statement.setString(3, obj.getId());
+                statement.setBigDecimal(3, obj.getImportPrice());
+                statement.setObject(4, obj.getUpdatedAt());
+                statement.setString(5, obj.getId());
                 statement.addBatch();
             }
 
@@ -97,7 +109,7 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
     }
 
     public boolean insertListProductExcel(ArrayList<ProductDTO> list) {
-        final String query = "INSERT INTO product (id, name, stock_quantity, selling_price, status_id, description, image_url, category_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        final String query = "INSERT INTO product (id, name, stock_quantity, selling_price, import_price, status_id, description, image_url, category_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
@@ -107,10 +119,13 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
                 statement.setString(2, obj.getName());
                 statement.setInt(3, obj.getStockQuantity());
                 statement.setBigDecimal(4, obj.getSellingPrice());
-                statement.setInt(5, obj.getStatusId());
-                statement.setString(6, obj.getDescription());
-                statement.setString(7, obj.getImageUrl());
-                statement.setInt(8, obj.getCategoryId());
+                statement.setBigDecimal(5, obj.getImportPrice());
+                statement.setInt(6, obj.getStatusId());
+                statement.setString(7, obj.getDescription());
+                statement.setString(8, obj.getImageUrl());
+                statement.setInt(9, obj.getCategoryId());
+                statement.setObject(10, obj.getCreatedAt());
+                statement.setObject(11, obj.getUpdatedAt());
                 statement.addBatch();
             }
 

@@ -65,7 +65,7 @@ public class CustomerModalController {
 
     private void loadComboBox() {
         StatusBUS statusBus = StatusBUS.getInstance();
-        ArrayList<StatusDTO> statusOptions = statusBus.getByTypeLocal(StatusType.CUSTOMER);
+        ArrayList<StatusDTO> statusOptions = statusBus.getAllByTypeLocal(StatusType.CUSTOMER);
 
         // 1. Đổ trực tiếp danh sách DTO vào ComboBox (Thay vì String)
         ObservableList<StatusDTO> options = FXCollections.observableArrayList(statusOptions);

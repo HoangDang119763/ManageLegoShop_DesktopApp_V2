@@ -1,6 +1,7 @@
 package DTO;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import lombok.ToString;
 
@@ -10,10 +11,13 @@ public class ProductDTO {
     private String name;
     private int stockQuantity;
     private BigDecimal sellingPrice;
+    private BigDecimal importPrice;
     private int statusId;
     private String description;
     private String imageUrl;
     private int categoryId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public ProductDTO() {
     }
@@ -30,15 +34,34 @@ public class ProductDTO {
         this.categoryId = categoryId;
     }
 
+    public ProductDTO(String id, String name, int stockQuantity, BigDecimal sellingPrice, BigDecimal importPrice,
+            int statusId, String description, String imageUrl, int categoryId, LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
+        this.id = id;
+        this.name = name;
+        this.stockQuantity = stockQuantity;
+        this.sellingPrice = sellingPrice;
+        this.importPrice = importPrice;
+        this.statusId = statusId;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.categoryId = categoryId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public ProductDTO(ProductDTO product) {
         this.id = product.id;
         this.name = product.name;
         this.stockQuantity = product.stockQuantity;
         this.sellingPrice = product.sellingPrice;
+        this.importPrice = product.importPrice;
         this.statusId = product.statusId;
         this.description = product.description;
         this.imageUrl = product.imageUrl;
         this.categoryId = product.categoryId;
+        this.createdAt = product.createdAt;
+        this.updatedAt = product.updatedAt;
     }
 
     public String getId() {
@@ -73,10 +96,6 @@ public class ProductDTO {
         this.sellingPrice = sellingPrice;
     }
 
-    public boolean isStatus() {
-        return statusId == 1; // 1 = ACTIVE
-    }
-
     public void setStatus(boolean status) {
         this.statusId = status ? 1 : 2; // 1 = ACTIVE, 2 = INACTIVE
     }
@@ -107,6 +126,30 @@ public class ProductDTO {
 
     public int getCategoryId() {
         return categoryId;
+    }
+
+    public BigDecimal getImportPrice() {
+        return importPrice;
+    }
+
+    public void setImportPrice(BigDecimal importPrice) {
+        this.importPrice = importPrice;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public void setCategoryId(int categoryId) {
