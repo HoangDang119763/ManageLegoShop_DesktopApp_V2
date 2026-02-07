@@ -1,241 +1,230 @@
-// package GUI;
+package GUI;
 
-// import BUS.CategoryBUS;
-// import DTO.CategoryDTO;
-// import INTERFACE.IController;
-// import SERVICE.SessionManagerService;
-// import UTILS.NotificationUtils;
-// import UTILS.UiUtils;
-// import UTILS.ValidationUtils;
-// import javafx.application.Platform;
-// import javafx.beans.property.SimpleStringProperty;
-// import javafx.collections.FXCollections;
-// import javafx.fxml.FXML;
-// import javafx.scene.control.*;
-// import javafx.scene.control.cell.PropertyValueFactory;
-// import javafx.scene.layout.HBox;
+import java.util.ArrayList;
 
-// public class CategoryController implements IController {
-// @FXML
-// private TableView<CategoryDTO> tblCategory;
-// @FXML
-// private TableColumn<CategoryDTO, Integer> tlb_col_id;
-// @FXML
-// private TableColumn<CategoryDTO, String> tlb_col_name;
-// @FXML
-// private TableColumn<CategoryDTO, String> tlb_col_status;
-// @FXML
-// private HBox functionBtns;
-// @FXML
-// private Button addBtn, editBtn, deleteBtn, refreshBtn;
-// @FXML
-// private TextField txtSearch;
-// @FXML
-// private CheckBox ckbStatusFilter;
-// @FXML
-// private ComboBox<String> cbSearchBy;
+import BUS.CategoryBUS;
+import BUS.StatusBUS;
+import DTO.CategoryDTO;
+import DTO.StatusDTO;
+import ENUM.PermissionKey;
+import ENUM.StatusType;
+import INTERFACE.IController;
+import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
+import UTILS.NotificationUtils;
+import UTILS.UiUtils;
+import UTILS.ValidationUtils;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 
-// // Filter state
-// private String searchBy = "Mã thể loại";
-// private String keyword = "";
-// private int statusFilter = 1;
-// private CategoryDTO selectedCategory;
+public class CategoryController implements IController {
+    @FXML
+    private TableView<CategoryDTO> tblCategory;
+    @FXML
+    private TableColumn<CategoryDTO, Integer> tlb_col_id;
+    @FXML
+    private TableColumn<CategoryDTO, String> tlb_col_name;
+    @FXML
+    private TableColumn<CategoryDTO, String> tlb_col_status;
+    @FXML
+    private HBox functionBtns;
+    @FXML
+    private Button addBtn, editBtn, deleteBtn, refreshBtn;
+    @FXML
+    private TextField txtSearch;
+    @FXML
+    private ComboBox<StatusDTO> cbStatusFilter;
+    @FXML
+    private ComboBox<String> cbSearchBy;
 
-// @FXML
-// public void initialize() {
-// if (CategoryBUS.getInstance().isLocalEmpty())
-// CategoryBUS.getInstance().loadLocal();
-// tblCategory.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-// // Tránh deprecated
-// Platform.runLater(() -> tblCategory.getSelectionModel().clearSelection());
+    // Filter state
+    private String searchBy = "Mã thể loại";
+    private String keyword = "";
+    private StatusDTO statusFilter = null;
+    private CategoryDTO selectedCategory;
 
-// hideButtonWithoutPermission();
-// loadComboBox();
-// setupListeners();
+    @FXML
+    public void initialize() {
+        CategoryBUS categoryBUS = CategoryBUS.getInstance();
+        if (categoryBUS.isLocalEmpty())
+            categoryBUS.loadLocal();
+        tblCategory.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        // Tránh deprecated
+        Platform.runLater(() -> tblCategory.getSelectionModel().clearSelection());
 
-// loadTable();
-// applyFilters();
-// }
+        hideButtonWithoutPermission();
+        loadComboBox();
+        setupListeners();
 
-// @Override
-// public void loadTable() {
-// ValidationUtils validationUtils = ValidationUtils.getInstance();
-// CategoryBUS categoryBus = CategoryBUS.getInstance();
+        loadTable();
+        applyFilters();
+    }
 
-// tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
-// tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
-// // tlb_col_status.setCellValueFactory(cellData ->
-// // formatCell(cellData.getValue().isStatus() ? "Hoạt động" : "Ngưng hoạt
-// // động"));
-// // // tlb_col_status.setCellValueFactory(cellData ->
-// // // new SimpleStringProperty(cellData.getValue().isStatus() ? "Hoạt động" :
-// // "Ngưng hoạt động"));
+    @Override
+    public void loadTable() {
+        StatusBUS statusBUS = StatusBUS.getInstance();
+        tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
+        tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
+        tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(statusBUS
+                .getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
+    }
 
-// //
-// tblCategory.setItems(FXCollections.observableArrayList(categoryBus.getAllLocal()));
-// }
+    private void loadComboBox() {
+        cbSearchBy.getItems().addAll("Mã thể loại", "Tên thể loại");
+        // Load Status ComboBox
+        StatusBUS statusBUS = StatusBUS.getInstance();
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.PRODUCT);
+        StatusDTO allStatus = new StatusDTO(-1, "Tất cả cả trạng thái");
+        cbStatusFilter.getItems().add(allStatus); // "Tất cả" option
+        cbStatusFilter.getItems().addAll(statusList);
+        // default selection
+        cbSearchBy.getSelectionModel().selectFirst();
+        cbStatusFilter.getSelectionModel().selectFirst(); // "Tất cả"
+    }
 
-// private SimpleStringProperty formatCell(String value) {
-// return new SimpleStringProperty(value);
-// }
+    @Override
+    public void setupListeners() {
+        // Search and Filters Controls
+        cbSearchBy.setOnAction(event -> handleSearchByChange());
+        cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
+        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+        refreshBtn.setOnAction(event -> {
+            resetFilters();
+            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+        });
 
-// private void loadComboBox() {
-// cbSearchBy.getItems().addAll("Mã thể loại", "Tên thể loại");
+        addBtn.setOnAction(event -> handleAddBtn());
+        editBtn.setOnAction(event -> handleEditBtn());
+        deleteBtn.setOnAction(event -> handleDeleteBtn());
+    }
 
-// // default selection
-// cbSearchBy.getSelectionModel().selectFirst();
-// ckbStatusFilter.setSelected(false);
-// }
+    private void handleStatusFilterChange() {
+        statusFilter = cbStatusFilter.getValue();
+        applyFilters();
+    }
 
-// @Override
-// public void setupListeners() {
-// // Search and Filters Controls
-// cbSearchBy.setOnAction(event -> handleSearchByChange());
-// ckbStatusFilter.setOnAction(event -> handleStatusFilterChange());
-// txtSearch.textProperty().addListener((observable, oldValue, newValue) ->
-// handleKeywordChange());
-// refreshBtn.setOnAction(event -> {
-// resetFilters();
-// NotificationUtils.showInfoAlert("Làm mới thành công", "Thông báo");
-// });
+    private void handleSearchByChange() {
+        searchBy = cbSearchBy.getValue();
+        applyFilters();
+    }
 
-// addBtn.setOnAction(event -> handleAddBtn());
-// editBtn.setOnAction(event -> handleEditBtn());
-// deleteBtn.setOnAction(event -> handleDeleteBtn());
-// // them excel o duoi nay
-// }
+    private void handleKeywordChange() {
+        keyword = txtSearch.getText().trim();
+        applyFilters();
+    }
 
-// private void handleStatusFilterChange() {
-// statusFilter = ckbStatusFilter.isSelected() ? -1 : 1;
-// applyFilters();
-// }
+    @Override
+    public void applyFilters() {
+        int statusId = statusFilter == null ? -1 : statusFilter.getId();
+        tblCategory.setItems(FXCollections.observableArrayList(
+                CategoryBUS.getInstance().filterCategories(searchBy, keyword, statusId)));
+        tblCategory.getSelectionModel().clearSelection();
+    }
 
-// private void handleSearchByChange() {
-// searchBy = cbSearchBy.getValue();
-// applyFilters();
-// }
+    @Override
+    public void resetFilters() {
+        cbSearchBy.getSelectionModel().selectFirst();
+        cbStatusFilter.getSelectionModel().selectFirst(); // "Tất cả"
+        txtSearch.clear();
 
-// private void handleKeywordChange() {
-// keyword = txtSearch.getText().trim();
-// applyFilters();
-// }
+        searchBy = "Mã thể loại";
+        keyword = "";
+        statusFilter = null;
+        applyFilters();
 
-// @Override
-// public void applyFilters() {
-// CategoryBUS categoryBUS = CategoryBUS.getInstance();
-// tblCategory.setItems(FXCollections.observableArrayList(
-// categoryBUS.filterCategories(searchBy, keyword, statusFilter)));
-// tblCategory.getSelectionModel().clearSelection();
-// }
+    }
 
-// @Override
-// public void resetFilters() {
-// cbSearchBy.getSelectionModel().selectFirst();
-// ckbStatusFilter.setSelected(false); // Mặc định lọc Active
-// txtSearch.clear();
+    @Override
+    public void hideButtonWithoutPermission() {
+        SessionManagerService session = SessionManagerService.getInstance();
+        boolean canAdd = session.hasPermission(PermissionKey.CATEGORY_INSERT);
+        boolean canEdit = session.hasPermission(PermissionKey.CATEGORY_UPDATE);
+        boolean canDelete = session.hasPermission(PermissionKey.CATEGORY_DELETE);
 
-// searchBy = "Mã thể loại";
-// keyword = "";
-// statusFilter = 1;
-// applyFilters();
+        if (!canAdd)
+            functionBtns.getChildren().remove(addBtn);
+        if (!canEdit)
+            functionBtns.getChildren().remove(editBtn);
+        if (!canDelete)
+            functionBtns.getChildren().remove(deleteBtn);
+    }
 
-// }
+    private void handleAddBtn() {
+        CategoryModalController modalController = UiUtils.gI().openStageWithController(
+                "/GUI/CategoryModal.fxml",
+                controller -> controller.setTypeModal(0),
+                "Thêm thể loại");
+        if (modalController != null && modalController.isSaved()) {
+            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+            applyFilters();
+        }
+    }
 
-// @Override
-// public void hideButtonWithoutPermission() {
-// boolean canAdd = SessionManagerService.getInstance().hasPermission(17);
-// boolean canEdit = SessionManagerService.getInstance().hasPermission(19);
-// boolean canDelete = SessionManagerService.getInstance().hasPermission(18);
+    private void handleDeleteBtn() {
+        // Get selected category
+        selectedCategory = tblCategory.getSelectionModel().getSelectedItem();
+        if (selectedCategory == null) {
+            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-// if (!canAdd)
-// functionBtns.getChildren().remove(addBtn);
-// if (!canEdit)
-// functionBtns.getChildren().remove(editBtn);
-// if (!canDelete)
-// functionBtns.getChildren().remove(deleteBtn);
-// }
+        if (selectedCategory.getId() == 1) {
+            NotificationUtils.showErrorAlert(AppMessages.CATEGORY_CANNOT_DELETE_DEFAULT, AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-// private void handleAddBtn() {
-// CategoryModalController modalController =
-// UiUtils.gI().openStageWithController(
-// "/GUI/CategoryModal.fxml",
-// controller -> controller.setTypeModal(0),
-// "Thêm thể loại");
-// if (modalController != null && modalController.isSaved()) {
-// NotificationUtils.showInfoAlert("Thêm thể loại thành công", "Thông báo");
-// applyFilters();
-// }
-// }
+        CategoryBUS categoryBUS = CategoryBUS.getInstance();
+        SessionManagerService session = SessionManagerService.getInstance();
+        int deleteResult = categoryBUS.delete(
+                selectedCategory.getId(),
+                session.employeeRoleId(),
+                session.employeeLoginId());
 
-// private void handleDeleteBtn() {
-// // Get selected category
+        switch (deleteResult) {
+            case 1 -> {
+                NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+                applyFilters();
+            }
+            case 2 -> NotificationUtils.showErrorAlert(AppMessages.CATEGORY_DELETE_ERROR, AppMessages.DIALOG_TITLE);
+            case 3 ->
+                NotificationUtils.showErrorAlert(AppMessages.CATEGORY_CANNOT_DELETE_DEFAULT, AppMessages.DIALOG_TITLE);
+            case 4 ->
+                NotificationUtils.showErrorAlert(AppMessages.CATEGORY_DELETE_NO_PERMISSION, AppMessages.DIALOG_TITLE);
+            case 5 -> NotificationUtils.showErrorAlert(AppMessages.CATEGORY_NOT_FOUND, AppMessages.DIALOG_TITLE);
+            case 6 -> NotificationUtils.showErrorAlert(AppMessages.CATEGORY_DELETE_DB_ERROR, AppMessages.DIALOG_TITLE);
+            default -> NotificationUtils.showErrorAlert(AppMessages.GENERAL_ERROR, AppMessages.DIALOG_TITLE);
+        }
+    }
 
-// CategoryDTO selectedCategory =
-// tblCategory.getSelectionModel().getSelectedItem();
-// if (selectedCategory == null) {
-// NotificationUtils.showErrorAlert("Vui lòng chọn một thể loại để xóa!", "Thông
-// báo");
-// return;
-// }
+    private void handleEditBtn() {
+        // Get selected category
+        selectedCategory = tblCategory.getSelectionModel().getSelectedItem();
 
-// if (selectedCategory.getId() == 1) {
-// NotificationUtils.showErrorAlert("Không thể xóa thể loại gốc!", "Thông báo");
-// return;
-// }
+        if (selectedCategory == null) {
+            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-// int deleteResult = CategoryBUS.getInstance().delete(
-// selectedCategory.getId(),
-// SessionManagerService.getInstance().employeeRoleId(),
-// SessionManagerService.getInstance().employeeLoginId());
+        if (selectedCategory.getId() == 1) {
+            NotificationUtils.showErrorAlert(AppMessages.CATEGORY_CANNOT_UPDATE_DEFAULT, AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-// switch (deleteResult) {
-// case 1 -> {
-// NotificationUtils.showInfoAlert("Xóa thể loại thành công!", "Thông báo");
-// applyFilters();
-// }
-// case 2 ->
-// NotificationUtils.showErrorAlert("Lỗi xoá thể loại không thành công. Vui lòng
-// thử lại", "Thông báo");
-// case 4 -> NotificationUtils.showErrorAlert("Không có quyền xóa thể loại.",
-// "Thông báo");
-// case 3 -> NotificationUtils.showErrorAlert("Không thể xoá thể loại gốc. Vui
-// lòng thử lại.", "Thông báo");
-// case 6 -> NotificationUtils.showErrorAlert("Không thể xoá thể loại ở CSDL.",
-// "Thông báo");
-// case 5 -> NotificationUtils.showErrorAlert("Thể loại không tồn tại hoặc đã bị
-// xoá.", "Thông báo");
-// default -> NotificationUtils.showErrorAlert("Lỗi không xác định. Xóa thể loại
-// thất bại.", "Thông báo");
-// }
-// }
-
-// private void handleEditBtn() {
-// // Get selected category
-// CategoryDTO selectedCategory =
-// tblCategory.getSelectionModel().getSelectedItem();
-
-// if (selectedCategory == null) {
-// NotificationUtils.showErrorAlert("Vui lòng chọn một thể loại để chỉnh sửa!",
-// "Thông báo");
-// return;
-// }
-
-// if (selectedCategory.getId() == 1) {
-// NotificationUtils.showErrorAlert("Không thể sửa thể loại gốc!", "Thông báo");
-// return;
-// }
-
-// CategoryModalController modalController =
-// UiUtils.gI().openStageWithController(
-// "/GUI/CategoryModal.fxml",
-// controller -> {
-// controller.setTypeModal(1);
-// controller.setCategory(selectedCategory);
-// },
-// "Sửa thể loại");
-// if (modalController != null && modalController.isSaved()) {
-// NotificationUtils.showInfoAlert("Sửa thể loại thành công", "Thông báo");
-// applyFilters();
-// }
-// }
-// }
+        CategoryModalController modalController = UiUtils.gI().openStageWithController(
+                "/GUI/CategoryModal.fxml",
+                controller -> {
+                    controller.setTypeModal(1);
+                    controller.setCategory(selectedCategory);
+                },
+                "Sửa thể loại");
+        if (modalController != null && modalController.isSaved()) {
+            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+            applyFilters();
+        }
+    }
+}

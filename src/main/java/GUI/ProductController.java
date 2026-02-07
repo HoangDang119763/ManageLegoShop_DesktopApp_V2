@@ -54,7 +54,7 @@ public class ProductController implements IController {
     @FXML
     private HBox functionBtns;
     @FXML
-    private Button addBtn, editBtn, deleteBtn, refreshBtn, btnImportExcel, detailBtn;
+    private Button addBtn, editBtn, deleteBtn, refreshBtn, btnImportExcel;
     @FXML
     private TextField txtSearch;
     @FXML
@@ -77,10 +77,14 @@ public class ProductController implements IController {
 
     @FXML
     public void initialize() {
-        if (ProductBUS.getInstance().isLocalEmpty())
-            ProductBUS.getInstance().loadLocal();
-        if (CategoryBUS.getInstance().isLocalEmpty())
-            CategoryBUS.getInstance().loadLocal();
+        ProductBUS productBUS = ProductBUS.getInstance();
+        if (productBUS.isLocalEmpty())
+            productBUS.loadLocal();
+
+        CategoryBUS categoryBUS = CategoryBUS.getInstance();
+        if (categoryBUS.isLocalEmpty())
+            categoryBUS.loadLocal();
+
         tblProduct.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         // Tránh deprecated
         Platform.runLater(() -> tblProduct.getSelectionModel().clearSelection());
@@ -143,8 +147,6 @@ public class ProductController implements IController {
                 URL defaultImageUrl = getClass().getResource("/images/default/default.png");
                 if (defaultImageUrl != null) {
                     image = new Image(defaultImageUrl.toExternalForm());
-                } else {
-                    // System.err.println("Ảnh mặc định không tìm thấy trong resources.");
                 }
             }
 
@@ -188,7 +190,11 @@ public class ProductController implements IController {
         addBtn.setOnAction(e -> handleAdd());
         editBtn.setOnAction(e -> handleEdit());
         deleteBtn.setOnAction(e -> handleDelete());
-        detailBtn.setOnAction(e -> handleDetail());
+        tblProduct.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                handleDetail();
+            }
+        });
         btnImportExcel.setOnMouseClicked(event -> {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             importProductExcel(stage);
@@ -271,9 +277,10 @@ public class ProductController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
-        boolean canAdd = SessionManagerService.getInstance().hasPermission(PermissionKey.PRODUCT_INSERT);
-        boolean canEdit = SessionManagerService.getInstance().hasPermission(PermissionKey.PRODUCT_UPDATE);
-        boolean canDelete = SessionManagerService.getInstance().hasPermission(PermissionKey.PRODUCT_DELETE);
+        SessionManagerService session = SessionManagerService.getInstance();
+        boolean canAdd = session.hasPermission(PermissionKey.PRODUCT_INSERT);
+        boolean canEdit = session.hasPermission(PermissionKey.PRODUCT_UPDATE);
+        boolean canDelete = session.hasPermission(PermissionKey.PRODUCT_DELETE);
 
         if (!canAdd)
             functionBtns.getChildren().remove(addBtn);
@@ -289,7 +296,8 @@ public class ProductController implements IController {
             return;
         }
 
-        if (ProductBUS.getInstance().getByIdLocal(selectedProduct.getId()).getStockQuantity() != 0) {
+        ProductBUS productBUS = ProductBUS.getInstance();
+        if (productBUS.getByIdLocal(selectedProduct.getId()).getStockQuantity() != 0) {
             NotificationUtils.showErrorAlert(AppMessages.PRODUCT_DELETE_WITH_STOCK, AppMessages.DIALOG_TITLE);
             return;
         }
@@ -298,10 +306,11 @@ public class ProductController implements IController {
             return;
         }
 
-        int deleteResult = ProductBUS.getInstance().delete(
+        SessionManagerService session = SessionManagerService.getInstance();
+        int deleteResult = productBUS.delete(
                 selectedProduct.getId(),
-                SessionManagerService.getInstance().employeeRoleId(),
-                SessionManagerService.getInstance().employeeLoginId());
+                session.employeeRoleId(),
+                session.employeeLoginId());
         switch (deleteResult) {
             case 1 -> {
                 NotificationUtils.showInfoAlert(AppMessages.PRODUCT_DELETE_SUCCESS, AppMessages.DIALOG_TITLE);

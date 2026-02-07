@@ -215,9 +215,9 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         ArrayList<EmployeeDTO> filteredList = new ArrayList<>();
 
         if (keyword == null)
-            keyword = ""; // Tr+�nh l�+�i khi keyword b�+� null
+            keyword = "";
         if (searchBy == null)
-            searchBy = ""; // Tr+�nh l�+�i khi searchBy b�+� null
+            searchBy = "";
 
         keyword = keyword.trim().toLowerCase();
 

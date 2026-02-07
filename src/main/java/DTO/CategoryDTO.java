@@ -26,6 +26,12 @@ public class CategoryDTO {
         this.name = name;
     }
 
+    public CategoryDTO(int id, String name, int statusId) {
+        this.id = id;
+        this.name = name;
+        this.statusId = statusId;
+    }
+
     // Copy Constructor
     public CategoryDTO(CategoryDTO other) {
         if (other != null) {
@@ -82,8 +88,4 @@ public class CategoryDTO {
     public String toString() {
         return name;
     }
-
-    // Helper methods cho JavaFX TableView hoặc CheckBox
-    // Lưu ý: Không nên hardcode ID ở đây nữa.
-    // Nên dùng statusBus để kiểm tra hoặc để logic này ở tầng BUS.
 }

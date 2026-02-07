@@ -1,375 +1,358 @@
+package GUI;
 
-// package GUI;
+import BUS.DepartmentBUS;
+import BUS.EmployeeBUS;
+import BUS.RoleBUS;
+import BUS.SalaryBUS;
+import BUS.StatusBUS;
+import DTO.DepartmentDTO;
+import DTO.EmployeeDTO;
+import DTO.RoleDTO;
+import DTO.SalaryDTO;
+import DTO.StatusDTO;
+import ENUM.StatusType;
+import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
+import UTILS.NotificationUtils;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.stage.Stage;
+import lombok.Getter;
 
-// import BUS.EmployeeBUS;
-// import BUS.RoleBUS;
-// import BUS.StatusBUS;
-// import DTO.EmployeeDTO;
-// import DTO.RoleDTO;
-// import DTO.StatusDTO;
-// import ENUM.StatusType;
-// import INTERFACE.IController;
-// import SERVICE.SessionManagerService;
-// import UTILS.NotificationUtils;
-// import UTILS.UiUtils;
-// import UTILS.ValidationUtils;
-// import javafx.application.Platform;
-// import javafx.collections.FXCollections;
-// import javafx.collections.ObservableList;
-// import javafx.fxml.FXML;
-// import javafx.scene.Node;
-// import javafx.scene.control.*;
-// import javafx.scene.layout.HBox;
-// import javafx.stage.Stage;
-// import lombok.Getter;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
-// import java.util.ArrayList;
+/**
+ * Controller cho modal thêm/sửa/xem thông tin nhân viên
+ * typeModal: 0 = Add, 1 = Edit, 2 = View (readonly)
+ */
+public class EmployeeModalController {
+    @FXML
+    private Label modalName;
+    @FXML
+    private TextField txtEmployeeId;
+    @FXML
+    private TextField txtFirstName;
+    @FXML
+    private TextField txtLastName;
+    @FXML
+    private DatePicker dpDateOfBirth;
+    @FXML
+    private ComboBox<String> cbGender;
+    @FXML
+    private TextField txtPhone;
+    @FXML
+    private TextField txtEmail;
+    @FXML
+    private ComboBox<DepartmentDTO> cbDepartment;
+    @FXML
+    private ComboBox<RoleDTO> cbRole;
+    @FXML
+    private TextField txtBaseSalary;
+    @FXML
+    private TextField txtCoefficient;
+    @FXML
+    private TextField txtNumDependents;
+    @FXML
+    private ComboBox<StatusDTO> cbStatus;
+    @FXML
+    private TextField txtHealthInsCode;
+    @FXML
+    private CheckBox cbSocialIns;
+    @FXML
+    private CheckBox cbUnemploymentIns;
+    @FXML
+    private CheckBox cbPersonalTax;
+    @FXML
+    private CheckBox cbTransportSupport;
+    @FXML
+    private CheckBox cbAccommodationSupport;
+    @FXML
+    private CheckBox cbSocialIns1; // Health insurance checkbox
+    @FXML
+    private TextField txtCreatedAt;
+    @FXML
+    private TextField txtUpdatedAt;
+    @FXML
+    private Button saveBtn;
+    @FXML
+    private Button closeBtn;
 
-// import java.math.BigDecimal;
-// import java.time.LocalDate;
-// import java.time.LocalDateTime;
-// import java.util.HashMap;
+    @Getter
+    private boolean isSaved = false;
+    private int typeModal; // 0=Add, 1=Edit, 2=View
+    private EmployeeDTO employee;
+    private RoleBUS roleBUS;
+    private SalaryBUS salaryBUS;
+    private StatusBUS statusBUS;
+    private DepartmentBUS departmentBUS;
+    private EmployeeBUS employeeBUS;
+    private SessionManagerService session;
 
-// public class EmployeeModalController {
-// @FXML
-// private Label modalName;
-// @FXML
-// private TextField txtEmployeeId;
-// @FXML
-// private TextField txtFirstName;
-// @FXML
-// private TextField txtLastName;
-// @FXML
-// private DatePicker dateOfBirth;
-// @FXML
-// private TextField txtSalary;
-// @FXML
-// private Button saveBtn, closeBtn, addRoleSubBtn;
-// @FXML
-// private ComboBox<String> cbSelectRole;
-// @FXML
-// private ComboBox<String> cbSelectStatus;
-// @Getter
-// private boolean isSaved;
-// private int typeModal;
-// private EmployeeDTO employee;
-// private final HashMap<String, Integer> roleMap = new HashMap<>();
+    @FXML
+    public void initialize() {
+        // Load BUS instances
+        roleBUS = RoleBUS.getInstance();
+        salaryBUS = SalaryBUS.getInstance();
+        statusBUS = StatusBUS.getInstance();
+        departmentBUS = DepartmentBUS.getInstance();
+        employeeBUS = EmployeeBUS.getInstance();
+        session = SessionManagerService.getInstance();
 
-// @FXML
-// public void initialize() {
-// loadComboBox();
-// setupListeners();
-// }
+        // Load initial data
+        loadGenderComboBox();
+        loadDepartmentComboBox();
+        loadRoleComboBox();
+        loadStatusComboBox();
 
-// public void setupListeners() {
-// saveBtn.setOnAction(e -> handleSave());
-// closeBtn.setOnAction(e -> handleClose());
-// addRoleSubBtn.setOnAction(e -> handleAddRoleSub());
-// }
+        // Setup listeners
+        setupListeners();
+    }
 
-// private void loadComboBox() {
-// StatusBUS statusBus = StatusBUS.getInstance();
-// ArrayList<StatusDTO> statusOptions =
-// statusBus.getByTypeLocal(StatusType.EMPLOYEE);
+    private void loadGenderComboBox() {
+        cbGender.getItems().addAll("Nam", "Nữ", "Khác");
+        cbGender.getSelectionModel().selectFirst();
+    }
 
-// // Extract tên status từ StatusDTO
-// ArrayList<String> statusNames = new ArrayList<>();
-// for (StatusDTO status : statusOptions) {
-// statusNames.add(status.getName());
-// }
+    private void loadDepartmentComboBox() {
+        if (departmentBUS.isLocalEmpty()) {
+            departmentBUS.loadLocal();
+        }
+        cbDepartment.getItems().addAll(departmentBUS.getAllLocal());
+        cbDepartment.setConverter(new javafx.util.StringConverter<DepartmentDTO>() {
+            @Override
+            public String toString(DepartmentDTO dept) {
+                return dept != null ? dept.getName() : "";
+            }
 
-// ObservableList<String> options =
-// FXCollections.observableArrayList(statusNames);
-// cbSelectStatus.setItems(options);
+            @Override
+            public DepartmentDTO fromString(String string) {
+                return null;
+            }
+        });
+    }
 
-// RoleBUS roleBUS = RoleBUS.getInstance();
-// roleMap.clear();
-// String selectedRole = cbSelectRole.getSelectionModel().getSelectedItem();
+    private void loadRoleComboBox() {
+        if (roleBUS.isLocalEmpty()) {
+            roleBUS.loadLocal();
+        }
+        cbRole.getItems().addAll(roleBUS.getAllLocal());
+        cbRole.setConverter(new javafx.util.StringConverter<RoleDTO>() {
+            @Override
+            public String toString(RoleDTO role) {
+                return role != null ? role.getName() : "";
+            }
 
-// // Xóa tất cả các mục hiện có
-// cbSelectRole.getItems().clear();
-// for (RoleDTO role : roleBUS.getAllLocal()) {
-// cbSelectRole.getItems().add(role.getName());
-// roleMap.put(role.getName(), role.getId());
-// }
+            @Override
+            public RoleDTO fromString(String string) {
+                return null;
+            }
+        });
 
-// // Khôi phục lựa chọn để lưu
-// if (selectedRole != null && roleMap.containsKey(selectedRole)) {
-// cbSelectRole.getSelectionModel().select(selectedRole);
-// } else {
-// cbSelectRole.getSelectionModel().selectFirst();
-// }
+        // Auto-update salary when role changes
+        cbRole.setOnAction(event -> handleRoleSelectChange());
+    }
 
-// cbSelectStatus.getSelectionModel().selectFirst();
-// }
+    /**
+     * Khi chọn Role, auto-update Lương cơ bản và Hệ số từ Salary table
+     */
+    private void handleRoleSelectChange() {
+        RoleDTO selectedRole = cbRole.getSelectionModel().getSelectedItem();
+        if (selectedRole != null && selectedRole.getSalaryId() != null) {
+            SalaryDTO salary = salaryBUS.getByIdLocal(selectedRole.getSalaryId());
+            if (salary != null) {
+                txtBaseSalary.setText(salary.getBase() != null ? salary.getBase().toString() : "0");
+                txtCoefficient.setText(salary.getCoefficient() != null ? salary.getCoefficient().toString() : "0");
+            }
+        }
+    }
 
-// private int getSelectedRole() {
-// return roleMap.getOrDefault(cbSelectRole.getValue(), -1);
-// }
+    private void loadStatusComboBox() {
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.EMPLOYEE);
+        cbStatus.getItems().addAll(statusList);
+        cbStatus.setConverter(new javafx.util.StringConverter<StatusDTO>() {
+            @Override
+            public String toString(StatusDTO status) {
+                return status != null ? status.getDescription() : "";
+            }
 
-// public void setTypeModal(int type) {
-// if (type != 0 && type != 1)
-// handleClose();
-// typeModal = type;
-// if (typeModal == 0) {
-// modalName.setText("Thêm nhân viên");
-// txtEmployeeId.setText(String.valueOf(EmployeeBUS.getInstance().getAllLocal().size()
-// + 1));
-// } else {
-// if (employee == null)
-// handleClose();
-// modalName.setText("Sửa nhân viên");
-// }
-// }
+            @Override
+            public StatusDTO fromString(String string) {
+                return null;
+            }
+        });
+    }
 
-// public void setEmployee(EmployeeDTO employee) {
-// this.employee = employee;
-// txtEmployeeId.setText(String.valueOf(employee.getId()));
-// txtFirstName.setText(employee.getFirstName());
-// txtLastName.setText(employee.getLastName());
-// LocalDate dateOfBirthValue = employee.getDateOfBirth();
+    private void setupListeners() {
+        saveBtn.setOnAction(e -> handleSave());
+        closeBtn.setOnAction(e -> handleClose());
+    }
 
-// if (dateOfBirthValue != null) {
-// dateOfBirth.setValue(dateOfBirthValue);
-// } else {
-// dateOfBirth.setValue(null);
-// }
-// RoleDTO selectedRole =
-// RoleBUS.getInstance().getByIdLocal(employee.getRoleId());
-// if (selectedRole != null) {
-// cbSelectRole.getSelectionModel().select(selectedRole.getName());
-// } else {
-// cbSelectRole.getSelectionModel().clearSelection();
-// }
-// txtSalary.setText(employee.getSalary().toString());
-// cbSelectStatus.getSelectionModel().select(employee.isStatus() ? "Hoạt động" :
-// "Ngừng hoạt động");
+    public void setTypeModal(int type) {
+        typeModal = type;
 
-// int employeeLoginId = SessionManagerService.getInstance().employeeRoleId();
-// int employeeRoleId = SessionManagerService.getInstance().employeeRoleId();
-// if (employee.getId() == employeeLoginId) {
-// // Cߦ�p nhߦ�t ch+�nh m+�nh => kh+�a status v+� role
-// makeReadOnly(cbSelectRole);
-// makeReadOnly(cbSelectStatus);
-// makeReadOnly(addRoleSubBtn);
-// }
-// if (employeeRoleId != 1) {
-// // Nߦ+u kh+�ng phߦ�i admin th+� kh+�ng cho ch�+�nh l����ng
-// makeReadOnly(txtSalary);
-// }
-// }
+        if (typeModal == 0) {
+            modalName.setText("Thêm nhân viên");
+            txtEmployeeId.setText("Hệ thống tự tạo");
+        } else if (typeModal == 1) {
+            modalName.setText("Sửa nhân viên");
+        } else if (typeModal == 2) {
+            modalName.setText("Xem thông tin nhân viên");
+            setReadOnly();
+        }
+    }
 
-// private boolean isValidInput() {
-// boolean isValid = true;
-// String firstName = txtFirstName.getText().trim();
-// String lastName = txtLastName.getText().trim();
-// String salary = txtSalary.getText().trim();
+    public void setEmployee(EmployeeDTO emp) {
+        this.employee = emp;
 
-// ValidationUtils validator = ValidationUtils.getInstance();
+        // Display employee data
+        txtEmployeeId.setText(String.valueOf(emp.getId()));
+        txtFirstName.setText(emp.getFirstName() != null ? emp.getFirstName() : "");
+        txtLastName.setText(emp.getLastName() != null ? emp.getLastName() : "");
+        dpDateOfBirth.setValue(emp.getDateOfBirth());
+        cbGender.getSelectionModel().select(emp.getGender() != null ? emp.getGender() : "Nam");
+        txtPhone.setText(emp.getPhone() != null ? emp.getPhone() : "");
+        txtEmail.setText(emp.getEmail() != null ? emp.getEmail() : "");
+        txtHealthInsCode.setText(emp.getHealthInsCode() != null ? emp.getHealthInsCode() : "");
+        txtNumDependents.setText("0"); // Will update when we have tax DTO
 
-// if (firstName.isEmpty()) {
-// NotificationUtils.showErrorAlert("Họ đệm nhân viên không được để trống.",
-// "Thông báo");
-// clearAndFocus(txtFirstName);
-// isValid = false;
-// } else if (!validator.validateVietnameseText100(firstName)) {
-// NotificationUtils.showErrorAlert(
-// "Họ đệm nhân viên không hợp lệ (Tối đa 100 ký tự, chỉ chữ và số, \"_\",
-// \"-\", \"/\").",
-// "Thông báo");
-// clearAndFocus(txtFirstName);
-// isValid = false;
-// }
+        // Set Department
+        if (emp.getDepartmentId() != null) {
+            DepartmentDTO dept = departmentBUS.getByIdLocal(emp.getDepartmentId());
+            cbDepartment.getSelectionModel().select(dept);
+        }
 
-// if (isValid && lastName.isEmpty()) {
-// NotificationUtils.showErrorAlert("Tên nhân viên không được để trống ", "Thông
-// báo");
-// clearAndFocus(txtLastName);
-// isValid = false;
-// } else if (isValid && !validator.validateVietnameseText100(lastName)) {
-// NotificationUtils.showErrorAlert(
-// "Tên nhân viên không hợp lệ (Tối đa 100 ký tự, chỉ chữ và số, \"_\", \"-\",
-// \"/\").", "Thông báo");
-// clearAndFocus(txtLastName);
-// isValid = false;
-// }
+        // Set Role (this will trigger auto-update of salary)
+        RoleDTO role = roleBUS.getByIdLocal(emp.getRoleId());
+        if (role != null) {
+            cbRole.getSelectionModel().select(role);
+            handleRoleSelectChange(); // Trigger salary update
+        }
 
-// if (isValid && cbSelectRole.getValue() == null) {
-// NotificationUtils.showErrorAlert("Chức vụ không được để trống.", "Thông
-// báo");
-// isValid = false;
-// }
+        // Set Status
+        StatusDTO status = statusBUS.getByIdLocal(emp.getStatusId());
+        if (status != null) {
+            cbStatus.getSelectionModel().select(status);
+        }
 
-// if (isValid && salary.isEmpty()) {
-// NotificationUtils.showErrorAlert("Lương cơ bản không được để trống.", "Thông
-// báo");
-// clearAndFocus(txtSalary);
-// isValid = false;
-// } else if (isValid) {
-// try {
-// BigDecimal salaryS = new BigDecimal(salary);
-// if (!validator.validateSalary(salaryS, 10, 2, false)) {
-// NotificationUtils.showErrorAlert(
-// "Lương cơ bản không hợp lế (Tối đa 10 chữ số, 2 số thập phân, không âm hoặc
-// bằng 0).",
-// "Thông báo");
-// clearAndFocus(txtSalary);
-// isValid = false;
-// }
-// } catch (NumberFormatException e) {
-// NotificationUtils.showErrorAlert("Lương cơ bản phải là số.", "Thông báo");
-// clearAndFocus(txtSalary);
-// isValid = false;
-// }
-// }
+        // Set Insurance checkboxes
+        cbSocialIns.setSelected(emp.isSocialInsurance());
+        cbUnemploymentIns.setSelected(emp.isUnemploymentInsurance());
+        cbPersonalTax.setSelected(emp.isPersonalIncomeTax());
+        cbTransportSupport.setSelected(emp.isTransportationSupport());
+        cbAccommodationSupport.setSelected(emp.isAccommodationSupport());
+        cbSocialIns1.setSelected(emp.isHealthInsurance());
 
-// // Ki�+�m tra dateOfBirth
-// if (isValid) {
-// LocalDate date = dateOfBirth.getValue();
-// if (date != null) {
-// LocalDate today = LocalDate.now();
-// if (date.isAfter(today)) {
-// NotificationUtils.showErrorAlert("Ngày sinh không được là ngày trong tương
-// lai.", "Thông báo");
-// isValid = false;
-// }
-// }
-// }
+        // Display metadata
+        if (emp.getCreatedAt() != null) {
+            txtCreatedAt.setText(emp.getCreatedAt()
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        }
+        if (emp.getUpdatedAt() != null) {
+            txtUpdatedAt.setText(emp.getUpdatedAt()
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        }
+    }
 
-// return isValid;
-// }
+    private void setReadOnly() {
+        txtFirstName.setDisable(true);
+        txtLastName.setDisable(true);
+        dpDateOfBirth.setDisable(true);
+        cbGender.setDisable(true);
+        txtPhone.setDisable(true);
+        txtEmail.setDisable(true);
+        cbDepartment.setDisable(true);
+        cbRole.setDisable(true);
+        txtNumDependents.setDisable(true);
+        cbStatus.setDisable(true);
+        txtHealthInsCode.setDisable(true);
+        cbSocialIns.setDisable(true);
+        cbUnemploymentIns.setDisable(true);
+        cbPersonalTax.setDisable(true);
+        cbTransportSupport.setDisable(true);
+        cbAccommodationSupport.setDisable(true);
+        cbSocialIns1.setDisable(true);
+        saveBtn.setDisable(true);
+    }
 
-// private void handleSave() {
-// if (typeModal == 0) {
-// insertEmployee();
+    private void handleSave() {
+        // Validation
+        if (txtFirstName.getText().trim().isEmpty() || txtLastName.getText().trim().isEmpty()) {
+            NotificationUtils.showErrorAlert("Họ tên không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-// } else {
-// updateEmployee();
-// }
-// }
+        if (cbRole.getSelectionModel().getSelectedItem() == null) {
+            NotificationUtils.showErrorAlert("Chức vụ không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-// private void insertEmployee() {
-// EmployeeBUS emBus = EmployeeBUS.getInstance();
-// if (isValidInput()) {
-// EmployeeDTO temp = new
-// EmployeeDTO(Integer.parseInt(txtEmployeeId.getText().trim()),
-// txtFirstName.getText().trim(),
-// txtLastName.getText().trim(), "0", "",
-// new BigDecimal(txtSalary.getText().trim()),
-// dateOfBirth.getValue(),
-// getSelectedRole(), cbSelectStatus.getValue().equals("Hoạt động"),
-// "", 0, null, false, false, false, false, false, false);
-// int insertResult = emBus.insert(temp,
-// SessionManagerService.getInstance().employeeRoleId(),
-// SessionManagerService.getInstance().employeeLoginId());
-// switch (insertResult) {
-// case 1 -> {
-// isSaved = true;
-// handleClose();
-// }
-// case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi thêm nhân viên. Vui
-// lòng thử lại.", "Thông báo");
-// case 3 ->
-// NotificationUtils.showErrorAlert("Bạn không có quyền \"Thêm nhân viên\" để
-// thực hiện thao tác này.",
-// "Thông báo");
-// case 4 -> NotificationUtils.showErrorAlert("Thêm nhân viên thất bại. Vui lòng
-// thử lại.", "Thông báo");
-// default -> NotificationUtils.showErrorAlert("Lỗi không xác định. Vui lòng thử
-// lại.", "Thông báo");
-// }
-// }
-// }
+        if (cbStatus.getSelectionModel().getSelectedItem() == null) {
+            NotificationUtils.showErrorAlert("Trạng thái không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-// private void updateEmployee() {
-// EmployeeBUS emBus = EmployeeBUS.getInstance();
-// if (isValidInput()) {
-// EmployeeDTO temp = new EmployeeDTO(employee.getId(),
-// txtFirstName.getText().trim(),
-// txtLastName.getText().trim(), "0", "",
-// new BigDecimal(txtSalary.getText().trim()),
-// dateOfBirth.getValue(),
-// getSelectedRole(), cbSelectStatus.getValue().equals("Hoạt động"),
-// "", 0, null, false, false, false, false, false, false);
-// int updateResult = emBus.update(temp,
-// SessionManagerService.getInstance().employeeRoleId(),
-// SessionManagerService.getInstance().employeeLoginId());
-// switch (updateResult) {
-// case 1 -> {
-// isSaved = true;
-// handleClose();
-// }
-// case 2 ->
-// NotificationUtils.showErrorAlert("Có lỗi khi cập nhật nhân viên. Vui lòng thử
-// lại.", "Thông báo");
-// case 3 ->
-// NotificationUtils.showErrorAlert(
-// "Bạn không có quyền \"Cập nhật nhân viên\" để thực hiện thao tác này.",
-// "Thông báo");
-// case 4 -> NotificationUtils.showErrorAlert("Dữ liệu không hợp lệ.", "Thông
-// báo");
-// case 5 -> {
-// NotificationUtils.showErrorAlert("Không thể cập nhật nhân viên gốc.", "Thông
-// báo");
-// }
-// case 6 ->
-// NotificationUtils.showErrorAlert("Bạn không thể cập nhật nhân viên ngang
-// quyền.", "Thông báo");
-// case 7 ->
-// NotificationUtils.showErrorAlert("Cập nhật nhân viên thất bại. Vui lòng thử
-// lại sau.", "Thông báo");
-// default -> NotificationUtils.showErrorAlert("Lỗi không xác định. Vui lòng thử
-// lại.", "Thông báo");
-// }
-// }
-// }
+        // Update employee
+        if (employee == null) {
+            employee = new EmployeeDTO();
+        }
 
-// private void makeReadOnly(Node node) {
-// node.setDisable(false); // Gi�+� UI r+�
-// node.setMouseTransparent(true); // Kh+�ng t����ng t+�c
-// node.setFocusTraversable(false); // Kh+�ng focus
-// node.setStyle("-fx-background-color: #999999; -fx-opacity: 0.75;");
+        employee.setFirstName(txtFirstName.getText().trim());
+        employee.setLastName(txtLastName.getText().trim());
+        employee.setDateOfBirth(dpDateOfBirth.getValue());
+        employee.setGender(cbGender.getValue());
+        employee.setPhone(txtPhone.getText().trim());
+        employee.setEmail(txtEmail.getText().trim());
 
-// if (node instanceof TextInputControl textInput) {
-// textInput.setEditable(false);
-// }
+        DepartmentDTO dept = cbDepartment.getSelectionModel().getSelectedItem();
+        if (dept != null) {
+            employee.setDepartmentId(dept.getId());
+        }
 
-// if (node instanceof ComboBox<?> comboBox) {
-// comboBox.setEditable(false);
+        RoleDTO role = cbRole.getSelectionModel().getSelectedItem();
+        if (role != null) {
+            employee.setRoleId(role.getId());
+        }
 
-// Platform.runLater(() -> {
-// Node arrow = comboBox.lookup(".arrow-button");
-// if (arrow != null) {
-// arrow.setStyle("-fx-background-color: #999999; -fx-opacity: 0.75;");
-// }
+        StatusDTO status = cbStatus.getSelectionModel().getSelectedItem();
+        if (status != null) {
+            employee.setStatusId(status.getId());
+        }
 
-// Node arrowIcon = comboBox.lookup(".arrow");
-// if (arrowIcon != null) {
-// arrowIcon.setStyle("-fx-shape: ''; -fx-background-color: transparent;");
-// }
-// });
-// }
-// }
+        employee.setHealthInsCode(txtHealthInsCode.getText().trim());
+        employee.setSocialInsurance(cbSocialIns.isSelected());
+        employee.setUnemploymentInsurance(cbUnemploymentIns.isSelected());
+        employee.setPersonalIncomeTax(cbPersonalTax.isSelected());
+        employee.setTransportationSupport(cbTransportSupport.isSelected());
+        employee.setAccommodationSupport(cbAccommodationSupport.isSelected());
 
-// private void handleAddRoleSub() {
-// RoleModalController modalController = UiUtils.gI().openStageWithController(
-// "/GUI/RoleModal.fxml",
-// controller -> controller.setTypeModal(0),
-// "Thêm chức vụ");
-// if (modalController != null && modalController.isSaved()) {
-// NotificationUtils.showInfoAlert("Thêm chức vụ thành công.", "Thông báo");
-// loadComboBox();
-// }
-// }
+        // Save to database
+        int result;
+        if (typeModal == 0) {
+            // Insert new employee
+            result = employeeBUS.insert(employee, session.employeeRoleId(), session.employeeLoginId());
+            if (result == 1) {
+                NotificationUtils.showInfoAlert("Thêm nhân viên thành công", AppMessages.DIALOG_TITLE);
+                isSaved = true;
+                handleClose();
+            } else {
+                NotificationUtils.showErrorAlert("Thêm nhân viên thất bại", AppMessages.DIALOG_TITLE);
+            }
+        } else if (typeModal == 1) {
+            // Update existing employee
+            result = employeeBUS.update(employee, session.employeeRoleId(), session.employeeLoginId());
+            if (result == 1) {
+                NotificationUtils.showInfoAlert("Cập nhật nhân viên thành công", AppMessages.DIALOG_TITLE);
+                isSaved = true;
+                handleClose();
+            } else {
+                NotificationUtils.showErrorAlert("Cập nhật nhân viên thất bại", AppMessages.DIALOG_TITLE);
+            }
+        }
+    }
 
-// private void handleClose() {
-// if (closeBtn.getScene() != null && closeBtn.getScene().getWindow() != null) {
-// Stage stage = (Stage) closeBtn.getScene().getWindow();
-// stage.close();
-// }
-// }
-
-// private void clearAndFocus(TextField textField) {
-// textField.requestFocus();
-// }
-// }
+    private void handleClose() {
+        Stage stage = (Stage) closeBtn.getScene().getWindow();
+        stage.close();
+    }
+}

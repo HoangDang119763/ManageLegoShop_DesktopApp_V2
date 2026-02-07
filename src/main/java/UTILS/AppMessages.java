@@ -111,7 +111,25 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý danh mục/loại sản phẩm
      */
-    // Placeholder cho các messages về category
+    public static final String CATEGORY_NAME_EMPTY = "Tên thể loại không được để trống.";
+    public static final String CATEGORY_NAME_INVALID = "Tên thể loại không hợp lệ (1-50 ký tự, chỉ chữ và số).";
+    public static final String CATEGORY_STATUS_REQUIRED = "Vui lòng chọn trạng thái";
+    public static final String CATEGORY_ADD_ERROR = "Có lỗi khi thêm thể loại. Vui lòng thử lại.";
+    public static final String CATEGORY_ADD_NO_PERMISSION = "Bạn không có quyền \"Thêm thể loại\" để thực hiện thao tác này.";
+    public static final String CATEGORY_ADD_DUPLICATE = "Tên thể loại đã tồn tại trong hệ thống.";
+    public static final String CATEGORY_ADD_FAILED = "Thêm thể loại thất bại. Vui lòng thử lại sau.";
+    public static final String CATEGORY_UPDATE_ERROR = "Có lỗi khi cập nhật thể loại. Vui lòng thử lại.";
+    public static final String CATEGORY_UPDATE_NO_PERMISSION = "Bạn không có quyền \"Cập nhật thể loại\" để thực hiện thao tác này.";
+    public static final String CATEGORY_UPDATE_DUPLICATE = "Tên thể loại đã tồn tại trong hệ thống.";
+    public static final String CATEGORY_UPDATE_FAILED = "Cập nhật thể loại thất bại. Vui lòng thử lại sau.";
+    public static final String CATEGORY_DELETE_NO_PERMISSION = "Bạn không có quyền \"Xóa thể loại\" để thực hiện thao tác này.";
+    public static final String CATEGORY_DELETE_ERROR = "Lỗi xoá thể loại không thành công. Vui lòng thử lại.";
+    public static final String CATEGORY_DELETE_FAILED = "Xóa thể loại thất bại. Vui lòng thử lại sau.";
+    public static final String CATEGORY_CANNOT_DELETE_DEFAULT = "Không thể xóa thể loại gốc!";
+    public static final String CATEGORY_CANNOT_UPDATE_DEFAULT = "Không thể sửa thể loại gốc!";
+    public static final String CATEGORY_NOT_FOUND = "Thể loại không tồn tại hoặc đã bị xoá.";
+    public static final String CATEGORY_DELETE_DB_ERROR = "Không thể xoá thể loại ở CSDL.";
+    public static final String CATEGORY_DATA_INVALID = "Dữ liệu thể loại không hợp lệ. Vui lòng kiểm tra lại.";
 
     // ==================== MODULE CHIẾT KHẤU (DISCOUNT) ====================
     /**
@@ -145,6 +163,9 @@ public class AppMessages {
     public static final String DIALOG_TITLE = "Thông báo";
     public static final String DIALOG_TITLE_CONFIRM = "Thông báo xác nhận";
     public static final String GENERAL_REFRESH_SUCCESS = "Làm mới thành công";
+    public static final String DATABASE_CONNECTION_ERROR = "Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.";
+    public static final String PRODUCT_DATA_INVALID = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+    public static final String GENERAL_ERROR = "Lỗi không xác định. Thao tác thất bại.";
     public static final String UNKNOWN_ERROR = "Lỗi không xác định. Vui lòng thử lại.";
     public static final String OPERATION_SUCCESS = "Thao tác thành công!";
     public static final String OPERATION_FAILED = "Thao tác thất bại!";

@@ -18,56 +18,59 @@
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
-                <AnchorPane prefHeight="50.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                <AnchorPane prefHeight="50.0" BorderPane.alignment="CENTER">
                     <children>
-                        <AnchorPane prefHeight="50.0" prefWidth="880.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <AnchorPane prefHeight="50.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <children>
-                                <FontAwesomeIcon fill="#58c9c9" glyphName="SEARCH" layoutX="169.0" layoutY="32.0" size="1.8em" text="" AnchorPane.leftAnchor="169.0" AnchorPane.topAnchor="15.0" />
-                                <Line endX="79.0" endY="-3.814697265625E-6" layoutX="111.0" layoutY="38.0" startX="-100.0" stroke="#58c9c9" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="45.0" />
-                                <TextField fx:id="txtSearch" layoutX="10.0" layoutY="10.0" prefHeight="26.0" prefWidth="145.6" promptText="Nhập để tìm kiếm" styleClass="textfield" stylesheets="@../css/base.css" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="15.0" />
-                                <HBox alignment="CENTER_LEFT" layoutX="200.0" layoutY="3.0" prefHeight="46.0" prefWidth="246.0" spacing="10.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="303.2" AnchorPane.topAnchor="3.0">
+                                <FontAwesomeIcon fill="#58c9c9" glyphName="SEARCH" layoutX="169.0" layoutY="32.0" size="1.8em" AnchorPane.leftAnchor="169.0" AnchorPane.topAnchor="15.0" />
+                                <Line endX="79.0" layoutX="111.0" layoutY="45.0" startX="-100.0" stroke="#58c9c9" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="45.0" />
+                                <TextField fx:id="txtSearch" layoutX="10.0" layoutY="15.0" prefHeight="26.0" prefWidth="145.6" promptText="Nhập để tìm kiếm" styleClass="textfield" stylesheets="@../css/base.css" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="15.0" />
+                                
+                                <HBox alignment="CENTER_LEFT" layoutX="210.0" layoutY="3.0" prefHeight="46.0" spacing="10.0" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="3.0">
                                     <children>
                                         <ComboBox fx:id="cbSearchBy" prefHeight="26.0" prefWidth="140.0" stylesheets="@../css/base.css" />
                                         <ComboBox fx:id="cbCategoryFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
-                              <ComboBox fx:id="cbStatusFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
+                                        <ComboBox fx:id="cbStatusFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
                                     </children>
                                 </HBox>
-                        <VBox layoutX="808.0" layoutY="4.0">
-                           <children>
-                                      <HBox alignment="CENTER" prefHeight="46.0" prefWidth="257.0" spacing="10.0">
-                                          <children>
-                                              <FontAwesomeIcon fill="#58c9c9" glyphName="MONEY" size="2em" text="" />
-                                              <TextField fx:id="txtStartPrice" prefHeight="26.0" prefWidth="92.0" promptText="Giá bán từ" styleClass="textfield" stylesheets="@../css/base.css" />
-                                              <Line endX="-78.20001220703125" endY="-3.814697265625E-6" startX="-89.199951171875" startY="-3.814697265625E-6" stroke="#1f7d84" />
-                                              <TextField fx:id="txtEndPrice" prefHeight="26.0" prefWidth="92.0" promptText="Giá bán đến" styleClass="textfield" stylesheets="@../css/base.css" />
-                                          </children>
-                                      </HBox>
-                           </children>
-                        </VBox>
+
+                                <VBox layoutX="808.0" layoutY="4.0" AnchorPane.rightAnchor="10.0">
+                                    <children>
+                                        <HBox alignment="CENTER" prefHeight="46.0" prefWidth="257.0" spacing="10.0">
+                                            <children>
+                                                <FontAwesomeIcon fill="#58c9c9" glyphName="MONEY" size="2em" text="" />
+                                                <TextField fx:id="txtStartPrice" prefHeight="26.0" prefWidth="92.0" promptText="Giá bán từ" styleClass="textfield" stylesheets="@../css/base.css" />
+                                                <Line endX="-10.0" stroke="#1f7d84" />
+                                                <TextField fx:id="txtEndPrice" prefHeight="26.0" prefWidth="92.0" promptText="Giá bán đến" styleClass="textfield" stylesheets="@../css/base.css" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
                             </children>
                         </AnchorPane>
                     </children>
                 </AnchorPane>
             </top>
+            
             <center>
-                <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                <AnchorPane BorderPane.alignment="CENTER">
                     <children>
-                        <AnchorPane layoutX="10.0" layoutY="9.0" prefHeight="286.0" prefWidth="858.0" stylesheets="@../css/base.css" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
+                        <AnchorPane layoutX="10.0" layoutY="5.0" stylesheets="@../css/base.css" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
                             <styleClass>
                                 <String fx:value="white-bg" />
                                 <String fx:value="shadow" />
                             </styleClass>
                             <children>
-                                <TableView fx:id="tblProduct" editable="true" prefHeight="444.0" prefWidth="859.2" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <TableView fx:id="tblProduct" prefHeight="444.0" prefWidth="859.2" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                     <columns>
-                                        <TableColumn fx:id="tlb_col_id" prefWidth="110.39999234676361" text="Mã sản phẩm" />
-                                        <TableColumn fx:id="tlb_col_name" prefWidth="112.8000259399414" text="Tên sản phẩm" />
-                                        <TableColumn fx:id="tlb_col_imageUrl" prefWidth="93.5999755859375" text="Hình ảnh" />
-                                        <TableColumn fx:id="tlb_col_description" prefWidth="111.20001220703125" text="Mô tả" />
-                                        <TableColumn fx:id="tlb_col_categoryName" prefWidth="99.20001220703125" text="Thể loại" />
-                                        <TableColumn fx:id="tlb_col_sellingPrice" minWidth="0.0" prefWidth="134.4000244140625" text="Giá bán" />
-                                        <TableColumn fx:id="tlb_col_stockQuantity" prefWidth="94.40008544921875" text="Còn lại" />
-                                        <TableColumn fx:id="tlb_col_status" prefWidth="110.4000244140625" text="Trạng thái" />
+                                        <TableColumn fx:id="tlb_col_id" prefWidth="110.0" text="Mã sản phẩm" />
+                                        <TableColumn fx:id="tlb_col_name" prefWidth="112.0" text="Tên sản phẩm" />
+                                        <TableColumn fx:id="tlb_col_imageUrl" prefWidth="93.0" text="Hình ảnh" />
+                                        <TableColumn fx:id="tlb_col_description" prefWidth="111.0" text="Mô tả" />
+                                        <TableColumn fx:id="tlb_col_categoryName" prefWidth="99.0" text="Thể loại" />
+                                        <TableColumn fx:id="tlb_col_sellingPrice" prefWidth="134.0" text="Giá bán" />
+                                        <TableColumn fx:id="tlb_col_stockQuantity" prefWidth="94.0" text="Còn lại" />
+                                        <TableColumn fx:id="tlb_col_status" prefWidth="110.0" text="Trạng thái" />
                                     </columns>
                                     <columnResizePolicy>
                                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -78,69 +81,39 @@
                     </children>
                 </AnchorPane>
             </center>
+
             <bottom>
-                <AnchorPane prefHeight="50.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                <AnchorPane prefHeight="50.0" BorderPane.alignment="CENTER">
                     <children>
-                        <AnchorPane prefHeight="50.0" prefWidth="880.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <HBox alignment="CENTER_LEFT" layoutX="10.0" spacing="10.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="10.0">
                             <children>
-                                <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" prefHeight="46.0" prefWidth="405.0" spacing="10.0" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="9.5" AnchorPane.topAnchor="0.0">
-                                    <children>
-                              <Button fx:id="detailBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="94.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Chi tiết">
-                                 <graphic>
-                                    <FontAwesomeIcon glyphName="EYE" size="1.2em" styleClass="action-icon" />
-                                 </graphic>
-                                 <font>
-                                    <Font size="14.0" />
-                                 </font>
-                              </Button>
-                                        <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Thêm">
-                                            <graphic>
-                                                <FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" />
-                                            </graphic>
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </Button>
-                                        <Button fx:id="editBtn" mnemonicParsing="false" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Sửa">
-                                            <graphic>
-                                                <FontAwesomeIcon glyphName="PENCIL" size="1.2em" styleClass="action-icon" />
-                                            </graphic>
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </Button>
-                                        <Button fx:id="deleteBtn" mnemonicParsing="false" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Xóa">
-                                            <graphic>
-                                                <FontAwesomeIcon glyphName="TRASH" size="1.2em" styleClass="action-icon" />
-                                            </graphic>
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </Button>
-                                    </children>
-                                </HBox>
-                            </children>
-                        </AnchorPane>
-                  <HBox alignment="CENTER_LEFT" layoutX="10.399999618530273" layoutY="4.800000190734863" spacing="10.0">
-                     <children>
                                 <Button fx:id="refreshBtn" mnemonicParsing="false" prefHeight="35.0" prefWidth="108.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Làm mới">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                    <graphic>
-                                        <FontAwesomeIcon glyphName="REFRESH" size="1.2em" styleClass="action-icon" />
-                                    </graphic>
+                                    <graphic><FontAwesomeIcon glyphName="REFRESH" size="1.2em" styleClass="action-icon" /></graphic>
+                                    <font><Font size="14.0" /></font>
                                 </Button>
-                        <Button fx:id="btnImportExcel" mnemonicParsing="false" prefHeight="34.4" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Nhập Excel">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                           <graphic>
-                              <FontAwesomeIcon glyphName="TABLE" size="1.2em" styleClass="action-icon" />
-                           </graphic>
-                        </Button>
-                     </children>
-                  </HBox>
+                                <Button fx:id="btnImportExcel" mnemonicParsing="false" prefHeight="35.0" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Nhập Excel">
+                                    <graphic><FontAwesomeIcon glyphName="TABLE" size="1.2em" styleClass="action-icon" text="" /></graphic>
+                                    <font><Font size="14.0" /></font>
+                                </Button>
+                            </children>
+                        </HBox>
+
+                        <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0">
+                            <children>
+                                <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Thêm">
+                                    <graphic><FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" /></graphic>
+                                    <font><Font size="14.0" /></font>
+                                </Button>
+                                <Button fx:id="editBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Sửa">
+                                    <graphic><FontAwesomeIcon glyphName="PENCIL" size="1.2em" styleClass="action-icon" /></graphic>
+                                    <font><Font size="14.0" /></font>
+                                </Button>
+                                <Button fx:id="deleteBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Xóa">
+                                    <graphic><FontAwesomeIcon glyphName="TRASH" size="1.2em" styleClass="action-icon" /></graphic>
+                                    <font><Font size="14.0" /></font>
+                                </Button>
+                            </children>
+                        </HBox>
                     </children>
                 </AnchorPane>
             </bottom>

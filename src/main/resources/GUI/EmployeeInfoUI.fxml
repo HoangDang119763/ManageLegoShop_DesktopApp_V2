@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Line?>
@@ -19,34 +20,37 @@
 
 <AnchorPane prefHeight="650.0" prefWidth="1074.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.EmployeeInfoController">
    <children>
-      <BorderPane prefHeight="700.0" prefWidth="1150.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <center>
             <HBox alignment="CENTER" spacing="15.0" BorderPane.alignment="CENTER">
                <padding>
-                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                  <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                </padding>
                <children>
                   
-                  <VBox prefHeight="610.0" prefWidth="660.0" spacing="25.0" styleClass="white-bg, shadow" HBox.hgrow="ALWAYS">
+                  <VBox maxWidth="750.0" minWidth="750.0" prefWidth="750.0" spacing="12.0" styleClass="white-bg, shadow" HBox.hgrow="NEVER">
                      <padding>
-                        <Insets bottom="25.0" left="25.0" right="25.0" top="20.0" />
+                        <Insets bottom="15.0" left="25.0" right="25.0" top="15.0" />
                      </padding>
                      <children>
-                        <VBox spacing="8.0">
+                        <VBox spacing="5.0">
                            <children>
-                              <HBox spacing="10.0">
+                              <HBox alignment="CENTER_LEFT" minHeight="40.0" spacing="10.0">
                                  <children>
-                                    <FontAwesomeIcon fill="#1f7d84" glyphName="USER_SECRET" size="1.8em" />
+                                    <FontAwesomeIcon fill="#1f7d84" glyphName="USER_SECRET" size="1.6em" />
                                     <Label styleClass="label-header" text="HỒ SƠ NHÂN VIÊN" textFill="#1f7d84">
-                                       <font><Font name="System Bold" size="20.0" /></font>
+                                       <font><Font name="System Bold" size="18.0" /></font>
+                                       <HBox.margin>
+                                          <Insets top="5.0" />
+                                       </HBox.margin>
                                     </Label>
                                  </children>
                               </HBox>
-                              <Line endX="600.0" stroke="#eee" strokeWidth="2.0" />
+                              <Line endX="700.0" stroke="#eee" strokeWidth="2.0" />
                            </children>
                         </VBox>
-                        
-                        <GridPane hgap="15.0" vgap="15.0">
+
+                        <GridPane hgap="15.0" vgap="8.0">
                           <columnConstraints>
                             <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="120.0" prefWidth="130.0" />
                             <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
@@ -55,133 +59,226 @@
                           </columnConstraints>
                           <children>
                               <Label styleClass="label-a" text="Mã nhân viên:" GridPane.rowIndex="0" />
-                              <TextField fx:id="lblEmployeeId" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                              <Label styleClass="label-a" text="Giới tính:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-                              <TextField fx:id="lblGender" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="3" GridPane.rowIndex="0" />
-
-                              <Label styleClass="label-a" text="Họ đệm:" GridPane.rowIndex="1" />
-                              <TextField fx:id="lblFirstName" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label styleClass="label-a" text="Tên:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                              <TextField fx:id="lblLastName" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                              <TextField fx:id="lblEmployeeId" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" />
                               
-                              <Label styleClass="label-a" text="Ngày sinh:" GridPane.rowIndex="2" />
-                              <TextField fx:id="lblDateOfBirth" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <Label styleClass="label-a" text="Điện thoại:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                              <TextField fx:id="lblPhone" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                              <Label styleClass="label-a" text="Giới tính:" GridPane.columnIndex="2" />
+                              <TextField fx:id="lblGender" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="3" />
 
-                              <Label styleClass="label-a" text="Email:" GridPane.rowIndex="3" />
-                              <TextField fx:id="lblEmail" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                              <Label styleClass="label-a" text="Trạng thái:" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                              <TextField fx:id="lblStatus" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                              <Label styleClass="label-a" text="Phòng ban:" GridPane.rowIndex="1" />
+                              <TextField fx:id="lblDepartmentName" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               
-                              <Label styleClass="label-a" text="Vai trò:" GridPane.rowIndex="4" />
-                              <TextField fx:id="lblRoleName" editable="false" prefHeight="35.0" styleClass="textfield" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                              <Label styleClass="label-a" text="Vai trò:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <TextField fx:id="lblRoleName" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+
+                              <Label styleClass="label-a" text="Trạng thái:" GridPane.rowIndex="2" />
+                              <TextField fx:id="lblStatus" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                           </children>
                            <rowConstraints>
-                              <RowConstraints />
-                              <RowConstraints />
                               <RowConstraints />
                               <RowConstraints />
                               <RowConstraints />
                            </rowConstraints>
                         </GridPane>
 
-                        <VBox spacing="8.0">
+                        <VBox spacing="5.0">
                            <children>
-                              <HBox alignment="CENTER_LEFT" spacing="10.0">
+                              <HBox alignment="CENTER_LEFT" minHeight="35.0" spacing="10.0">
                                  <children>
-                                    <FontAwesomeIcon fill="#1f7d84" glyphName="USER_PLUS" size="1.8em" />
-                                    <Label styleClass="label-header" text="QUYỀN LỢI &amp; BẢO HIỂM" textFill="#1f7d84">
-                                       <font><Font name="System Bold" size="20.0" /></font>
+                                    <FontAwesomeIcon fill="#1f7d84" glyphName="PENCIL_SQUARE_ALT" size="1.4em" />
+                                    <Label text="Thông tin liên hệ" textFill="#1f7d84">
+                                       <font><Font name="System Bold" size="16.0" /></font>
                                     </Label>
                                  </children>
                               </HBox>
-                              <Line endX="600.0" stroke="#eee" strokeWidth="2.0" />
+                              <Line endX="700.0" stroke="#f4f4f4" strokeWidth="1.5" />
                            </children>
-                           <VBox.margin><Insets top="10.0" /></VBox.margin>
+                           <VBox.margin><Insets top="5.0" /></VBox.margin>
                         </VBox>
 
-                        <GridPane hgap="30.0" vgap="15.0">
+                        <GridPane hgap="15.0" vgap="8.0">
+                          <columnConstraints>
+                            <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="120.0" prefWidth="130.0" />
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+                            <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="100.0" prefWidth="110.0" />
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+                          </columnConstraints>
+                          <children>
+                              <Label styleClass="label-a" text="Họ đệm:" />
+                              <TextField fx:id="lblFirstName" prefHeight="32.0" styleClass="textfield-1" GridPane.columnIndex="1" />
+                              <Label styleClass="label-a" text="Tên:" GridPane.columnIndex="2" />
+                              <TextField fx:id="lblLastName" prefHeight="32.0" styleClass="textfield-1" GridPane.columnIndex="3" />
+                              
+                              <Label styleClass="label-a" text="Ngày sinh:" GridPane.rowIndex="1" />
+                              <TextField fx:id="lblDateOfBirth" prefHeight="32.0" styleClass="textfield-1" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label styleClass="label-a" text="Điện thoại:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <TextField fx:id="lblPhone" prefHeight="32.0" styleClass="textfield-1" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+
+                              <Label styleClass="label-a" text="Email:" GridPane.rowIndex="2" />
+                              <TextField fx:id="lblEmail" prefHeight="32.0" styleClass="textfield-1" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Label styleClass="label-a" text="Mã BHYT:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <TextField fx:id="lblHealthInsCode" prefHeight="32.0" styleClass="textfield-1" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                          </children>
+                           <rowConstraints>
+                              <RowConstraints />
+                              <RowConstraints />
+                              <RowConstraints />
+                           </rowConstraints>
+                        </GridPane>
+
+                        <VBox spacing="5.0">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" minHeight="35.0" spacing="10.0">
+                                 <children>
+                                    <FontAwesomeIcon fill="#1f7d84" glyphName="HEARTBEAT" size="1.4em" />
+                                    <Label text="Quyền lợi &amp; Trợ cấp" textFill="#1f7d84">
+                                       <font><Font name="System Bold" size="16.0" /></font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <Line endX="700.0" stroke="#eee" strokeWidth="1.5" />
+                           </children>
+                           <VBox.margin><Insets top="5.0" /></VBox.margin>
+                        </VBox>
+
+                        <GridPane hgap="30.0" vgap="8.0">
                           <columnConstraints>
                             <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
                             <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
                           </columnConstraints>
                           <children>
-                              <CheckBox fx:id="cbHealthIns" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm y tế" GridPane.rowIndex="0" />
-                              <CheckBox fx:id="cbSocialIns" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm xã hội" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                              <CheckBox fx:id="cbUnemploymentIns" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm thất nghiệp" GridPane.rowIndex="1" />
-                              <CheckBox fx:id="cbIncomeTax" mouseTransparent="true" styleClass="label-a" text="Thuế TN cá nhân" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <CheckBox fx:id="cbTransportSupport" mouseTransparent="true" styleClass="label-a" text="Hỗ trợ đi lại" GridPane.rowIndex="2" />
-                              <CheckBox fx:id="cbAccommSupport" mouseTransparent="true" styleClass="label-a" text="Hỗ trợ chỗ ở" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <CheckBox fx:id="cbHealthIns" focusTraversable="false" minHeight="25.0" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm y tế" GridPane.rowIndex="0" />
+                              <CheckBox fx:id="cbSocialIns" focusTraversable="false" minHeight="25.0" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm xã hội" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                              <CheckBox fx:id="cbUnemploymentIns" focusTraversable="false" minHeight="25.0" mouseTransparent="true" styleClass="label-a" text="Bảo hiểm thất nghiệp" GridPane.rowIndex="1" />
+                              <CheckBox fx:id="cbIncomeTax" focusTraversable="false" minHeight="25.0" mouseTransparent="true" styleClass="label-a" text="Thuế TN cá nhân" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <CheckBox fx:id="cbTransportSupport" focusTraversable="false" minHeight="25.0" mouseTransparent="true" styleClass="label-a" text="Hỗ trợ đi lại" GridPane.rowIndex="2" />
+                              <CheckBox fx:id="cbAccommSupport" focusTraversable="false" minHeight="25.0" mouseTransparent="true" styleClass="label-a" text="Hỗ trợ chỗ ở" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                           </children>
-                           <padding><Insets left="30.0" /></padding>
+                           <padding><Insets left="40.0" /></padding>
                            <rowConstraints>
                               <RowConstraints />
                               <RowConstraints />
                               <RowConstraints />
                            </rowConstraints>
                         </GridPane>
+
+                        <HBox alignment="CENTER_LEFT" maxHeight="50.0" minHeight="50.0" prefHeight="50.0" spacing="10.0" VBox.vgrow="ALWAYS">
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="20.0">
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="5.0">
+                    <children>
+                        <Label minWidth="110.0" styleClass="label-metadata" text="Ngày tạo hồ sơ:" />
+                        <Label fx:id="lblCreatedAt" minWidth="140.0" text="07/02/2026 2:0:54" textFill="#7f8c8d">
+                            <font><Font name="Segoe UI Italic" size="14.0" /></font>
+                        </Label>
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="5.0">
+                    <children>
+                        <Label minWidth="110.0" styleClass="label-metadata" text="Cập nhật cuối:" />
+                        <Label fx:id="lblUpdatedAt" minWidth="140.0" text="07/02/2026 2:0:54" textFill="#7f8c8d">
+                            <font><Font name="Segoe UI Italic" size="14.0" /></font>
+                        </Label>
+                    </children>
+                </HBox>
+            </children>
+        </HBox>
+
+        
+        <Region HBox.hgrow="ALWAYS" />
+
+        <Button fx:id="btnUpdateInfo" minWidth="130.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="180.0" styleClass="action-btn" text="LƯU">
+            <graphic>
+                <FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.2em" />
+            </graphic>
+            <font>
+                <Font name="System Bold" size="14.0" />
+            </font>
+            <HBox.margin>
+                <Insets bottom="5.0" />
+            </HBox.margin>
+        </Button>
+    </children>
+    <padding>
+        <Insets left="5.0" right="5.0" top="10.0" />
+    </padding>
+</HBox>
                      </children>
                   </VBox>
 
-                  <VBox maxWidth="355.0" prefHeight="610.0" prefWidth="355.0" spacing="25.0" styleClass="white-bg, shadow" HBox.hgrow="ALWAYS">
+                  <VBox spacing="18.0" styleClass="white-bg, shadow" HBox.hgrow="ALWAYS">
                      <padding>
-                        <Insets bottom="25.0" left="25.0" right="25.0" top="20.0" />
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="15.0" />
                      </padding>
                      <children>
-                        <VBox spacing="8.0">
+                        <VBox spacing="5.0">
                            <children>
-                              <HBox alignment="CENTER_LEFT" spacing="10.0">
+                              <HBox alignment="CENTER_LEFT" minHeight="40.0" spacing="10.0">
                                  <children>
-                                    <FontAwesomeIcon fill="#1f7d84" glyphName="SHIELD" size="1.8em" />
-                                    <Label styleClass="label-header" text="BẢO MẬT TÀI KHOẢN" textFill="#1f7d84">
-                                       <font><Font name="System Bold" size="20.0" /></font>
+                                    <FontAwesomeIcon fill="#1f7d84" glyphName="SHIELD" size="1.6em" />
+                                    <Label styleClass="label-header" text="BẢO MẬT" textFill="#1f7d84">
+                                       <font>
+                                          <Font name="System Bold" size="18.0" />
+                                       </font>
+                                       <HBox.margin>
+                                          <Insets top="5.0" />
+                                       </HBox.margin>
                                     </Label>
                                  </children>
                               </HBox>
-                              <Line endX="320.0" stroke="#eee" strokeWidth="2.0" />
+                              <Line endX="235.0" stroke="#eee" strokeWidth="2.0" />
                            </children>
                         </VBox>
                         
-                        <VBox spacing="15.0">
+                              <VBox spacing="10.0">
                            <children>
-                              <VBox spacing="5.0">
+                              <VBox spacing="4.0">
                                  <children>
-                                    <Label styleClass="label-a" text="Tên đăng nhập:" />
-                                    <TextField fx:id="lblUsername" editable="false" focusTraversable="false" prefHeight="40.0" styleClass="textfield" />
+                                    <Label styleClass="label-a" text="Tên tài khoản:" />
+                                    <TextField fx:id="lblUsername" editable="false" focusTraversable="false" prefHeight="35.0" styleClass="textfield-1, readonly" />
                                  </children>
                               </VBox>
-                              <VBox spacing="5.0">
+                              <VBox spacing="4.0">
                                  <children>
                                     <Label styleClass="label-a" text="Mật khẩu cũ:" />
-                                    <PasswordField fx:id="txtOldPassword" prefHeight="40.0" promptText="Nhập mật khẩu cũ" styleClass="textfield" />
+                                    <PasswordField fx:id="txtOldPassword" prefHeight="35.0" promptText="********" styleClass="textfield-1" />
                                  </children>
                               </VBox>
-                              <VBox spacing="5.0">
+                              <VBox spacing="4.0">
                                  <children>
                                     <Label styleClass="label-a" text="Mật khẩu mới:" />
-                                    <PasswordField fx:id="txtNewPassword" prefHeight="40.0" promptText="Nhập mật khẩu mới" styleClass="textfield" />
+                                    <PasswordField fx:id="txtNewPassword" prefHeight="35.0" promptText="********" styleClass="textfield-1" />
                                  </children>
                               </VBox>
-                              <VBox spacing="5.0">
+                              <VBox spacing="4.0">
                                  <children>
-                                    <Label styleClass="label-a" text="Xác nhận mật khẩu:" />
-                                    <PasswordField fx:id="txtConfirmPassword" prefHeight="40.0" promptText="Xác nhận lại mật khẩu" styleClass="textfield" />
+                                    <Label styleClass="label-a" text="Xác nhận lại:" />
+                                    <PasswordField fx:id="txtReNewPassword" prefHeight="35.0" promptText="********" styleClass="textfield-1" />
                                  </children>
                               </VBox>
                            </children>
                         </VBox>
 
-                        <HBox alignment="BOTTOM_RIGHT" spacing="12.0">
+                              <VBox alignment="BOTTOM_CENTER" maxHeight="90.0" spacing="10.0" VBox.vgrow="ALWAYS">
                            <children>
-                              <Button fx:id="btnChangePassword" mnemonicParsing="false" prefHeight="45.0" prefWidth="150.0" styleClass="action-btn" text="Đổi mật khẩu">
-                                 <graphic><FontAwesomeIcon fill="WHITE" glyphName="KEY" /></graphic>
+                              <Button fx:id="btnChangePassword" maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="40.0" styleClass="action-btn" text="ĐỔI MẬT KHẨU">
+                                 <graphic>
+                                    <FontAwesomeIcon fill="WHITE" glyphName="KEY" />
+                                 </graphic>
+                                 <font>
+                                    <Font name="System Bold" size="13.0" />
+                                 </font>
                               </Button>
-                              <Button fx:id="btnClear" mnemonicParsing="false" prefHeight="45.0" prefWidth="110.0" styleClass="action-btn" text="Làm mới">
-                                 <graphic><FontAwesomeIcon fill="WHITE" glyphName="REFRESH" /></graphic>
+                              <Button fx:id="btnClear" maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="40.0" styleClass="action-btn" text="LÀM MỚI">
+                                 <graphic>
+                                    <FontAwesomeIcon fill="WHITE" glyphName="REFRESH" />
+                                 </graphic>
+                                 <font>
+                                    <Font name="System Bold" size="13.0" />
+                                 </font>
                               </Button>
                            </children>
-                        </HBox>
+                        </VBox>
                      </children>
                   </VBox>
                </children>
