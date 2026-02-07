@@ -130,4 +130,9 @@ public class Status {
             return defaultAmount;
         }
     }
+
+    // Enum cho Phòng ban
+    public enum Department {
+        ACTIVE, INACTIVE
+    }
 }

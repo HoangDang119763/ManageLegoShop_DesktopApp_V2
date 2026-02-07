@@ -14,6 +14,7 @@ public class EmployeeDTO extends BaseInformationDTO {
     private String lastName;
     private String email;
     private int roleId;
+    private Integer departmentId; // Phòng ban
     private String gender;
     private Integer accountId; // Dùng Integer để có thể nhận giá trị null
     private String healthInsCode; // Mã BHYT
@@ -34,7 +35,7 @@ public class EmployeeDTO extends BaseInformationDTO {
 
     // Constructor đầy đủ cho việc lấy dữ liệu từ DB
     public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
-            LocalDate dateOfBirth, int roleId, int statusId,
+            LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
             String gender, Integer accountId, String healthInsCode,
             boolean isSocialInsurance, boolean isUnemploymentInsurance,
             boolean isPersonalIncomeTax, boolean isTransportationSupport,
@@ -44,6 +45,7 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.lastName = lastName;
         this.email = email;
         this.roleId = roleId;
+        this.departmentId = departmentId;
         this.gender = gender;
         this.accountId = accountId;
         this.healthInsCode = healthInsCode;
@@ -62,6 +64,7 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.lastName = other.lastName;
         this.email = other.email;
         this.roleId = other.roleId;
+        this.departmentId = other.departmentId;
         this.gender = other.gender;
         this.accountId = other.accountId;
         this.statusId = other.statusId;
