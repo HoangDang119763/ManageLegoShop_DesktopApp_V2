@@ -26,7 +26,8 @@ public class EmployeeDTO extends BaseInformationDTO {
     private boolean isTransportationSupport;
     private boolean isAccommodationSupport;
 
-    // Thời gian cập nhật
+    // Thời gian
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public EmployeeDTO() {
@@ -39,7 +40,7 @@ public class EmployeeDTO extends BaseInformationDTO {
             String gender, Integer accountId, String healthInsCode,
             boolean isSocialInsurance, boolean isUnemploymentInsurance,
             boolean isPersonalIncomeTax, boolean isTransportationSupport,
-            boolean isAccommodationSupport, LocalDateTime updatedAt) {
+            boolean isAccommodationSupport, LocalDateTime createdAt, LocalDateTime updatedAt) {
         super(id, dateOfBirth, phone, statusId);
         this.firstName = firstName;
         this.lastName = lastName;
@@ -54,6 +55,7 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.isPersonalIncomeTax = isPersonalIncomeTax;
         this.isTransportationSupport = isTransportationSupport;
         this.isAccommodationSupport = isAccommodationSupport;
+        this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
@@ -74,6 +76,7 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.isPersonalIncomeTax = other.isPersonalIncomeTax;
         this.isTransportationSupport = other.isTransportationSupport;
         this.isAccommodationSupport = other.isAccommodationSupport;
+        this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;
     }
 

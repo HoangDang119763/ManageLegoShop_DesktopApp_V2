@@ -36,6 +36,9 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 resultSet.getBoolean("is_personal_income_tax"),
                 resultSet.getBoolean("is_transportation_support"),
                 resultSet.getBoolean("is_accommodation_support"),
+                resultSet.getTimestamp("created_at") != null
+                        ? resultSet.getTimestamp("created_at").toLocalDateTime()
+                        : null,
                 resultSet.getTimestamp("updated_at") != null
                         ? resultSet.getTimestamp("updated_at").toLocalDateTime()
                         : null);

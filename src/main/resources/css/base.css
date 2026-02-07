@@ -261,7 +261,7 @@
 
 /* Định dạng cho DatePicker */
 .date-picker {
-    -fx-font-size: 12px;
+    -fx-font-size: 14px;
     /* Kích thước phông chữ */
     -fx-border-color: #58c9c9;
 }
@@ -326,6 +326,10 @@
     -fx-border-color: none;
     -fx-font-family: "Arial";
     -fx-font-size: 16px;
+}
+
+.readonly {
+    -fx-background-color: #D3D3D3;
 }
 
 .textarea-1 {
@@ -457,6 +461,8 @@
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
     -fx-letter-spacing: 1px;
     -fx-padding: 0 0 5 0;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
     /* Tạo khoảng trống nhẹ với đường kẻ */
 }
 

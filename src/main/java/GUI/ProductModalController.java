@@ -11,6 +11,7 @@ import SERVICE.ImageService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -160,6 +161,7 @@ public class ProductModalController {
         txtStockQuantity.setText(String.valueOf(product.getStockQuantity()));
         txtCreatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(product.getCreatedAt()));
         txtUpdatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(product.getUpdatedAt()));
+        // Only admin can edit selling price ---
         if (SessionManagerService.getInstance().employeeRoleId() == 1) {
             txtSellingPrice.setMouseTransparent(false);
             txtSellingPrice.setFocusTraversable(true);
@@ -197,7 +199,7 @@ public class ProductModalController {
     }
 
     private void setupReadOnlyMode() {
-// Đối với TextField và TextArea: Chỉ cấm sửa, không cấm tương tác
+        // Đối với TextField và TextArea: Chỉ cấm sửa, không cấm tương tác
         txtProductId.setEditable(false);
         txtProductName.setEditable(false);
         txtDescription.setEditable(false);
@@ -209,12 +211,14 @@ public class ProductModalController {
         // Kết hợp với setFocusTraversable(false) để không bị chọn bằng phím Tab
         cbSelectCategory.setMouseTransparent(true);
         cbSelectCategory.setFocusTraversable(false);
+        cbSelectCategory.setPrefWidth(382);
         cbSelectStatus.setMouseTransparent(true);
         cbSelectStatus.setFocusTraversable(false);
 
         // Hide action buttons
         functionBtns.getChildren().remove(saveBtn);
         subCategoryBox.getChildren().remove(addCategorySubBtn);
+
         choseImg.setVisible(false);
 
         // Change close button text and style
@@ -380,16 +384,15 @@ public class ProductModalController {
     }
 
     private void handleAddCategorySub() {
-        // CategoryModalController modalController =
-        // UiUtils.gI().openStageWithController(
-        // "/GUI/CategoryModal.fxml",
-        // controller -> controller.setTypeModal(0),
-        // "Thêm thể loại");
-        // if (modalController != null && modalController.isSaved()) {
-        // NotificationUtils.showInfoAlert(AppMessages.OPERATION_SUCCESS,
-        // AppMessages.DIALOG_TITLE);
-        // loadComboBox();
-        // }
+        CategoryModalController modalController = UiUtils.gI().openStageWithController(
+                "/GUI/CategoryModal.fxml",
+                controller -> controller.setTypeModal(0),
+                "Thêm thể loại");
+        if (modalController != null && modalController.isSaved()) {
+            NotificationUtils.showInfoAlert(AppMessages.OPERATION_SUCCESS,
+                    AppMessages.DIALOG_TITLE);
+            loadComboBox();
+        }
     }
 
     private void focus(TextField textField) {

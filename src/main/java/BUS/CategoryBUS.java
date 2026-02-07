@@ -192,8 +192,7 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
 
         for (CategoryDTO cate : arrLocal) {
             boolean matchesSearch = true;
-            // boolean matchesStatus = (statusFilter == -1) || (cate.isStatus() ==
-            // (statusFilter == 1));
+            boolean matchesStatus = (statusFilter == -1) || (cate.getStatusId() == statusFilter);
 
             String id = String.valueOf(cate.getId());
             String username = cate.getName() != null ? cate.getName().toLowerCase() : "";
@@ -205,7 +204,7 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
                 }
             }
 
-            if (matchesSearch /* && matchesStatus */) {
+            if (matchesSearch && matchesStatus) {
                 filteredList.add(cate);
             }
         }

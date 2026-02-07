@@ -30,6 +30,11 @@ public class RoleDTO {
         this.salaryId = salaryId;
     }
 
+    public RoleDTO(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public RoleDTO(RoleDTO other) {
         if (other != null) {
             this.id = other.id;
@@ -109,5 +114,10 @@ public class RoleDTO {
 
     public void setSalaryId(Integer salaryId) {
         this.salaryId = salaryId;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
