@@ -72,7 +72,10 @@ INSERT INTO `status` (`name`, `description`, `type`) VALUES
 ('APPROVED', 'Quyết định đã được duyệt, chờ ngày có hiệu lực', 'WORKING_HISTORY'),
 ('EFFECTIVE', 'Quyết định đã chính thức đi vào hiệu lực', 'WORKING_HISTORY'),
 ('REJECTED', 'Quyết định bị cấp trên từ chối', 'WORKING_HISTORY'),
-('CANCELED', 'QVERTISE định đã bị hủy bỏ trước khi thực hiện', 'WORKING_HISTORY');
+('CANCELED', 'QVERTISE định đã bị hủy bỏ trước khi thực hiện', 'WORKING_HISTORY'),
+-- Nhóm Nhà Phòng Ban - Department
+('Active', 'Hoạt động', 'DEPARTMENT'),
+('Inactive', 'Vô hiệu', 'DEPARTMENT');
 
 -- Tạo bảng Role
 CREATE TABLE `role` (
@@ -211,6 +214,25 @@ WHERE `role_id` IN (4, 5, 6) AND `permission_id` IN (4, 6, 13, 14);
 UPDATE `role_permission` SET `status` = 1 
 WHERE `role_id` IN (7, 8) AND `permission_id` IN (7,9, 10,12, 15,16, 17,19);
 
+CREATE TABLE `department` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,          -- Tên phòng ban (VD: Phòng Nhân sự, Phòng Kinh doanh)
+  `description` TEXT DEFAULT NULL,       -- Mô tả chức năng nhiệm vụ
+  `status_id` INT NOT NULL,              -- Trạng thái (Hoạt động, Giải thể...)
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  -- Ràng buộc khóa ngoại
+  CONSTRAINT `fk_dept_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+INSERT INTO `department` (`name`, `description`, `status_id`) VALUES 
+('Phòng Hội đồng quản trị', 'Ban lãnh đạo cấp cao', 27), -- Giả sử 1 là Hoạt động
+('Phòng Nhân sự', 'Quản lý tuyển dụng và đào tạo', 27),
+('Phòng Kinh doanh', 'Tiếp thị và bán lẻ sản phẩm LEGO', 27),
+('Phòng Kho vận', 'Quản lý nhập xuất hàng hóa', 27),
+('Phòng Kỹ thuật', 'Bảo trì hệ thống và hỗ trợ', 27);
+
 CREATE TABLE `employee` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `first_name` VARCHAR(100) NOT NULL,
@@ -220,11 +242,10 @@ CREATE TABLE `employee` (
   `date_of_birth` DATE DEFAULT NULL,
   `gender` VARCHAR(255) DEFAULT NULL,
   `role_id` INT(11) DEFAULT NULL,
+  `department_id` INT DEFAULT NULL, -- Liên kết phòng ban
   `status_id` INT NOT NULL,
   `account_id` INT DEFAULT NULL,
-  -- Chỉ mã BHYT là dùng String
   `health_ins_code` VARCHAR(50) DEFAULT NULL, 
-  -- Các cờ hiệu Boolean (0: Không, 1: Có)
   `is_social_insurance` TINYINT(1) DEFAULT '0',
   `is_unemployment_insurance` TINYINT(1) DEFAULT '0',
   `is_personal_income_tax` TINYINT(1) DEFAULT '0',
@@ -234,29 +255,34 @@ CREATE TABLE `employee` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   CONSTRAINT `fk_employee_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_employee_department` FOREIGN KEY (`department_id`) REFERENCES `department` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_employee_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 INSERT INTO `employee` 
 (
   `first_name`, `last_name`, `phone`, `email`, `date_of_birth`, 
-  `role_id`, `status_id`, `gender`, `account_id`, 
+  `role_id`, `department_id`, `status_id`, `gender`, `account_id`, 
   `health_ins_code`, `is_social_insurance`, `is_unemployment_insurance`, 
   `is_personal_income_tax`, `is_transportation_support`, `is_accommodation_support`
 ) 
 VALUES 
-('Đặng Huy', 'Hoàng', '0123456789', 'hoang.dh@company.com', '2004-06-11', 1, 1, 'Nam', 1, 'HI-2026001', 1, 1, 1, 1, 1),
-('Nguyễn Thành', 'Long', '0987654321', 'long.nt@company.com', '2003-04-11', 2, 1, 'Nam', 2, 'HI-2026002', 1, 1, 1, 0, 0),
-('Tần Thiên', 'Lang', '0912345678', 'lang.tt@company.com', '2000-01-15', 3, 1, 'Nam', 3, 'HI-2026003', 1, 1, 0, 1, 0),
-('Lê Thị', 'Bích', '0933456789', 'bich.lt@company.com', '1988-02-20', 3, 1, 'Nữ', 4, 'HI-2026004', 0, 1, 1, 0, 1),
-('Phạm Minh', 'Chính', '0944567890', 'chinh.pm@company.com', '1985-03-25', 3, 1, 'Nam', 5, 'HI-2026005', 1, 0, 1, 1, 1),
-('Nguyễn Thị', 'Diệu', '0955678901', 'dieu.nt@company.com', '1992-04-30', 3, 1, 'Nữ', 6, NULL, 0, 0, 1, 0, 0),
-('Đỗ Văn', 'Em', '0966789012', 'em.dv@company.com', '1995-05-05', 6, 1, 'Nam', 7, 'HI-2026007', 1, 1, 0, 0, 0),
-('Bùi Thị', 'Phượng', '0977890123', 'phuong.bt@company.com', '1993-06-10', 5, 1, 'Nữ', 8, 'HI-2026008', 1, 1, 1, 1, 0),
-('Ngô Minh', 'Giàu', '0988901234', 'giau.nm@company.com', '1991-07-15', 4, 1, 'Nam', 9, 'HI-2026009', 1, 1, 0, 1, 1),
-('Trịnh Văn', 'Hùng', '0999012345', 'hung.tv@company.com', '1989-08-20', 2, 2, 'Nam', 10, 'HI-2026010', 1, 1, 1, 0, 0),
-('Vũ Thị', 'Iến', '0900123456', 'ien.vt@company.com', '1994-09-25', 1, 1, 'Nữ', 11, 'HI-2026011', 1, 1, 1, 1, 1),
-('Lý Văn', 'Nam', '0911234567', 'nam.lv@company.com', '1996-10-30', 1, 1, 'Nam', 12, 'HI-2026012', 1, 1, 1, 0, 0);
+-- Ban lãnh đạo (Dept 1)
+('Đặng Huy', 'Hoàng', '0123456789', 'hoang.dh@company.com', '2004-06-11', 1, 1, 1, 'Nam', 1, 'HI-2026001', 1, 1, 1, 1, 1),
+('Vũ Thị', 'Iến', '0900123456', 'ien.vt@company.com', '1994-09-25', 1, 1, 1, 'Nữ', 11, 'HI-2026011', 1, 1, 1, 1, 1),
+('Lý Văn', 'Nam', '0911234567', 'nam.lv@company.com', '1996-10-30', 1, 1, 1, 'Nam', 12, 'HI-2026012', 1, 1, 1, 0, 0),
+-- Nhân sự & Quản lý (Dept 2)
+('Nguyễn Thành', 'Long', '0987654321', 'long.nt@company.com', '2003-04-11', 2, 2, 1, 'Nam', 2, 'HI-2026002', 1, 1, 1, 0, 0),
+('Trịnh Văn', 'Hùng', '0999012345', 'hung.tv@company.com', '1989-08-20', 2, 2, 2, 'Nam', 10, 'HI-2026010', 1, 1, 1, 0, 0),
+-- Kinh doanh (Dept 3)
+('Tần Thiên', 'Lang', '0912345678', 'lang.tt@company.com', '2000-01-15', 3, 3, 1, 'Nam', 3, 'HI-2026003', 1, 1, 0, 1, 0),
+('Lê Thị', 'Bích', '0933456789', 'bich.lt@company.com', '1988-02-20', 3, 3, 1, 'Nữ', 4, 'HI-2026004', 0, 1, 1, 0, 1),
+('Phạm Minh', 'Chính', '0944567890', 'chinh.pm@company.com', '1985-03-25', 3, 3, 1, 'Nam', 5, 'HI-2026005', 1, 0, 1, 1, 1),
+('Nguyễn Thị', 'Diệu', '0955678901', 'dieu.nt@company.com', '1992-04-30', 3, 3, 1, 'Nữ', 6, NULL, 0, 0, 1, 0, 0),
+('Ngô Minh', 'Giàu', '0988901234', 'giau.nm@company.com', '1991-07-15', 4, 3, 1, 'Nam', 9, 'HI-2026009', 1, 1, 0, 1, 1),
+('Bùi Thị', 'Phượng', '0977890123', 'phuong.bt@company.com', '1993-06-10', 5, 3, 1, 'Nữ', 8, 'HI-2026008', 1, 1, 1, 1, 0),
+-- Kho vận (Dept 4)
+('Đỗ Văn', 'Em', '0966789012', 'em.dv@company.com', '1995-05-05', 6, 4, 1, 'Nam', 7, 'HI-2026007', 1, 1, 0, 0, 0);
     
 -- Giữ nguyên cấu trúc bảng account
 CREATE TABLE `account` (
@@ -737,26 +763,22 @@ SELECT
     IF(is_unemployment_insurance = 1, 100000, 0)
 FROM `employee`;
 
-CREATE TABLE `working_history` (
+CREATE TABLE `employment_history` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `employee_id` INT NOT NULL,           -- Nhân viên được điều chuyển
-  -- Theo dõi phòng ban (Nếu bạn có bảng department)
-  `old_department_id` INT DEFAULT NULL, 
-  `new_department_id` INT NOT NULL,
-  -- Theo dõi chức vụ (Role)
-  `old_role_id` INT DEFAULT NULL, 
-  `new_role_id` INT NOT NULL,
+  -- Chỉ lưu thông tin mới nhất tại thời điểm điều chuyển
+  `department_id` INT NOT NULL,         -- Phòng ban mới
+  `role_id` INT NOT NULL,               -- Chức vụ mới
   `effective_date` DATE NOT NULL,       -- Ngày quyết định có hiệu lực
-  `approver_id` INT DEFAULT NULL,      -- Người duyệt (FK ngược lại bảng employee)
-  `reason` TEXT,                        -- Lý do điều chuyển/thăng chức
-  `decision_number` VARCHAR(50),        -- Số quyết định (nếu có)
+  `approver_id` INT DEFAULT NULL,       -- Người phê duyệt quyết định
+  `status_id` INT NOT NULL,             -- Trạng thái (Chờ duyệt, Đã duyệt, Hủy...)
+  `reason` TEXT,                        -- Lý do (Thăng chức, Chuyển công tác...)
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `status_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  -- Các ràng buộc khóa ngoại
-  CONSTRAINT `fk_history_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`),
-  CONSTRAINT `fk_history_old_role` FOREIGN KEY (`old_role_id`) REFERENCES `role` (`id`),
-  CONSTRAINT `fk_history_new_role` FOREIGN KEY (`new_role_id`) REFERENCES `role` (`id`),
-  CONSTRAINT `fk_history_approver` FOREIGN KEY (`approver_id`) REFERENCES `employee` (`id`),
-  CONSTRAINT `fk_history_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
+  -- Khóa ngoại
+  CONSTRAINT `fk_eh_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_eh_dept` FOREIGN KEY (`department_id`) REFERENCES `department` (`id`),
+  CONSTRAINT `fk_eh_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`),
+  CONSTRAINT `fk_eh_approver` FOREIGN KEY (`approver_id`) REFERENCES `employee` (`id`),
+  CONSTRAINT `fk_eh_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

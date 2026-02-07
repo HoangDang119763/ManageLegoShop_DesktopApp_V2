@@ -26,6 +26,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                         ? resultSet.getDate("date_of_birth").toLocalDate()
                         : null,
                 resultSet.getInt("role_id"),
+                resultSet.getObject("department_id") != null ? resultSet.getInt("department_id") : null,
                 resultSet.getInt("status_id"),
                 resultSet.getString("gender"),
                 resultSet.getObject("account_id") != null ? resultSet.getInt("account_id") : null,
@@ -42,7 +43,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(first_name, last_name, phone, email, date_of_birth, role_id, status_id, gender, account_id, health_ins_code, is_social_insurance, is_unemployment_insurance, is_personal_income_tax, is_transportation_support, is_accommodation_support) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, health_ins_code, is_social_insurance, is_unemployment_insurance, is_personal_income_tax, is_transportation_support, is_accommodation_support) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -53,15 +54,16 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         statement.setString(4, obj.getEmail());
         statement.setObject(5, obj.getDateOfBirth());
         statement.setInt(6, obj.getRoleId());
-        statement.setInt(7, obj.getStatusId());
-        statement.setString(8, obj.getGender());
-        statement.setObject(9, obj.getAccountId());
-        statement.setString(10, obj.getHealthInsCode());
-        statement.setBoolean(11, obj.isSocialInsurance());
-        statement.setBoolean(12, obj.isUnemploymentInsurance());
-        statement.setBoolean(13, obj.isPersonalIncomeTax());
-        statement.setBoolean(14, obj.isTransportationSupport());
-        statement.setBoolean(15, obj.isAccommodationSupport());
+        statement.setObject(7, obj.getDepartmentId());
+        statement.setInt(8, obj.getStatusId());
+        statement.setString(9, obj.getGender());
+        statement.setObject(10, obj.getAccountId());
+        statement.setString(11, obj.getHealthInsCode());
+        statement.setBoolean(12, obj.isSocialInsurance());
+        statement.setBoolean(13, obj.isUnemploymentInsurance());
+        statement.setBoolean(14, obj.isPersonalIncomeTax());
+        statement.setBoolean(15, obj.isTransportationSupport());
+        statement.setBoolean(16, obj.isAccommodationSupport());
     }
 
     @Override
@@ -76,7 +78,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
     public boolean updateAdvance(EmployeeDTO obj, boolean allowAdvanceChange) {
         String query = allowAdvanceChange
-                ? "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, role_id = ?, status_id = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?"
+                ? "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, role_id = ?, department_id = ?, status_id = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?"
                 : "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?";
 
         try (Connection connection = connectionFactory.newConnection();
@@ -91,17 +93,18 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
             if (allowAdvanceChange) {
                 statement.setInt(6, obj.getRoleId());
-                statement.setInt(7, obj.getStatusId());
-                statement.setString(8, obj.getGender());
-                statement.setObject(9, obj.getAccountId());
-                statement.setString(10, obj.getHealthInsCode());
-                statement.setBoolean(11, obj.isSocialInsurance());
-                statement.setBoolean(12, obj.isUnemploymentInsurance());
-                statement.setBoolean(13, obj.isPersonalIncomeTax());
-                statement.setBoolean(14, obj.isTransportationSupport());
-                statement.setBoolean(15, obj.isAccommodationSupport());
-                statement.setObject(16, obj.getUpdatedAt());
-                statement.setInt(17, obj.getId());
+                statement.setObject(7, obj.getDepartmentId());
+                statement.setInt(8, obj.getStatusId());
+                statement.setString(9, obj.getGender());
+                statement.setObject(10, obj.getAccountId());
+                statement.setString(11, obj.getHealthInsCode());
+                statement.setBoolean(12, obj.isSocialInsurance());
+                statement.setBoolean(13, obj.isUnemploymentInsurance());
+                statement.setBoolean(14, obj.isPersonalIncomeTax());
+                statement.setBoolean(15, obj.isTransportationSupport());
+                statement.setBoolean(16, obj.isAccommodationSupport());
+                statement.setObject(17, obj.getUpdatedAt());
+                statement.setInt(18, obj.getId());
             } else {
                 statement.setString(6, obj.getGender());
                 statement.setObject(7, obj.getAccountId());
@@ -124,7 +127,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
     public boolean updateBasic(EmployeeDTO obj, boolean allowAdvanceChange) {
         String query = allowAdvanceChange
-                ? "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, role_id = ?, status_id = ?, updated_at = ? WHERE id = ?"
+                ? "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, role_id = ?, department_id = ?, status_id = ?, updated_at = ? WHERE id = ?"
                 : "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?";
 
         try (Connection connection = connectionFactory.newConnection();
@@ -147,9 +150,10 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
             if (allowAdvanceChange) {
                 statement.setInt(14, obj.getRoleId());
-                statement.setInt(15, obj.getStatusId());
-                statement.setObject(16, obj.getUpdatedAt());
-                statement.setInt(17, obj.getId());
+                statement.setObject(15, obj.getDepartmentId());
+                statement.setInt(16, obj.getStatusId());
+                statement.setObject(17, obj.getUpdatedAt());
+                statement.setInt(18, obj.getId());
             } else {
                 statement.setObject(14, obj.getUpdatedAt());
                 statement.setInt(15, obj.getId());

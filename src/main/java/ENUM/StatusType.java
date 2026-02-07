@@ -9,5 +9,6 @@ public enum StatusType {
     CUSTOMER,
     INVOICE,
     IMPORT,
-    LEAVE_REQUEST;
+    LEAVE_REQUEST,
+    DEPARTMENT,
 }
