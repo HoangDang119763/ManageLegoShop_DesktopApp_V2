@@ -135,4 +135,9 @@ public class Status {
     public enum Department {
         ACTIVE, INACTIVE
     }
+
+    // Enum cho Lịch công tác
+    public enum EmploymentHistory {
+        PENDING, APPROVED, EFFECTIVE, REJECTED, CANCELLED
+    }
 }

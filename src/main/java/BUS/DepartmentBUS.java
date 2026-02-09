@@ -20,15 +20,9 @@ public class DepartmentBUS extends BaseBUS<DepartmentDTO, Integer> {
         return DepartmentDAL.getInstance().getAll();
     }
 
-    public DepartmentDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (DepartmentDTO dept : arrLocal) {
-            if (Objects.equals(dept.getId(), id)) {
-                return new DepartmentDTO(dept);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(DepartmentDTO obj) {
+        return obj.getId();
     }
 
     public ArrayList<DepartmentDTO> getAllLocal() {

@@ -23,6 +23,11 @@ public class DeductionBUS extends BaseBUS<DeductionDTO, Integer> {
         return DeductionDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(DeductionDTO obj) {
+        return obj.getId();
+    }
+
     public DeductionDTO getById(Integer id) {
         return DeductionDAL.getInstance().getById(id);
     }

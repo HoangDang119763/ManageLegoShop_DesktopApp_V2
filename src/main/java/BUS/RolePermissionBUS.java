@@ -8,10 +8,12 @@ import SERVICE.AuthorizationService;
 import UTILS.AvailableUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
     private static final RolePermissionBUS INSTANCE = new RolePermissionBUS();
+    private final HashMap<Integer, ArrayList<RolePermissionDTO>> mapByRoleId = new HashMap<>();
 
     private RolePermissionBUS() {
     }
@@ -23,6 +25,22 @@ public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
     @Override
     public ArrayList<RolePermissionDTO> getAll() {
         return RolePermissionDAL.getInstance().getAll();
+    }
+
+    @Override
+    protected Integer getKey(RolePermissionDTO obj) {
+        return obj.getPermissionId();
+    }
+
+    @Override
+    public void loadLocal() {
+        super.loadLocal();
+        mapByRoleId.clear();
+        for (RolePermissionDTO rp : arrLocal) {
+            if (rp.getRoleId() > 0) {
+                mapByRoleId.computeIfAbsent(rp.getRoleId(), k -> new ArrayList<>()).add(rp);
+            }
+        }
     }
 
     public int delete(Integer roleId, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
@@ -58,13 +76,13 @@ public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
 
     public ArrayList<RolePermissionDTO> getAllRolePermissionByRoleIdLocal(int roleId) {
         if (roleId <= 0)
-            return null;
+            return new ArrayList<>();
+        ArrayList<RolePermissionDTO> cached = mapByRoleId.get(roleId);
+        if (cached == null)
+            return new ArrayList<>();
         ArrayList<RolePermissionDTO> result = new ArrayList<>();
-        for (RolePermissionDTO rp : arrLocal) {
-            if (Objects.equals(rp.getRoleId(), roleId)) {
-                // Tạo bản sao sâu của mỗi đối tượng RolePermissionDTO
-                result.add(new RolePermissionDTO(rp)); // Giả sử có constructor sao chép trong RolePermissionDTO
-            }
+        for (RolePermissionDTO rp : cached) {
+            result.add(new RolePermissionDTO(rp));
         }
         return result;
     }

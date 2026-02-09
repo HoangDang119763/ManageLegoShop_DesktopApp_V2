@@ -171,34 +171,59 @@
 }
 
 .check-box {
-    -fx-font-family: "Arial";
+    -fx-font-family: "Segoe UI", "Arial"; /* Segoe UI trông hiện đại hơn trên Windows */
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
     -fx-text-fill: #1f7d84;
+    -fx-label-padding: 0 0 0 8px; /* Tạo khoảng cách giữa ô tích và chữ */
 }
 
+/* Đảm bảo ô box có đủ khoảng trống cho dấu tích to */
 .check-box .box {
-    -fx-background-color: #ffffff;
-    /* Màu nền cho ô checkbox */
+    -fx-padding: 3px;
+    -fx-background-color: white;
     -fx-border-color: #1f7d84;
-    /* Màu viền */
-    -fx-border-width: 1px;
-    /* Độ dày viền */
-    -fx-border-radius: 6px;
-    -fx-font-size: 12px;
+    -fx-border-width: 1.8px; /* Tăng độ dày viền box cho cân xứng với dấu tích */
+    -fx-border-radius: 4px;
 }
 
+/* Trạng thái di chuột qua (Hover) */
+.check-box:hover .box {
+    /* Màu xanh Teal dịu hơn, không bị chói như Cyan cũ */
+    -fx-border-color: #28a3b5;
+    -fx-background-color: #f9f9f9; /* Nền trắng xám rất nhẹ */
+    -fx-scale-x: 1.15; /* Phóng to ô tích nhiều hơn một chút vì nó nhỏ */
+        -fx-scale-y: 1.15;
+}
+
+/* Khi được chọn */
 .check-box:selected .box {
-    -fx-background-color: #eeeeee;
-    -fx-background-radius: 6px;
+    -fx-background-color: #eeeeee; /* Màu nền xám nhạt như trong ảnh bạn gửi */
+    -fx-border-color: #1f7d84;
 }
 
 .check-box:selected .box .mark {
-    -fx-background-color: #3AE2F4;
-    /* Màu của dấu tích */
+    /* Sử dụng màu xanh bạn chọn */
+    -fx-background-color: #1f7d84;
+
+    /* SVG Path phiên bản 'Bold' - các nét được làm dày và các góc bo tròn hơn */
+    -fx-shape: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
+
+    /* Tăng Scale để dấu tích to và chiếm không gian tốt hơn */
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
 }
 
+/* Loại bỏ viền mờ khi focus (phím Tab) để giao diện sạch hơn */
+.check-box:focused .box {
+    -fx-background-insets: 0;
+}
+
+.check-box:pressed .box {
+    -fx-scale-x: 0.95; /* Khi nhấn thì co lại một chút, tạo cảm giác lún xuống */
+    -fx-scale-y: 0.95;
+}
 
 .check-box-m {
     -fx-font-family: "Arial";
@@ -475,6 +500,13 @@
 /* Style cho nhãn Ngày tạo/Cập nhật (Nhỏ, mờ, nghiêng) */
 .label-metadata {
     -fx-text-fill: #1f7d84;
+    -fx-font-size: 16px;
+    -fx-font-style: italic;
+    -fx-font-family: "Segoe UI", Arial;
+}
+
+.label-metadata-date {
+    -fx-text-fill: #7f8c8d;
     -fx-font-size: 16px;
     -fx-font-style: italic;
     -fx-font-family: "Segoe UI", Arial;

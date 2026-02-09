@@ -29,6 +29,11 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return ProductDAL.getInstance().getAll();
     }
 
+    @Override
+    protected String getKey(ProductDTO obj) {
+        return obj.getId();
+    }
+
     public ProductDTO getByIdLocal(String id) {
         if (id == null || id.isEmpty())
             return null;

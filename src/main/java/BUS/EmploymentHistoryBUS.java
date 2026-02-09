@@ -20,15 +20,9 @@ public class EmploymentHistoryBUS extends BaseBUS<EmploymentHistoryDTO, Integer>
         return EmploymentHistoryDAL.getInstance().getAll();
     }
 
-    public EmploymentHistoryDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (EmploymentHistoryDTO history : arrLocal) {
-            if (Objects.equals(history.getId(), id)) {
-                return new EmploymentHistoryDTO(history);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(EmploymentHistoryDTO obj) {
+        return obj.getId();
     }
 
     public ArrayList<EmploymentHistoryDTO> getAllLocal() {

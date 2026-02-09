@@ -23,15 +23,9 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
         return LeaveRequestDAL.getInstance().getAll();
     }
 
-    public LeaveRequestDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (LeaveRequestDTO leaveRequest : arrLocal) {
-            if (Objects.equals(leaveRequest.getId(), id)) {
-                return new LeaveRequestDTO(leaveRequest);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(LeaveRequestDTO obj) {
+        return obj.getId();
     }
 
     public int insert(LeaveRequestDTO obj, int employee_roleId, int employeeLoginId) {

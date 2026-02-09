@@ -1,6 +1,6 @@
 package SERVICE;
 
-import BUS.AccountBUS;
+import BUS.EmployeeBUS;
 import BUS.PermissionBUS;
 import BUS.RolePermissionBUS;
 import DTO.EmployeeDTO;
@@ -12,11 +12,14 @@ import java.util.HashSet;
 
 public class SessionManagerService {
     private static SessionManagerService instance;
-    private EmployeeDTO loggedInEmployee;
+    private int employeeId;
+    private int roleId;
     private HashSet<Integer> allowedModules;
     private HashSet<String> allowedPermissionKeys;
 
     private SessionManagerService() {
+        this.employeeId = -1;
+        this.roleId = -1;
         allowedModules = new HashSet<>();
         allowedPermissionKeys = new HashSet<>();
     }
@@ -29,12 +32,19 @@ public class SessionManagerService {
     }
 
     public void setLoggedInEmployee(EmployeeDTO employee) {
-        this.loggedInEmployee = employee;
+        if (employee != null) {
+            this.employeeId = employee.getId();
+            this.roleId = employee.getRoleId();
+        } else {
+            this.employeeId = -1;
+            this.roleId = -1;
+        }
         loadPermissions();
     }
 
     public void logout() {
-        this.loggedInEmployee = null;
+        this.employeeId = -1;
+        this.roleId = -1;
         allowedModules.clear();
         allowedPermissionKeys.clear();
     }
@@ -60,7 +70,7 @@ public class SessionManagerService {
     private void loadPermissions() {
         allowedModules.clear();
         allowedPermissionKeys.clear();
-        if (loggedInEmployee == null)
+        if (employeeId <= 0)
             return;
 
         PermissionBUS permissionBUS = PermissionBUS.getInstance();
@@ -71,7 +81,7 @@ public class SessionManagerService {
         if (rolePermissionBUS.isLocalEmpty())
             rolePermissionBUS.loadLocal();
 
-        for (RolePermissionDTO rp : rolePermissionBUS.getAllRolePermissionByRoleIdLocal(loggedInEmployee.getRoleId())) {
+        for (RolePermissionDTO rp : rolePermissionBUS.getAllRolePermissionByRoleIdLocal(roleId)) {
             if (rp.isStatus()) {
                 // Lấy permission để có được permission_key
                 PermissionDTO permission = permissionBUS.getByIdLocal(rp.getPermissionId());
@@ -88,7 +98,10 @@ public class SessionManagerService {
     }
 
     public EmployeeDTO currEmployee() {
-        return loggedInEmployee != null ? new EmployeeDTO(loggedInEmployee) : null;
+        if (employeeId <= 0)
+            return null;
+        EmployeeDTO emp = EmployeeBUS.getInstance().getByIdLocal(employeeId);
+        return emp != null ? new EmployeeDTO(emp) : null;
     }
 
     public int numAllowedModules() {
@@ -96,11 +109,11 @@ public class SessionManagerService {
     }
 
     public int employeeLoginId() {
-        return loggedInEmployee.getId();
+        return employeeId;
     }
 
     public int employeeRoleId() {
-        return loggedInEmployee.getRoleId();
+        return roleId;
     }
 
     public boolean canManage() {
@@ -121,4 +134,11 @@ public class SessionManagerService {
     public boolean canImporting() {
         return hasModuleAccess(6);
     }
+
+    public void updateCurrentEmployee() {
+        if (employeeId <= 0)
+            return;
+        loadPermissions();
+    }
+
 }

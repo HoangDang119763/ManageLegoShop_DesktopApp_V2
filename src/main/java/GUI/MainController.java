@@ -45,9 +45,9 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        loadSessionData();
         setupEventHandlers();
         loadAllLocalData();
+        loadSessionData();
         loadAllowedModules();
     }
 
@@ -82,6 +82,7 @@ public class MainController {
             AccountBUS.getInstance().loadLocal();
             isLoaded = true;
         }
+        System.out.println(RoleBUS.getInstance().toString());
     }
 
     public void minimize(MouseEvent event) {

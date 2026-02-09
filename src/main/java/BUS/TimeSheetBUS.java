@@ -4,9 +4,11 @@ import DTO.TimeSheetDTO;
 import DAL.TimeSheetDAL;
 import SERVICE.AuthorizationService;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TimeSheetBUS extends BaseBUS<TimeSheetDTO, Integer> {
     public static final TimeSheetBUS INSTANCE = new TimeSheetBUS();
+    private final HashMap<Integer, ArrayList<TimeSheetDTO>> mapByEmployeeId = new HashMap<>();
 
     private TimeSheetBUS() {
     }
@@ -20,19 +22,31 @@ public class TimeSheetBUS extends BaseBUS<TimeSheetDTO, Integer> {
         return TimeSheetDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(TimeSheetDTO obj) {
+        return obj.getId();
+    }
+
+    @Override
+    public void loadLocal() {
+        super.loadLocal();
+        mapByEmployeeId.clear();
+        for (TimeSheetDTO ts : arrLocal) {
+            if (ts.getEmployeeId() > 0) {
+                mapByEmployeeId.computeIfAbsent(ts.getEmployeeId(), k -> new ArrayList<>()).add(ts);
+            }
+        }
+    }
+
     public TimeSheetDTO getById(Integer id) {
         return TimeSheetDAL.getInstance().getById(id);
     }
 
     public ArrayList<TimeSheetDTO> getByEmployeeId(int employeeId) {
-        ArrayList<TimeSheetDTO> allTimeSheets = getAll();
-        ArrayList<TimeSheetDTO> result = new ArrayList<>();
-        for (TimeSheetDTO ts : allTimeSheets) {
-            if (ts.getEmployeeId() == employeeId) {
-                result.add(ts);
-            }
-        }
-        return result;
+        if (employeeId <= 0)
+            return new ArrayList<>();
+        ArrayList<TimeSheetDTO> result = mapByEmployeeId.get(employeeId);
+        return result != null ? new ArrayList<>(result) : new ArrayList<>();
     }
 
     public boolean insert(TimeSheetDTO obj, int employeeRoleId, int employeeLoginId) {

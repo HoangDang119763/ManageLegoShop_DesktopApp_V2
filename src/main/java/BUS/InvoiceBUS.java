@@ -24,6 +24,11 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
         return InvoiceDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(InvoiceDTO obj) {
+        return obj.getId();
+    }
+
     public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || id == null || id <= 0)
             return false;
@@ -35,17 +40,6 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
         }
         arrLocal.removeIf(role -> Objects.equals(role.getId(), id));
         return true;
-    }
-
-    public InvoiceDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (InvoiceDTO invoice : arrLocal) {
-            if (Objects.equals(invoice.getId(), id)) {
-                return new InvoiceDTO(invoice);
-            }
-        }
-        return null;
     }
 
     public boolean insert(InvoiceDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {

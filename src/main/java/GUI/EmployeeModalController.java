@@ -330,24 +330,30 @@ public class EmployeeModalController {
         int result;
         if (typeModal == 0) {
             // Insert new employee
-            result = employeeBUS.insert(employee, session.employeeRoleId(), session.employeeLoginId());
-            if (result == 1) {
-                NotificationUtils.showInfoAlert("Thêm nhân viên thành công", AppMessages.DIALOG_TITLE);
-                isSaved = true;
-                handleClose();
-            } else {
-                NotificationUtils.showErrorAlert("Thêm nhân viên thất bại", AppMessages.DIALOG_TITLE);
-            }
+            // result = employeeBUS.insert(employee, session.employeeRoleId(),
+            // session.employeeLoginId());
+            // if (result == 1) {
+            // NotificationUtils.showInfoAlert("Thêm nhân viên thành công",
+            // AppMessages.DIALOG_TITLE);
+            // isSaved = true;
+            // handleClose();
+            // } else {
+            // NotificationUtils.showErrorAlert("Thêm nhân viên thất bại",
+            // AppMessages.DIALOG_TITLE);
+            // }
         } else if (typeModal == 1) {
             // Update existing employee
-            result = employeeBUS.update(employee, session.employeeRoleId(), session.employeeLoginId());
-            if (result == 1) {
-                NotificationUtils.showInfoAlert("Cập nhật nhân viên thành công", AppMessages.DIALOG_TITLE);
-                isSaved = true;
-                handleClose();
-            } else {
-                NotificationUtils.showErrorAlert("Cập nhật nhân viên thất bại", AppMessages.DIALOG_TITLE);
-            }
+            // result = employeeBUS.update(employee, session.employeeRoleId(),
+            // session.employeeLoginId());
+            // if (result == 1) {
+            // NotificationUtils.showInfoAlert("Cập nhật nhân viên thành công",
+            // AppMessages.DIALOG_TITLE);
+            // isSaved = true;
+            // handleClose();
+            // } else {
+            // NotificationUtils.showErrorAlert("Cập nhật nhân viên thất bại",
+            // AppMessages.DIALOG_TITLE);
+            // }
         }
     }
 

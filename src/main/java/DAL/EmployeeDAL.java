@@ -168,4 +168,120 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             return false;
         }
     }
+
+    /**
+     * Cập nhật TAB 1: Thông tin cá nhân
+     * Update: firstName, lastName, phone, email, dateOfBirth, gender, healthInsCode
+     */
+    public boolean updatePersonalInfoBySelf(EmployeeDTO obj) {
+        String query = "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ? WHERE id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, obj.getFirstName());
+            statement.setString(2, obj.getLastName());
+            statement.setString(3, obj.getPhone());
+            statement.setString(4, obj.getEmail());
+            statement.setDate(5, obj.getDateOfBirth() != null ? java.sql.Date.valueOf(obj.getDateOfBirth()) : null);
+            statement.setInt(6, obj.getId());
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating personal info (self): " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean updatePersonalInfoByAdmin(EmployeeDTO obj) {
+        String query = "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ? WHERE id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, obj.getFirstName());
+            statement.setString(2, obj.getLastName());
+            statement.setString(3, obj.getPhone());
+            statement.setString(4, obj.getEmail());
+            statement.setDate(5, obj.getDateOfBirth() != null ? java.sql.Date.valueOf(obj.getDateOfBirth()) : null);
+            statement.setString(6, obj.getGender());
+            statement.setInt(7, obj.getId());
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating personal info (admin): " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Cập nhật TAB 2: Vị trí công tác
+     * Update: departmentId, statusId trong employee table
+     * Ghi nhật ký lịch sử điều chuyển trong employment_history table
+     */
+    public boolean updateJobPosition(EmployeeDTO obj) {
+        String query = "UPDATE employee SET department_id = ?, status_id = ?, updated_at = ? WHERE id = ?";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setObject(1, obj.getDepartmentId());
+            statement.setInt(2, obj.getStatusId());
+            statement.setObject(3, obj.getUpdatedAt());
+            statement.setInt(4, obj.getId());
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating job position: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Cập nhật TAB 3: Lương & Bảo hiểm
+     * Update: role_id, insurance flags (isSocialInsurance, isUnemploymentInsurance,
+     * isPersonalIncomeTax, isTransportationSupport, isAccommodationSupport)
+     * Lưu ý: baseSalary, coefficient sẽ được update qua SalaryDAL
+     * numDependents sẽ được update qua TaxDAL
+     */
+    public boolean updatePayrollInfo(EmployeeDTO obj) {
+        String query = "UPDATE employee SET role_id = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, obj.getRoleId());
+            statement.setBoolean(2, obj.isSocialInsurance());
+            statement.setBoolean(3, obj.isUnemploymentInsurance());
+            statement.setBoolean(4, obj.isPersonalIncomeTax());
+            statement.setBoolean(5, obj.isTransportationSupport());
+            statement.setBoolean(6, obj.isAccommodationSupport());
+            statement.setObject(7, obj.getUpdatedAt());
+            statement.setInt(8, obj.getId());
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating payroll info: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Cập nhật TAB 4: Tài khoản hệ thống
+     * Update: accountId
+     */
+    public boolean updateSystemAccount(EmployeeDTO obj) {
+        String query = "UPDATE employee SET account_id = ?, updated_at = ? WHERE id = ?";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setObject(1, obj.getAccountId());
+            statement.setObject(2, obj.getUpdatedAt());
+            statement.setInt(3, obj.getId());
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating system account: " + e.getMessage());
+            return false;
+        }
+    }
 }

@@ -63,16 +63,16 @@ INSERT INTO `status` (`name`, `description`, `type`) VALUES
 ('Completed', 'Giao dịch thành công', 'IMPORT'),
 ('Canceled', 'Giao dịch đã bị hủy bỏ', 'IMPORT'),
 -- Nhóm Xin nghỉ phép - Leave Request
-('PENDING', 'Đơn đang chờ quản lý phê duyệt', 'LEAVE_REQUEST'),
-('APPROVED', 'Đơn đã được chấp thuận', 'LEAVE_REQUEST'),
-('REJECTED', 'Đơn bị từ chối', 'LEAVE_REQUEST'),
-('CANCELED', 'Đơn đã bị hủy bởi nhân viên', 'LEAVE_REQUEST'),
+('Pending', 'Đơn đang chờ quản lý phê duyệt', 'LEAVE_REQUEST'),
+('Approved', 'Đơn đã được chấp thuận', 'LEAVE_REQUEST'),
+('Rejected', 'Đơn bị từ chối', 'LEAVE_REQUEST'),
+('Canceled', 'Đơn đã bị hủy bởi nhân viên', 'LEAVE_REQUEST'),
 -- Nhóm Lịch sử công tác - Working History
-('PENDING', 'Quyết định đang chờ cấp trên phê duyệt', 'WORKING_HISTORY'),
-('APPROVED', 'Quyết định đã được duyệt, chờ ngày có hiệu lực', 'WORKING_HISTORY'),
-('EFFECTIVE', 'Quyết định đã chính thức đi vào hiệu lực', 'WORKING_HISTORY'),
-('REJECTED', 'Quyết định bị cấp trên từ chối', 'WORKING_HISTORY'),
-('CANCELED', 'QVERTISE định đã bị hủy bỏ trước khi thực hiện', 'WORKING_HISTORY'),
+('Pending', 'Quyết định đang chờ cấp trên phê duyệt', 'EMPLOYMENT_HISTORY'),
+('Approved', 'Quyết định đã được duyệt, chờ ngày có hiệu lực', 'EMPLOYMENT_HISTORY'),
+('Effective', 'Quyết định đã chính thức đi vào hiệu lực', 'EMPLOYMENT_HISTORY'),
+('Rejected', 'Quyết định bị cấp trên từ chối', 'EMPLOYMENT_HISTORY'),
+('Canceled', 'Quyết định đã bị hủy bỏ trước khi thực hiện', 'EMPLOYMENT_HISTORY'),
 -- Nhóm Nhà Phòng Ban - Department
 ('Active', 'Hoạt động', 'DEPARTMENT'),
 ('Inactive', 'Vô hiệu', 'DEPARTMENT');
@@ -92,21 +92,15 @@ CREATE TABLE `role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 INSERT INTO `role` (`id`, `name`, `description`, `start_experience`, `end_experience`, `salary_id`) VALUES
--- Cấp điều hành cao nhất
-(1, 'Tổng giám đốc', 'Chủ cửa hàng/Điều hành cao cấp', 10, 30, 1),
-
--- Cấp quản lý trực tiếp
-(2, 'Quản lý cửa hàng', 'Điều hành toàn diện hoạt động cửa hàng', 4, 15, 8),
-(3, 'Trưởng nhóm bán hàng', 'Giám sát ca làm việc và hỗ trợ thanh toán phức tạp', 2, 4, 10),
-
--- Nhóm Bán hàng (Chuyên môn giảm dần)
-(4, 'Nhân viên bán hàng (Bậc 3)', 'Nhân viên nòng cốt, hỗ trợ đào tạo người mới', 3, 5, 11),
-(5, 'Nhân viên bán hàng (Bậc 2)', 'Nhân viên kinh nghiệm, tư vấn dòng LEGO chuyên sâu', 1, 3, 12),
-(6, 'Nhân viên bán hàng (Bậc 1)', 'Nhân viên mới, thực hiện bán hàng cơ bản', 0, 1, 13),
-
--- Nhóm Kho
-(7, 'Nhân viên kho (Bậc 2)', 'Quản lý nhập xuất, chịu trách nhiệm tồn kho', 2, 5, 8),
-(8, 'Nhân viên kho (Bậc 1)', 'Thực hiện sắp xếp và kiểm đếm hàng hóa', 0, 2, 9);
+(1, 'IT Admin', 'Quản trị hệ thống toàn quyền', 0, 0, 1),
+(2, 'Tổng giám đốc', 'Chủ cửa hàng/Điều hành cao cấp', 10, 30, 1),
+(3, 'Quản lý cửa hàng', 'Điều hành toàn diện hoạt động cửa hàng', 4, 15, 8),
+(4, 'Trưởng nhóm bán hàng', 'Giám sát ca làm việc và hỗ trợ thanh toán phức tạp', 2, 4, 10),
+(5, 'Nhân viên bán hàng (Bậc 3)', 'Nhân viên nòng cốt, hỗ trợ đào tạo người mới', 3, 5, 11),
+(6, 'Nhân viên bán hàng (Bậc 2)', 'Nhân viên kinh nghiệm, tư vấn chuyên sâu', 1, 3, 12),
+(7, 'Nhân viên bán hàng (Bậc 1)', 'Nhân viên mới', 0, 1, 13),
+(8, 'Nhân viên kho (Bậc 2)', 'Quản lý nhập xuất kho', 2, 5, 8),
+(9, 'Nhân viên kho (Bậc 1)', 'Sắp xếp và kiểm kê kho', 0, 2, 9);
 
 CREATE TABLE `module` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -137,47 +131,75 @@ CREATE TABLE `permission` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
--- Quản lý nhân viên
-('Thêm nhân viên', 'EMPLOYEE_INSERT', 1),
+-- Quyền tổng để vào module
+('Xem danh sách nhân viên', 'EMPLOYEE_LIST_VIEW', 1),
+
+-- Tab 1: Thông tin cá nhân
+('Xem hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_VIEW', 1),
+('Cập nhật hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_UPDATE', 1),
+
+-- Tab 2: Đơn vị công tác & Lịch sử
+('Xem vị trí công tác & lịch sử', 'EMPLOYEE_JOB_VIEW', 1),
+('Cập nhật vị trí công tác', 'EMPLOYEE_JOB_UPDATE', 1),
+
+-- Tab 3: Bảo hiểm & Thu nhập
+('Xem lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_VIEW', 1),
+('Cập nhật lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_UPDATE', 1),
+
+-- Tab 4: Tài khoản hệ thống
+('Xem tài khoản hệ thống', 'EMPLOYEE_ACCOUNT_VIEW', 1),
+('Đặt lại mật khẩu nhân viên', 'EMPLOYEE_ACCOUNT_RESET_PASSWORD', 1),
+('Cập nhật trạng thái tài khoản', 'EMPLOYEE_ACCOUNT_UPDATE_STATUS', 1),
+
+-- Các thao tác quản trị danh sách
+('Thêm mới nhân viên', 'EMPLOYEE_INSERT', 1),
 ('Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
-('Cập nhật nhân viên', 'EMPLOYEE_UPDATE', 1),
--- Quản lý khách hàng
+
+-- === 👥 MODULE KHÁCH HÀNG (Module ID: 2) ===
+('Xem danh sách khách hàng', 'CUSTOMER_VIEW', 2),
 ('Thêm khách hàng', 'CUSTOMER_INSERT', 2),
-('Xóa khách hàng', 'CUSTOMER_DELETE', 2),
 ('Cập nhật khách hàng', 'CUSTOMER_UPDATE', 2),
--- Quản lý sản phẩm
+('Xóa khách hàng', 'CUSTOMER_DELETE', 2),
+
+-- === 📦 MODULE SẢN PHẨM (Module ID: 3) ===
+('Xem danh sách sản phẩm', 'PRODUCT_VIEW', 3),
 ('Thêm sản phẩm', 'PRODUCT_INSERT', 3),
-('Xóa sản phẩm', 'PRODUCT_DELETE', 3),
 ('Cập nhật sản phẩm', 'PRODUCT_UPDATE', 3),
--- Quản lý nhà cung cấp
+('Xóa sản phẩm', 'PRODUCT_DELETE', 3),
+
+-- === 🏭 MODULE NHÀ CUNG CẤP (Module ID: 4) ===
+('Xem danh sách nhà cung cấp', 'SUPPLIER_VIEW', 4),
 ('Thêm nhà cung cấp', 'SUPPLIER_INSERT', 4),
-('Xóa nhà cung cấp', 'SUPPLIER_DELETE', 4),
 ('Cập nhật nhà cung cấp', 'SUPPLIER_UPDATE', 4),
--- Quản lý bán hàng
-('Tạo đơn hàng', 'ORDER_CREATE', 5),
-('Xem đơn hàng', 'ORDER_VIEW', 5),
--- Quản lý nhập hàng
-('Tạo phiếu nhập hàng', 'IMPORT_CREATE', 6),
+('Xóa nhà cung cấp', 'SUPPLIER_DELETE', 4),
+
+-- === 💰 MODULE GIAO DỊCH (Module ID: 5 & 6) ===
+('Xem danh sách đơn hàng', 'ORDER_VIEW', 5),
+('Tạo đơn hàng mới', 'ORDER_CREATE', 5),
 ('Xem phiếu nhập hàng', 'IMPORT_VIEW', 6),
--- Quản lý thể loại
-('Thêm thể loại', 'CATEGORY_INSERT', 7),
-('Xóa thể loại', 'CATEGORY_DELETE', 7),
-('Cập nhật thể loại', 'CATEGORY_UPDATE', 7),
--- Quản lý khuyến mãi
-('Thêm mã giảm giá', 'PROMOTION_INSERT', 8),
-('Xóa mã giảm giá', 'PROMOTION_DELETE', 8),
-('Cập nhật mã giảm giá', 'PROMOTION_UPDATE', 8),
--- Quản lý chức vụ & phân quyền
-('Thêm chức vụ', 'ROLE_INSERT', 9),
-('Xóa chức vụ', 'ROLE_DELETE', 9),
+('Tạo phiếu nhập hàng mới', 'IMPORT_CREATE', 6),
+
+-- === 📑 MODULE DANH MỤC & KHUYẾN MÃI (Module ID: 7 & 8) ===
+('Xem danh mục sản phẩm', 'CATEGORY_VIEW', 7),
+('Thêm danh mục sản phẩm', 'CATEGORY_INSERT', 7),
+('Cập nhật danh mục sản phẩm', 'CATEGORY_UPDATE', 7),
+('Xóa danh mục sản phẩm', 'CATEGORY_DELETE', 7),
+
+('Xem chương trình khuyến mãi', 'PROMOTION_VIEW', 8),
+('Thêm chương trình khuyến mãi', 'PROMOTION_INSERT', 8),
+('Cập nhật chương trình khuyến mãi', 'PROMOTION_UPDATE', 8),
+('Xóa chương trình khuyến mãi', 'PROMOTION_DELETE', 8),
+
+-- === ⚙️ MODULE HỆ THỐNG (Module ID: 9) ===
+('Xem danh sách chức vụ', 'ROLE_VIEW', 9),
+('Thêm chức vụ mới', 'ROLE_INSERT', 9),
 ('Cập nhật chức vụ', 'ROLE_UPDATE', 9),
-('Cập nhật phân quyền', 'PERMISSION_UPDATE', 9),
--- Quản lý tài khoản
-('Tạo tài khoản', 'ACCOUNT_INSERT', 10),
-('Xóa tài khoản', 'ACCOUNT_DELETE', 10),
-('Cập nhật tài khoản', 'ACCOUNT_UPDATE', 10),
--- Thống kê
-('Xem thống kê', 'STATISTICS_VIEW', 11);
+('Xóa chức vụ', 'ROLE_DELETE', 9),
+('Xem bảng phân quyền', 'PERMISSION_VIEW', 9),
+('Cập nhật cấu hình phân quyền', 'PERMISSION_UPDATE', 9),
+
+-- === 📊 MODULE THỐNG KÊ (Module ID: 11) ===
+('Xem báo cáo thống kê', 'STATISTICS_VIEW', 11);
 
 CREATE TABLE `role_permission` (
   `role_id` int(11) NOT NULL,
@@ -192,27 +214,6 @@ CREATE TABLE `role_permission` (
 INSERT INTO `role_permission` (`role_id`, `permission_id`, `status`)
 SELECT r.id, p.id, 0
 FROM `role` r CROSS JOIN `permission` p;
-
--- Bước 3: Bật quyền (status = 1) theo thứ tự Role mới (1-8)
-
--- 1. Tổng giám đốc (New Role 1): Full 30 quyền
-UPDATE `role_permission` SET `status` = 1 WHERE `role_id` = 1;
-
--- 2. Quản lý cửa hàng (New Role 2): Quản lý vận hành + Thống kê
-UPDATE `role_permission` SET `status` = 1 
-WHERE `role_id` = 2 AND `permission_id` IN (1,3, 4,6, 7,9, 10,12, 13,14, 15,16, 17,19, 20,22, 30);
-
--- 3. Trưởng nhóm bán hàng (New Role 3): Bán hàng + Khách hàng + Voucher + Sản phẩm
-UPDATE `role_permission` SET `status` = 1 
-WHERE `role_id` = 3 AND `permission_id` IN (4,6, 7,9, 13,14, 20,22);
-
--- 4. Nhóm Bán hàng (New Role 4, 5, 6): Chỉ tập trung Bán hàng & Khách hàng
-UPDATE `role_permission` SET `status` = 1 
-WHERE `role_id` IN (4, 5, 6) AND `permission_id` IN (4, 6, 13, 14);
-
--- 5. Nhóm Kho (New Role 7, 8): Quản lý Sản phẩm, Nhà cung cấp, Nhập hàng, Thể loại
-UPDATE `role_permission` SET `status` = 1 
-WHERE `role_id` IN (7, 8) AND `permission_id` IN (7,9, 10,12, 15,16, 17,19);
 
 CREATE TABLE `department` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -268,26 +269,28 @@ INSERT INTO `employee`
   `is_personal_income_tax`, `is_transportation_support`, `is_accommodation_support`
 ) 
 VALUES 
+-- Tài khoản hệ thống
+('ID', 'ADMIN', '', '', NULL, 1, NULL, 1, 'Nam', 1, 'HI-000000', 1, 1, 1, 1, 1),  -- account_id = 1
 -- Ban lãnh đạo (Dept 1)
-('Đặng Huy', 'Hoàng', '0123456789', 'hoang.dh@company.com', '2004-06-11', 1, 1, 1, 'Nam', 1, 'HI-2026001', 1, 1, 1, 1, 1),
-('Vũ Thị', 'Iến', '0900123456', 'ien.vt@company.com', '1994-09-25', 1, 1, 1, 'Nữ', 11, 'HI-2026011', 1, 1, 1, 1, 1),
-('Lý Văn', 'Nam', '0911234567', 'nam.lv@company.com', '1996-10-30', 1, 1, 1, 'Nam', 12, 'HI-2026012', 1, 1, 1, 0, 0),
+('Đặng Huy', 'Hoàng', '0123456789', 'hoang.dh@company.com', '2004-06-11', 2, 1, 1, 'Nam', 2, 'HI-2026001', 1, 1, 1, 1, 1),   -- account_id = 2
+('Vũ Thị', 'Iến', '0900123456', 'ien.vt@company.com', '1994-09-25', 2, 1, 1, 'Nữ', 3, 'HI-2026011', 1, 1, 1, 1, 1),   -- account_id = 3
+('Lý Văn', 'Nam', '0911234567', 'nam.lv@company.com', '1996-10-30', 2, 1, 1, 'Nam', 4, 'HI-2026012', 1, 1, 1, 0, 0),   -- account_id = 4
 -- Nhân sự & Quản lý (Dept 2)
-('Nguyễn Thành', 'Long', '0987654321', 'long.nt@company.com', '2003-04-11', 2, 2, 1, 'Nam', 2, 'HI-2026002', 1, 1, 1, 0, 0),
-('Trịnh Văn', 'Hùng', '0999012345', 'hung.tv@company.com', '1989-08-20', 2, 2, 2, 'Nam', 10, 'HI-2026010', 1, 1, 1, 0, 0),
+('Nguyễn Thành', 'Long', '0987654321', 'long.nt@company.com', '2003-04-11', 3, 2, 1, 'Nam', 5, 'HI-2026002', 1, 1, 1, 0, 0), -- account_id = 5
+('Trịnh Văn', 'Hùng', '0999012345', 'hung.tv@company.com', '1989-08-20', 3, 2, 2, 'Nam', 6, 'HI-2026010', 1, 1, 1, 0, 0), -- account_id = 6
 -- Kinh doanh (Dept 3)
-('Tần Thiên', 'Lang', '0912345678', 'lang.tt@company.com', '2000-01-15', 3, 3, 1, 'Nam', 3, 'HI-2026003', 1, 1, 0, 1, 0),
-('Lê Thị', 'Bích', '0933456789', 'bich.lt@company.com', '1988-02-20', 3, 3, 1, 'Nữ', 4, 'HI-2026004', 0, 1, 1, 0, 1),
-('Phạm Minh', 'Chính', '0944567890', 'chinh.pm@company.com', '1985-03-25', 3, 3, 1, 'Nam', 5, 'HI-2026005', 1, 0, 1, 1, 1),
-('Nguyễn Thị', 'Diệu', '0955678901', 'dieu.nt@company.com', '1992-04-30', 3, 3, 1, 'Nữ', 6, NULL, 0, 0, 1, 0, 0),
-('Ngô Minh', 'Giàu', '0988901234', 'giau.nm@company.com', '1991-07-15', 4, 3, 1, 'Nam', 9, 'HI-2026009', 1, 1, 0, 1, 1),
-('Bùi Thị', 'Phượng', '0977890123', 'phuong.bt@company.com', '1993-06-10', 5, 3, 1, 'Nữ', 8, 'HI-2026008', 1, 1, 1, 1, 0),
+('Tần Thiên', 'Lang', '0912345678', 'lang.tt@company.com', '2000-01-15', 4, 3, 1, 'Nam', 7, 'HI-2026003', 1, 1, 0, 1, 0), -- account_id = 7
+('Lê Thị', 'Bích', '0933456789', 'bich.lt@company.com', '1988-02-20', 3, 4, 1, 'Nữ', 8, 'HI-2026004', 0, 1, 1, 0, 1),   -- account_id = 8
+('Phạm Minh', 'Chính', '0944567890', 'chinh.pm@company.com', '1985-03-25', 4, 3, 1, 'Nam', 9, 'HI-2026005', 1, 0, 1, 1, 1),  -- account_id = 9
+('Nguyễn Thị', 'Diệu', '0955678901', 'dieu.nt@company.com', '1992-04-30', 4, 3, 1, 'Nữ', 10, 'HI-2026006', 0, 0, 1, 0, 0), -- account_id = 10
+('Ngô Minh', 'Giàu', '0988901234', 'giau.nm@company.com', '1991-07-15', 6, 3, 1, 'Nam', 11, 'HI-2026009', 1, 1, 0, 1, 1),  -- account_id = 11
+('Bùi Thị', 'Phượng', '0977890123', 'phuong.bt@company.com', '1993-06-10', 6, 3, 1, 'Nữ', 12, 'HI-2026008', 1, 1, 1, 1, 0), -- account_id = 12
 -- Kho vận (Dept 4)
-('Đỗ Văn', 'Em', '0966789012', 'em.dv@company.com', '1995-05-05', 6, 4, 1, 'Nam', 7, 'HI-2026007', 1, 1, 0, 0, 0);
+('Đỗ Văn', 'Em', '0966789012', 'em.dv@company.com', '1995-05-05', 7, 4, 1, 'Nam', 13, 'HI-2026007', 1, 1, 0, 0, 0); -- account_id = 13
     
 -- Giữ nguyên cấu trúc bảng account
 CREATE TABLE `account` (
-  `id` INT NOT NULL, 
+  `id` INT NOT NULL AUTO_INCREMENT, 
   `username` VARCHAR(50) NOT NULL UNIQUE,
   `password` VARCHAR(255) NOT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -299,19 +302,20 @@ CREATE TABLE `account` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- Cập nhật dữ liệu INSERT: Active (4), Locked (5)
-INSERT INTO `account` (`id`, `username`, `password`, `status_id`) VALUES
-(1, 'huyhoang119763', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(2, 'thanhlong123456', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(3, 'tlang01', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(4, 'lethib88', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(5, 'phamminhc85', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(6, 'nguyenthid92', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(7, 'dovane95', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(8, 'buithif93', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(9, 'ngominhg91', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(10, 'trinhvanh89', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 5),
-(11, 'vuthii94', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4),
-(12, 'lyvanj96', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4);
+INSERT INTO `account` (`username`, `password`, `status_id`) VALUES
+('admin', '$2a$12$QIBl3fm0aG.SDhGTldUk5eTFgClKWp1HjNP06Er4utLo/kG1dNpCG', 4),  -- ID ADMIN
+('huyhoang119763', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', 4), -- Đặng Huy Hoàng
+('vuithii', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4), -- Vũ Thị Iến
+('lyvan', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4), -- Lý Văn Nam
+('nguyenthanh', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4), -- Nguyễn Thành Long
+('trinhvan', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4), -- Trịnh Văn Hùng
+('tanthien', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4), -- Tần Thiên Lang
+('lethib', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4),   -- Lê Thị Bích
+('phamminh', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4), -- Phạm Minh Chính
+('nguyenthi', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4),   -- Nguyễn Thị Diệu
+('ngominh', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4),    -- Ngô Minh Giàu
+('buithiph', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4),   -- Bùi Thị Phượng
+('dovan', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', 4); -- Đỗ Văn Em
 
 CREATE TABLE `customer` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -759,7 +763,7 @@ INSERT INTO `deduction` (`employee_id`, `salary_period`, `health_insurance`, `so
 SELECT 
     id, 
     '2026-02-01', 
-    IF(is_health_insurance = 1, 150000, 0), 
+    IF(health_ins_code != NULL, 150000, 0), 
     IF(is_social_insurance = 1, 800000, 0),
     IF(is_unemployment_insurance = 1, 100000, 0)
 FROM `employee`;
@@ -783,3 +787,78 @@ CREATE TABLE `employment_history` (
   CONSTRAINT `fk_eh_approver` FOREIGN KEY (`approver_id`) REFERENCES `employee` (`id`),
   CONSTRAINT `fk_eh_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+-- =============================================
+-- 1. CẬP NHẬT TRẠNG THÁI CHO CÁC THỰC THỂ (ACTIVE)
+-- =============================================
+SET SQL_SAFE_UPDATES = 0;
+-- Bước 3: Bật quyền (status = 1)
+UPDATE role_permission SET status = 1 WHERE role_id = 1;
+
+-- 1. Tổng giám đốc
+-- UPDATE role_permission rp
+-- JOIN permission p ON rp.permission_id = p.id
+-- SET rp.status = 1
+-- WHERE rp.role_id = 2
+-- AND p.permission_key IN (
+-- 'EMPLOYEE_LIST_VIEW','EMPLOYEE_PERSONAL_VIEW','EMPLOYEE_JOB_VIEW','EMPLOYEE_PAYROLL_VIEW',
+-- 'PRODUCT_VIEW','CUSTOMER_VIEW','STATISTICS_VIEW'
+-- );
+UPDATE role_permission SET status = 1 WHERE role_id = 2;
+-- 2. Quản lý cửa hàng
+UPDATE role_permission rp
+JOIN permission p ON rp.permission_id = p.id
+SET rp.status = 1
+WHERE rp.role_id = 3
+AND p.permission_key IN (
+'EMPLOYEE_LIST_VIEW','EMPLOYEE_PERSONAL_VIEW','EMPLOYEE_JOB_VIEW',
+'PRODUCT_VIEW','PRODUCT_UPDATE',
+'CUSTOMER_VIEW','ORDER_VIEW','STATISTICS_VIEW'
+);
+
+-- 3. Trưởng nhóm bán hàng
+UPDATE role_permission rp
+JOIN permission p ON rp.permission_id = p.id
+SET rp.status = 1
+WHERE rp.role_id = 4
+AND p.permission_key IN (
+'PRODUCT_VIEW','ORDER_CREATE','CUSTOMER_VIEW'
+);
+
+-- 4. Nhóm Bán hàng
+UPDATE role_permission rp
+JOIN permission p ON rp.permission_id = p.id
+SET rp.status = 1
+WHERE rp.role_id IN (5,6,7)
+AND p.permission_key IN (
+'PRODUCT_VIEW','CUSTOMER_VIEW','ORDER_CREATE'
+);
+
+-- 5. Nhóm Kho
+UPDATE role_permission rp
+JOIN permission p ON rp.permission_id = p.id
+SET rp.status = 1
+WHERE rp.role_id IN (8,9)
+AND p.permission_key IN (
+'PRODUCT_VIEW','PRODUCT_UPDATE','IMPORT_CREATE','IMPORT_VIEW'
+);
+UPDATE department SET status_id = (SELECT id FROM status WHERE type = 'DEPARTMENT' AND name = 'Active' LIMIT 1);
+UPDATE employee   SET status_id = (SELECT id FROM status WHERE type = 'EMPLOYEE' AND name = 'Active' LIMIT 1);
+UPDATE account    SET status_id = (SELECT id FROM status WHERE type = 'ACCOUNT' AND name = 'Active' LIMIT 1);
+UPDATE customer   SET status_id = (SELECT id FROM status WHERE type = 'CUSTOMER' AND name = 'Active' LIMIT 1);
+UPDATE category   SET status_id = (SELECT id FROM status WHERE type = 'CATEGORY' AND name = 'Active' LIMIT 1);
+UPDATE supplier   SET status_id = (SELECT id FROM status WHERE type = 'SUPPLIER' AND name = 'Active' LIMIT 1);
+UPDATE product    SET status_id = (SELECT id FROM status WHERE type = 'PRODUCT' AND name = 'Active' LIMIT 1);
+
+-- =============================================
+-- 2. CẬP NHẬT TRẠNG THÁI CHO GIAO DỊCH (COMPLETED)
+-- =============================================
+UPDATE invoice    SET status_id = (SELECT id FROM status WHERE type = 'INVOICE' AND name = 'Completed' LIMIT 1);
+UPDATE import     SET status_id = (SELECT id FROM status WHERE type = 'IMPORT' AND name = 'Completed' LIMIT 1);
+
+-- =============================================
+-- 3. CẬP NHẬT TRẠNG THÁI CHO QUY TRÌNH (PENDING)
+-- =============================================
+UPDATE leave_request SET status_id = (SELECT id FROM status WHERE type = 'LEAVE_REQUEST' AND name = 'Canceled' LIMIT 1);
+UPDATE employment_history SET status_id = (SELECT id FROM status WHERE type = 'WORKING_HISTORY' AND name = 'Canceled' LIMIT 1);
+SET SQL_SAFE_UPDATES = 1;

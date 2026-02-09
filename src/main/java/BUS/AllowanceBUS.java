@@ -23,6 +23,11 @@ public class AllowanceBUS extends BaseBUS<AllowanceDTO, Integer> {
         return AllowanceDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(AllowanceDTO obj) {
+        return obj.getId();
+    }
+
     public AllowanceDTO getById(Integer id) {
         return AllowanceDAL.getInstance().getById(id);
     }

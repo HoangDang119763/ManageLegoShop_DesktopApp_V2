@@ -27,15 +27,9 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
         return CategoryDAL.getInstance().getAll();
     }
 
-    public CategoryDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (CategoryDTO category : arrLocal) {
-            if (Objects.equals(category.getId(), id)) {
-                return new CategoryDTO(category);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(CategoryDTO obj) {
+        return obj.getId();
     }
 
     public int insert(CategoryDTO obj, int employee_roleId, int employeeLoginId) {

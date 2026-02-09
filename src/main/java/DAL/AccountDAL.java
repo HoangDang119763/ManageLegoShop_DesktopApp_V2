@@ -1,6 +1,7 @@
 package DAL;
 
 import DTO.AccountDTO;
+import DTO.EmployeeDTO;
 
 import java.sql.*;
 
@@ -58,14 +59,35 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
 
     @Override
     protected String getUpdateQuery() {
-        return "SET password = ?, last_login = ?, status_id = ? WHERE id = ?";
+        throw new UnsupportedOperationException("Cannot update Employee records.");
     }
 
-    @Override
-    protected void setUpdateParameters(PreparedStatement statement, AccountDTO obj) throws SQLException {
-        statement.setString(1, obj.getPassword());
-        statement.setObject(2, obj.getLastLogin());
-        statement.setInt(3, obj.getStatusId());
-        statement.setInt(4, obj.getId());
+    public boolean changePasswordBySelf(AccountDTO obj) {
+        String query = "UPDATE account SET username = ?, password = ? WHERE id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, obj.getUsername());
+            statement.setString(2, obj.getPassword());
+            statement.setInt(3, obj.getId());
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating account (self): " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Cập nhật thời gian đăng nhập cuối cùng
+    public void updateLastLogin(int accountId) {
+        String query = "UPDATE account SET last_login = ? WHERE id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setTimestamp(1, new java.sql.Timestamp(System.currentTimeMillis()));
+            statement.setInt(2, accountId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error updating last login: " + e.getMessage());
+        }
     }
 }

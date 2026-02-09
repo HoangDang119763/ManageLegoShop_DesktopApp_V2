@@ -6,13 +6,14 @@ import BUS.SalaryBUS;
 import BUS.StatusBUS;
 import BUS.TaxBUS;
 import DTO.EmployeeDTO;
-import DTO.EmployeeTableDTO;
+import DTO.EmployeeDetailDTO;
 import DTO.RoleDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
 import PROVIDER.EmployeeViewProvider;
+import PROVIDER.EmployeeDetailFilterer;
 import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
@@ -32,25 +33,23 @@ import java.util.ArrayList;
 
 public class EmployeeController implements IController {
     @FXML
-    private TableView<EmployeeTableDTO> tblEmployee;
+    private TableView<EmployeeDetailDTO> tblEmployee;
     @FXML
-    private TableColumn<EmployeeTableDTO, Integer> tlb_col_employeeId;
+    private TableColumn<EmployeeDetailDTO, Integer> tlb_col_employeeId;
     @FXML
-    private TableColumn<EmployeeTableDTO, String> tlb_col_fullName;
+    private TableColumn<EmployeeDetailDTO, String> tlb_col_fullName;
     @FXML
-    private TableColumn<EmployeeTableDTO, String> tlb_col_roleName;
+    private TableColumn<EmployeeDetailDTO, String> tlb_col_gender;
     @FXML
-    private TableColumn<EmployeeTableDTO, String> tlb_col_baseSalary;
+    private TableColumn<EmployeeDetailDTO, String> tlb_col_email;
     @FXML
-    private TableColumn<EmployeeTableDTO, String> tlb_col_salaryCoefficient;
+    private TableColumn<EmployeeDetailDTO, String> tlb_col_baseSalary;
     @FXML
-    private TableColumn<EmployeeTableDTO, String> tlb_col_phone;
+    private TableColumn<EmployeeDetailDTO, String> tlb_col_salaryCoefficient;
     @FXML
-    private TableColumn<EmployeeTableDTO, String> tlb_col_email;
+    private TableColumn<EmployeeDetailDTO, String> tlb_col_username;
     @FXML
-    private TableColumn<EmployeeTableDTO, String> tlb_col_gender;
-    @FXML
-    private TableColumn<EmployeeTableDTO, String> tlb_col_status;
+    private TableColumn<EmployeeDetailDTO, String> tlb_col_status;
     @FXML
     private HBox functionBtns;
     @FXML
@@ -68,36 +67,35 @@ public class EmployeeController implements IController {
     private String keyword = "";
     private RoleDTO roleFilter = null;
     private StatusDTO statusFilter = null;
-    private ArrayList<EmployeeTableDTO> cachedTableData = new ArrayList<>();
-    private EmployeeTableDTO selectedEmployeeTable;
-    private EmployeeDTO selectedEmployee;
+    private ArrayList<EmployeeDetailDTO> cachedTableData = new ArrayList<>();
+    private EmployeeDetailDTO selectedEmployeeTable;
+
+    // BUS instances
+    private EmployeeBUS employeeBUS;
+    private RoleBUS roleBUS;
+    private StatusBUS statusBUS;
+    private SalaryBUS salaryBUS;
+    private TaxBUS taxBUS;
 
     @FXML
     public void initialize() {
-        EmployeeBUS employeeBUS = EmployeeBUS.getInstance();
-        if (employeeBUS.isLocalEmpty()) {
+        // Gán BUS instance một lần
+        employeeBUS = EmployeeBUS.getInstance();
+        roleBUS = RoleBUS.getInstance();
+        statusBUS = StatusBUS.getInstance();
+        salaryBUS = SalaryBUS.getInstance();
+        taxBUS = TaxBUS.getInstance();
+
+        if (employeeBUS.isLocalEmpty())
             employeeBUS.loadLocal();
-        }
-
-        RoleBUS roleBUS = RoleBUS.getInstance();
-        if (roleBUS.isLocalEmpty()) {
+        if (roleBUS.isLocalEmpty())
             roleBUS.loadLocal();
-        }
-
-        StatusBUS statusBUS = StatusBUS.getInstance();
-        if (statusBUS.isLocalEmpty()) {
+        if (statusBUS.isLocalEmpty())
             statusBUS.loadLocal();
-        }
-
-        SalaryBUS salaryBUS = SalaryBUS.getInstance();
-        if (salaryBUS.isLocalEmpty()) {
+        if (salaryBUS.isLocalEmpty())
             salaryBUS.loadLocal();
-        }
-
-        TaxBUS taxBUS = TaxBUS.getInstance();
-        if (taxBUS.isLocalEmpty()) {
+        if (taxBUS.isLocalEmpty())
             taxBUS.loadLocal();
-        }
 
         tblEmployee.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblEmployee.getSelectionModel().clearSelection());
@@ -114,12 +112,11 @@ public class EmployeeController implements IController {
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_fullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
-        tlb_col_roleName.setCellValueFactory(new PropertyValueFactory<>("roleName"));
         tlb_col_baseSalary.setCellValueFactory(cellData -> new SimpleStringProperty(
                 validationUtils.formatCurrency(cellData.getValue().getBaseSalary())));
         tlb_col_salaryCoefficient.setCellValueFactory(cellData -> new SimpleStringProperty(
                 validationUtils.formatCurrency(cellData.getValue().getSalaryCoefficient())));
-        tlb_col_phone.setCellValueFactory(new PropertyValueFactory<>("phone"));
+        tlb_col_username.setCellValueFactory(new PropertyValueFactory<>("username"));
         tlb_col_email.setCellValueFactory(new PropertyValueFactory<>("email"));
         tlb_col_gender.setCellValueFactory(new PropertyValueFactory<>("gender"));
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
@@ -129,14 +126,12 @@ public class EmployeeController implements IController {
         cbSearchBy.getItems().addAll("Mã nhân viên", "Họ tên", "SDT", "Email");
 
         // Load Status ComboBox
-        StatusBUS statusBUS = StatusBUS.getInstance();
         ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.EMPLOYEE);
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus); // "Tất cả" option
         cbStatusFilter.getItems().addAll(statusList);
 
         // Load Role ComboBox
-        RoleBUS roleBUS = RoleBUS.getInstance();
         ArrayList<RoleDTO> roleList = roleBUS.getAllLocal();
         RoleDTO allRole = new RoleDTO(-1, "Tất cả chức vụ");
         cbRoleFilter.getItems().add(allRole); // "Tất cả" option
@@ -199,15 +194,18 @@ public class EmployeeController implements IController {
 
     @Override
     public void applyFilters() {
-        EmployeeBUS employeeBUS = EmployeeBUS.getInstance();
         EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
+        EmployeeDetailFilterer filterer = EmployeeDetailFilterer.getInstance();
 
         String roleFilterName = roleFilter != null ? roleFilter.getName() : "";
         String statusFilterDesc = statusFilter != null ? statusFilter.getDescription() : "";
 
-        // Transform employee data to table view using provider
-        cachedTableData = provider.applyAllFilters(
-                employeeBUS.getAllLocal(),
+        // Step 1: Transform employee data using provider
+        ArrayList<EmployeeDetailDTO> tableData = provider.toTableDTOs(employeeBUS.getAllLocal());
+
+        // Step 2: Apply filters using dedicated filterer
+        cachedTableData = filterer.applyAllFilters(
+                tableData,
                 searchBy,
                 keyword,
                 roleFilterName,
@@ -235,13 +233,13 @@ public class EmployeeController implements IController {
     public void hideButtonWithoutPermission() {
         SessionManagerService session = SessionManagerService.getInstance();
         boolean canAdd = session.hasPermission(PermissionKey.EMPLOYEE_INSERT);
-        boolean canEdit = session.hasPermission(PermissionKey.EMPLOYEE_UPDATE);
+        // boolean canEdit = session.hasPermission(PermissionKey.EMPLOYEE_UPDATE);
         boolean canDelete = session.hasPermission(PermissionKey.EMPLOYEE_DELETE);
 
         if (!canAdd)
             functionBtns.getChildren().remove(addBtn);
-        if (!canEdit)
-            functionBtns.getChildren().remove(editBtn);
+        // if (!canEdit)
+        // functionBtns.getChildren().remove(editBtn);
         if (!canDelete)
             functionBtns.getChildren().remove(deleteBtn);
     }
@@ -258,50 +256,49 @@ public class EmployeeController implements IController {
     }
 
     public void handleDeleteBtn() {
-        if (isNotSelectedEmployee()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên", AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        // Lấy thông tin đầy đủ của nhân viên
-        EmployeeBUS employeeBUS = EmployeeBUS.getInstance();
-        EmployeeDTO employee = employeeBUS.getByIdLocal(selectedEmployeeTable.getEmployeeId());
-
-        if (employee == null) {
-            NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên", AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        SessionManagerService session = SessionManagerService.getInstance();
-        if (employee.getId() == session.employeeLoginId()) {
-            NotificationUtils.showErrorAlert("Bạn không thể xóa thông tin của chính mình", AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        if (employee.getId() == 1) {
-            NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc", AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        int deleteResult = employeeBUS.delete(employee.getId(), session.employeeRoleId(), session.employeeLoginId());
-
-        switch (deleteResult) {
-            case 1 -> {
-                NotificationUtils.showInfoAlert("Xóa nhân viên thành công", AppMessages.DIALOG_TITLE);
-                resetFilters();
-            }
-            case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi xóa nhân viên", AppMessages.DIALOG_TITLE);
-            case 3 ->
-                NotificationUtils.showErrorAlert("Không thể xóa thông tin của chính mình", AppMessages.DIALOG_TITLE);
-            case 4 -> NotificationUtils.showErrorAlert("Bạn không có quyền xóa nhân viên", AppMessages.DIALOG_TITLE);
-            case 5 ->
-                NotificationUtils.showErrorAlert("Bạn không thể xóa nhân viên ngang quyền", AppMessages.DIALOG_TITLE);
-            case 6 -> NotificationUtils.showErrorAlert("Xóa nhân viên thất bại", AppMessages.DIALOG_TITLE);
-            case 7 ->
-                NotificationUtils.showErrorAlert("Nhân viên không hợp lệ hoặc đã bị xóa", AppMessages.DIALOG_TITLE);
-            case 8 -> NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc", AppMessages.DIALOG_TITLE);
-            default -> NotificationUtils.showErrorAlert("Lỗi không xác định", AppMessages.DIALOG_TITLE);
-        }
+//        if (isNotSelectedEmployee()) {
+//            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên", AppMessages.DIALOG_TITLE);
+//            return;
+//        }
+//
+//        // Lấy thông tin đầy đủ của nhân viên
+//        EmployeeDTO employee = employeeBUS.getByIdLocal(selectedEmployeeTable.getEmployeeId());
+//
+//        if (employee == null) {
+//            NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên", AppMessages.DIALOG_TITLE);
+//            return;
+//        }
+//
+//        SessionManagerService session = SessionManagerService.getInstance();
+//        if (employee.getId() == session.employeeLoginId()) {
+//            NotificationUtils.showErrorAlert("Bạn không thể xóa thông tin của chính mình", AppMessages.DIALOG_TITLE);
+//            return;
+//        }
+//
+//        if (employee.getId() == 1) {
+//            NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc", AppMessages.DIALOG_TITLE);
+//            return;
+//        }
+//
+//        int deleteResult = employeeBUS.delete(employee.getId(), session.employeeRoleId(), session.employeeLoginId());
+//
+//        switch (deleteResult) {
+//            case 1 -> {
+//                NotificationUtils.showInfoAlert("Xóa nhân viên thành công", AppMessages.DIALOG_TITLE);
+//                resetFilters();
+//            }
+//            case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi xóa nhân viên", AppMessages.DIALOG_TITLE);
+//            case 3 ->
+//                NotificationUtils.showErrorAlert("Không thể xóa thông tin của chính mình", AppMessages.DIALOG_TITLE);
+//            case 4 -> NotificationUtils.showErrorAlert("Bạn không có quyền xóa nhân viên", AppMessages.DIALOG_TITLE);
+//            case 5 ->
+//                NotificationUtils.showErrorAlert("Bạn không thể xóa nhân viên ngang quyền", AppMessages.DIALOG_TITLE);
+//            case 6 -> NotificationUtils.showErrorAlert("Xóa nhân viên thất bại", AppMessages.DIALOG_TITLE);
+//            case 7 ->
+//                NotificationUtils.showErrorAlert("Nhân viên không hợp lệ hoặc đã bị xóa", AppMessages.DIALOG_TITLE);
+//            case 8 -> NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc", AppMessages.DIALOG_TITLE);
+//            default -> NotificationUtils.showErrorAlert("Lỗi không xác định", AppMessages.DIALOG_TITLE);
+//        }
     }
 
     public void handleEditBtn() {
@@ -310,7 +307,6 @@ public class EmployeeController implements IController {
             return;
         }
 
-        EmployeeBUS employeeBUS = EmployeeBUS.getInstance();
         EmployeeDTO employee = employeeBUS.getByIdLocal(selectedEmployeeTable.getEmployeeId());
 
         if (employee == null) {

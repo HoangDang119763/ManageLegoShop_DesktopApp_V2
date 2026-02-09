@@ -22,6 +22,11 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
         return RoleDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(RoleDTO obj) {
+        return obj.getId();
+    }
+
     public boolean delete(Integer roleId, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || roleId == null || roleId <= 0)
             return false;
@@ -50,19 +55,6 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
 
         arrLocal.removeIf(role -> role.getId() == roleId);
         return true;
-    }
-
-    public RoleDTO getByIdLocal(int roleId) {
-        if (roleId <= 0)
-            return null;
-        if (isLocalEmpty())
-            loadLocal();
-        for (RoleDTO role : arrLocal) {
-            if (Objects.equals(role.getId(), roleId)) {
-                return new RoleDTO(role);
-            }
-        }
-        return null;
     }
 
     public int insert(RoleDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {

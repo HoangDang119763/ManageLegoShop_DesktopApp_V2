@@ -20,6 +20,11 @@ public class DetailImportBUS extends BaseBUS<DetailImportDTO, Integer> {
         return DetailImportDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(DetailImportDTO obj) {
+        return obj.getImportId();
+    }
+
     public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || id == null || id <= 0)
             return false;
