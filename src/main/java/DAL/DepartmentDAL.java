@@ -64,8 +64,4 @@ public class DepartmentDAL extends BaseDAL<DepartmentDTO, Integer> {
         statement.setInt(4, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return true;
-    }
 }

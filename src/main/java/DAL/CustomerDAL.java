@@ -71,8 +71,4 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
         statement.setInt(7, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return true;
-    }
 }

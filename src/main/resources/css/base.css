@@ -358,10 +358,25 @@
 }
 
 .textarea-1 {
-    -fx-background-color: linear-gradient(to bottom, #efefef, #eeeeee);
-    -fx-border-color: none;
+    /* Nền và Font */
+    -fx-background-color: white, linear-gradient(to bottom, #ffffff, #fafafa);
     -fx-font-family: "Arial";
-    -fx-font-size: 16px;
+    -fx-font-size: 15px; /* Giảm nhẹ xuống 15px để thanh thoát hơn */
+
+    /* Border - Đây là phần bạn cần */
+    -fx-border-color: #cccccc; /* Màu xám trung tính */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    /* Padding để chữ không dính sát viền */
+    -fx-padding: 1px;
+}
+
+/* Hiệu ứng khi người dùng click vào để nhập liệu */
+.textarea-1:focused {
+    -fx-border-color: #30bac4; /* Chuyển sang màu chủ đạo của bạn */
+    -fx-border-width: 1.5px;    /* Làm dày hơn một chút để nổi bật */
+    -fx-background-color: white;
 }
 
 .pExitBtnContainer,
@@ -527,4 +542,22 @@
 /* Hiệu ứng khi di chuột vào (để biết là không được sửa) */
 .field-metadata:hover {
     -fx-cursor: default;
+}
+
+.close {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+
+.close:hover {
+    -fx-background-color: #ff3547;
+}
+
+.close-icon {
+    -fx-fill: black;
+    -fx-transition: fill 0.3s ease-in-out;
+}
+
+.close:hover .close-icon {
+    -fx-fill: #fff;
 }

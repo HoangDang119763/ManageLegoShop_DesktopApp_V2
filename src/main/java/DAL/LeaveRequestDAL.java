@@ -69,8 +69,4 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
         statement.setInt(7, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

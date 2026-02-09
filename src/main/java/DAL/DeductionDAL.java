@@ -81,8 +81,4 @@ public class DeductionDAL extends BaseDAL<DeductionDTO, Integer> {
         statement.setInt(9, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

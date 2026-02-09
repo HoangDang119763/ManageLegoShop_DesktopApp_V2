@@ -67,8 +67,4 @@ public class TimeSheetDAL extends BaseDAL<TimeSheetDTO, Integer> {
         statement.setInt(5, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

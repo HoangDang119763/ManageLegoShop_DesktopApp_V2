@@ -2,7 +2,8 @@ package BUS;
 
 import DAL.InvoiceDAL;
 import DTO.InvoiceDTO;
-import ENUM.ServiceAccessCode;
+import DTO.DetailInvoiceDTO;
+import ENUM.*;
 import SERVICE.AuthorizationService;
 import UTILS.ValidationUtils;
 import java.math.BigDecimal;
@@ -87,10 +88,7 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
             LocalDate invoiceDate = invoice.getCreateDate().toLocalDate();
 
             // --- Kiểm tra ngày bắt buộc ---
-            boolean matchesDate = true;
-            if (startDate != null && invoiceDate.isBefore(startDate)) {
-                matchesDate = false;
-            }
+            boolean matchesDate = startDate == null || !invoiceDate.isBefore(startDate);
             if (endDate != null && invoiceDate.isAfter(endDate)) {
                 matchesDate = false;
             }
@@ -121,10 +119,7 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
 
             if (startTotalPrice != null || endTotalPrice != null) {
                 BigDecimal totalPrice = invoice.getTotalPrice();
-                boolean matchPrice = true;
-                if (startTotalPrice != null && totalPrice.compareTo(startTotalPrice) < 0) {
-                    matchPrice = false;
-                }
+                boolean matchPrice = startTotalPrice == null || totalPrice.compareTo(startTotalPrice) >= 0;
                 if (endTotalPrice != null && totalPrice.compareTo(endTotalPrice) > 0) {
                     matchPrice = false;
                 }
@@ -158,6 +153,46 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
             }
         }
         return result;
+    }
+
+    /**
+     * Kiểm tra xem sản phẩm có trong hóa đơn có trạng thái COMPLETED hay không
+     *
+     * @param productId ID của sản phẩm
+     * @return true nếu sản phẩm có trong invoice hoàn thành
+     */
+    public boolean isProductInCompletedInvoice(String productId) {
+        InvoiceBUS invoiceBUS = InvoiceBUS.getInstance();
+        DetailInvoiceBUS detailInvoiceBUS = DetailInvoiceBUS.getInstance();
+
+        // Đảm bảo dữ liệu đã được load
+        if (invoiceBUS.isLocalEmpty()) {
+            invoiceBUS.loadLocal();
+        }
+        if (detailInvoiceBUS.isLocalEmpty()) {
+            detailInvoiceBUS.loadLocal();
+        }
+
+        // Lấy statusId của invoice COMPLETED
+        int completedStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusNameLocal(StatusType.INVOICE, Status.Invoice.COMPLETED).getId();
+
+        if (completedStatusId <= 0) {
+            return false; // Không tìm thấy status COMPLETED
+        }
+
+        // Kiểm tra tất cả DetailInvoice
+        for (DetailInvoiceDTO detail : detailInvoiceBUS.getAllLocal()) {
+            if (detail.getProductId().equals(productId)) {
+                // Tìm invoice tương ứng
+                InvoiceDTO invoice = invoiceBUS.getByIdLocal(detail.getInvoiceId());
+                if (invoice != null && invoice.getStatusId() == completedStatusId) {
+                    return true; // Sản phẩm này trong invoice COMPLETED
+                }
+            }
+        }
+
+        return false;
     }
 
 }

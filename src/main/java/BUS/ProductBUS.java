@@ -3,12 +3,17 @@ package BUS;
 import DAL.ProductDAL;
 
 import DTO.ProductDTO;
-import ENUM.PermissionKey;
+import DTO.BUSResult;
+import DTO.EmployeeDTO;
+import ENUM.*;
 import SERVICE.AuthorizationService;
+import UTILS.AppMessages;
 import UTILS.AvailableUtils;
 import UTILS.ValidationUtils;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
@@ -34,41 +39,58 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return obj.getId();
     }
 
-    public ProductDTO getByIdLocal(String id) {
-        if (id == null || id.isEmpty())
-            return null;
-        for (ProductDTO product : arrLocal) {
-            if (Objects.equals(product.getId(), id)) {
-                return new ProductDTO(product);
-            }
-        }
-        return null;
-    }
+    private void updateLocalCache(ProductDTO obj) {
+        // Tạo bản sao mới để tránh side-effect từ UI
+        ProductDTO clonedObj = new ProductDTO(obj);
 
-    public int delete(String id, int employee_roleId, int employeeLoginId) {
-        if (id == null || id.isEmpty() || employee_roleId <= 0) {
-            return 2;
-        }
+        // Cập nhật Map (Nhanh - O(1))
+        mapLocal.put(clonedObj.getId(), clonedObj);
 
-        if (getByIdLocal(id).getStockQuantity() != 0)
-            return 5;
-
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId,
-                PermissionKey.PRODUCT_DELETE))
-            return 3;
-
-        if (!ProductDAL.getInstance().delete(id)) {
-            return 4;
-        }
-
-        // Cập nhật trạng thái sản phẩm trong `arrLocal`
-        for (ProductDTO product : arrLocal) {
-            if (product.getId().equals(id)) {
-                product.setStatus(false);
+        // Cập nhật List (Dùng để hiển thị lên TableView)
+        for (int i = 0; i < arrLocal.size(); i++) {
+            if (Objects.equals(arrLocal.get(i).getId(), clonedObj.getId())) {
+                // Thay thế bằng đối tượng đã clone
+                arrLocal.set(i, clonedObj);
                 break;
             }
         }
-        return 1;
+    }
+
+    public BUSResult delete(String id) {
+        // 1. Kiểm tra đầu vào & kho (Chuẩn)
+        if (id == null || id.isEmpty())
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+
+        ProductDTO targetProduct = getByIdLocal(id);
+        if (targetProduct == null)
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+
+        if (targetProduct.getStockQuantity() != 0)
+            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_DELETE_WITH_STOCK);
+
+        // 2. Quyết định xóa (Chuẩn)
+        boolean isInInvoice = InvoiceBUS.getInstance().isProductInCompletedInvoice(id);
+        boolean success = isInInvoice ? ProductDAL.getInstance().softDelete(targetProduct)
+                : ProductDAL.getInstance().delete(targetProduct.getId());
+
+        if (!success)
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+
+        // 3. Đồng bộ Cache
+        if (isInInvoice) {
+            // Lấy ID từ Cache của StatusBUS (nhanh, không sợ lag)
+            int inactiveStatusId = StatusBUS.getInstance()
+                    .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
+
+            targetProduct.setStatusId(inactiveStatusId);
+            mapLocal.put(id, targetProduct);
+        } else {
+            // Xóa cứng: Bay màu hoàn toàn khỏi cả 2 danh sách
+            arrLocal.remove(targetProduct);
+            mapLocal.remove(id);
+        }
+
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_DELETE_SUCCESS);
     }
 
     public String autoId() {
@@ -90,33 +112,51 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return String.format("SP%05d", temp);
     }
 
-    public int insert(ProductDTO obj, int employee_roleId, int employeeLoginId) {
-        if (obj == null || obj.getCategoryId() <= 0 || employee_roleId <= 0 || !isValidProductInput(obj)) {
-            return 2;
+    public BUSResult insert(ProductDTO obj) {
+        if (obj == null || obj.getCategoryId() <= 0) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
-
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId,
-                PermissionKey.PRODUCT_INSERT))
-            return 3;
-
-        if (!AvailableUtils.getInstance().isValidCategory(obj.getCategoryId()))
-            return 4;
-
-        if (isDuplicateProductName("", obj.getName())) {
-            return 5;
+        if (!isValidProductInput(obj)) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
+        // 1. Chuẩn hóa ngay từ đầu để Validate cho chính xác
         ValidationUtils validate = ValidationUtils.getInstance();
-        // Xuống dc đây là đúng hết rồi
-        obj.setId(autoId()); // Tạo ID mới
         obj.setName(validate.normalizeWhiteSpace(obj.getName()));
         obj.setDescription(validate.normalizeWhiteSpace(obj.getDescription()));
-        obj.setStockQuantity(0);
-        obj.setSellingPrice(new BigDecimal(0));
-        if (!ProductDAL.getInstance().insert(obj))
-            return 6;
 
-        arrLocal.add(new ProductDTO(obj));
-        return 1;
+        // 2. Check logic (Lúc này tên đã sạch sẽ)
+        if (!CategoryBUS.getInstance().isValidCategory(obj.getCategoryId()))
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.PRODUCT_CATEGORY_INVALID);
+
+        if (isDuplicateProductName("", obj.getName())) {
+            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_ADD_DUPLICATE);
+        }
+
+        // 3. Thiết lập thông số mặc định cho hàng mới
+        obj.setId(autoId());
+        obj.setStockQuantity(0);
+        obj.setSellingPrice(BigDecimal.ZERO);
+        obj.setImportPrice(BigDecimal.ZERO); // Nên set luôn cả giá nhập mặc định
+
+        // 4. Ghi DB
+        if (!ProductDAL.getInstance().insert(obj))
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+
+        // 5. Cập nhật Cache
+        addToLocalCache(obj);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_ADD_SUCCESS);
+    }
+
+    private void addToLocalCache(ProductDTO obj) {
+        // Deep copy để an toàn tham chiếu
+        ProductDTO newProd = new ProductDTO(obj);
+
+        // Thêm mới hoàn toàn vào Map và List
+        mapLocal.put(newProd.getId(), newProd);
+        arrLocal.add(newProd);
+
+        // Nếu dùng JavaFX TableView, nó sẽ tự động hiện dòng mới ngay lập tức tại đây
     }
 
     public int insertListProductExcel(ArrayList<ProductDTO> listProducts) {
@@ -124,7 +164,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
             return 2; // Danh sách rỗng
         }
 
-        AvailableUtils ava = AvailableUtils.getInstance();
+        CategoryBUS cate = CategoryBUS.getInstance();
         Set<String> excelProductNames = new HashSet<>();
         ValidationUtils validate = ValidationUtils.getInstance();
         String id = autoId();
@@ -142,7 +182,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
             excelProductNames.add(normalizedName); // Thêm vào danh sách đã kiểm tra tên
 
             // Kiểm tra danh mục hợp lệ
-            if (!ava.isValidCategory(p.getCategoryId()))
+            if (!cate.isValidCategory(p.getCategoryId()))
                 return 4;
 
             // Kiểm tra trùng tên trong hệ thống
@@ -168,51 +208,35 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return 1; // Thành công
     }
 
-    public int update(ProductDTO obj, int employee_roleId, int employeeLoginId) {
-        if (obj == null || obj.getId().isEmpty() || employee_roleId <= 0 || obj.getCategoryId() <= 0) {
-            return 2;
+    // Chỉ sửa name, selling price, description, imageUrl, categoryId, statusId
+    public BUSResult update(ProductDTO obj) {
+        // 1. Validate cơ bản
+        if (obj == null || obj.getId().isEmpty() || obj.getCategoryId() <= 0) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId,
-                PermissionKey.PRODUCT_UPDATE))
-            return 3;
-
-        if (!isValidProductUpdate(obj))
-            return 4;
-
-        if (isDuplicateProductName(obj.getId(), obj.getName())) {
-            return 5;
-        }
-
+        // 2. Chuẩn hóa dữ liệu TRƯỚC khi check trùng
         ValidationUtils validate = ValidationUtils.getInstance();
         obj.setName(validate.normalizeWhiteSpace(obj.getName()));
         obj.setDescription(validate.normalizeWhiteSpace(obj.getDescription()));
 
-        if (isDuplicateProduct(obj))
-            return 1;
+        // 3. Kiểm tra logic (Tên, dữ liệu hợp lệ...)
+        if (!isValidProductUpdate(obj))
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
 
-        if (!ProductDAL.getInstance().update(obj))
-            return 6;
-
-        // Cập nhật arrLocal nếu database cập nhật thành công
-        for (int i = 0; i < arrLocal.size(); i++) {
-            if (Objects.equals(arrLocal.get(i).getId(), obj.getId())) {
-                ProductDTO local = arrLocal.get(i);
-                ProductDTO newProduct = new ProductDTO(local); // Giữ nguyên các field khác
-
-                newProduct.setName(obj.getName());
-                newProduct.setSellingPrice(obj.getSellingPrice());
-                newProduct.setDescription(obj.getDescription());
-                newProduct.setImageUrl(obj.getImageUrl());
-                newProduct.setCategoryId(obj.getCategoryId());
-                newProduct.setStatusId(obj.getStatusId());
-                System.out.println("Old: " + local.toString());
-                System.out.println("New: " + newProduct.toString());
-                arrLocal.set(i, newProduct);
-                break;
-            }
+        if (isDuplicateProductName(obj.getId(), obj.getName())) {
+            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_UPDATE_DUPLICATE);
         }
-        return 1;
+        if (isDuplicateProduct(obj))
+            return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_UPDATE_SUCCESS);
+        // 5. Ghi xuống Database
+        if (!ProductDAL.getInstance().update(obj))
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+
+        // 6. Cập nhật vào Cache (Truyền thẳng obj vào, hàm cache sẽ tự clone)
+        updateLocalCache(obj);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_UPDATE_SUCCESS);
     }
 
     public boolean updateQuantitySellingPriceListProduct(ArrayList<ProductDTO> listProducts, boolean isAdd) {

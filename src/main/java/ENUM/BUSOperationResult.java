@@ -27,8 +27,6 @@ public enum BUSOperationResult {
     UNAUTHORIZED,
     NOT_FOUND,
     CONFLICT,
-    CANNOT_DELETE_SELF,
-    CANNOT_DELETE_SYSTEM,
     FAIL;
 
     /**

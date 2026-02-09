@@ -8,6 +8,7 @@ import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.ExcelService;
+import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
@@ -75,15 +76,25 @@ public class ProductController implements IController {
     private BigDecimal endPrice = null;
     private ProductDTO selectedProduct;
 
+    // BUS instances - initialized once
+    private ProductBUS productBUS;
+    private CategoryBUS categoryBUS;
+    private StatusBUS statusBUS;
+
     @FXML
     public void initialize() {
-        ProductBUS productBUS = ProductBUS.getInstance();
+        // Initialize BUS instances once
+        productBUS = ProductBUS.getInstance();
         if (productBUS.isLocalEmpty())
             productBUS.loadLocal();
 
-        CategoryBUS categoryBUS = CategoryBUS.getInstance();
+        categoryBUS = CategoryBUS.getInstance();
         if (categoryBUS.isLocalEmpty())
             categoryBUS.loadLocal();
+
+        statusBUS = StatusBUS.getInstance();
+        if (statusBUS.isLocalEmpty())
+            statusBUS.loadLocal();
 
         tblProduct.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         // Tránh deprecated
@@ -101,17 +112,15 @@ public class ProductController implements IController {
         cbSearchBy.getItems().addAll("Mã sản phẩm", "Tên sản phẩm");
 
         // Load Status ComboBox
-        StatusBUS statusBUS = StatusBUS.getInstance();
         ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.PRODUCT);
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả cả trạng thái");
         cbStatusFilter.getItems().add(allStatus); // "Tất cả" option
         cbStatusFilter.getItems().addAll(statusList);
 
         // Load Category ComboBox
-        CategoryBUS cateBUS = CategoryBUS.getInstance();
         CategoryDTO allCategory = new CategoryDTO(-1, "Tất cả thể loại");
         cbCategoryFilter.getItems().add(allCategory); // "Tất cả" option
-        cbCategoryFilter.getItems().addAll(cateBUS.getAllLocal());
+        cbCategoryFilter.getItems().addAll(categoryBUS.getAllLocal());
 
         cbSearchBy.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst(); // "Tất cả"
@@ -120,9 +129,6 @@ public class ProductController implements IController {
 
     @Override
     public void loadTable() {
-        CategoryBUS cateBUS = CategoryBUS.getInstance();
-        StatusBUS statusBUS = StatusBUS.getInstance();
-
         // Cập nhật dữ liệu vào bảng
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -163,7 +169,7 @@ public class ProductController implements IController {
         tlb_col_description.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getDescription() == null ? "" : cellData.getValue().getDescription()));
         tlb_col_categoryName.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cateBUS.getByIdLocal(cellData.getValue().getCategoryId()).getName()));
+                categoryBUS.getByIdLocal(cellData.getValue().getCategoryId()).getName()));
         tlb_col_sellingPrice.setCellValueFactory(cellData -> new SimpleStringProperty(
                 ValidationUtils.getInstance().formatCurrency(cellData.getValue().getSellingPrice())));
         tlb_col_stockQuantity.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
@@ -296,9 +302,9 @@ public class ProductController implements IController {
             return;
         }
 
-        ProductBUS productBUS = ProductBUS.getInstance();
-        if (productBUS.getByIdLocal(selectedProduct.getId()).getStockQuantity() != 0) {
-            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_DELETE_WITH_STOCK, AppMessages.DIALOG_TITLE);
+        ProductDTO product = productBUS.getByIdLocal(selectedProduct.getId());
+        if (product == null) {
+            NotificationUtils.showErrorAlert(AppMessages.UNKNOWN_ERROR, AppMessages.DIALOG_TITLE);
             return;
         }
 
@@ -306,23 +312,32 @@ public class ProductController implements IController {
             return;
         }
 
-        SessionManagerService session = SessionManagerService.getInstance();
-        int deleteResult = productBUS.delete(
-                selectedProduct.getId(),
-                session.employeeRoleId(),
-                session.employeeLoginId());
-        switch (deleteResult) {
-            case 1 -> {
-                NotificationUtils.showInfoAlert(AppMessages.PRODUCT_DELETE_SUCCESS, AppMessages.DIALOG_TITLE);
-                resetFilters();
-            }
-            case 2 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_DELETE_ERROR, AppMessages.DIALOG_TITLE);
-            case 3 ->
-                NotificationUtils.showErrorAlert(AppMessages.PRODUCT_DELETE_NO_PERMISSION, AppMessages.DIALOG_TITLE);
-            case 4 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_DELETE_FAILED, AppMessages.DIALOG_TITLE);
-            case 5 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_DELETE_WITH_STOCK, AppMessages.DIALOG_TITLE);
-            default -> NotificationUtils.showErrorAlert(AppMessages.UNKNOWN_ERROR, AppMessages.DIALOG_TITLE);
+        BUSResult updateResult = SecureExecutor.runSafeBUSResult(PermissionKey.PRODUCT_DELETE,
+                () -> productBUS.delete(selectedProduct.getId()));
+
+        if (updateResult.isSuccess()) {
+            NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+            resetFilters();
+            return;
+        } else {
+            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+            return;
         }
+    }
+
+    private void handleDetail() {
+        if (isNotSelectedProduct()) {
+            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
+        ProductModalController modalController = UiUtils.gI().openStageWithController(
+                "/GUI/ProductModal.fxml",
+                controller -> {
+                    controller.setTypeModal(2);
+                    controller.setProduct(selectedProduct);
+                },
+                "Xem chi tiết sản phẩm");
+
     }
 
     private void handleAdd() {
@@ -331,7 +346,6 @@ public class ProductController implements IController {
                 controller -> controller.setTypeModal(0),
                 "Thêm sản phẩm");
         if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert(AppMessages.PRODUCT_ADD_SUCCESS, AppMessages.DIALOG_TITLE);
             resetFilters();
         }
     }
@@ -349,25 +363,9 @@ public class ProductController implements IController {
                 },
                 "Sửa sản phẩm");
         if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert(AppMessages.PRODUCT_UPDATE_SUCCESS, AppMessages.DIALOG_TITLE);
             applyFilters();
         }
         tblProduct.refresh();
-    }
-
-    private void handleDetail() {
-        if (isNotSelectedProduct()) {
-            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
-            return;
-        }
-        ProductModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/ProductModal.fxml",
-                controller -> {
-                    controller.setTypeModal(2);
-                    controller.setProduct(selectedProduct);
-                },
-                "Xem chi tiết sản phẩm");
-
     }
 
     private boolean isNotSelectedProduct() {

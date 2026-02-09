@@ -1,13 +1,10 @@
 package BUS;
 
 import DAL.CategoryDAL;
-import DAL.CustomerDAL;
 import DTO.CategoryDTO;
-import DTO.CustomerDTO;
 import ENUM.*;
 import SERVICE.AuthorizationService;
 import UTILS.ValidationUtils;
-import UTILS.AvailableUtils;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -145,8 +142,8 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
             return false;
 
         // chỉ check trùng với các thể loại active, non active không check
-        int activeStatusId = AvailableUtils.getInstance()
-                .getStatusIdByTypeAndName(StatusType.CATEGORY, Status.Category.ACTIVE);
+        int activeStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusNameLocal(StatusType.CATEGORY, Status.Category.ACTIVE).getId();
 
         for (CategoryDTO category : arrLocal) {
             if (category.getId() != id &&
@@ -204,5 +201,21 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
         }
 
         return filteredList;
+    }
+
+    public boolean isValidCategory(int categoryId) {
+        if (categoryId <= 0)
+            return false;
+
+        CategoryDTO temp = CategoryBUS.getInstance().getByIdLocal(categoryId);
+        if (temp == null)
+            return false;
+
+        // Lấy đối tượng status an toàn
+        int activeStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusNameLocal(StatusType.CATEGORY, Status.Category.ACTIVE).getId();
+
+        // Kiểm tra null cho activeStatus trước khi so sánh ID
+        return activeStatusId > 0 && temp.getStatusId() == activeStatusId;
     }
 }

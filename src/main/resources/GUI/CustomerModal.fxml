@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon?>
-<?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
@@ -15,101 +14,118 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="300.0" prefWidth="850.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.CustomerModalController">
+<AnchorPane prefHeight="480.0" prefWidth="650.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.CustomerModalController">
     <children>
-        <BorderPane prefHeight="450.0" prefWidth="800.0" style="-fx-border-color: #30bac4; -fx-border-width: 2px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <BorderPane style="-fx-border-color: #30bac4; -fx-border-width: 2px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
             <top>
-                <AnchorPane prefHeight="60.0" BorderPane.alignment="CENTER">
+                <VBox alignment="TOP_CENTER" BorderPane.alignment="CENTER">
                     <children>
-                        <Label fx:id="modalName" alignment="CENTER" prefHeight="40.0" text="THÔNG TIN KHÁCH HÀNG" textFill="#30bac4" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="15.0">
-                            <font><Font name="Arial Bold" size="22.0" /></font>
-                        </Label>
+                        <AnchorPane prefHeight="55.0">
+                            <children>
+                                <Label fx:id="modalName" alignment="CENTER" prefHeight="40.0" text="THÔNG TIN KHÁCH HÀNG" textFill="#30bac4" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="10.0">
+                                    <font><Font name="Arial Bold" size="20.0" /></font>
+                                </Label>
+                                <Button fx:id="closeBtn" minWidth="40.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="50.0" styleClass="close" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="8.0">
+                                    <graphic>
+                                        <FontAwesomeIcon fill="#7f8c8d" glyphName="CLOSE" size="1.5em" styleClass="close-icon" />
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </AnchorPane>
+                        <Line endX="600.0" stroke="#eee" strokeWidth="1.5" />
                     </children>
-                </AnchorPane>
+                </VBox>
             </top>
 
             <center>
-                <VBox prefHeight="250.0" spacing="20.0" BorderPane.alignment="CENTER">
+                <VBox spacing="15.0" BorderPane.alignment="CENTER">
                     <padding><Insets left="30.0" right="30.0" top="20.0" /></padding>
                     <children>
-                        <GridPane hgap="20.0" vgap="15.0">
-                          <columnConstraints>
-                            <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="100.0" prefWidth="120.0" />
-                            <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="230.0" />
-                            <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="100.0" prefWidth="120.0" />
-                            <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="230.0" />
-                          </columnConstraints>
-                          <children>
-                              <Label styleClass="label-s" text="Mã KH :" textFill="#30bac4" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                 <font><Font name="Arial Bold" size="15.0" /></font>
-                              </Label>
-                              <TextField fx:id="txtCustomerId" editable="false" focusTraversable="false" mouseTransparent="true" opacity="0.75" prefHeight="32.0" text="Hệ thống tự tạo" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                           <styleClass>
-                              <String fx:value="textfield-1" />
-                              <String fx:value="readonly" />
-                           </styleClass></TextField>
-                              
-                              <Label styleClass="label-s" text="Trạng thái :" textFill="#30bac4" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                 <font><Font name="Arial Bold" size="15.0" /></font>
-                              </Label>
-                              <ComboBox fx:id="cbSelectStatus" prefHeight="32.0" prefWidth="240.0" promptText="Chọn trạng thái" GridPane.columnIndex="3" GridPane.rowIndex="0" />
-
-                              <Label styleClass="label-s" text="Họ đệm :" textFill="#30bac4" GridPane.rowIndex="1">
-                                 <font><Font name="Arial Bold" size="15.0" /></font>
-                              </Label>
-                              <TextField fx:id="txtFirstName" prefHeight="32.0" promptText="Nguyễn Văn" styleClass="textfield-1" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              
-                              <Label styleClass="label-s" text="Tên :" textFill="#30bac4" GridPane.columnIndex="2" GridPane.rowIndex="1">
-                                 <font><Font name="Arial Bold" size="15.0" /></font>
-                              </Label>
-                              <TextField fx:id="txtLastName" prefHeight="32.0" prefWidth="240.0" promptText="A" styleClass="textfield-1" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-
-                              <Label styleClass="label-s" text="Ngày sinh :" textFill="#30bac4" GridPane.rowIndex="2">
-                                 <font><Font name="Arial Bold" size="15.0" /></font>
-                              </Label>
-                              <DatePicker fx:id="dpDateOfBirth" prefHeight="32.0" prefWidth="300.0" promptText="dd/mm/yyyy" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              
-                              <Label styleClass="label-s" text="Điện thoại :" textFill="#30bac4" GridPane.columnIndex="2" GridPane.rowIndex="2">
-                                 <font><Font name="Arial Bold" size="15.0" /></font>
-                              </Label>
-                              <TextField fx:id="txtPhone" prefHeight="32.0" prefWidth="240.0" promptText="090x..." styleClass="textfield-1" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-
-                              <Label styleClass="label-s" text="Địa chỉ :" textFill="#30bac4" GridPane.rowIndex="3">
-                                 <font><Font name="Arial Bold" size="15.0" /></font>
-                              </Label>
-                              <TextField fx:id="txtAddress" prefHeight="32.0" promptText="Số nhà, tên đường, phường/xã..." styleClass="textfield-1" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                <Label minWidth="130.0" prefWidth="130.0" styleClass="label-metadata" text="Cập nhật lần cuối:" textFill="#7f8c8d" GridPane.columnIndex="2" GridPane.rowIndex="3">
-                                    <font>
-                              <Font name="System Italic" size="12.0" />
-                           </font>
-                                </Label>
-                        <TextField fx:id="txtUpdatedAt" prefHeight="32.0" prefWidth="200.0" styleClass="field-metadata" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-                          </children>
-                           <rowConstraints>
-                              <RowConstraints />
-                              <RowConstraints />
-                              <RowConstraints />
-                              <RowConstraints />
-                           </rowConstraints>
+                        <GridPane hgap="20.0" vgap="12.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            </columnConstraints>
+                            <children>
+                                <VBox spacing="5.0">
+                                    <children>
+                                        <Label styleClass="label-s" text="Mã KH" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <TextField fx:id="txtCustomerId" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="Hệ thống tự tạo" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="5.0" GridPane.columnIndex="1">
+                                    <children>
+                                        <Label styleClass="label-s" text="Trạng thái" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <ComboBox fx:id="cbSelectStatus" prefHeight="32.0" prefWidth="300.0" promptText="Chọn trạng thái" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="5.0" GridPane.rowIndex="1">
+                                    <children>
+                                        <Label styleClass="label-s" text="Họ đệm *" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <TextField fx:id="txtFirstName" prefHeight="32.0" promptText="Nguyễn Văn" styleClass="textfield-1" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <children>
+                                        <Label styleClass="label-s" text="Tên *" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <TextField fx:id="txtLastName" prefHeight="32.0" promptText="An" styleClass="textfield-1" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="5.0" GridPane.rowIndex="2">
+                                    <children>
+                                        <Label styleClass="label-s" text="Ngày sinh" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <DatePicker fx:id="dpDateOfBirth" prefHeight="32.0" prefWidth="300.0" promptText="dd/mm/yyyy" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                    <children>
+                                        <Label styleClass="label-s" text="Điện thoại" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <TextField fx:id="txtPhone" prefHeight="32.0" promptText="090x..." styleClass="textfield-1" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="5.0" GridPane.columnSpan="2" GridPane.rowIndex="3">
+                                    <children>
+                                        <Label styleClass="label-s" text="Địa chỉ" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <TextField fx:id="txtAddress" prefHeight="32.0" promptText="Số nhà, tên đường..." styleClass="textfield-1" />
+                                    </children>
+                                </VBox>
+                            </children>
+                            <rowConstraints>
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                            </rowConstraints>
                         </GridPane>
+
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Label styleClass="label-metadata" text="Cập nhật lần cuối:" textFill="#95a5a6">
+                                    <font><Font name="System Italic" size="12.0" /></font>
+                                </Label>
+                                <TextField fx:id="txtUpdatedAt" editable="false" prefHeight="25.0" prefWidth="180.0" style="-fx-background-color: transparent; -fx-padding: 0;" styleClass="field-metadata" text="10/02/2026 15:30" />
+                                <AnchorPane HBox.hgrow="ALWAYS" />
+                                <FontAwesomeIcon fill="#30bac4" glyphName="USER" opacity="0.05" size="3em" />
+                            </children>
+                            <VBox.margin><Insets top="5.0" /></VBox.margin>
+                        </HBox>
                     </children>
                 </VBox>
             </center>
 
             <bottom>
-                <AnchorPane prefHeight="80.0" BorderPane.alignment="CENTER">
+                <AnchorPane prefHeight="70.0" BorderPane.alignment="CENTER">
                     <children>
-                        <HBox fx:id="functionBtns" alignment="CENTER" spacing="40.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                        <Line endX="600.0" layoutX="25.0" stroke="#eee" strokeWidth="1.5" AnchorPane.topAnchor="0.0" />
+                        <HBox alignment="CENTER_RIGHT" spacing="15.0" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="30.0">
                             <children>
                                 <Button fx:id="saveBtn" mnemonicParsing="false" prefHeight="40.0" prefWidth="160.0" styleClass="action-btn" text="LƯU DỮ LIỆU">
-                                    <graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.3em" /></graphic>
-                                    <font><Font name="System Bold" size="14.0" /></font>
-                                </Button>
-                                <Button fx:id="closeBtn" mnemonicParsing="false" prefHeight="40.0" prefWidth="160.0" styleClass="action-btn" text="THOÁT">
-                                    <graphic><FontAwesomeIcon fill="WHITE" glyphName="TIMES" size="1.3em" /></graphic>
-                                    <font><Font name="System Bold" size="14.0" /></font>
+                                    <graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.2em" /></graphic>
+                                    <font><Font name="System Bold" size="13.0" /></font>
                                 </Button>
                             </children>
                         </HBox>

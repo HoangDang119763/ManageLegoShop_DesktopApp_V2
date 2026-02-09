@@ -37,7 +37,7 @@ public class PermissionDAL extends BaseDAL<PermissionDTO, Integer> {
     }
 
     @Override
-    protected boolean hasSoftDelete() {
+    public boolean delete(Integer id) {
         throw new UnsupportedOperationException("Cannot delete permission records.");
     }
 

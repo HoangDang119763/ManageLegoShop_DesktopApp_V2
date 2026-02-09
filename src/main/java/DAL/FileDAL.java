@@ -62,8 +62,4 @@ public class FileDAL extends BaseDAL<FileDTO, Integer> {
         statement.setInt(4, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

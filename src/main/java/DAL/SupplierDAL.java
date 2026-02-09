@@ -68,8 +68,4 @@ public class SupplierDAL extends BaseDAL<SupplierDTO, Integer> {
         statement.setInt(6, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return true;
-    }
 }

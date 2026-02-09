@@ -35,7 +35,7 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
         if (roleId == employee_roleId)
             return false;
 
-        if (!AvailableUtils.getInstance().isValidRole(roleId)) {
+        if (!isValidRole(roleId)) {
             if (!RoleDAL.getInstance().delete(roleId))
                 return false;
             arrLocal.removeIf(role -> role.getId() == roleId);
@@ -232,6 +232,29 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
         }
 
         return filteredList;
+    }
+
+    /**
+     * Kiểm tra xem role có hợp lệ không
+     * - roleId phải > 0
+     * - role phải tồn tại trong database
+     * - role phải có đủ quyền hạn (RolePermission)
+     */
+    public boolean isValidRole(int roleId) {
+        if (roleId <= 0)
+            return false;
+
+        return RoleBUS.getInstance().getByIdLocal(roleId) != null && isValidRoleWithPermissions(roleId);
+    }
+
+    public boolean isValidRoleWithPermissions(int roleId) {
+        if (roleId <= 0)
+            return false;
+
+        int rolePermissionCount = RolePermissionBUS.getInstance().getAllRolePermissionByRoleIdLocal(roleId).size();
+        int totalPermissions = PermissionBUS.getInstance().getAllLocal().size();
+        // Nếu role không có đủ quyền, từ chối ngay
+        return (rolePermissionCount == totalPermissions);
     }
 
 }

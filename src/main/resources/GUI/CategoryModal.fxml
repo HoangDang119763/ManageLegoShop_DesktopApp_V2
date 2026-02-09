@@ -10,79 +10,91 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="350.0" prefWidth="550.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.CategoryModalController">
+<AnchorPane prefHeight="420.0" prefWidth="600.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.CategoryModalController">
     <children>
-        <BorderPane prefHeight="480.0" prefWidth="550.0" style="-fx-border-color: #30bac4; -fx-border-width: 2px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <BorderPane style="-fx-border-color: #30bac4; -fx-border-width: 2px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
             <top>
-                <AnchorPane prefHeight="60.0" BorderPane.alignment="CENTER">
+                <VBox alignment="TOP_CENTER">
                     <children>
-                        <Label fx:id="modalName" alignment="CENTER" prefHeight="40.0" textFill="#30bac4" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="15.0">
-                            <font><Font name="Arial Bold" size="22.0" /></font>
-                        </Label>
+                        <AnchorPane prefHeight="60.0">
+                            <children>
+                                <Label fx:id="modalName" alignment="CENTER" prefHeight="40.0" text="THÔNG TIN THỂ LOẠI" textFill="#30bac4" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="15.0">
+                                    <font><Font name="Arial Bold" size="24.0" /></font>
+                                </Label>
+                                <Button fx:id="closeBtn" minWidth="45.0" mnemonicParsing="false" prefWidth="45.0" styleClass="close" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                                    <graphic>
+                                        <FontAwesomeIcon fill="#7f8c8d" glyphName="CLOSE" size="1.6em" styleClass="close-icon" />
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </AnchorPane>
+                        <Line endX="540.0" stroke="#eee" strokeWidth="2.0">
+                            <VBox.margin><Insets bottom="5.0" /></VBox.margin>
+                        </Line>
                     </children>
-                </AnchorPane>
+                </VBox>
             </top>
 
             <center>
-                <VBox prefWidth="510.0" spacing="15.0" BorderPane.alignment="CENTER">
-                    <padding><Insets left="30.0" right="30.0" top="10.0" /></padding>
+                <HBox spacing="25.0" BorderPane.alignment="CENTER">
+                    <padding><Insets left="30.0" right="30.0" top="15.0" /></padding>
                     <children>
-                        <HBox alignment="CENTER_LEFT" prefHeight="45.0" spacing="10.0">
+                        <VBox prefWidth="300.0" spacing="15.0" HBox.hgrow="ALWAYS">
                             <children>
-                                <Label prefWidth="120.0" styleClass="label-s" text="Mã thể loại" textFill="#30bac4"><font><Font name="Arial Bold" size="16.0" /></font></Label>
-                                <Label text=":" textFill="#30bac4"><font><Font size="18.0" /></font></Label>
-                                <TextField fx:id="txtCategoryId" editable="false" focusTraversable="false" mouseTransparent="true" opacity="0.75" prefHeight="31.0" prefWidth="320.0" styleClass="textfield-2" />
-                            </children>
-                        </HBox>
-
-                        <HBox alignment="CENTER_LEFT" prefHeight="45.0" spacing="10.0">
-                            <children>
-                                <Label prefWidth="120.0" styleClass="label-s" text="Tên thể loại" textFill="#30bac4"><font><Font name="Arial Bold" size="16.0" /></font></Label>
-                                <Label text=":" textFill="#30bac4"><font><Font size="18.0" /></font></Label>
-                                <TextField fx:id="txtCategoryName" prefHeight="31.0" prefWidth="320.0" promptText="Nhập tên thể loại" styleClass="textfield-1" />
-                            </children>
-                        </HBox>
-
-                        <HBox alignment="CENTER_LEFT" prefHeight="45.0" spacing="10.0">
-                            <children>
-                                <Label prefWidth="120.0" styleClass="label-s" text="Trạng thái" textFill="#30bac4"><font><Font name="Arial Bold" size="16.0" /></font></Label>
-                                <Label text=":" textFill="#30bac4"><font><Font size="18.0" /></font></Label>
-                                <ComboBox fx:id="cbSelectStatus" prefHeight="31.0" prefWidth="320.0" promptText="Chọn trạng thái" />
-                            </children>
-                        </HBox>
-
-                        <HBox spacing="20.0">
-                            <children>
-                                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                                    <children>
-                                        <Label styleClass="label-metadata" text="Ngày tạo hệ thống" textFill="#7f8c8d"><font><Font name="System Italic" size="12.0" /></font></Label>
-                                        <TextField fx:id="txtCreatedAt" editable="false" prefHeight="30.0" styleClass="field-metadata" />
-                                    </children>
+                                <VBox spacing="5.0">
+                                    <Label styleClass="label-s" text="Mã thể loại" textFill="#30bac4"><font><Font name="Arial Bold" size="14.0" /></font></Label>
+                                    <TextField fx:id="txtCategoryId" editable="false" prefHeight="35.0" styleClass="textfield-1, readonly" />
                                 </VBox>
-                                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                                    <children>
-                                        <Label styleClass="label-metadata" text="Cập nhật lần cuối" textFill="#7f8c8d"><font><Font name="System Italic" size="12.0" /></font></Label>
-                                        <TextField fx:id="txtUpdatedAt" editable="false" prefHeight="30.0" styleClass="field-metadata" />
-                                    </children>
+                                <VBox spacing="5.0">
+                                    <Label styleClass="label-s" text="Tên thể loại *" textFill="#30bac4"><font><Font name="Arial Bold" size="14.0" /></font></Label>
+                                    <TextField fx:id="txtCategoryName" prefHeight="35.0" promptText="Nhập tên thể loại" styleClass="textfield-1" />
+                                </VBox>
+                                <VBox spacing="5.0">
+                                    <Label styleClass="label-s" text="Trạng thái *" textFill="#30bac4"><font><Font name="Arial Bold" size="14.0" /></font></Label>
+                                    <ComboBox fx:id="cbSelectStatus" prefHeight="35.0" prefWidth="400.0" promptText="Chọn trạng thái" />
                                 </VBox>
                             </children>
-                        </HBox>
+                        </VBox>
+
+                        <VBox prefWidth="220.0" spacing="15.0">
+                            <children>
+                                <VBox spacing="10.0" style="-fx-background-color: #f9f9f9; -fx-background-radius: 5; -fx-padding: 15;">
+                                    <children>
+                                        <VBox spacing="5.0">
+                                            <Label styleClass="label-metadata" text="Ngày tạo:" />
+                                            <TextField fx:id="txtCreatedAt" editable="false" prefHeight="28.0" styleClass="field-metadata" />
+                                        </VBox>
+                                        <VBox spacing="5.0">
+                                            <Label styleClass="label-metadata" text="Cập nhật cuối:" />
+                                            <TextField fx:id="txtUpdatedAt" editable="false" prefHeight="28.0" styleClass="field-metadata" />
+                                        </VBox>
+                                    </children>
+                                </VBox>
+                                <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+                                    <children>
+                                        <FontAwesomeIcon fill="#30bac4" glyphName="TAGS" opacity="0.1" size="5.5em" />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </VBox>
                     </children>
-                </VBox>
+                </HBox>
             </center>
 
             <bottom>
-                <AnchorPane prefHeight="80.0" BorderPane.alignment="CENTER">
+                <AnchorPane prefHeight="75.0" BorderPane.alignment="CENTER">
                     <children>
-                        <HBox fx:id="functionBtns" alignment="CENTER" spacing="60.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                        <Line endX="540.0" layoutX="30.0" stroke="#eee" strokeWidth="2.0" AnchorPane.topAnchor="0.0" />
+
+                        <HBox alignment="CENTER_RIGHT" prefHeight="50.0" spacing="20.0" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="30.0">
                             <children>
-                                <Button fx:id="saveBtn" mnemonicParsing="false" prefHeight="40.0" prefWidth="150.0" styleClass="action-btn" text="LƯU DỮ LIỆU">
-                                    <graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.3em" /></graphic>
-                                </Button>
-                                <Button fx:id="closeBtn" mnemonicParsing="false" prefHeight="40.0" prefWidth="150.0" styleClass="action-btn" text="THOÁT">
-                                    <graphic><FontAwesomeIcon fill="WHITE" glyphName="TIMES" size="1.3em" /></graphic>
+                                <Button fx:id="saveBtn" mnemonicParsing="false" prefHeight="42.0" prefWidth="170.0" styleClass="action-btn" text="LƯU DỮ LIỆU">
+                                    <graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.2em" /></graphic>
+                                    <font><Font name="System Bold" size="13.0" /></font>
                                 </Button>
                             </children>
                         </HBox>

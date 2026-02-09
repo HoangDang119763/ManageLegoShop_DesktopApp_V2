@@ -117,34 +117,43 @@ public class AccountModalController {
     }
 
     private void insertAccount() {
-        AccountBUS accBus = AccountBUS.getInstance();
-        StatusBUS statusBus = StatusBUS.getInstance();
-        if (isValidInput()) {
+        // AccountBUS accBus = AccountBUS.getInstance();
+        // StatusBUS statusBus = StatusBUS.getInstance();
+        // if (isValidInput()) {
 
-            AccountDTO temp = new AccountDTO(-1, txtUsername.getText().trim(), txtPassword.getText().trim(),
-                    statusBus.getByTypeAndStatusNameLocal(StatusType.ACCOUNT, Status.Account.ACTIVE).getId());
-            int insertResult = accBus.insert(temp, SessionManagerService.getInstance().employeeRoleId(),
-                    SessionManagerService.getInstance().employeeLoginId());
-            switch (insertResult) {
-                case 1 -> {
-                    saved = true;
-                    handleClose();
-                }
-                case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi thêm tài khoản. Vui lòng thử lại.", "Thông báo");
-                case 3 ->
-                    NotificationUtils.showErrorAlert("Bạn không có quyền \"Thêm tài khoản\" để thực hiện thao tác này.",
-                            "Thông báo");
-                case 4 -> NotificationUtils.showErrorAlert(
-                        "Nhân viên đã có tài khoản hoặc nhân viên này có vai trò quản trị", "Thông báo");
-                case 5 -> {
-                    NotificationUtils.showErrorAlert("Tên tài khoản đã tồn tại trong hệ thống.", "Thông báo");
-                    clearAndFocus(txtUsername);
-                }
-                case 6 ->
-                    NotificationUtils.showErrorAlert("Thêm tài khoản thất bại. Vui lòng thử lại sau.", "Thông báo");
-                default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
-            }
-        }
+        // AccountDTO temp = new AccountDTO(-1, txtUsername.getText().trim(),
+        // txtPassword.getText().trim(),
+        // statusBus.getByTypeAndStatusNameLocal(StatusType.ACCOUNT,
+        // Status.Account.ACTIVE).getId());
+        // int insertResult = accBus.insert(temp,
+        // SessionManagerService.getInstance().employeeRoleId(),
+        // SessionManagerService.getInstance().employeeLoginId());
+        // switch (insertResult) {
+        // case 1 -> {
+        // saved = true;
+        // handleClose();
+        // }
+        // case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi thêm tài khoản. Vui
+        // lòng thử lại.", "Thông báo");
+        // case 3 ->
+        // NotificationUtils.showErrorAlert("Bạn không có quyền \"Thêm tài khoản\" để
+        // thực hiện thao tác này.",
+        // "Thông báo");
+        // case 4 -> NotificationUtils.showErrorAlert(
+        // "Nhân viên đã có tài khoản hoặc nhân viên này có vai trò quản trị", "Thông
+        // báo");
+        // case 5 -> {
+        // NotificationUtils.showErrorAlert("Tên tài khoản đã tồn tại trong hệ thống.",
+        // "Thông báo");
+        // clearAndFocus(txtUsername);
+        // }
+        // case 6 ->
+        // NotificationUtils.showErrorAlert("Thêm tài khoản thất bại. Vui lòng thử lại
+        // sau.", "Thông báo");
+        // default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử
+        // lại sau.", "Thông báo");
+        // }
+        // }
     }
 
     private void updateAccount() {
