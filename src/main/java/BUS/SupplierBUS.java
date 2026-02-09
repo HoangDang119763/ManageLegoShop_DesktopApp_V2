@@ -26,15 +26,9 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
         return SupplierDAL.getInstance().getAll();
     }
 
-    public SupplierDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (SupplierDTO supp : arrLocal) {
-            if (Objects.equals(supp.getId(), id)) {
-                return new SupplierDTO(supp);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(SupplierDTO obj) {
+        return obj.getId();
     }
 
     public ArrayList<SupplierDTO> filterSuppliers(String searchBy, String keyword, int statusFilter) {

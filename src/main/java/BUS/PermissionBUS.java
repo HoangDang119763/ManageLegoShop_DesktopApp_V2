@@ -20,15 +20,9 @@ public class PermissionBUS extends BaseBUS<PermissionDTO, Integer> {
         return PermissionDAL.getInstance().getAll();
     }
 
-    public PermissionDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (PermissionDTO permission : arrLocal) {
-            if (Objects.equals(permission.getId(), id)) {
-                return new PermissionDTO(permission);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(PermissionDTO obj) {
+        return obj.getId();
     }
 
     public PermissionDTO getByPermissionKeyLocal(String permissionKey) {

@@ -51,12 +51,11 @@
                                     <columns>
                                         <TableColumn fx:id="tlb_col_employeeId" prefWidth="90.0" text="Mã nhân viên" />
                                         <TableColumn fx:id="tlb_col_fullName" prefWidth="130.0" text="Họ và tên" />
-                                        <TableColumn fx:id="tlb_col_roleName" prefWidth="110.0" text="Chức vụ" />
+                                        <TableColumn fx:id="tlb_col_gender" prefWidth="80.0" text="Giới tính" />
+                                        <TableColumn fx:id="tlb_col_email" prefWidth="110.0" text="Email" />
                                         <TableColumn fx:id="tlb_col_baseSalary" prefWidth="110.0" text="Lương cơ bản" />
                                         <TableColumn fx:id="tlb_col_salaryCoefficient" prefWidth="120.0" text="Hệ số lương" />
-                                        <TableColumn fx:id="tlb_col_phone" prefWidth="100.0" text="SDT" />
-                                        <TableColumn fx:id="tlb_col_email" prefWidth="120.0" text="Email" />
-                                        <TableColumn fx:id="tlb_col_gender" prefWidth="80.0" text="Giới tính" />
+                                        <TableColumn fx:id="tlb_col_username" prefWidth="100.0" text="Tài khoản" />
                                         <TableColumn fx:id="tlb_col_status" prefWidth="100.0" text="Trạng thái" />
                                     </columns>
                                     <columnResizePolicy>

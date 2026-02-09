@@ -143,9 +143,9 @@ public class ValidationUtils {
 
     public boolean validateDateOfBirth(LocalDate dateOfBirth) {
         if (dateOfBirth == null)
-            return false; // Ng+�y sinh kh+�ng -榦�+�c l+� null
+            return false;
         LocalDate today = LocalDate.now();
-        return dateOfBirth.isBefore(today); // Ng+�y sinh phߦ�i tr���+�c ng+�y h+�m nay
+        return dateOfBirth.isBefore(today);
     }
 
     public boolean validateDateOfBirth(LocalDateTime dateOfBirth) {
@@ -182,6 +182,26 @@ public class ValidationUtils {
             return LocalDateTime.parse(value, formatter);
         } catch (DateTimeException e) {
             System.err.println("Lỗi định dạng thời gian: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Parse String thành LocalDate
+     * Định dạng mong đợi: dd-MM-yyyy (ví dụ: 11-06-2004)
+     * 
+     * @param dateString chuỗi ngày tháng cần parse
+     * @return LocalDate nếu parse thành công, null nếu có lỗi
+     */
+    public LocalDate parseToLocalDate(String dateString) {
+        try {
+            if (dateString == null || dateString.trim().isEmpty())
+                return null;
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            return LocalDate.parse(dateString.trim(), formatter);
+        } catch (DateTimeException e) {
+            System.err.println("Lỗi định dạng ngày tháng (dd-MM-yyyy): " + e.getMessage());
             return null;
         }
     }

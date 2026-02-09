@@ -1,30 +1,52 @@
 package ENUM;
 
 public enum PermissionKey {
-    // Nhân viên
-    EMPLOYEE_INSERT, EMPLOYEE_DELETE, EMPLOYEE_UPDATE,
+    // === 🧩 MODULE NHÂN VIÊN (Phân tách theo đúng 4 Tab trên UI) ===
+    EMPLOYEE_LIST_VIEW,
+    // Tab 1: Thông tin cá nhân
+    EMPLOYEE_PERSONAL_VIEW,
+    EMPLOYEE_PERSONAL_UPDATE,
 
-    // Khách hàng
-    CUSTOMER_INSERT, CUSTOMER_DELETE, CUSTOMER_UPDATE,
+    // Tab 2: Đơn vị công tác & Lịch sử
+    EMPLOYEE_JOB_VIEW,
+    EMPLOYEE_JOB_UPDATE,
 
-    // Sản phẩm
-    PRODUCT_INSERT, PRODUCT_DELETE, PRODUCT_UPDATE,
+    // Tab 3: Bảo hiểm & Thu nhập
+    EMPLOYEE_PAYROLLINFO_VIEW,
+    EMPLOYEE_PAYROLLINFO_UPDATE,
 
-    // Nhà cung cấp
-    SUPPLIER_INSERT, SUPPLIER_DELETE, SUPPLIER_UPDATE,
+    // Tab 4: Tài khoản hệ thống (Chuyển từ ACCOUNT qua đây)
+    EMPLOYEE_ACCOUNT_VIEW,
+    // Quyền quản trị mật khẩu (Dùng để hiện nút Reset mật khẩu cho nhân viên khác)
+    EMPLOYEE_ACCOUNT_RESET_PASSWORD,
+    // Quyền quản trị trạng thái (Khóa/Mở khóa tài khoản nhân viên)
+    EMPLOYEE_ACCOUNT_UPDATE_STATUS,
 
-    // Bán hàng & Nhập hàng
-    ORDER_CREATE, ORDER_VIEW,
-    IMPORT_CREATE, IMPORT_VIEW,
+    // Quyền thao tác danh sách
+    EMPLOYEE_INSERT,
+    EMPLOYEE_DELETE,
 
-    // Danh mục & Khuyến mãi
-    CATEGORY_INSERT, CATEGORY_DELETE, CATEGORY_UPDATE,
-    PROMOTION_INSERT, PROMOTION_DELETE, PROMOTION_UPDATE,
+    // === 👥 MODULE KHÁCH HÀNG ===
+    CUSTOMER_VIEW, CUSTOMER_INSERT, CUSTOMER_UPDATE, CUSTOMER_DELETE,
 
-    // Hệ thống & Tài khoản
-    ROLE_INSERT, ROLE_DELETE, ROLE_UPDATE, PERMISSION_UPDATE,
-    ACCOUNT_INSERT, ACCOUNT_DELETE, ACCOUNT_UPDATE,
+    // === 📦 MODULE SẢN PHẨM ===
+    PRODUCT_VIEW, PRODUCT_INSERT, PRODUCT_UPDATE, PRODUCT_DELETE,
 
-    // Thống kê
+    // === 🏭 MODULE NHÀ CUNG CẤP ===
+    SUPPLIER_VIEW, SUPPLIER_INSERT, SUPPLIER_UPDATE, SUPPLIER_DELETE,
+
+    // === 💰 MODULE GIAO DỊCH ===
+    ORDER_VIEW, ORDER_CREATE,
+    IMPORT_VIEW, IMPORT_CREATE,
+
+    // === 📑 MODULE DANH MỤC & KHUYẾN MÃI ===
+    CATEGORY_VIEW, CATEGORY_INSERT, CATEGORY_UPDATE, CATEGORY_DELETE,
+    PROMOTION_VIEW, PROMOTION_INSERT, PROMOTION_UPDATE, PROMOTION_DELETE,
+
+    // === ⚙️ HỆ THỐNG (Chỉ còn lại Role và Permission) ===
+    ROLE_VIEW, ROLE_INSERT, ROLE_UPDATE, ROLE_DELETE,
+    PERMISSION_VIEW, PERMISSION_UPDATE,
+
+    // === 📊 THỐNG KÊ ===
     STATISTICS_VIEW;
 }

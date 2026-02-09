@@ -22,6 +22,11 @@ public class HolidayBUS extends BaseBUS<HolidayDTO, Integer> {
         return HolidayDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(HolidayDTO obj) {
+        return obj.getId();
+    }
+
     public HolidayDTO getById(Integer id) {
         return HolidayDAL.getInstance().getById(id);
     }

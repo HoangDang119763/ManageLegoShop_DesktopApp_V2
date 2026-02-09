@@ -21,6 +21,11 @@ public class ReportBUS extends BaseBUS<ReportDTO, Integer> {
         return ReportDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(ReportDTO obj) {
+        return obj.getId();
+    }
+
     public ReportDTO getById(Integer id) {
         return ReportDAL.getInstance().getById(id);
     }

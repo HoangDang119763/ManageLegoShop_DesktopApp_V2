@@ -2,9 +2,7 @@ package BUS;
 
 import DAL.AccountDAL;
 import DTO.AccountDTO;
-import ENUM.ServiceAccessCode;
-import ENUM.StatusType;
-import ENUM.Status;
+import ENUM.*;
 import SERVICE.AuthorizationService;
 import UTILS.AvailableUtils;
 import UTILS.PasswordUtils;
@@ -25,6 +23,11 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
     @Override
     public ArrayList<AccountDTO> getAll() {
         return AccountDAL.getInstance().getAll();
+    }
+
+    @Override
+    protected Integer getKey(AccountDTO obj) {
+        return obj.getId();
     }
 
     public int delete(Integer id, int employee_roleId, int employeeLoginId) {
@@ -54,17 +57,6 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         return 1;
     }
 
-    public AccountDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (AccountDTO account : arrLocal) {
-            if (Objects.equals(account.getId(), id)) {
-                return new AccountDTO(account);
-            }
-        }
-        return null;
-    }
-
     public int insert(AccountDTO obj, int employee_roleId, int employeeLoginId) {
         if (obj == null || isInvalidAccountInput(obj)) {
             return 2;
@@ -88,37 +80,54 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         return 1;
     }
 
-    public int update(AccountDTO obj, int employee_roleId, int employeeLoginId) {
-        // Kiểm tra tài khoản có tồn tại và dữ liệu hợp lệ
-        if (obj == null || obj.getId() <= 0 || employee_roleId <= 0)
-            return 2;
-
-        // Không có quyền 29 thì không chỉnh chính mình hay người khác
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 29))
-            return 3;
-
-        if (isInvalidAccountInput(obj))
-            return 4;
-
-        // Ngăn chặn cập nhật tài khoản gốc nếu không phải chính nó
-        if (obj.getId() == 1 && employeeLoginId != 1) {
-            return 5;
+    public BUSOperationResult changePasswordBySelf(AccountDTO obj, String oldPassword) {
+        // Kiểm tra tham số đầu vào
+        if (obj == null || obj.getId() <= 0 || oldPassword == null) {
+            return BUSOperationResult.INVALID_PARAMS;
         }
 
-        if (isDuplicateAccount(obj))
-            return 1;
+        if (obj.getUsername() == null || obj.getPassword() == null) {
+            return BUSOperationResult.INVALID_DATA;
+        }
+
+        ValidationUtils validator = ValidationUtils.getInstance();
+        if (!validator.validateUsername(obj.getUsername(), 4, 50) ||
+                !validator.validatePassword(obj.getPassword(), 6, 255)) {
+            return BUSOperationResult.INVALID_DATA;
+        }
+
+        AccountDTO existingAcc = getByIdLocal(obj.getId());
+
+        // Kiểm tra xem tài khoản có tồn tại và mật khẩu cũ có đúng không
+        if (existingAcc == null ||
+                !PasswordUtils.getInstance().verifyPassword(oldPassword, existingAcc.getPassword())) {
+            return BUSOperationResult.FAIL;
+        }
+
+        // Kiểm tra xem mật khẩu mới có giống mật khẩu cũ không
+        if (PasswordUtils.getInstance().verifyPassword(obj.getPassword(), existingAcc.getPassword())) {
+            return BUSOperationResult.NO_CHANGES;
+        }
+
+        // Cập nhật mật khẩu
         obj.setPassword(PasswordUtils.getInstance().hashPassword(obj.getPassword()));
-        if (!AccountDAL.getInstance().update(obj))
-            return 6;
+        if (!AccountDAL.getInstance().changePasswordBySelf(obj)) {
+            return BUSOperationResult.DB_ERROR;
+        }
 
         updateLocalCache(obj);
-        return 1;
+        return BUSOperationResult.SUCCESS;
     }
 
     private void updateLocalCache(AccountDTO obj) {
+        AccountDTO newAcc = new AccountDTO(obj);
+
+        // Update primary map
+        mapLocal.put(obj.getId(), newAcc);
+
         for (int i = 0; i < arrLocal.size(); i++) {
             if (Objects.equals(arrLocal.get(i).getId(), obj.getId())) {
-                arrLocal.set(i, new AccountDTO(obj));
+                arrLocal.set(i, newAcc);
                 break;
             }
         }
@@ -133,14 +142,6 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
             }
         }
         return false;
-    }
-
-    private boolean isDuplicateAccount(AccountDTO obj) {
-        AccountDTO existingAcc = getByIdLocal(obj.getId());
-        // Kiểm tra xem tên và mật khẩu có trùng không
-        return existingAcc != null &&
-                Objects.equals(existingAcc.getUsername(), obj.getUsername()) &&
-                PasswordUtils.getInstance().verifyPassword(obj.getPassword(), existingAcc.getPassword());
     }
 
     public int checkLogin(String username, String password, ServiceAccessCode codeAccess) {
@@ -163,6 +164,7 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
 
                 // 4. Nếu không khóa, mới kiểm tra mật khẩu
                 if (PasswordUtils.getInstance().verifyPassword(password, account.getPassword())) {
+                    updateLastLogin(account.getId());
                     return account.getId(); // Đăng nhập thành công
                 } else {
                     return -1; // Sai mật khẩu
@@ -212,5 +214,10 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         }
 
         return filteredList;
+    }
+
+    // Cập nhật thời gian đăng nhập cuối cùng cho tài khoản
+    public void updateLastLogin(int accountId) {
+        AccountDAL.getInstance().updateLastLogin(accountId);
     }
 }

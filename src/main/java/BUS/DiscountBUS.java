@@ -26,6 +26,11 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
         return DiscountDAL.getInstance().getAll();
     }
 
+    @Override
+    protected String getKey(DiscountDTO obj) {
+        return obj.getCode();
+    }
+
     public DiscountDTO getByIdLocal(String code) {
         if (code == null || code.isEmpty())
             return null;

@@ -22,6 +22,11 @@ public class FineBUS extends BaseBUS<FineDTO, Integer> {
         return FineDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(FineDTO obj) {
+        return obj.getId();
+    }
+
     public FineDTO getById(Integer id) {
         return FineDAL.getInstance().getById(id);
     }
@@ -132,12 +137,4 @@ public class FineBUS extends BaseBUS<FineDTO, Integer> {
         return true;
     }
 
-    public FineDTO getByIdLocal(Integer id) {
-        for (FineDTO fine : arrLocal) {
-            if (fine.getId() == id) {
-                return new FineDTO(fine);
-            }
-        }
-        return null;
-    }
 }

@@ -21,14 +21,9 @@ public class SalaryBUS extends BaseBUS<SalaryDTO, Integer> {
         return SalaryDAL.getInstance().getAll();
     }
 
-    public SalaryDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (SalaryDTO salary : arrLocal) {
-            if (Objects.equals(salary.getId(), id)) {
-                return new SalaryDTO(salary);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(SalaryDTO obj) {
+        return obj.getId();
     }
+
 }

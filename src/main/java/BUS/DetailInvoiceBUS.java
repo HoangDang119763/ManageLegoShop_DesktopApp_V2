@@ -20,6 +20,11 @@ public class DetailInvoiceBUS extends BaseBUS<DetailInvoiceDTO, Integer> {
         return DetailInvoiceDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(DetailInvoiceDTO obj) {
+        return obj.getInvoiceId();
+    }
+
     public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || id == null || id <= 0)
             return false;

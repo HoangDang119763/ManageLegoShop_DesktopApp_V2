@@ -372,7 +372,7 @@ public class ProductModalController {
                 case 3 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_UPDATE_NO_PERMISSION,
                         AppMessages.DIALOG_TITLE);
                 case 4 ->
-                    NotificationUtils.showErrorAlert(AppMessages.PRODUCT_UPDATE_INVALID_DATA, AppMessages.DIALOG_TITLE);
+                    NotificationUtils.showErrorAlert(AppMessages.INVALID_DATA, AppMessages.DIALOG_TITLE);
                 case 5 -> {
                     NotificationUtils.showErrorAlert(AppMessages.PRODUCT_UPDATE_DUPLICATE, AppMessages.DIALOG_TITLE);
                     focus(txtProductName);

@@ -11,4 +11,5 @@ public enum StatusType {
     IMPORT,
     LEAVE_REQUEST,
     DEPARTMENT,
+    EMPLOYEE_HISTORY,
 }

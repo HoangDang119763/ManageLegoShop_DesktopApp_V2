@@ -4,9 +4,11 @@ import DTO.TaxDTO;
 import DAL.TaxDAL;
 import SERVICE.AuthorizationService;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TaxBUS extends BaseBUS<TaxDTO, Integer> {
     public static final TaxBUS INSTANCE = new TaxBUS();
+    private final HashMap<Integer, TaxDTO> mapByEmployeeId = new HashMap<>();
 
     private TaxBUS() {
     }
@@ -20,18 +22,30 @@ public class TaxBUS extends BaseBUS<TaxDTO, Integer> {
         return TaxDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(TaxDTO obj) {
+        return obj.getId();
+    }
+
+    @Override
+    public void loadLocal() {
+        super.loadLocal();
+        mapByEmployeeId.clear();
+        for (TaxDTO tax : arrLocal) {
+            if (tax.getEmployeeId() > 0) {
+                mapByEmployeeId.put(tax.getEmployeeId(), tax);
+            }
+        }
+    }
+
     public TaxDTO getById(Integer id) {
         return TaxDAL.getInstance().getById(id);
     }
 
     public TaxDTO getByEmployeeId(int employeeId) {
-        ArrayList<TaxDTO> allTaxes = getAll();
-        for (TaxDTO tax : allTaxes) {
-            if (tax.getEmployeeId() == employeeId) {
-                return tax;
-            }
-        }
-        return null;
+        if (employeeId <= 0)
+            return null;
+        return mapByEmployeeId.get(employeeId);
     }
 
     public boolean insert(TaxDTO obj, int employeeRoleId, int employeeLoginId) {

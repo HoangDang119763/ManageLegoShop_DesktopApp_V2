@@ -21,6 +21,11 @@ public class DetailDiscountBUS extends BaseBUS<DetailDiscountDTO, String> {
         return DetailDiscountDAL.getInstance().getAll();
     }
 
+    @Override
+    protected String getKey(DetailDiscountDTO obj) {
+        return obj.getDiscountCode();
+    }
+
     public int delete(String code, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE || code == null || code.isEmpty())
             return 2;

@@ -8,19 +8,20 @@ import BUS.StatusBUS;
 import DTO.EmployeeDTO;
 import DTO.AccountDTO;
 import DTO.DepartmentDTO;
-import DTO.RoleDTO;
-import DTO.StatusDTO;
+import DTO.EmployeeDetailDTO;
+import ENUM.*;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
+import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
+import PROVIDER.EmployeeViewProvider;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDate;
 
 /**
  * Controller quản lý màn hình thông tin nhân viên (Employee Info)
@@ -51,14 +52,20 @@ public class EmployeeInfoController {
     @FXML
     private TextField lblLastName; // Tên
     @FXML
-    private TextField lblDateOfBirth; // Ngày sinh
+    private DatePicker dpDateOfBirth; // Ngày sinh
     @FXML
     private TextField lblPhone; // Điện thoại
     @FXML
     private TextField lblEmail; // Email
     @FXML
     private TextField lblHealthInsCode; // Mã BHYT
-
+    // Role + Department Section
+    @FXML
+    private TextField lblBaseSalary; // Lương cơ bản
+    @FXML
+    private TextField lblSalaryCoefficient; // Hệ số lương --- IGNORE ---\
+    @FXML
+    private TextField lblNumDependents; // Tên tài khoản --- IGNORE ---
     // Benefits Section
     @FXML
     private CheckBox cbHealthIns; // Bảo hiểm y tế
@@ -94,26 +101,39 @@ public class EmployeeInfoController {
     private Button btnChangePassword; // Nút đổi mật khẩu
     @FXML
     private Button btnClear; // Nút xóa form
+    @FXML
+    private VBox vboxPersonalInfo; // Container thông tin cá nhân
+
+    // ==================== CACHED DATA ====================
+    private EmployeeDetailDTO cachedEmployeeDetail; // Cache employee detail để tránh load lại
+
+    // ==================== BUS INSTANCES ====================
+    // Gán một lần trong initialize() để tránh gọi getInstance() nhiều lần
+    private EmployeeBUS employeeBUS;
+    private AccountBUS accountBUS;
+    private DepartmentBUS departmentBUS;
+    private RoleBUS roleBUS;
+    private StatusBUS statusBUS;
+    public SessionManagerService sessionManagerService;
 
     @FXML
     public void initialize() {
-        EmployeeBUS employeeBUS = EmployeeBUS.getInstance();
+        // Khởi tạo BUS instances một lần
+        employeeBUS = EmployeeBUS.getInstance();
+        accountBUS = AccountBUS.getInstance();
+        departmentBUS = DepartmentBUS.getInstance();
+        roleBUS = RoleBUS.getInstance();
+        statusBUS = StatusBUS.getInstance();
+        sessionManagerService = SessionManagerService.getInstance();
+        // Load local data nếu cần
         if (employeeBUS.isLocalEmpty())
             employeeBUS.loadLocal();
-
-        AccountBUS accountBUS = AccountBUS.getInstance();
         if (accountBUS.isLocalEmpty())
             accountBUS.loadLocal();
-
-        DepartmentBUS departmentBUS = DepartmentBUS.getInstance();
         if (departmentBUS.isLocalEmpty())
             departmentBUS.loadLocal();
-
-        RoleBUS roleBUS = RoleBUS.getInstance();
         if (roleBUS.isLocalEmpty())
             roleBUS.loadLocal();
-
-        StatusBUS statusBUS = StatusBUS.getInstance();
         if (statusBUS.isLocalEmpty())
             statusBUS.loadLocal();
 
@@ -133,45 +153,97 @@ public class EmployeeInfoController {
     /**
      * PHẦN 1: TẢI THÔNG TIN NHÂN VIÊN
      * Lấy thông tin nhân viên hiện tại từ session và hiển thị
+     * Sử dụng cache để tránh load lại nhiều lần
      */
     private void loadEmployeeInfo() {
         try {
-            EmployeeBUS employeeBUS = EmployeeBUS.getInstance();
-            AccountBUS accountBUS = AccountBUS.getInstance();
-            DepartmentBUS departmentBUS = DepartmentBUS.getInstance();
-            RoleBUS roleBUS = RoleBUS.getInstance();
-            StatusBUS statusBUS = StatusBUS.getInstance();
+            EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
+            EmployeeDTO employee = employeeBUS.getByIdLocal(sessionManagerService.employeeLoginId());
+
+            if (employee == null) {
+                hidePersonalInfo();
+                NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên", AppMessages.DIALOG_TITLE);
+                return;
+            }
+
+            // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
+            if (employee.getRoleId() != -1 && employee.getRoleId() == 1) {
+                hidePersonalInfo();
+                return;
+            }
+
+            cachedEmployeeDetail = provider.getDetailById(employee.getId());
+
+            if (cachedEmployeeDetail != null) {
+                displayEmployeeInfo();
+            } else {
+                NotificationUtils.showErrorAlert("Không thể tải thông tin chi tiết nhân viên",
+                        AppMessages.DIALOG_TITLE);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            NotificationUtils.showErrorAlert("Lỗi khi tải thông tin nhân viên", AppMessages.DIALOG_TITLE);
+        }
+    }
+
+    private void hidePersonalInfo() {
+        vboxPersonalInfo.setVisible(false);
+        vboxPersonalInfo.setManaged(false);
+    }
+
+    /**
+     * Hiển thị thông tin nhân viên từ cached data lên UI
+     */
+    private void displayEmployeeInfo() {
+        if (cachedEmployeeDetail == null) {
+            return;
+        }
+
+        try {
+            EmployeeDTO employee = employeeBUS.getByIdLocal(sessionManagerService.employeeLoginId());
             ValidationUtils validationUtils = ValidationUtils.getInstance();
-            // Lấy thông tin nhân viên từ session
-            EmployeeDTO employee = SessionManagerService.getInstance().currEmployee();
 
+            // === PROFILE INFO SECTION ===
+            lblEmployeeId.setText(String.valueOf(cachedEmployeeDetail.getEmployeeId()));
+            lblGender.setText(cachedEmployeeDetail.getGender() != null ? cachedEmployeeDetail.getGender() : "");
+
+            // Get department name
+            if (employee != null && employee.getDepartmentId() != null) {
+                DepartmentDTO department = departmentBUS.getByIdLocal(employee.getDepartmentId());
+                lblDepartmentName.setText(department != null ? department.getName() : "");
+            } else {
+                lblDepartmentName.setText("");
+            }
+
+            lblRoleName.setText(cachedEmployeeDetail.getRoleName() != null ? cachedEmployeeDetail.getRoleName() : "");
+            lblStatus.setText(
+                    cachedEmployeeDetail.getStatusDescription() != null ? cachedEmployeeDetail.getStatusDescription()
+                            : "");
+
+            // === CONTACT INFO SECTION ===
+            lblFirstName
+                    .setText(cachedEmployeeDetail.getFirstName() != null ? cachedEmployeeDetail.getFirstName() : "");
+            lblLastName.setText(cachedEmployeeDetail.getLastName() != null ? cachedEmployeeDetail.getLastName() : "");
+            dpDateOfBirth.setValue(employee != null ? employee.getDateOfBirth() : LocalDate.now());
+            lblPhone.setText(cachedEmployeeDetail.getPhone() != null ? cachedEmployeeDetail.getPhone() : "");
+            lblEmail.setText(cachedEmployeeDetail.getEmail() != null ? cachedEmployeeDetail.getEmail() : "");
+            lblHealthInsCode.setText(
+                    employee != null && employee.getHealthInsCode() != null ? employee.getHealthInsCode() : "");
+
+            // === Salary + Tax SECTION ===
+            lblBaseSalary.setText(cachedEmployeeDetail.getBaseSalary() != null
+                    ? validationUtils.formatCurrency(cachedEmployeeDetail.getBaseSalary())
+                    : "");
+            lblSalaryCoefficient.setText(cachedEmployeeDetail.getSalaryCoefficient() != null
+                    ? String.valueOf(cachedEmployeeDetail.getSalaryCoefficient())
+                    : "");
+            lblNumDependents.setText(cachedEmployeeDetail.getNumDependents() != null
+                    ? String.valueOf(cachedEmployeeDetail.getNumDependents())
+                    : "");
+
+            // === BENEFITS SECTION ===
             if (employee != null) {
-                // === PROFILE INFO SECTION ===
-                lblEmployeeId.setText(String.valueOf(employee.getId()));
-                lblGender.setText(employee.getGender() != null ? employee.getGender() : "");
-
-                // Get department name
-                if (employee.getDepartmentId() != null) {
-                    DepartmentDTO department = departmentBUS.getByIdLocal(employee.getDepartmentId());
-                    lblDepartmentName.setText(department != null ? department.getName() : "");
-                } else {
-                    lblDepartmentName.setText("");
-                }
-
-                RoleDTO role = roleBUS.getByIdLocal(SessionManagerService.getInstance().employeeRoleId());
-                lblRoleName.setText(role != null ? role.getName() : "");
-                StatusDTO status = statusBUS.getByIdLocal(employee.getStatusId());
-                lblStatus.setText(status != null ? status.getDescription() : "");
-
-                // === CONTACT INFO SECTION ===
-                lblFirstName.setText(employee.getFirstName() != null ? employee.getFirstName() : "");
-                lblLastName.setText(employee.getLastName() != null ? employee.getLastName() : "");
-                lblDateOfBirth.setText(validationUtils.formatDateTime(employee.getDateOfBirth()));
-                lblPhone.setText(employee.getPhone() != null ? employee.getPhone() : "");
-                lblEmail.setText(employee.getEmail() != null ? employee.getEmail() : "");
-                lblHealthInsCode.setText(employee.getHealthInsCode() != null ? employee.getHealthInsCode() : "");
-
-                // === BENEFITS SECTION ===
                 cbHealthIns.setSelected(employee.isHealthInsurance());
                 cbSocialIns.setSelected(employee.isSocialInsurance());
                 cbUnemploymentIns.setSelected(employee.isUnemploymentInsurance());
@@ -179,18 +251,13 @@ public class EmployeeInfoController {
                 cbTransportSupport.setSelected(employee.isTransportationSupport());
                 cbAccommSupport.setSelected(employee.isAccommodationSupport());
 
-                lblCreatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(employee.getCreatedAt()));
-                lblUpdatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(employee.getUpdatedAt()));
-                // === Account ===
-                AccountDTO account = accountBUS.getByIdLocal(employee.getAccountId());
-                lblUsername.setText(account.getUsername());
-
-            } else {
-                NotificationUtils.showErrorAlert("Không thể tải thông tin nhân viên", AppMessages.DIALOG_TITLE);
+                lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getCreatedAt()));
+                lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getUpdatedAt()));
             }
+            // === Account ===
+            lblUsername.setText(cachedEmployeeDetail.getUsername() != null ? cachedEmployeeDetail.getUsername() : "");
         } catch (Exception e) {
-            NotificationUtils.showErrorAlert("Lỗi khi tải thông tin nhân viên. Vui lòng thử lại.",
-                    AppMessages.DIALOG_TITLE);
+            log.error("Error displaying employee info", e);
         }
     }
 
@@ -204,48 +271,26 @@ public class EmployeeInfoController {
             return; // Nếu validation thất bại, dừng lại
         }
 
-        try {
-            // // ===== BƯỚC 2: LẤY ID NHÂN VIÊN HIỆN TẠI =====
-            // int currentEmployeeId =
-            // SessionManagerService.getInstance().getCurrentEmployeeId();
-            //
-            // // ===== BƯỚC 3: LẤY TÀI KHOẢN CỦA NHÂN VIÊN =====
-            // AccountDTO account =
-            // AccountBUS.getInstance().getByEmployeeId(currentEmployeeId);
-            // if (account == null) {
-            // NotificationUtils.showErrorAlert("Không tìm thấy tài khoản",
-            // AppMessages.DIALOG_TITLE);
-            // return;
-            // }
-            //
-            // // ===== BƯỚC 4: KIỂM TRA MẬT KHẨU CŨ =====
-            // String oldPassword = txtOldPassword.getText();
-            // String newPassword = txtNewPassword.getText();
-            //
-            // // Kiểm tra xem mật khẩu cũ có đúng không
-            // if (!account.getPassword().equals(oldPassword)) {
-            // NotificationUtils.showErrorAlert("Mật khẩu cũ không chính xác!",
-            // AppMessages.DIALOG_TITLE);
-            // return;
-            // }
-            //
-            // // ===== BƯỚC 5: CẬP NHẬT MẬT KHẨU =====
-            // account.setPassword(newPassword);
-            // int updateResult = AccountBUS.getInstance().update(account);
-            //
-            // if (updateResult > 0) {
-            // NotificationUtils.showInfoAlert("Đổi mật khẩu thành công!",
-            // AppMessages.DIALOG_TITLE);
-            // handleClear(); // Xóa form sau khi thành công
-            // log.info("Đổi mật khẩu thành công cho nhân viên ID: {}", currentEmployeeId);
-            // } else {
-            // NotificationUtils.showErrorAlert("Đổi mật khẩu thất bại. Vui lòng thử lại.",
-            // AppMessages.DIALOG_TITLE);
-            // log.warn("Đổi mật khẩu thất bại cho nhân viên ID: {}", currentEmployeeId);
-            // }
-        } catch (Exception e) {
-            log.error("Lỗi khi đổi mật khẩu", e);
-            NotificationUtils.showErrorAlert("Có lỗi xảy ra khi đổi mật khẩu. Vui lòng thử lại.",
+        AccountDTO account = new AccountDTO(accountBUS.getByIdLocal(sessionManagerService.employeeLoginId()));
+        account.setPassword(txtNewPassword.getText().trim());
+        BUSOperationResult updateResult = SecureExecutor
+                .executePublicResult(() -> accountBUS.changePasswordBySelf(account, txtOldPassword.getText().trim()));
+        switch (updateResult) {
+            case SUCCESS, NO_CHANGES -> {
+                NotificationUtils.showInfoAlert(AppMessages.ACCOUNT_PASSWORD_CHANGE_SUCCESS,
+                        AppMessages.DIALOG_TITLE);
+                handleClear(); // Xóa form sau khi đổi thành công
+            }
+            case FAIL -> {
+                NotificationUtils.showErrorAlert(AppMessages.ACCOUNT_OLD_PASSWORD_WRONG, AppMessages.DIALOG_TITLE);
+            }
+            case INVALID_PARAMS -> NotificationUtils.showInfoAlert(AppMessages.INVALID_PARAMS,
+                    AppMessages.DIALOG_TITLE);
+            case INVALID_DATA -> NotificationUtils.showInfoAlert(AppMessages.INVALID_DATA,
+                    AppMessages.DIALOG_TITLE);
+            case DB_ERROR -> NotificationUtils.showInfoAlert(AppMessages.DATABASE_CONNECTION_ERROR,
+                    AppMessages.DIALOG_TITLE);
+            default -> NotificationUtils.showInfoAlert(AppMessages.ACCOUNT_PASSWORD_CHANGE_ERROR,
                     AppMessages.DIALOG_TITLE);
         }
     }
@@ -260,46 +305,50 @@ public class EmployeeInfoController {
      * - Mật khẩu mới phải khác mật khẩu cũ
      */
     private boolean validatePasswordInput() {
+        boolean isValid = true;
         String oldPassword = txtOldPassword.getText().trim();
         String newPassword = txtNewPassword.getText().trim();
         String confirmPassword = txtConfirmPassword.getText().trim();
 
-        // Kiểm tra: Mật khẩu cũ không được để trống
+        ValidationUtils validator = ValidationUtils.getInstance();
+
+        // 1. Kiểm tra mật khẩu cũ
         if (oldPassword.isEmpty()) {
-            NotificationUtils.showErrorAlert("Vui lòng nhập mật khẩu cũ", AppMessages.DIALOG_TITLE);
-            txtOldPassword.requestFocus();
-            return false;
+            NotificationUtils.showErrorAlert("Vui lòng nhập mật khẩu hiện tại.", "Thông báo");
+            clearAndFocus(txtOldPassword);
+            isValid = false;
         }
 
-        // Kiểm tra: Mật khẩu mới không được để trống
-        if (newPassword.isEmpty()) {
-            NotificationUtils.showErrorAlert("Vui lòng nhập mật khẩu mới", AppMessages.DIALOG_TITLE);
-            txtNewPassword.requestFocus();
-            return false;
+        // 2. Kiểm tra mật khẩu mới (Bắt buộc & Định dạng)
+        if (isValid && newPassword.isEmpty()) {
+            NotificationUtils.showErrorAlert("Mật khẩu mới không được để trống.", "Thông báo");
+            clearAndFocus(txtNewPassword);
+            isValid = false;
+        } else if (isValid && !validator.validatePassword(newPassword, 6, 255)) {
+            NotificationUtils.showErrorAlert("Mật khẩu mới không hợp lệ (tối thiểu 6 ký tự).", "Thông báo");
+            clearAndFocus(txtNewPassword);
+            isValid = false;
         }
 
-        // Kiểm tra: Xác nhận mật khẩu không được để trống
-        if (confirmPassword.isEmpty()) {
-            NotificationUtils.showErrorAlert("Vui lòng xác nhận mật khẩu mới", AppMessages.DIALOG_TITLE);
-            txtConfirmPassword.requestFocus();
-            return false;
+        // 3. Kiểm tra xác nhận mật khẩu
+        if (isValid && confirmPassword.isEmpty()) {
+            NotificationUtils.showErrorAlert("Vui lòng xác nhận mật khẩu mới.", "Thông báo");
+            clearAndFocus(txtConfirmPassword);
+            isValid = false;
+        } else if (isValid && !confirmPassword.equals(newPassword)) {
+            NotificationUtils.showErrorAlert("Xác nhận mật khẩu không trùng khớp.", "Thông báo");
+            clearAndFocus(txtConfirmPassword);
+            isValid = false;
         }
 
-        // Kiểm tra: Mật khẩu mới và xác nhận phải giống nhau
-        if (!newPassword.equals(confirmPassword)) {
-            NotificationUtils.showErrorAlert("Mật khẩu mới và xác nhận không trùng khớp!", AppMessages.DIALOG_TITLE);
-            txtConfirmPassword.requestFocus();
-            return false;
+        // 4. Kiểm tra logic nghiệp vụ: Mới phải khác Cũ
+        if (isValid && newPassword.equals(oldPassword)) {
+            NotificationUtils.showErrorAlert("Mật khẩu mới phải khác mật khẩu cũ.", "Thông báo");
+            clearAndFocus(txtNewPassword);
+            isValid = false;
         }
 
-        // Kiểm tra: Mật khẩu mới phải khác mật khẩu cũ
-        if (oldPassword.equals(newPassword)) {
-            NotificationUtils.showErrorAlert("Mật khẩu mới phải khác mật khẩu cũ!", AppMessages.DIALOG_TITLE);
-            txtNewPassword.requestFocus();
-            return false;
-        }
-
-        return true;
+        return isValid;
     }
 
     /**
@@ -311,7 +360,6 @@ public class EmployeeInfoController {
         txtNewPassword.clear();
         txtConfirmPassword.clear();
         txtOldPassword.requestFocus();
-        log.info("Xóa form đổi mật khẩu");
     }
 
     /**
@@ -319,40 +367,126 @@ public class EmployeeInfoController {
      * Cập nhật thông tin cơ bản của nhân viên (tên, điện thoại, email, etc.)
      */
     private void handleUpdateInfo() {
-        try {
-            SessionManagerService session = SessionManagerService.getInstance();
-            EmployeeBUS employeeBUS = EmployeeBUS.getInstance();
-
-            EmployeeDTO employee = session.currEmployee();
-            if (employee == null) {
-                NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên", AppMessages.DIALOG_TITLE);
-                return;
-            }
-
-            // Cập nhật các trường từ UI
-            employee.setFirstName(lblFirstName.getText().trim());
-            employee.setLastName(lblLastName.getText().trim());
-            employee.setPhone(lblPhone.getText().trim());
-            employee.setEmail(lblEmail.getText().trim());
-            employee.setHealthInsCode(lblHealthInsCode.getText().trim());
-
-            // Cập nhật các quyền lợi/trợ cấp
-
-            int updateResult = employeeBUS.update(employee,
-                    session.employeeRoleId(),
-                    session.employeeLoginId());
-
-            if (updateResult == 1) {
-                NotificationUtils.showInfoAlert("Cập nhật thông tin nhân viên thành công!", AppMessages.DIALOG_TITLE);
-                loadEmployeeInfo(); // Refresh UI
-            } else {
-                NotificationUtils.showErrorAlert("Cập nhật thông tin thất bại. Vui lòng thử lại.",
-                        AppMessages.DIALOG_TITLE);
-            }
-        } catch (Exception e) {
-            NotificationUtils.showErrorAlert("Lỗi khi cập nhật thông tin nhân viên: " + e.getMessage(),
-                    AppMessages.DIALOG_TITLE);
-            log.error("Error updating employee info", e);
+        // Validate input trước
+        String validationError = validateUpdateInfoFields();
+        if (validationError != null) {
+            NotificationUtils.showErrorAlert(validationError, AppMessages.DIALOG_TITLE);
+            return;
         }
+
+        EmployeeDTO employee = new EmployeeDTO(sessionManagerService.currEmployee());
+
+        // Cập nhật các trường từ UI
+        employee.setFirstName(lblFirstName.getText().trim());
+        employee.setLastName(lblLastName.getText().trim());
+        employee.setDateOfBirth(dpDateOfBirth.getValue());
+        employee.setPhone(lblPhone.getText().trim());
+        employee.setEmail(lblEmail.getText().trim());
+        employee.setGender(lblGender.getText().trim());
+
+        BUSOperationResult updateResult = SecureExecutor
+                .executePublicResult(() -> employeeBUS.updatePersonalInfoBySelf(employee));
+        switch (updateResult) {
+            case SUCCESS, NO_CHANGES -> {
+                NotificationUtils.showInfoAlert(AppMessages.EMPLOYEE_PERSONAL_UPDATE_SUCCESS,
+                        AppMessages.DIALOG_TITLE);
+                sessionManagerService.updateCurrentEmployee();
+                loadEmployeeInfo(); // Refresh UI
+            }
+            case INVALID_PARAMS -> NotificationUtils.showInfoAlert(AppMessages.INVALID_PARAMS,
+                    AppMessages.DIALOG_TITLE);
+            case INVALID_DATA -> NotificationUtils.showInfoAlert(AppMessages.INVALID_DATA,
+                    AppMessages.DIALOG_TITLE);
+            case DB_ERROR -> NotificationUtils.showInfoAlert(AppMessages.DATABASE_CONNECTION_ERROR,
+                    AppMessages.DIALOG_TITLE);
+            default -> NotificationUtils.showInfoAlert(AppMessages.EMPLOYEE_PERSONAL_UPDATE_ERROR,
+                    AppMessages.DIALOG_TITLE);
+        }
+    }
+
+    /**
+     * VALIDATE TỪNG FIELD CỦA FORM CẬP NHẬT THÔNG TIN
+     * Kiểm tra và trả về thông báo lỗi cụ thể cho từng field
+     * 
+     * @return null nếu hợp lệ, message cụ thể nếu lỗi
+     */
+    private String validateUpdateInfoFields() {
+        ValidationUtils validator = ValidationUtils.getInstance();
+
+        // 1. Kiểm tra Họ đệm
+        String firstName = lblFirstName.getText().trim();
+        if (firstName.isEmpty()) {
+            focus(lblFirstName);
+            return "Họ đệm không được để trống.";
+        }
+        if (!validator.validateVietnameseText100(firstName)) {
+            focus(lblFirstName);
+            return "Họ đệm chỉ chứa chữ cái và không quá 100 ký tự.";
+        }
+
+        // 2. Kiểm tra Tên
+        String lastName = lblLastName.getText().trim();
+        if (lastName.isEmpty()) {
+            focus(lblLastName);
+            return "Tên không được để trống.";
+        }
+        if (!validator.validateVietnameseText100(lastName)) {
+            focus(lblLastName);
+            return "Tên chỉ chứa chữ cái và không quá 100 ký tự.";
+        }
+
+        // 3. Kiểm tra Ngày sinh
+        if (dpDateOfBirth.getValue() == null) {
+            dpDateOfBirth.requestFocus();
+            return "Ngày sinh không được để trống.";
+        }
+        if (!validator.validateDateOfBirth(dpDateOfBirth.getValue())) {
+            dpDateOfBirth.requestFocus();
+            return "Ngày sinh không hợp lệ hoặc quá nhỏ (tối thiểu 18 tuổi).";
+        }
+
+        // 4. Kiểm tra Điện thoại
+        String phone = lblPhone.getText().trim();
+        if (phone.isEmpty()) {
+            focus(lblBaseSalary);
+            return "Số điện thoại không được để trống.";
+        }
+        if (!phone.isEmpty() && !validator.validateVietnamesePhoneNumber(phone)) {
+            focus(lblPhone);
+            return "Số điện thoại không hợp lệ (VD: 0912345678).";
+        }
+
+        // 5. Kiểm tra Email
+        String email = lblEmail.getText().trim();
+        if (email.isEmpty()) {
+            focus(lblEmail);
+            return "Email không được để trống.";
+        }
+        if (!email.isEmpty() && !validator.validateEmail(email)) {
+            focus(lblEmail);
+            return "Email không hợp lệ (VD: user@example.com).";
+        }
+
+        // 6. Kiểm tra Giới tính
+        String gender = lblGender.getText().trim();
+        if (gender.isEmpty()) {
+            focus(lblGender);
+            return "Giới tính không được để trống.";
+        }
+        if (!gender.equals("Nam") && !gender.equals("Nữ") && !gender.equals("Khác")) {
+            focus(lblGender);
+            return "Giới tính không hợp lệ (Nam, Nữ, hoặc Khác).";
+        }
+
+        return null; // Hợp lệ
+    }
+
+    private void clearAndFocus(TextField textField) {
+        textField.clear();
+        textField.requestFocus();
+    }
+
+    private void focus(TextField textField) {
+        textField.requestFocus();
     }
 }

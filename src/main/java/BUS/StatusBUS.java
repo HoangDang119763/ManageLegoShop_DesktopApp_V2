@@ -22,15 +22,9 @@ public class StatusBUS extends BaseBUS<StatusDTO, Integer> {
         return StatusDAL.getInstance().getAll();
     }
 
-    public StatusDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (StatusDTO status : arrLocal) {
-            if (Objects.equals(status.getId(), id)) {
-                return new StatusDTO(status);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(StatusDTO obj) {
+        return obj.getId();
     }
 
     // Lấy các status theo type

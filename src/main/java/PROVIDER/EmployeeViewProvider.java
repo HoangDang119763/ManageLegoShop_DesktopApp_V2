@@ -1,23 +1,30 @@
 package PROVIDER;
 
+import BUS.AccountBUS;
+import BUS.EmployeeBUS;
 import BUS.RoleBUS;
 import BUS.SalaryBUS;
 import BUS.StatusBUS;
+import BUS.TaxBUS;
+import DTO.AccountDTO;
 import DTO.EmployeeDTO;
-import DTO.EmployeeTableDTO;
+import DTO.EmployeeDetailDTO;
 import DTO.RoleDTO;
 import DTO.SalaryDTO;
 import DTO.StatusDTO;
-import java.util.ArrayList;
-import java.util.List;
+import DTO.TaxDTO;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Provider để transform dữ liệu Employee sang dạng hiển thị trong Table
- * Join dữ liệu từ Employee (BUS), Role (BUS), Salary (BUS), Status (BUS)
- * Không cần tạo thêm BUS/DAL mới
+ * Provider để transform dữ liệu Employee sang EmployeeDetailDTO
+ * Single Responsibility: Chỉ xử lý transformation từ EmployeeDTO + BUS data
+ * sang EmployeeDetailDTO
+ * Filter logic được tách ra EmployeeDetailFilterer
  */
 public class EmployeeViewProvider {
+
     private static final EmployeeViewProvider INSTANCE = new EmployeeViewProvider();
 
     private EmployeeViewProvider() {
@@ -27,151 +34,110 @@ public class EmployeeViewProvider {
         return INSTANCE;
     }
 
+    // Cache maps per call (not global cache)
+    private Map<Integer, RoleDTO> roleMap;
+    private Map<Integer, SalaryDTO> salaryMap;
+    private Map<Integer, StatusDTO> statusMap;
+    private Map<Integer, AccountDTO> accountMap;
+    private Map<Integer, TaxDTO> taxMap;
+
     /**
-     * Transform danh sách EmployeeDTO thành EmployeeTableDTO
-     * Join với Role, Salary, Status để lấy đầy đủ thông tin hiển thị
+     * Build maps once per request
      */
-    public ArrayList<EmployeeTableDTO> toTableDTOs(List<EmployeeDTO> employees) {
+    private void buildMaps() {
         RoleBUS roleBUS = RoleBUS.getInstance();
         SalaryBUS salaryBUS = SalaryBUS.getInstance();
         StatusBUS statusBUS = StatusBUS.getInstance();
+        AccountBUS accountBUS = AccountBUS.getInstance();
+        TaxBUS taxBUS = TaxBUS.getInstance();
+        if (roleBUS.isLocalEmpty())
+            roleBUS.loadLocal();
+        if (salaryBUS.isLocalEmpty())
+            salaryBUS.loadLocal();
+        if (statusBUS.isLocalEmpty())
+            statusBUS.loadLocal();
+        if (accountBUS.isLocalEmpty())
+            accountBUS.loadLocal();
+        if (taxBUS.isLocalEmpty())
+            taxBUS.loadLocal();
+        roleMap = roleBUS.getAllLocal().stream()
+                .collect(Collectors.toMap(RoleDTO::getId, r -> r));
+
+        salaryMap = salaryBUS.getAllLocal().stream()
+                .collect(Collectors.toMap(SalaryDTO::getId, s -> s));
+
+        statusMap = statusBUS.getAllLocal().stream()
+                .collect(Collectors.toMap(StatusDTO::getId, s -> s));
+
+        accountMap = accountBUS.getAllLocal().stream()
+                .collect(Collectors.toMap(AccountDTO::getId, a -> a));
+
+        taxMap = taxBUS.getAllLocal().stream()
+                .collect(Collectors.toMap(TaxDTO::getEmployeeId, t -> t));
+    }
+
+    /**
+     * Convert list EmployeeDTO -> EmployeeDetailDTO
+     */
+    public ArrayList<EmployeeDetailDTO> toTableDTOs(List<EmployeeDTO> employees) {
+        buildMaps();
 
         return employees.stream()
-                .map(emp -> transformToTableDTO(emp, roleBUS, salaryBUS, statusBUS))
+                .map(this::transform)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
-     * Transform 1 EmployeeDTO thành EmployeeTableDTO
+     * Get single employee detail
      */
-    private EmployeeTableDTO transformToTableDTO(EmployeeDTO emp, RoleBUS roleBUS,
-            SalaryBUS salaryBUS, StatusBUS statusBUS) {
-        // Lấy thông tin Role
-        RoleDTO role = roleBUS.getByIdLocal(emp.getRoleId());
-        String roleName = role != null ? role.getName() : "";
+    public EmployeeDetailDTO getDetailById(int employeeId) {
+        EmployeeDTO emp = EmployeeBUS.getInstance().getByIdLocal(employeeId);
+        if (emp == null)
+            return null;
 
-        // Lấy thông tin Salary từ Role
-        SalaryDTO salary = null;
-        if (role != null && role.getSalaryId() != null) {
-            salary = salaryBUS.getByIdLocal(role.getSalaryId());
-        }
-
-        // Lấy thông tin Status
-        StatusDTO status = statusBUS.getByIdLocal(emp.getStatusId());
-        String statusDescription = status != null ? status.getDescription() : "";
-
-        // Build fullName
-        String fullName = (emp.getFirstName() != null ? emp.getFirstName() : "") + " " +
-                (emp.getLastName() != null ? emp.getLastName() : "");
-
-        return new EmployeeTableDTO(
-                emp.getId(),
-                fullName.trim(),
-                roleName,
-                salary != null ? salary.getBase() : null,
-                salary != null ? salary.getCoefficient() : null,
-                emp.getPhone(),
-                emp.getEmail(),
-                emp.getGender(),
-                statusDescription);
+        buildMaps();
+        return transform(emp);
     }
 
     /**
-     * Lọc theo keyword (tên, SDT, email)
+     * Transform core method
      */
-    public ArrayList<EmployeeTableDTO> filterByKeyword(ArrayList<EmployeeTableDTO> data, String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return data;
-        }
+    private EmployeeDetailDTO transform(EmployeeDTO emp) {
 
-        String searchKey = keyword.toLowerCase().trim();
-        return data.stream()
-                .filter(emp -> emp.getFullName().toLowerCase().contains(searchKey) ||
-                        (emp.getPhone() != null && emp.getPhone().toLowerCase().contains(searchKey)) ||
-                        (emp.getEmail() != null && emp.getEmail().toLowerCase().contains(searchKey)))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
+        RoleDTO role = roleMap.get(emp.getRoleId());
+        SalaryDTO salary = role != null ? salaryMap.get(role.getSalaryId()) : null;
+        StatusDTO empStatus = statusMap.get(emp.getStatusId());
+        AccountDTO account = accountMap.get(emp.getAccountId());
+        TaxDTO tax = taxMap.get(emp.getId());
 
-    /**
-     * Lọc theo mã nhân viên
-     */
-    public ArrayList<EmployeeTableDTO> filterByEmployeeId(ArrayList<EmployeeTableDTO> data, String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return data;
-        }
+        StatusDTO accStatus = account != null ? statusMap.get(account.getStatusId()) : null;
 
-        return data.stream()
-                .filter(emp -> String.valueOf(emp.getEmployeeId()).contains(keyword))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
+        return EmployeeDetailDTO.builder()
+                .employeeId(emp.getId())
+                .firstName(emp.getFirstName())
+                .lastName(emp.getLastName())
+                .email(emp.getEmail())
+                .phone(emp.getPhone())
+                .gender(emp.getGender())
 
-    /**
-     * Lọc theo Role
-     */
-    public ArrayList<EmployeeTableDTO> filterByRole(ArrayList<EmployeeTableDTO> data, String roleName) {
-        if (roleName == null || roleName.isEmpty() || roleName.equals("Tất cả")) {
-            return data;
-        }
+                .roleId(emp.getRoleId())
+                .roleName(role != null ? role.getName() : "")
 
-        return data.stream()
-                .filter(emp -> emp.getRoleName().equals(roleName))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
+                .salaryId(role != null ? role.getSalaryId() : 0)
+                .baseSalary(salary != null ? salary.getBase() : null)
+                .salaryCoefficient(salary != null ? salary.getCoefficient() : null)
 
-    /**
-     * Lọc theo Status
-     */
-    public ArrayList<EmployeeTableDTO> filterByStatus(ArrayList<EmployeeTableDTO> data, String statusDesc) {
-        if (statusDesc == null || statusDesc.isEmpty() || statusDesc.startsWith("Tất cả")) {
-            return data;
-        }
+                .accountId(emp.getAccountId())
+                .username(account != null ? account.getUsername() : "")
+                .accountStatusId(account != null ? account.getStatusId() : 0)
+                .accountStatus(accStatus != null ? accStatus.getDescription() : "")
 
-        return data.stream()
-                .filter(emp -> emp.getStatusDescription().equals(statusDesc))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
+                .statusId(emp.getStatusId())
+                .statusDescription(empStatus != null ? empStatus.getDescription() : "")
 
-    /**
-     * Apply tất cả filters
-     */
-    public ArrayList<EmployeeTableDTO> applyAllFilters(List<EmployeeDTO> employees,
-            String searchBy, String keyword, String roleName, String statusDesc) {
+                .taxId(tax != null ? tax.getId() : 0)
+                .numDependents(tax != null ? tax.getNumDependents() : 0)
 
-        // Transform to table DTOs
-        ArrayList<EmployeeTableDTO> tableData = toTableDTOs(employees);
-
-        // Apply filters
-        if (!keyword.isEmpty()) {
-            tableData = switch (searchBy) {
-                case "Mã nhân viên" -> filterByEmployeeId(tableData, keyword);
-                case "Họ tên" -> filterByKeyword(tableData, keyword);
-                case "SDT" -> filterBySDT(tableData, keyword);
-                case "Email" -> filterByEmail(tableData, keyword);
-                default -> tableData;
-            };
-        }
-
-        tableData = filterByRole(tableData, roleName);
-        tableData = filterByStatus(tableData, statusDesc);
-
-        return tableData;
-    }
-
-    /**
-     * Lọc theo SDT
-     */
-    private ArrayList<EmployeeTableDTO> filterBySDT(ArrayList<EmployeeTableDTO> data, String keyword) {
-        return data.stream()
-                .filter(emp -> emp.getPhone() != null && emp.getPhone().contains(keyword))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    /**
-     * Lọc theo Email
-     */
-    private ArrayList<EmployeeTableDTO> filterByEmail(ArrayList<EmployeeTableDTO> data, String keyword) {
-        return data.stream()
-                .filter(emp -> emp.getEmail() != null && emp.getEmail().toLowerCase().contains(keyword.toLowerCase()))
-                .collect(Collectors.toCollection(ArrayList::new));
+                .build();
     }
 }

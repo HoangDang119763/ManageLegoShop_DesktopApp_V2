@@ -148,37 +148,46 @@ public class AccountModalController {
     }
 
     private void updateAccount() {
-        AccountBUS accBus = AccountBUS.getInstance();
-        AccountDTO temp = new AccountDTO(-1, txtUsername.getText().trim(),
-                txtPassword.getText().trim(), null, null, 0);
-        if (isValidInput()) {
+        // AccountBUS accBus = AccountBUS.getInstance();
+        // AccountDTO temp = new AccountDTO(-1, txtUsername.getText().trim(),
+        // txtPassword.getText().trim(), null, null, 0);
+        // if (isValidInput()) {
 
-            int updateResult = accBus.update(temp, SessionManagerService.getInstance().employeeRoleId(),
-                    SessionManagerService.getInstance().employeeLoginId());
-            switch (updateResult) {
-                case 1 -> {
-                    saved = true;
-                    handleClose();
-                }
-                case 2 ->
-                    NotificationUtils.showErrorAlert("Có lỗi khi cập nhật tài khoản. Vui lòng thử lại.", "Thông báo");
-                case 3 ->
-                    NotificationUtils.showErrorAlert(
-                            "Bạn không có quyền \"Cập nhật tài khoản\" để thực hiện thao tác này.", "Thông báo");
-                case 4 -> NotificationUtils.showErrorAlert("Dữ liệu đầu vào không hợp lệ", "Thông báo");
-                case 5 -> {
-                    NotificationUtils.showErrorAlert("Không thể cập nhật tài khoản gốc.", "Thông báo");
-                    clearAndFocus(txtPassword);
-                    clearAndFocus(txtRePassword);
-                }
-                case 6 -> NotificationUtils.showErrorAlert("Bạn không thể cập nhật chức vụ ngang quyền.", "Thông báo");
-                case 7 ->
-                    NotificationUtils.showErrorAlert("Tài khoản không tồn tại. Vui lòng thử lại sau.", "Thông báo");
-                case 8 ->
-                    NotificationUtils.showErrorAlert("Cập nhật tài khoản thất bại. Vui lòng thử lại sau.", "Thông báo");
-                default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
-            }
-        }
+        // int updateResult = accBus.update(temp,
+        // SessionManagerService.getInstance().employeeRoleId(),
+        // SessionManagerService.getInstance().employeeLoginId());
+        // switch (updateResult) {
+        // case 1 -> {
+        // saved = true;
+        // handleClose();
+        // }
+        // case 2 ->
+        // NotificationUtils.showErrorAlert("Có lỗi khi cập nhật tài khoản. Vui lòng thử
+        // lại.", "Thông báo");
+        // case 3 ->
+        // NotificationUtils.showErrorAlert(
+        // "Bạn không có quyền \"Cập nhật tài khoản\" để thực hiện thao tác này.",
+        // "Thông báo");
+        // case 4 -> NotificationUtils.showErrorAlert("Dữ liệu đầu vào không hợp lệ",
+        // "Thông báo");
+        // case 5 -> {
+        // NotificationUtils.showErrorAlert("Không thể cập nhật tài khoản gốc.", "Thông
+        // báo");
+        // clearAndFocus(txtPassword);
+        // clearAndFocus(txtRePassword);
+        // }
+        // case 6 -> NotificationUtils.showErrorAlert("Bạn không thể cập nhật chức vụ
+        // ngang quyền.", "Thông báo");
+        // case 7 ->
+        // NotificationUtils.showErrorAlert("Tài khoản không tồn tại. Vui lòng thử lại
+        // sau.", "Thông báo");
+        // case 8 ->
+        // NotificationUtils.showErrorAlert("Cập nhật tài khoản thất bại. Vui lòng thử
+        // lại sau.", "Thông báo");
+        // default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử
+        // lại sau.", "Thông báo");
+        // }
+        // }
     }
 
     private void makeReadOnly(Node node) {

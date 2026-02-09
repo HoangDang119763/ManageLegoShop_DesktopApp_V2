@@ -23,6 +23,11 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
         return ImportDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(ImportDTO obj) {
+        return obj.getId();
+    }
+
     public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || id == null || id <= 0)
             return false;
@@ -35,17 +40,6 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
         }
         arrLocal.removeIf(role -> Objects.equals(role.getId(), id));
         return true;
-    }
-
-    public ImportDTO getByIdLocal(int id) {
-        if (id <= 0)
-            return null;
-        for (ImportDTO importa : arrLocal) {
-            if (Objects.equals(importa.getId(), id)) {
-                return new ImportDTO(importa);
-            }
-        }
-        return null;
     }
 
     public boolean insert(ImportDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {

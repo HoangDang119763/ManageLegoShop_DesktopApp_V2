@@ -18,6 +18,11 @@ public class AppMessages {
     public static final String LOGIN_ACCOUNT_LOCKED = "Tài khoản của bạn hiện đang bị khóa!";
     public static final String LOGIN_EMPLOYEE_INVALID = "Thông tin nhân viên không hợp lệ!";
 
+    // ==================== MODULE THÔNG TIN CÁ NHÂN NHÂN VIÊN (EMPLOYEE INFO)
+    // ====================
+    public static final String EMPLOYEE_PERSONAL_UPDATE_SUCCESS = "Cập nhật thông tin cá nhân thành công!";
+    public static final String EMPLOYEE_PERSONAL_UPDATE_ERROR = "Có lỗi khi cập nhật thông tin cá nhân. Vui lòng thử lại.";
+
     // ==================== MODULE BÁN HÀNG - CHI TIẾT HÓA ĐƠN ====================
     /**
      * Các thông báo liên quan đến quá trình bán hàng và quản lý hóa đơn
@@ -83,7 +88,7 @@ public class AppMessages {
     public static final String PRODUCT_UPDATE_SUCCESS = "Sửa sản phẩm thành công";
     public static final String PRODUCT_UPDATE_ERROR = "Có lỗi khi cập nhật sản phẩm. Vui lòng thử lại.";
     public static final String PRODUCT_UPDATE_NO_PERMISSION = "Bạn không có quyền \"Cập nhật sản phẩm\" để thực hiện thao tác này.";
-    public static final String PRODUCT_UPDATE_INVALID_DATA = "Dữ liệu đầu vào không hợp lệ";
+
     public static final String PRODUCT_UPDATE_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
     public static final String PRODUCT_UPDATE_FAILED = "Cập nhật sản phẩm thất bại. Vui lòng thử lại sau.";
 
@@ -148,6 +153,9 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý tài khoản người dùng
      */
+    public static final String ACCOUNT_PASSWORD_CHANGE_SUCCESS = "Đổi mật khẩu thành công!";
+    public static final String ACCOUNT_PASSWORD_CHANGE_ERROR = "Có lỗi khi đổi mật khẩu. Vui lòng thử lại.";
+    public static final String ACCOUNT_OLD_PASSWORD_WRONG = "Mật khẩu cũ không đúng. Vui lòng thử lại.";
     // Placeholder cho các messages về account
 
     // ==================== MODULE THỐNG KÊ (STATISTIC) ====================
@@ -164,9 +172,11 @@ public class AppMessages {
     public static final String DIALOG_TITLE_CONFIRM = "Thông báo xác nhận";
     public static final String GENERAL_REFRESH_SUCCESS = "Làm mới thành công";
     public static final String DATABASE_CONNECTION_ERROR = "Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.";
-    public static final String PRODUCT_DATA_INVALID = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
     public static final String GENERAL_ERROR = "Lỗi không xác định. Thao tác thất bại.";
     public static final String UNKNOWN_ERROR = "Lỗi không xác định. Vui lòng thử lại.";
     public static final String OPERATION_SUCCESS = "Thao tác thành công!";
     public static final String OPERATION_FAILED = "Thao tác thất bại!";
+    public static final String INVALID_DATA = "Dữ liệu đầu vào không hợp lệ";
+    public static final String INVALID_PARAMS = "Tham số không hợp lệ";
+
 }

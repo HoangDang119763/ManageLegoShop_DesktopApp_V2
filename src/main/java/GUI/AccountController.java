@@ -119,16 +119,16 @@ public class AccountController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
-        boolean canAdd = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_INSERT);
-        boolean canEdit = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_UPDATE);
-        boolean canDelete = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_DELETE);
-
-        if (!canAdd)
-            functionBtns.getChildren().remove(addBtn);
-        if (!canEdit)
-            functionBtns.getChildren().remove(editBtn);
-        if (!canDelete)
-            functionBtns.getChildren().remove(deleteBtn);
+//        boolean canAdd = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_INSERT);
+//        boolean canEdit = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_UPDATE);
+//        boolean canDelete = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_DELETE);
+//
+//        if (!canAdd)
+//            functionBtns.getChildren().remove(addBtn);
+//        if (!canEdit)
+//            functionBtns.getChildren().remove(editBtn);
+//        if (!canDelete)
+//            functionBtns.getChildren().remove(deleteBtn);
     }
 
     private void handleDelete() {

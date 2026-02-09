@@ -21,6 +21,11 @@ public class FileBUS extends BaseBUS<FileDTO, Integer> {
         return FileDAL.getInstance().getAll();
     }
 
+    @Override
+    protected Integer getKey(FileDTO obj) {
+        return obj.getId();
+    }
+
     public FileDTO getById(Integer id) {
         return FileDAL.getInstance().getById(id);
     }

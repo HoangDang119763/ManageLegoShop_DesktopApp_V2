@@ -11,7 +11,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
+public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
     private static final CustomerBUS INSTANCE = new CustomerBUS();
 
     private CustomerBUS() {
@@ -26,31 +26,30 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
         return CustomerDAL.getInstance().getAll();
     }
 
-    public CustomerDTO getByIdLocal(int id) {
-        if (id <= 0) return null;
-        for (CustomerDTO customer : arrLocal) {
-            if (Objects.equals(customer.getId(), id)) {
-                return new CustomerDTO(customer);
-            }
-        }
-        return null;
+    @Override
+    protected Integer getKey(CustomerDTO obj) {
+        return obj.getId();
     }
 
     public int delete(Integer id, int employee_roleId, int employeeLoginId) {
         // Kiểm tra ID hợp lệ
-        if (id == null || id <= 0) return 2; // Khách hàng không tồn tại
+        if (id == null || id <= 0)
+            return 2; // Khách hàng không tồn tại
 
         // Kiểm tra quyền xóa khách hàng (permission ID = 5)
-        if (employee_roleId <= 0 || !AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 5)) {
+        if (employee_roleId <= 0
+                || !AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 5)) {
             return 4; // Không có quyền xóa
         }
 
         // Kiểm tra ID khách hàng vãng lai(gốc)
-        if (id == 1) return 3;
+        if (id == 1)
+            return 3;
 
-        //Khach hang da bi xoa hoac khong ton tai
+        // Khach hang da bi xoa hoac khong ton tai
         CustomerDTO targetCustomer = getByIdLocal(id);
-        if (targetCustomer == null || !targetCustomer.isStatus()) return 5;
+        if (targetCustomer == null || !targetCustomer.isStatus())
+            return 5;
 
         // Xóa khách hàng trong database
         if (!CustomerDAL.getInstance().delete(id)) {
@@ -67,11 +66,14 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
     }
 
     public int insert(CustomerDTO obj, int employee_roleId, int employeeLoginId) {
-        if (obj == null || employee_roleId <= 0 || !AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 4) || !isValidCustomerInput(obj)) {
+        if (obj == null || employee_roleId <= 0
+                || !AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 4)
+                || !isValidCustomerInput(obj)) {
             return 2;
         }
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 4)) return 4;
+        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 4))
+            return 4;
 
         if (isDuplicateCustomer(-1, obj.getFirstName(), obj.getLastName(), obj.getPhone(), obj.getAddress())) {
             return 3;
@@ -79,7 +81,7 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
 
         // image_url và date_of_birth có thể null
 
-        //validate khi chuyen xuong database
+        // validate khi chuyen xuong database
         ValidationUtils validate = ValidationUtils.getInstance();
         obj.setStatus(true);
         obj.setFirstName(validate.normalizeWhiteSpace(obj.getFirstName()));
@@ -92,7 +94,7 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
         }
 
         arrLocal.add(new CustomerDTO(obj));
-        return 1;//them thanh cong
+        return 1;// them thanh cong
     }
 
     public int update(CustomerDTO obj, int employee_roleId, int employeeLoginId) {
@@ -100,19 +102,21 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
             return 2;
         }
 
-        if(!isValidCustomerInput(obj)) return 6;
+        if (!isValidCustomerInput(obj))
+            return 6;
 
-        //Không có quyền sửa
-        if (!AuthorizationService.getInstance().
-                hasPermission(employeeLoginId, employee_roleId, 6)) return 4;
+        // Không có quyền sửa
+        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 6))
+            return 4;
 
         // Kiểm tra trùng lặp trước khi cập nhật
         if (isDuplicateCustomer(obj.getId(), obj.getFirstName(), obj.getLastName(), obj.getPhone(), obj.getAddress())) {
             return 3;
         }
 
-        //Kiểm tra input ở database
-        if (isDuplicateCustomerS(obj)) return 1;
+        // Kiểm tra input ở database
+        if (isDuplicateCustomerS(obj))
+            return 1;
         ValidationUtils validate = ValidationUtils.getInstance();
         obj.setStatus(true);
         obj.setFirstName(validate.normalizeWhiteSpace(obj.getFirstName()));
@@ -125,23 +129,24 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
             return 5;
         }
 
-        //Sửa thành công
+        // Sửa thành công
         updateLocalCache(obj);
         return 1;
     }
 
-    //Cap nhat cache local
+    // Cap nhat cache local
     private void updateLocalCache(CustomerDTO obj) {
         for (int i = 0; i < arrLocal.size(); i++) {
             if (Objects.equals(arrLocal.get(i).getId(), obj.getId())) {
                 arrLocal.set(i, new CustomerDTO(obj));
                 break;
             }
-        }  
+        }
     }
 
-    public boolean isDuplicateCustomer(int id, String firstName, String lastName,String phone, String address) {
-        if (firstName == null || lastName == null || phone == null || address == null) return false;
+    public boolean isDuplicateCustomer(int id, String firstName, String lastName, String phone, String address) {
+        if (firstName == null || lastName == null || phone == null || address == null)
+            return false;
 
         for (CustomerDTO customer : arrLocal) {
             if (customer.getId() != id &&
@@ -157,7 +162,8 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
     }
 
     private boolean isValidCustomerInput(CustomerDTO obj) {
-        if (obj.getFirstName() == null || obj.getLastName() == null || obj.getPhone() == null || obj.getAddress() == null) {
+        if (obj.getFirstName() == null || obj.getLastName() == null || obj.getPhone() == null
+                || obj.getAddress() == null) {
             return false;
         }
 
@@ -183,12 +189,14 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
                 Objects.equals(existingPro.getAddress(), validate.normalizeWhiteSpace(obj.getAddress()));
     }
 
-    //searchbar
+    // searchbar
     public ArrayList<CustomerDTO> filterCustomers(String searchBy, String keyword, int statusFilter) {
         ArrayList<CustomerDTO> filteredList = new ArrayList<>();
 
-        if (keyword == null) keyword = "";
-        if (searchBy == null) searchBy = "";
+        if (keyword == null)
+            keyword = "";
+        if (searchBy == null)
+            searchBy = "";
 
         keyword = keyword.trim().toLowerCase();
 
@@ -200,7 +208,7 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
             String firstName = cus.getFirstName() != null ? cus.getFirstName().toLowerCase() : "";
             String lastName = cus.getLastName() != null ? cus.getLastName().toLowerCase() : "";
             String id = String.valueOf(cus.getId());
-            String phone = cus.getPhone() != null ? cus.getPhone(): "";
+            String phone = cus.getPhone() != null ? cus.getPhone() : "";
 
             if (!keyword.isEmpty()) {
                 switch (searchBy) {
@@ -222,9 +230,9 @@ public class CustomerBUS extends BaseBUS <CustomerDTO, Integer> {
 
     public ArrayList<CustomerDTO> searchCustomerByPhone(String phone) {
         ArrayList<CustomerDTO> list = new ArrayList<>();
-        if(phone == null || phone.trim().isEmpty())
+        if (phone == null || phone.trim().isEmpty())
             return arrLocal;
-        for(CustomerDTO cus : arrLocal) {
+        for (CustomerDTO cus : arrLocal) {
             if (cus.getPhone().contains(phone.trim()) && cus.isStatus())
                 list.add(cus);
         }
