@@ -18,8 +18,6 @@ public class AuthorizationService {
             return false;
         // Kiểm tra employeeId đó có role đó thật không và role có tồn tại không và hợp
         // lệ không
-        if (isInvalidUserRole(employeeId, roleId) || !AvailableUtils.getInstance().isValidRole(roleId))
-            return false;
 
         if (RoleBUS.getInstance().isLocalEmpty())
             RoleBUS.getInstance().loadLocal();
@@ -27,6 +25,9 @@ public class AuthorizationService {
             PermissionBUS.getInstance().loadLocal();
         if (RolePermissionBUS.getInstance().isLocalEmpty())
             RolePermissionBUS.getInstance().loadLocal();
+
+        if (isInvalidUserRole(employeeId, roleId) || !RoleBUS.getInstance().isValidRole(roleId))
+            return false;
 
         // Kiểm tra role có quyền cụ thể không
         return RolePermissionBUS.getInstance().hasPermission(roleId, permissionId);
@@ -37,7 +38,7 @@ public class AuthorizationService {
             return false;
         // Kiểm tra employeeId đó có role đó thật không và role có tồn tại không và hợp
         // lệ không
-        if (isInvalidUserRole(employeeId, roleId) || !AvailableUtils.getInstance().isValidRole(roleId))
+        if (isInvalidUserRole(employeeId, roleId) || !RoleBUS.getInstance().isValidRole(roleId))
             return false;
 
         if (RoleBUS.getInstance().isLocalEmpty())

@@ -74,8 +74,4 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
         statement.setInt(8, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

@@ -3,11 +3,14 @@ package GUI;
 import BUS.CategoryBUS;
 import BUS.ProductBUS;
 import BUS.StatusBUS;
+import DTO.BUSResult;
 import DTO.CategoryDTO;
 import DTO.ProductDTO;
 import DTO.StatusDTO;
+import ENUM.PermissionKey;
 import ENUM.StatusType;
 import SERVICE.ImageService;
+import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
@@ -49,7 +52,7 @@ public class ProductModalController {
     @FXML
     private Button saveBtn, closeBtn, addCategorySubBtn;
     @FXML
-    private Button choseImg;
+    private Button choseImg, resetImgBtn;
     @FXML
     private ImageView imageView;
     private String imageUrl = null;
@@ -63,9 +66,17 @@ public class ProductModalController {
     private boolean isSaved;
     private int typeModal;
     private ProductDTO product;
+    private ProductBUS productBUS;
+    private StatusBUS statusBUS;
+    private CategoryBUS categoryBUS;
 
     @FXML
     public void initialize() {
+        // Initialize BUS instances once
+        productBUS = ProductBUS.getInstance();
+        statusBUS = StatusBUS.getInstance();
+        categoryBUS = CategoryBUS.getInstance();
+
         loadComboBox();
         setupListeners();
     }
@@ -81,15 +92,14 @@ public class ProductModalController {
         closeBtn.setOnAction(e -> handleClose());
         addCategorySubBtn.setOnAction(e -> handleAddCategorySub());
         choseImg.setOnAction(e -> handleChoseImg());
+        resetImgBtn.setOnAction(e -> handleResetImg());
     }
 
     private void loadComboBox() {
-        StatusBUS statusBus = StatusBUS.getInstance();
-        ArrayList<StatusDTO> statusOptions = statusBus.getAllByTypeLocal(StatusType.PRODUCT);
+        ArrayList<StatusDTO> statusOptions = statusBUS.getAllByTypeLocal(StatusType.PRODUCT);
         cbSelectStatus.setItems(FXCollections.observableArrayList(statusOptions));
 
-        CategoryBUS cateBUS = CategoryBUS.getInstance();
-        ArrayList<CategoryDTO> categoryOptions = cateBUS.getAllLocal();
+        ArrayList<CategoryDTO> categoryOptions = categoryBUS.getAllLocal();
         cbSelectCategory.setItems(FXCollections.observableArrayList(categoryOptions));
 
         cbSelectStatus.getSelectionModel().selectFirst();
@@ -103,7 +113,7 @@ public class ProductModalController {
         typeModal = type;
         if (typeModal == 0) {
             modalName.setText("Thêm sản phẩm");
-            txtProductId.setText(ProductBUS.getInstance().autoId());
+            txtProductId.setText(productBUS.autoId());
         } else if (typeModal == 1) {
             if (product == null) {
                 handleClose();
@@ -135,7 +145,7 @@ public class ProductModalController {
     public void setProduct(ProductDTO product) {
         this.product = product;
         txtProductName.setText(product.getName());
-        CategoryDTO selectedCategory = CategoryBUS.getInstance().getByIdLocal(product.getCategoryId());
+        CategoryDTO selectedCategory = categoryBUS.getByIdLocal(product.getCategoryId());
         if (selectedCategory != null) {
             cbSelectCategory.getItems().stream()
                     .filter(item -> item != null && item.getId() == selectedCategory.getId())
@@ -145,9 +155,7 @@ public class ProductModalController {
         txtProductId.setText(product.getId());
 
         // Select status based on object
-        StatusBUS statusBus = StatusBUS.getInstance();
-        StatusDTO statusToSelect = statusBus.getByIdLocal(
-                product.getStatusId());
+        StatusDTO statusToSelect = statusBUS.getByIdLocal(product.getStatusId());
         if (statusToSelect != null) {
             cbSelectStatus.getItems().stream()
                     .filter(item -> item != null && item.getId() == statusToSelect.getId())
@@ -234,10 +242,26 @@ public class ProductModalController {
         if (file != null) {
             Image image = new Image(file.toURI().toString());
             imageView.setImage(image);
-            // imageView.setFitWidth(217.5);
-            // imageView.setFitHeight(217.5);
             imageUrl = file.toURI().toString();
         }
+    }
+
+    private void handleResetImg() {
+        Image image = null;
+        URL resource = getClass().getResource("/images/default/default.png");
+        if (resource != null) {
+            image = new Image(resource.toExternalForm());
+        } else {
+            System.err.println("Resource not found: /images/default/default.png");
+        }
+
+        if (image != null)
+
+        {
+            imageView.setImage(image);
+            imageUrl = "";
+        }
+
     }
 
     private boolean isValidInput() {
@@ -289,7 +313,6 @@ public class ProductModalController {
     }
 
     private void insertProduct() throws IOException {
-        ProductBUS proBus = ProductBUS.getInstance();
         if (isValidInput()) {
             StatusDTO selectedStatus = cbSelectStatus.getValue();
             CategoryDTO selectedCategory = cbSelectCategory.getValue();
@@ -307,34 +330,23 @@ public class ProductModalController {
             ProductDTO temp = new ProductDTO(
                     txtProductId.getText().trim(),
                     txtProductName.getText().trim(), 0,
-                    new BigDecimal(0),
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
                     selectedStatus.getId(), txtDescription.getText().trim(),
                     newImgUrl, selectedCategory.getId());
-            int insertResult = proBus.insert(temp,
-                    SessionManagerService.getInstance().employeeRoleId(),
-                    SessionManagerService.getInstance().employeeLoginId());
-            switch (insertResult) {
-                case 1 -> {
-                    isSaved = true;
-                    handleClose();
-                }
-                case 2 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_ADD_ERROR, AppMessages.DIALOG_TITLE);
-                case 3 ->
-                    NotificationUtils.showErrorAlert(AppMessages.PRODUCT_ADD_NO_PERMISSION, AppMessages.DIALOG_TITLE);
-                case 4 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_ADD_INVALID_CATEGORY,
-                        AppMessages.DIALOG_TITLE);
-                case 5 -> {
-                    NotificationUtils.showErrorAlert(AppMessages.PRODUCT_ADD_DUPLICATE, AppMessages.DIALOG_TITLE);
-                    focus(txtProductName);
-                }
-                case 6 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_ADD_FAILED, AppMessages.DIALOG_TITLE);
-                default -> NotificationUtils.showErrorAlert(AppMessages.UNKNOWN_ERROR, AppMessages.DIALOG_TITLE);
-            }
+            BUSResult updateResult = SecureExecutor
+                    .runSafeBUSResult(PermissionKey.PRODUCT_INSERT, () -> productBUS.insert(temp));
+
+            if (updateResult.isSuccess()) {
+                NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+                isSaved = true;
+                handleClose();
+            } else
+                NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
         }
     }
 
     private void updateProduct() throws IOException {
-        ProductBUS proBus = ProductBUS.getInstance();
         if (isValidInput()) {
             StatusDTO selectedStatus = cbSelectStatus.getValue();
             CategoryDTO selectedCategory = cbSelectCategory.getValue();
@@ -355,30 +367,24 @@ public class ProductModalController {
 
             ProductDTO temp = new ProductDTO(
                     txtProductId.getText().trim(),
-                    txtProductName.getText().trim(), 0,
+                    txtProductName.getText().trim(),
+                    product.getStockQuantity(),
                     new BigDecimal(txtSellingPrice.getText().trim()),
+                    new BigDecimal(txtImportPrice.getText().trim()),
                     selectedStatus.getId(),
                     txtDescription.getText().trim(),
-                    newImgUrl, selectedCategory.getId());
-            int updateResult = proBus.update(temp,
-                    SessionManagerService.getInstance().employeeRoleId(),
-                    SessionManagerService.getInstance().employeeLoginId());
-            switch (updateResult) {
-                case 1 -> {
-                    isSaved = true;
-                    handleClose();
-                }
-                case 2 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_UPDATE_ERROR, AppMessages.DIALOG_TITLE);
-                case 3 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_UPDATE_NO_PERMISSION,
-                        AppMessages.DIALOG_TITLE);
-                case 4 ->
-                    NotificationUtils.showErrorAlert(AppMessages.INVALID_DATA, AppMessages.DIALOG_TITLE);
-                case 5 -> {
-                    NotificationUtils.showErrorAlert(AppMessages.PRODUCT_UPDATE_DUPLICATE, AppMessages.DIALOG_TITLE);
-                    focus(txtProductName);
-                }
-                case 6 -> NotificationUtils.showErrorAlert(AppMessages.PRODUCT_UPDATE_FAILED, AppMessages.DIALOG_TITLE);
-                default -> NotificationUtils.showErrorAlert(AppMessages.UNKNOWN_ERROR, AppMessages.DIALOG_TITLE);
+                    newImgUrl,
+                    selectedCategory.getId());
+
+            BUSResult updateResult = SecureExecutor
+                    .runSafeBUSResult(PermissionKey.PRODUCT_UPDATE, () -> productBUS.update(temp));
+
+            if (updateResult.isSuccess()) {
+                NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+                isSaved = true;
+                handleClose();
+            } else {
+                NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
             }
         }
     }

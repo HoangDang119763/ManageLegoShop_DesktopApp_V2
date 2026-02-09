@@ -54,7 +54,7 @@ public class RolePermissionService {
         ArrayList<RolePermissionDTO> tempList = rolePermissionBus.getAllRolePermissionByRoleIdLocal(roleId);
 
         // Xóa role_permission trước
-        if (!AvailableUtils.getInstance().isValidRole(roleId)) {
+        if (!RoleBUS.getInstance().isValidRole(roleId)) {
             return roleBus.delete(roleId, employee_roleId, ServiceAccessCode.ROLE_PERMISSION_SERVICE,
                     employeeLoginId) ? 1 : 2;
         }

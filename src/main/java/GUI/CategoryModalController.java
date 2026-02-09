@@ -148,7 +148,7 @@ public class CategoryModalController {
                 case 4 ->
                     NotificationUtils.showErrorAlert(AppMessages.CATEGORY_ADD_NO_PERMISSION, AppMessages.DIALOG_TITLE);
                 case 5 ->
-                    NotificationUtils.showErrorAlert(AppMessages.DATABASE_CONNECTION_ERROR, AppMessages.DIALOG_TITLE);
+                    NotificationUtils.showErrorAlert(AppMessages.DB_ERROR, AppMessages.DIALOG_TITLE);
                 default -> NotificationUtils.showErrorAlert(AppMessages.UNKNOWN_ERROR, AppMessages.DIALOG_TITLE);
             }
         }

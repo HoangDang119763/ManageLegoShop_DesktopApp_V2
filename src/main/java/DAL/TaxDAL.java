@@ -57,8 +57,4 @@ public class TaxDAL extends BaseDAL<TaxDTO, Integer> {
         statement.setInt(3, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

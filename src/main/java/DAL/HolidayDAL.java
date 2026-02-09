@@ -59,8 +59,4 @@ public class HolidayDAL extends BaseDAL<HolidayDTO, Integer> {
         statement.setInt(3, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

@@ -119,16 +119,19 @@ public class AccountController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
-//        boolean canAdd = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_INSERT);
-//        boolean canEdit = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_UPDATE);
-//        boolean canDelete = SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_DELETE);
-//
-//        if (!canAdd)
-//            functionBtns.getChildren().remove(addBtn);
-//        if (!canEdit)
-//            functionBtns.getChildren().remove(editBtn);
-//        if (!canDelete)
-//            functionBtns.getChildren().remove(deleteBtn);
+        // boolean canAdd =
+        // SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_INSERT);
+        // boolean canEdit =
+        // SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_UPDATE);
+        // boolean canDelete =
+        // SessionManagerService.getInstance().hasPermission(PermissionKey.ACCOUNT_DELETE);
+        //
+        // if (!canAdd)
+        // functionBtns.getChildren().remove(addBtn);
+        // if (!canEdit)
+        // functionBtns.getChildren().remove(editBtn);
+        // if (!canDelete)
+        // functionBtns.getChildren().remove(deleteBtn);
     }
 
     private void handleDelete() {
@@ -142,32 +145,41 @@ public class AccountController implements IController {
         // mình.", "Thông báo");
         // return;
         // }
-        if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa tài khoản này?", "Thông báo xác nhận"))
-            return;
+        // if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa tài khoản này?", "Thông
+        // báo xác nhận"))
+        // return;
 
-        int deleteResult = AccountBUS.getInstance().delete(-1, SessionManagerService.getInstance().employeeRoleId(),
-                SessionManagerService.getInstance().employeeLoginId());
-        switch (deleteResult) {
-            case 1 -> {
-                NotificationUtils.showInfoAlert("Xóa tài khoản thành công.", "Thông báo");
-                resetFilters();
-            }
-            case 2 ->
-                NotificationUtils.showErrorAlert("Có lỗi khi xóa tài khoản. Vui lòng thử lại.", "Thông báo");
-            case 3 ->
-                NotificationUtils.showErrorAlert("Không thể xóa tài khoản gốc.", "Thông báo");
-            case 4 ->
-                NotificationUtils.showErrorAlert("Bạn không thể xóa tài khoản của chính mình.", "Thông báo");
-            case 5 ->
-                NotificationUtils.showErrorAlert("Bạn không có quyền \"Xóa tài khoản\" để thực hiện thao tác này.",
-                        "Thông báo");
-            case 6 ->
-                NotificationUtils.showErrorAlert("Bạn không thể xóa chức vụ ngang quyền", "Thông báo");
-            case 7 ->
-                NotificationUtils.showErrorAlert("Xóa tài khoản thất bại. Vui lòng thử lại sau.", "Thông báo");
-            default ->
-                NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
-        }
+        // int deleteResult = AccountBUS.getInstance().delete(-1,
+        // SessionManagerService.getInstance().employeeRoleId(),
+        // SessionManagerService.getInstance().employeeLoginId());
+        // switch (deleteResult) {
+        // case 1 -> {
+        // NotificationUtils.showInfoAlert("Xóa tài khoản thành công.", "Thông báo");
+        // resetFilters();
+        // }
+        // case 2 ->
+        // NotificationUtils.showErrorAlert("Có lỗi khi xóa tài khoản. Vui lòng thử
+        // lại.", "Thông báo");
+        // case 3 ->
+        // NotificationUtils.showErrorAlert("Không thể xóa tài khoản gốc.", "Thông
+        // báo");
+        // case 4 ->
+        // NotificationUtils.showErrorAlert("Bạn không thể xóa tài khoản của chính
+        // mình.", "Thông báo");
+        // case 5 ->
+        // NotificationUtils.showErrorAlert("Bạn không có quyền \"Xóa tài khoản\" để
+        // thực hiện thao tác này.",
+        // "Thông báo");
+        // case 6 ->
+        // NotificationUtils.showErrorAlert("Bạn không thể xóa chức vụ ngang quyền",
+        // "Thông báo");
+        // case 7 ->
+        // NotificationUtils.showErrorAlert("Xóa tài khoản thất bại. Vui lòng thử lại
+        // sau.", "Thông báo");
+        // default ->
+        // NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.",
+        // "Thông báo");
+        // }
     }
 
     private void handleAdd() {

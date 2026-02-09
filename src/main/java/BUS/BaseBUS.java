@@ -37,10 +37,6 @@ public abstract class BaseBUS<T, K> implements IBUS<T, K> {
         return arrLocal.isEmpty();
     }
 
-    public T getByKeyLocal(K key) {
-        return mapLocal.get(key);
-    }
-
     public boolean containsKey(K key) {
         return mapLocal.containsKey(key);
     }

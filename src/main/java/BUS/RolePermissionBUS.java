@@ -63,7 +63,7 @@ public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
             return 5;
         }
 
-        if (!AvailableUtils.getInstance().isValidRole(roleId))
+        if (!RoleBUS.getInstance().isValidRole(roleId))
             return 7;
 
         if (!RolePermissionDAL.getInstance().delete(roleId)) {

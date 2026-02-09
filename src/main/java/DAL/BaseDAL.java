@@ -122,17 +122,8 @@ public abstract class BaseDAL<T, K> implements IDAL<T, K> {
 
     @Override
     public boolean delete(K id) {
-        if (hasSoftDelete()) {
-            final String query = "UPDATE " + table + " SET status = 0 WHERE " + idColumn + " = ?";
-            return executeDeleteQuery(query, id);
-        } else {
             final String query = "DELETE FROM " + table + " WHERE " + idColumn + " = ?";
             return executeDeleteQuery(query, id);
-        }
-    }
-
-    protected boolean hasSoftDelete() {
-        return false;
     }
 
     private boolean executeDeleteQuery(String query, K id) {

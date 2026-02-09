@@ -71,8 +71,4 @@ public class FineDAL extends BaseDAL<FineDTO, Integer> {
         statement.setInt(7, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

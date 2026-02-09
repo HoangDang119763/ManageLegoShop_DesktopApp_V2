@@ -1,6 +1,7 @@
 
 package SERVICE;
 
+import BUS.CategoryBUS;
 import BUS.EmployeeBUS;
 import BUS.ProductBUS;
 import BUS.RoleBUS;
@@ -247,7 +248,7 @@ public class ExcelService {
                         break;
                     continue;
                 }
-                if (categoryId < 0 || !AvailableUtils.getInstance().isValidCategory(categoryId)) {
+                if (categoryId < 0 || !CategoryBUS.getInstance().isValidCategory(categoryId)) {
                     if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ hoặc đã bị xóa.",
                             ++errorCount))
                         break;

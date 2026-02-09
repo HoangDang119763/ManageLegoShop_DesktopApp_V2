@@ -56,25 +56,19 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
 
     @Override
     protected String getUpdateQuery() {
-        return "SET name = ?, selling_price = ?, import_price = ?, status_id = ?, description = ?, image_url = ?, category_id = ?, updated_at = ? WHERE id = ?";
+        // Loại bỏ import_price để tránh làm sai lệch giá vốn khi chỉ sửa thông tin sản phẩm
+        return "SET name = ?, selling_price = ?, status_id = ?, description = ?, image_url = ?, category_id = ? WHERE id = ?";
     }
 
     @Override
     protected void setUpdateParameters(PreparedStatement statement, ProductDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setBigDecimal(2, obj.getSellingPrice());
-        statement.setBigDecimal(3, obj.getImportPrice());
-        statement.setInt(4, obj.getStatusId());
-        statement.setString(5, obj.getDescription());
-        statement.setString(6, obj.getImageUrl());
-        statement.setInt(7, obj.getCategoryId());
-        statement.setObject(8, obj.getUpdatedAt());
-        statement.setString(9, obj.getId());
-    }
-
-    @Override
-    protected boolean hasSoftDelete() {
-        return true;
+        statement.setInt(3, obj.getStatusId());
+        statement.setString(4, obj.getDescription());
+        statement.setString(5, obj.getImageUrl());
+        statement.setInt(6, obj.getCategoryId());
+        statement.setString(7, obj.getId()); // Tham số cho điều kiện WHERE
     }
 
     public boolean updateProductQuantityAndSellingPrice(ArrayList<ProductDTO> list) {
@@ -141,6 +135,23 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
 
         } catch (SQLException e) {
             System.err.println("Error inserting detail invoice: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean softDelete(ProductDTO obj) {
+        // SQL tự tìm ID dựa vào tên trạng thái 'INACTIVE' hoặc 'DELETED'
+        String query = "UPDATE product SET status_id = ? WHERE id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+                statement.setInt(1, obj.getStatusId());
+                statement.setString(2, obj.getId());
+
+            return statement.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error soft delete product: " + e.getMessage());
             return false;
         }
     }

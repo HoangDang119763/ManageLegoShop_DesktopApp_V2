@@ -35,8 +35,7 @@ public class ProductDTO {
     }
 
     public ProductDTO(String id, String name, int stockQuantity, BigDecimal sellingPrice, BigDecimal importPrice,
-            int statusId, String description, String imageUrl, int categoryId, LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            int statusId, String description, String imageUrl, int categoryId) {
         this.id = id;
         this.name = name;
         this.stockQuantity = stockQuantity;
@@ -46,8 +45,21 @@ public class ProductDTO {
         this.description = description;
         this.imageUrl = imageUrl;
         this.categoryId = categoryId;
-        this.createdAt = createdAt;
+    }
+
+    public ProductDTO(String id, String name, int stockQuantity, BigDecimal sellingPrice, BigDecimal importPrice,
+                      int statusId, String description, String imageUrl, int categoryId, LocalDateTime updatedAt, LocalDateTime createdAt ) {
+        this.id = id;
+        this.name = name;
+        this.stockQuantity = stockQuantity;
+        this.sellingPrice = sellingPrice;
+        this.importPrice = importPrice;
+        this.statusId = statusId;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.categoryId = categoryId;
         this.updatedAt = updatedAt;
+        this.createdAt = createdAt;
     }
 
     public ProductDTO(ProductDTO product) {
@@ -94,10 +106,6 @@ public class ProductDTO {
 
     public void setSellingPrice(BigDecimal sellingPrice) {
         this.sellingPrice = sellingPrice;
-    }
-
-    public void setStatus(boolean status) {
-        this.statusId = status ? 1 : 2; // 1 = ACTIVE, 2 = INACTIVE
     }
 
     public int getStatusId() {

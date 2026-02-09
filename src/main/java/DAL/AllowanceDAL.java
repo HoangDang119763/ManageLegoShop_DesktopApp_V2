@@ -81,8 +81,4 @@ public class AllowanceDAL extends BaseDAL<AllowanceDTO, Integer> {
         statement.setInt(9, obj.getId());
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return false;
-    }
 }

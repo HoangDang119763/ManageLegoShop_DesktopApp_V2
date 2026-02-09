@@ -74,11 +74,6 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         throw new UnsupportedOperationException("Cannot update Employee records.");
     }
 
-    @Override
-    protected boolean hasSoftDelete() {
-        return true;
-    }
-
     public boolean updateAdvance(EmployeeDTO obj, boolean allowAdvanceChange) {
         String query = allowAdvanceChange
                 ? "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, role_id = ?, department_id = ?, status_id = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?"

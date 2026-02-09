@@ -87,7 +87,7 @@
                     <children>
                         <HBox alignment="CENTER_LEFT" layoutX="10.0" spacing="10.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="10.0">
                             <children>
-                                <Button fx:id="refreshBtn" mnemonicParsing="false" prefHeight="35.0" prefWidth="108.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Làm mới">
+                                <Button fx:id="refreshBtn" mnemonicParsing="false" prefHeight="35.0" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Làm mới">
                                     <graphic><FontAwesomeIcon glyphName="REFRESH" size="1.2em" styleClass="action-icon" /></graphic>
                                     <font><Font size="14.0" /></font>
                                 </Button>

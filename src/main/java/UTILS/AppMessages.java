@@ -49,6 +49,8 @@ public class AppMessages {
     public static final String EMPLOYEE_DELETE_SUCCESS = "Xóa nhân viên thành công!";
     public static final String EMPLOYEE_DELETE_NO_SELECTION = "Vui lòng chọn một nhân viên để xóa!";
     public static final String EMPLOYEE_UPDATE_SUCCESS = "Sửa nhân viên thành công";
+    public static final String EMPLOYEE_CANNOT_DELETE_SYSTEM = "Không thể xóa nhân viên hệ thống";
+    public static final String EMPLOYEE_CANNOT_DELETE_SELF = "Không thể xóa thông tin nhân viên của chính mình";
 
     // ==================== MODULE KHÁCH HÀNG (CUSTOMER) ====================
     /**
@@ -72,24 +74,23 @@ public class AppMessages {
     public static final String PRODUCT_PRICE_NOT_NUMBER = "Giá bạn phải là số.";
     public static final String PRODUCT_STATUS_REQUIRED = "Vui lòng chọn trạng thái";
     public static final String PRODUCT_CATEGORY_REQUIRED = "Vui lòng chọn thể loại";
+    public static final String PRODUCT_CATEGORY_INVALID = "Thể loại không còn được sử dụng";
     public static final String PRODUCT_ADD_SUCCESS = "Thêm sản phẩm thành công";
     public static final String PRODUCT_ADD_ERROR = "Có lỗi khi thêm sản phẩm. Vui lòng thử lại.";
-    public static final String PRODUCT_ADD_NO_PERMISSION = "Bạn không có quyền \"Thêm sản phẩm\" để thực hiện thao tác này.";
     public static final String PRODUCT_ADD_INVALID_CATEGORY = "Thể loại không hợp lệ hoặc đã bị xóa";
     public static final String PRODUCT_ADD_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
     public static final String PRODUCT_ADD_FAILED = "Thêm sản phẩm thất bại. Vui lòng thử lại sau.";
     public static final String PRODUCT_NO_SELECTION = "Vui lòng chọn sản phẩm";
     public static final String PRODUCT_DELETE_WITH_STOCK = "Sản phẩm còn hàng tồn, không thể xóa!";
+    public static final String PRODUCT_DELETE_IN_COMPLETE_INVOICE = "Sản phẩm đang có trong hóa đơn hoàn thành, không thể xóa!";
     public static final String PRODUCT_DELETE_CONFIRM = "Bạn chắc muốn xóa sản phẩm này?";
     public static final String PRODUCT_DELETE_SUCCESS = "Xóa sản phẩm thành công!";
     public static final String PRODUCT_DELETE_ERROR = "Có lỗi khi xóa sản phẩm. Vui lòng thử lại.";
-    public static final String PRODUCT_DELETE_NO_PERMISSION = "Bạn không có quyền \"Xóa sản phẩm\" để thực hiện thao tác này.";
     public static final String PRODUCT_DELETE_FAILED = "Xóa sản phẩm thất bại. Vui lòng thử lại sau.";
     public static final String PRODUCT_UPDATE_SUCCESS = "Sửa sản phẩm thành công";
     public static final String PRODUCT_UPDATE_ERROR = "Có lỗi khi cập nhật sản phẩm. Vui lòng thử lại.";
-    public static final String PRODUCT_UPDATE_NO_PERMISSION = "Bạn không có quyền \"Cập nhật sản phẩm\" để thực hiện thao tác này.";
-
     public static final String PRODUCT_UPDATE_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
+    public static final String PRODUCT_DUPLICATE = "Sản phẩm đã tồn tại trong hệ thống.";
     public static final String PRODUCT_UPDATE_FAILED = "Cập nhật sản phẩm thất bại. Vui lòng thử lại sau.";
 
     // ==================== MODULE NHÀ CUNG CẤP (SUPPLIER) ====================
@@ -154,8 +155,13 @@ public class AppMessages {
      * Các thông báo liên quan đến quản lý tài khoản người dùng
      */
     public static final String ACCOUNT_PASSWORD_CHANGE_SUCCESS = "Đổi mật khẩu thành công!";
+    public static final String ACCOUNT_DELETE_SUCCESS = "Xóa tài khoản thành công!";
     public static final String ACCOUNT_PASSWORD_CHANGE_ERROR = "Có lỗi khi đổi mật khẩu. Vui lòng thử lại.";
     public static final String ACCOUNT_OLD_PASSWORD_WRONG = "Mật khẩu cũ không đúng. Vui lòng thử lại.";
+    public static final String ACCOUNT_CANNOT_DELETE_SYSTEM = "Không thể xóa tài khoản gốc hệ thống";
+    public static final String ACCOUNT_CANNOT_DELETE_SELF = "Không thể xóa tài khoản của chính mình";
+    public static final String ACCOUNT_USERNAME_DUPLICATE = "Tài khoản đã tồn tại. Vui lòng chọn tên khác.";
+    public static final String ACCOUNT_ADD_SUCCESS = "Thêm tài khoản thành công!";
     // Placeholder cho các messages về account
 
     // ==================== MODULE THỐNG KÊ (STATISTIC) ====================
@@ -171,12 +177,13 @@ public class AppMessages {
     public static final String DIALOG_TITLE = "Thông báo";
     public static final String DIALOG_TITLE_CONFIRM = "Thông báo xác nhận";
     public static final String GENERAL_REFRESH_SUCCESS = "Làm mới thành công";
-    public static final String DATABASE_CONNECTION_ERROR = "Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.";
+    public static final String DB_ERROR = "Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.";
     public static final String GENERAL_ERROR = "Lỗi không xác định. Thao tác thất bại.";
     public static final String UNKNOWN_ERROR = "Lỗi không xác định. Vui lòng thử lại.";
     public static final String OPERATION_SUCCESS = "Thao tác thành công!";
     public static final String OPERATION_FAILED = "Thao tác thất bại!";
     public static final String INVALID_DATA = "Dữ liệu đầu vào không hợp lệ";
     public static final String INVALID_PARAMS = "Tham số không hợp lệ";
-
+    public static final String NOT_FOUND = "Không tìm thấy dữ liệu yêu cầu";
+    public static final String UNAUTHORIZED = "Bạn không có quyền để thực hiện thao tác này.";
 }

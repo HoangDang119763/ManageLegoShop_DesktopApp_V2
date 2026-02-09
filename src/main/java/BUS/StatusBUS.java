@@ -5,7 +5,6 @@ import DTO.StatusDTO;
 import ENUM.StatusType;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class StatusBUS extends BaseBUS<StatusDTO, Integer> {
     private static final StatusBUS INSTANCE = new StatusBUS();

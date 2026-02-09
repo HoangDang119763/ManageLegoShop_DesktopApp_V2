@@ -7,6 +7,7 @@ import BUS.RoleBUS;
 import BUS.StatusBUS;
 import DTO.EmployeeDTO;
 import DTO.AccountDTO;
+import DTO.BUSResult;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDetailDTO;
 import ENUM.*;
@@ -273,25 +274,16 @@ public class EmployeeInfoController {
 
         AccountDTO account = new AccountDTO(accountBUS.getByIdLocal(sessionManagerService.employeeLoginId()));
         account.setPassword(txtNewPassword.getText().trim());
-        BUSOperationResult updateResult = SecureExecutor
-                .executePublicResult(() -> accountBUS.changePasswordBySelf(account, txtOldPassword.getText().trim()));
-        switch (updateResult) {
-            case SUCCESS, NO_CHANGES -> {
-                NotificationUtils.showInfoAlert(AppMessages.ACCOUNT_PASSWORD_CHANGE_SUCCESS,
-                        AppMessages.DIALOG_TITLE);
-                handleClear(); // Xóa form sau khi đổi thành công
-            }
-            case FAIL -> {
-                NotificationUtils.showErrorAlert(AppMessages.ACCOUNT_OLD_PASSWORD_WRONG, AppMessages.DIALOG_TITLE);
-            }
-            case INVALID_PARAMS -> NotificationUtils.showInfoAlert(AppMessages.INVALID_PARAMS,
+        BUSResult updateResult = SecureExecutor
+                .executePublicBUSResult(
+                        () -> accountBUS.changePasswordBySelf(account, txtOldPassword.getText().trim()));
+
+        if (updateResult.isSuccess()) {
+            NotificationUtils.showInfoAlert(AppMessages.ACCOUNT_PASSWORD_CHANGE_SUCCESS,
                     AppMessages.DIALOG_TITLE);
-            case INVALID_DATA -> NotificationUtils.showInfoAlert(AppMessages.INVALID_DATA,
-                    AppMessages.DIALOG_TITLE);
-            case DB_ERROR -> NotificationUtils.showInfoAlert(AppMessages.DATABASE_CONNECTION_ERROR,
-                    AppMessages.DIALOG_TITLE);
-            default -> NotificationUtils.showInfoAlert(AppMessages.ACCOUNT_PASSWORD_CHANGE_ERROR,
-                    AppMessages.DIALOG_TITLE);
+            handleClear(); // Xóa form sau khi đổi thành công
+        } else {
+            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
         }
     }
 
@@ -384,23 +376,15 @@ public class EmployeeInfoController {
         employee.setEmail(lblEmail.getText().trim());
         employee.setGender(lblGender.getText().trim());
 
-        BUSOperationResult updateResult = SecureExecutor
-                .executePublicResult(() -> employeeBUS.updatePersonalInfoBySelf(employee));
-        switch (updateResult) {
-            case SUCCESS, NO_CHANGES -> {
-                NotificationUtils.showInfoAlert(AppMessages.EMPLOYEE_PERSONAL_UPDATE_SUCCESS,
-                        AppMessages.DIALOG_TITLE);
-                sessionManagerService.updateCurrentEmployee();
-                loadEmployeeInfo(); // Refresh UI
-            }
-            case INVALID_PARAMS -> NotificationUtils.showInfoAlert(AppMessages.INVALID_PARAMS,
-                    AppMessages.DIALOG_TITLE);
-            case INVALID_DATA -> NotificationUtils.showInfoAlert(AppMessages.INVALID_DATA,
-                    AppMessages.DIALOG_TITLE);
-            case DB_ERROR -> NotificationUtils.showInfoAlert(AppMessages.DATABASE_CONNECTION_ERROR,
-                    AppMessages.DIALOG_TITLE);
-            default -> NotificationUtils.showInfoAlert(AppMessages.EMPLOYEE_PERSONAL_UPDATE_ERROR,
-                    AppMessages.DIALOG_TITLE);
+        BUSResult updateResult = SecureExecutor
+                .executePublicBUSResult(() -> employeeBUS.updatePersonalInfoBySelf(employee));
+
+        if (updateResult.isSuccess()) {
+            NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+            sessionManagerService.updateCurrentEmployee();
+            loadEmployeeInfo(); // Refresh UI
+        } else {
+            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
         }
     }
 
