@@ -25,7 +25,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -54,8 +54,6 @@ public class ProductController implements IController {
     @FXML
     private TableColumn<ProductDTO, String> tlb_col_status;
     @FXML
-    private HBox functionBtns;
-    @FXML
     private Button addBtn, editBtn, deleteBtn, refreshBtn, btnImportExcel;
     @FXML
     private TextField txtSearch;
@@ -81,6 +79,8 @@ public class ProductController implements IController {
     private ProductBUS productBUS;
     private CategoryBUS categoryBUS;
     private StatusBUS statusBUS;
+    @FXML
+    private AnchorPane mainContent;
 
     // =====================
     // 1️⃣ LIFECYCLE & INITIALIZATION
@@ -114,7 +114,7 @@ public class ProductController implements IController {
         cbSearchBy.getItems().addAll("Mã sản phẩm", "Tên sản phẩm");
 
         ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.PRODUCT);
-        StatusDTO allStatus = new StatusDTO(-1, "Tất cả cả trạng thái");
+        StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus);
         cbStatusFilter.getItems().addAll(statusList);
 
@@ -343,16 +343,28 @@ public class ProductController implements IController {
     @Override
     public void hideButtonWithoutPermission() {
         SessionManagerService session = SessionManagerService.getInstance();
+        boolean canView = session.hasPermission(PermissionKey.PRODUCT_LIST_VIEW);
+
+        // Block entire view if no permission
+        if (!canView) {
+            mainContent.setVisible(false);
+            mainContent.setManaged(false);
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+            return;
+        }
+
         boolean canAdd = session.hasPermission(PermissionKey.PRODUCT_INSERT);
         boolean canEdit = session.hasPermission(PermissionKey.PRODUCT_UPDATE);
         boolean canDelete = session.hasPermission(PermissionKey.PRODUCT_DELETE);
 
-        if (!canAdd)
-            functionBtns.getChildren().remove(addBtn);
-        if (!canEdit)
-            functionBtns.getChildren().remove(editBtn);
-        if (!canDelete)
-            functionBtns.getChildren().remove(deleteBtn);
+        addBtn.setVisible(canAdd);
+        addBtn.setManaged(canAdd);
+
+        editBtn.setVisible(canEdit);
+        editBtn.setManaged(canEdit);
+
+        deleteBtn.setVisible(canDelete);
+        deleteBtn.setManaged(canDelete);
     }
 
     // =====================

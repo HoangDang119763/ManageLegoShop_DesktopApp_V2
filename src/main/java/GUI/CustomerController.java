@@ -20,7 +20,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 
-import java.io.IOException;
 
 public class CustomerController implements IController {
     @FXML
@@ -54,9 +53,11 @@ public class CustomerController implements IController {
     private String keyword = "";
     private StatusDTO statusFilter = null;
     private CustomerDTO selectedCustomer;
+    private CustomerBUS customerBUS;
 
     @FXML
     public void initialize() {
+        customerBUS = CustomerBUS.getInstance();
         if (CustomerBUS.getInstance().isLocalEmpty())
             CustomerBUS.getInstance().loadLocal();
         tblCustomer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
@@ -94,6 +95,7 @@ public class CustomerController implements IController {
                 validationUtils.formatDateTimeWithHour(cellData.getValue().getUpdatedAt())));
         UiUtils.gI().addTooltipToColumn(tlb_col_fullName, 10);
         UiUtils.gI().addTooltipToColumn(tlb_col_address, 10);
+        System.out.println(customerBUS.getAllLocal().toString());
     }
 
     @Override

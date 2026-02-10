@@ -2,25 +2,33 @@ package GUI;
 
 import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
+import BUS.EmploymentHistoryBUS;
 import BUS.RoleBUS;
 import BUS.SalaryBUS;
 import BUS.StatusBUS;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDTO;
+import DTO.EmployeeDetailDTO;
+import DTO.EmploymentHistoryDTO;
+import DTO.EmploymentHistoryDetailDTO;
 import DTO.RoleDTO;
 import DTO.SalaryDTO;
 import DTO.StatusDTO;
+import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IModalController;
+import PROVIDER.EmploymentHistoryViewProvider;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.ValidationUtils;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import lombok.Getter;
 
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
@@ -28,8 +36,23 @@ import java.util.ArrayList;
  * typeModal: 0 = Add, 1 = Edit, 2 = View (readonly)
  */
 public class EmployeeModalController implements IModalController {
+    // ==================== TOP SECTION ====================
     @FXML
     private Label modalName;
+
+    // ==================== TAB PANE ====================
+    @FXML
+    private TabPane tabPaneEmployee;
+    @FXML
+    private Tab tabPersonal;
+    @FXML
+    private Tab tabAccount;
+    @FXML
+    private Tab tabJob;
+    @FXML
+    private Tab tabPayroll;
+
+    // ==================== TAB 1: PERSONAL INFO ====================
     @FXML
     private TextField txtEmployeeId;
     @FXML
@@ -45,21 +68,53 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TextField txtEmail;
     @FXML
+    private Button savePersonalBtn;
+
+    // ==================== TAB 2: ACCOUNT INFO ====================
+    @FXML
+    private TextField txtUsername;
+    @FXML
+    private ComboBox<StatusDTO> cbAccountStatus;
+    @FXML
+    private Label lblLastLogin;
+    @FXML
+    private Button btnResetPassword;
+    @FXML
+    private Button saveAccountBtn;
+
+    // ==================== TAB 3: JOB INFO ====================
+    @FXML
     private ComboBox<DepartmentDTO> cbDepartment;
     @FXML
     private ComboBox<RoleDTO> cbRole;
+    @FXML
+    private ComboBox<StatusDTO> cbStatus;
     @FXML
     private TextField txtBaseSalary;
     @FXML
     private TextField txtCoefficient;
     @FXML
-    private TextField txtNumDependents;
+    private TableView<EmploymentHistoryDetailDTO> tblJobHistory;
     @FXML
-    private ComboBox<StatusDTO> cbStatus;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colEffectiveDate;
+    @FXML
+    private TableColumn<EmploymentHistoryDetailDTO, String> colDepartment;
+    @FXML
+    private TableColumn<EmploymentHistoryDetailDTO, String> colRole;
+    @FXML
+    private TableColumn<EmploymentHistoryDetailDTO, String> colCreatedAt;
+    @FXML
+    private Button saveJobBtn;
+
+    // ==================== TAB 4: PAYROLL & BENEFITS ====================
+    @FXML
+    private TextField txtNumDependents;
     @FXML
     private TextField txtHealthInsCode;
     @FXML
     private CheckBox cbSocialIns;
+    @FXML
+    private CheckBox cbHealthIns;
     @FXML
     private CheckBox cbUnemploymentIns;
     @FXML
@@ -69,13 +124,13 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private CheckBox cbAccommodationSupport;
     @FXML
-    private CheckBox cbSocialIns1; // Health insurance checkbox
+    private Button savePayrollBtn;
+
+    // ==================== BOTTOM SECTION ====================
     @FXML
-    private TextField txtCreatedAt;
+    private Label lblCreatedAt;
     @FXML
-    private TextField txtUpdatedAt;
-    @FXML
-    private Button saveBtn;
+    private Label lblUpdatedAt;
     @FXML
     private Button closeBtn;
 
@@ -89,6 +144,8 @@ public class EmployeeModalController implements IModalController {
     private DepartmentBUS departmentBUS;
     private EmployeeBUS employeeBUS;
     private SessionManagerService session;
+    private EmploymentHistoryBUS employmentHistoryBUS;
+    private ValidationUtils validationUtils;
 
     @FXML
     public void initialize() {
@@ -99,15 +156,37 @@ public class EmployeeModalController implements IModalController {
         departmentBUS = DepartmentBUS.getInstance();
         employeeBUS = EmployeeBUS.getInstance();
         session = SessionManagerService.getInstance();
+        employmentHistoryBUS = EmploymentHistoryBUS.getInstance();
+        validationUtils = ValidationUtils.getInstance();
 
         // Load initial data
         loadGenderComboBox();
         loadDepartmentComboBox();
         loadRoleComboBox();
         loadStatusComboBox();
-
+        loadAccountStatusComboBox();
+        hideTabWithoutPermission();
         // Setup listeners
         setupListeners();
+    }
+
+    public void hideTabWithoutPermission() {
+        SessionManagerService session = SessionManagerService.getInstance();
+
+        boolean canViewPersonal = session.hasPermission(PermissionKey.EMPLOYEE_PERSONAL_VIEW);
+        boolean canUpdatePersonal = session.hasPermission(PermissionKey.EMPLOYEE_PERSONAL_UPDATE);
+        boolean canViewJob = session.hasPermission(PermissionKey.EMPLOYEE_JOB_VIEW);
+        boolean canUpdateJob = session.hasPermission(PermissionKey.EMPLOYEE_JOB_UPDATE);
+        boolean canViewPayrollInfo = session.hasPermission(PermissionKey.EMPLOYEE_PAYROLLINFO_VIEW);
+        boolean canUpdatePayrollInfo = session.hasPermission(PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE);
+        boolean canviewAccount = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_VIEW);
+        boolean canResetAccountPassword = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD);
+        boolean canUpdateAccountStatus = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS);
+        boolean canDelete = session.hasPermission(PermissionKey.EMPLOYEE_DELETE);
+        boolean canViewDetail = canViewPersonal || canViewJob || canViewPayrollInfo || canviewAccount;
+
+        // Có 4 tab edit riêng biệt
+
     }
 
     private void loadGenderComboBox() {
@@ -120,17 +199,6 @@ public class EmployeeModalController implements IModalController {
             departmentBUS.loadLocal();
         }
         cbDepartment.getItems().addAll(departmentBUS.getAllLocal());
-        cbDepartment.setConverter(new javafx.util.StringConverter<DepartmentDTO>() {
-            @Override
-            public String toString(DepartmentDTO dept) {
-                return dept != null ? dept.getName() : "";
-            }
-
-            @Override
-            public DepartmentDTO fromString(String string) {
-                return null;
-            }
-        });
     }
 
     private void loadRoleComboBox() {
@@ -138,17 +206,6 @@ public class EmployeeModalController implements IModalController {
             roleBUS.loadLocal();
         }
         cbRole.getItems().addAll(roleBUS.getAllLocal());
-        cbRole.setConverter(new javafx.util.StringConverter<RoleDTO>() {
-            @Override
-            public String toString(RoleDTO role) {
-                return role != null ? role.getName() : "";
-            }
-
-            @Override
-            public RoleDTO fromString(String string) {
-                return null;
-            }
-        });
 
         // Auto-update salary when role changes
         cbRole.setOnAction(event -> handleRoleSelectChange());
@@ -171,21 +228,40 @@ public class EmployeeModalController implements IModalController {
     private void loadStatusComboBox() {
         ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.EMPLOYEE);
         cbStatus.getItems().addAll(statusList);
-        cbStatus.setConverter(new javafx.util.StringConverter<StatusDTO>() {
-            @Override
-            public String toString(StatusDTO status) {
-                return status != null ? status.getDescription() : "";
-            }
+    }
 
-            @Override
-            public StatusDTO fromString(String string) {
-                return null;
-            }
-        });
+    private void loadAccountStatusComboBox() {
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.ACCOUNT);
+        cbAccountStatus.getItems().addAll(statusList);
+    }
+
+    /**
+     * Setup job history table columns
+     */
+    private void setupJobHistoryTable() {
+
+        colEffectiveDate.setCellValueFactory(cellData -> new SimpleStringProperty(
+                validationUtils.formatDateTime(cellData.getValue().getCreatedAt()) != null
+                        ? validationUtils.formatDateTime(cellData.getValue().getCreatedAt())
+                        : ""));
+
+        colDepartment.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getDepartmentName()));
+
+        colRole.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getRoleName()));
+
+        colCreatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
+                validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt()) != null
+                        ? validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())
+                        : ""));
     }
 
     private void setupListeners() {
-        saveBtn.setOnAction(e -> handleSave());
+        savePersonalBtn.setOnAction(e -> handleSave());
+        saveAccountBtn.setOnAction(e -> handleSave());
+        saveJobBtn.setOnAction(e -> handleSave());
+        savePayrollBtn.setOnAction(e -> handleSave());
         closeBtn.setOnAction(e -> handleClose());
     }
 
@@ -203,56 +279,77 @@ public class EmployeeModalController implements IModalController {
         }
     }
 
-    public void setEmployee(EmployeeDTO emp) {
-        this.employee = emp;
+    public void setEmployee(EmployeeDetailDTO empDetail) {
+        // Display employee data from EmployeeDetailDTO
+        // tab1 Personal Info
+        txtEmployeeId.setText(String.valueOf(empDetail.getEmployeeId()));
+        txtFirstName.setText(empDetail.getFirstName() != null ? empDetail.getFirstName() : "");
+        txtLastName.setText(empDetail.getLastName() != null ? empDetail.getLastName() : "");
+        dpDateOfBirth.setValue(empDetail.getDateOfBirth());
+        cbGender.getSelectionModel().select(empDetail.getGender() != null ? empDetail.getGender() : "");
+        txtPhone.setText(empDetail.getPhone() != null ? empDetail.getPhone() : "");
+        txtEmail.setText(empDetail.getEmail() != null ? empDetail.getEmail() : "");
+        // tab2 Account Info
+        txtUsername.setText(empDetail.getUsername() != null ? empDetail.getUsername() : "");
+        if (empDetail.getAccountStatusId() > 0) {
+            StatusDTO accountStatus = statusBUS.getByIdLocal(empDetail.getAccountStatusId());
+            if (accountStatus != null) {
+                cbAccountStatus.getItems().stream()
+                        .filter(item -> item != null && item.getId() == accountStatus.getId())
+                        .findFirst()
+                        .ifPresent(item -> cbAccountStatus.getSelectionModel().select(item));
+            }
+        }
+        lblLastLogin.setText("Chưa có lần đăng nhập"); // TODO: Load from Account table if available
 
-        // Display employee data
-        txtEmployeeId.setText(String.valueOf(emp.getId()));
-        txtFirstName.setText(emp.getFirstName() != null ? emp.getFirstName() : "");
-        txtLastName.setText(emp.getLastName() != null ? emp.getLastName() : "");
-        dpDateOfBirth.setValue(emp.getDateOfBirth());
-        cbGender.getSelectionModel().select(emp.getGender() != null ? emp.getGender() : "Nam");
-        txtPhone.setText(emp.getPhone() != null ? emp.getPhone() : "");
-        txtEmail.setText(emp.getEmail() != null ? emp.getEmail() : "");
-        txtHealthInsCode.setText(emp.getHealthInsCode() != null ? emp.getHealthInsCode() : "");
-        txtNumDependents.setText("0"); // Will update when we have tax DTO
-
-        // Set Department
-        if (emp.getDepartmentId() != null) {
-            DepartmentDTO dept = departmentBUS.getByIdLocal(emp.getDepartmentId());
+        // tab3 Job Info
+        if (empDetail.getDepartmentId() != null) {
+            DepartmentDTO dept = departmentBUS.getByIdLocal(empDetail.getDepartmentId());
             cbDepartment.getSelectionModel().select(dept);
         }
 
         // Set Role (this will trigger auto-update of salary)
-        RoleDTO role = roleBUS.getByIdLocal(emp.getRoleId());
+        RoleDTO role = roleBUS.getByIdLocal(empDetail.getRoleId());
         if (role != null) {
             cbRole.getSelectionModel().select(role);
             handleRoleSelectChange(); // Trigger salary update
         }
 
+        // Load Job History with department and role names
+        ArrayList<EmploymentHistoryDetailDTO> jobHistory = EmploymentHistoryViewProvider.getInstance()
+                .getJobHistoryByEmployeeIdDecrease(empDetail.getEmployeeId());
+        setupJobHistoryTable();
+        if (jobHistory != null)
+            tblJobHistory.setItems(FXCollections.observableArrayList(jobHistory));
+
         // Set Status
-        StatusDTO status = statusBUS.getByIdLocal(emp.getStatusId());
+        StatusDTO status = statusBUS.getByIdLocal(empDetail.getStatusId());
         if (status != null) {
-            cbStatus.getSelectionModel().select(status);
+            cbStatus.getItems().stream()
+                    .filter(item -> item != null && item.getId() == status.getId())
+                    .findFirst()
+                    .ifPresent(item -> cbStatus.getSelectionModel().select(item));
         }
 
-        // Set Insurance checkboxes
-        cbSocialIns.setSelected(emp.isSocialInsurance());
-        cbUnemploymentIns.setSelected(emp.isUnemploymentInsurance());
-        cbPersonalTax.setSelected(emp.isPersonalIncomeTax());
-        cbTransportSupport.setSelected(emp.isTransportationSupport());
-        cbAccommodationSupport.setSelected(emp.isAccommodationSupport());
-        cbSocialIns1.setSelected(emp.isHealthInsurance());
+        // Tab4 Payroll & Benefits
+        cbSocialIns.setSelected(empDetail.isSocialInsurance());
+        cbHealthIns.setSelected(empDetail.getHealthInsCode() != null);
+        cbUnemploymentIns.setSelected(empDetail.isUnemploymentInsurance());
+        cbPersonalTax.setSelected(empDetail.isPersonalIncomeTax());
+        cbTransportSupport.setSelected(empDetail.isTransportationSupport());
+        cbAccommodationSupport.setSelected(empDetail.isAccommodationSupport());
+
+        txtNumDependents.setText(empDetail.getNumDependents() != null ? empDetail.getNumDependents().toString() : "0");
+        txtHealthInsCode.setText(empDetail.getHealthInsCode() != null ? empDetail.getHealthInsCode() : "");
 
         // Display metadata
-        if (emp.getCreatedAt() != null) {
-            txtCreatedAt.setText(emp.getCreatedAt()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        if (empDetail.getCreatedAt() != null) {
+            lblCreatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(empDetail.getCreatedAt()));
         }
-        if (emp.getUpdatedAt() != null) {
-            txtUpdatedAt.setText(emp.getUpdatedAt()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        if (empDetail.getUpdatedAt() != null) {
+            lblUpdatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(empDetail.getUpdatedAt()));
         }
+
     }
 
     private void setReadOnly() {
@@ -268,12 +365,23 @@ public class EmployeeModalController implements IModalController {
         cbStatus.setDisable(true);
         txtHealthInsCode.setDisable(true);
         cbSocialIns.setDisable(true);
+        cbHealthIns.setDisable(true);
         cbUnemploymentIns.setDisable(true);
         cbPersonalTax.setDisable(true);
         cbTransportSupport.setDisable(true);
         cbAccommodationSupport.setDisable(true);
-        cbSocialIns1.setDisable(true);
-        saveBtn.setDisable(true);
+
+        // Hide all save buttons
+        savePersonalBtn.setVisible(false);
+        savePersonalBtn.setManaged(false);
+        saveAccountBtn.setVisible(false);
+        saveAccountBtn.setManaged(false);
+        saveJobBtn.setVisible(false);
+        saveJobBtn.setManaged(false);
+        savePayrollBtn.setVisible(false);
+        savePayrollBtn.setManaged(false);
+        btnResetPassword.setVisible(false);
+        btnResetPassword.setManaged(false);
     }
 
     private void handleSave() {

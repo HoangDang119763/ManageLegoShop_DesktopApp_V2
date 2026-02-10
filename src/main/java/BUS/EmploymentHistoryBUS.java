@@ -3,7 +3,6 @@ package BUS;
 import DAL.EmploymentHistoryDAL;
 import DTO.EmploymentHistoryDTO;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class EmploymentHistoryBUS extends BaseBUS<EmploymentHistoryDTO, Integer> {
     private static final EmploymentHistoryBUS INSTANCE = new EmploymentHistoryBUS();
@@ -33,11 +32,24 @@ public class EmploymentHistoryBUS extends BaseBUS<EmploymentHistoryDTO, Integer>
         return result;
     }
 
-    public ArrayList<EmploymentHistoryDTO> getByEmployeeIdLocal(int employeeId) {
+    public ArrayList<EmploymentHistoryDTO> getByEmployeeIdLocalIncrease(int employeeId) {
         ArrayList<EmploymentHistoryDTO> result = new ArrayList<>();
         if (employeeId <= 0)
             return result;
         for (EmploymentHistoryDTO history : arrLocal) {
+            if (history.getEmployeeId() == employeeId) {
+                result.add(new EmploymentHistoryDTO(history));
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<EmploymentHistoryDTO> getByEmployeeIdLocalDecrease(int employeeId) {
+        ArrayList<EmploymentHistoryDTO> result = new ArrayList<>();
+        if (employeeId <= 0)
+            return result;
+        for (int i = arrLocal.size() - 1; i >= 0; i--) {
+            EmploymentHistoryDTO history = arrLocal.get(i);
             if (history.getEmployeeId() == employeeId) {
                 result.add(new EmploymentHistoryDTO(history));
             }

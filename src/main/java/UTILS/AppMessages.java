@@ -68,32 +68,15 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý sản phẩm và kho hàng
      */
-    public static final String PRODUCT_NAME_EMPTY = "Tên sản phẩm không được để trống.";
-    public static final String PRODUCT_NAME_INVALID = "Tên sản phẩm không hợp lệ (Tối đa 50 ký tự, chỉ chữ và số, \"_\", \"-\", \"/\").";
-    public static final String PRODUCT_DESCRIPTION_INVALID = "Mô tả không hợp lệ (Tối đa 65.400 ký tự, chỉ chữ và số, \"_\", \"-\", \"/\").";
-    public static final String PRODUCT_PRICE_EMPTY = "Giá bán không được để trống.";
-    public static final String PRODUCT_PRICE_INVALID = "Giá bạn không hợp lệ (tối đa 10 chữ số, 2 số thập phân, không âm hoặc bằng 0).";
-    public static final String PRODUCT_PRICE_NOT_NUMBER = "Giá bạn phải là số.";
-    public static final String PRODUCT_STATUS_REQUIRED = "Vui lòng chọn trạng thái";
-    public static final String PRODUCT_CATEGORY_REQUIRED = "Vui lòng chọn thể loại";
-    public static final String PRODUCT_CATEGORY_INVALID = "Thể loại không còn được sử dụng";
+    public static final String PRODUCT_ADD_CATEGORY_INVALID = "Thể loại không còn được sử dụng";
     public static final String PRODUCT_ADD_SUCCESS = "Thêm sản phẩm thành công";
-    public static final String PRODUCT_ADD_ERROR = "Có lỗi khi thêm sản phẩm. Vui lòng thử lại.";
-    public static final String PRODUCT_ADD_INVALID_CATEGORY = "Thể loại không hợp lệ hoặc đã bị xóa";
     public static final String PRODUCT_ADD_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
-    public static final String PRODUCT_ADD_FAILED = "Thêm sản phẩm thất bại. Vui lòng thử lại sau.";
     public static final String PRODUCT_NO_SELECTION = "Vui lòng chọn sản phẩm";
     public static final String PRODUCT_DELETE_WITH_STOCK = "Sản phẩm còn hàng tồn, không thể xóa!";
-    public static final String PRODUCT_DELETE_IN_COMPLETE_INVOICE = "Sản phẩm đang có trong hóa đơn hoàn thành, không thể xóa!";
     public static final String PRODUCT_DELETE_CONFIRM = "Bạn chắc muốn xóa sản phẩm này?";
     public static final String PRODUCT_DELETE_SUCCESS = "Xóa sản phẩm thành công!";
-    public static final String PRODUCT_DELETE_ERROR = "Có lỗi khi xóa sản phẩm. Vui lòng thử lại.";
-    public static final String PRODUCT_DELETE_FAILED = "Xóa sản phẩm thất bại. Vui lòng thử lại sau.";
     public static final String PRODUCT_UPDATE_SUCCESS = "Sửa sản phẩm thành công";
-    public static final String PRODUCT_UPDATE_ERROR = "Có lỗi khi cập nhật sản phẩm. Vui lòng thử lại.";
     public static final String PRODUCT_UPDATE_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
-    public static final String PRODUCT_DUPLICATE = "Sản phẩm đã tồn tại trong hệ thống.";
-    public static final String PRODUCT_UPDATE_FAILED = "Cập nhật sản phẩm thất bại. Vui lòng thử lại sau.";
     public static final String PRODUCT_IMAGE_RESET_SUCCESS = "Xóa ảnh sản phẩm thành công.";
     public static final String PRODUCT_IMAGE_RESET_CONFIRM = "Bạn có chắc chắn muốn xóa ảnh không?";
 

@@ -25,7 +25,9 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
                 resultSet.getDate("date_of_birth") != null
                         ? resultSet.getDate("date_of_birth").toLocalDate()
                         : null,
-                resultSet.getInt("status_id"));
+                resultSet.getInt("status_id"),
+                resultSet.getTimestamp("updated_at") != null ? resultSet.getTimestamp("updated_at").toLocalDateTime()
+                        : null);
     }
 
     @Override

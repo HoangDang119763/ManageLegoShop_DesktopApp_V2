@@ -41,7 +41,7 @@ public class EmployeeDTO extends BaseInformationDTO {
             boolean isSocialInsurance, boolean isUnemploymentInsurance,
             boolean isPersonalIncomeTax, boolean isTransportationSupport,
             boolean isAccommodationSupport, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        super(id, dateOfBirth, phone, statusId);
+        super(id, dateOfBirth, phone, statusId, updatedAt);
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
