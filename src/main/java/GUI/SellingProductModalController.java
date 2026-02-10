@@ -3,6 +3,7 @@ package GUI;
 import BUS.ProductBUS;
 import DTO.ProductDTO;
 import DTO.TempDetailInvoiceDTO;
+import INTERFACE.IModalController;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import javafx.fxml.FXML;
@@ -14,7 +15,7 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 
-public class SellingProductModalController {
+public class SellingProductModalController implements IModalController {
     @FXML
     private Label modalName;
     @FXML

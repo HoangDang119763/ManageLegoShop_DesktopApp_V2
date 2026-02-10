@@ -20,6 +20,8 @@ public class AppMessages {
 
     // ==================== MODULE THÔNG TIN CÁ NHÂN NHÂN VIÊN (EMPLOYEE INFO)
     // ====================
+    public static final String EMPLOYEE_NOT_FOUND = "Không tìm thấy thông tin nhân viên";
+    public static final String EMPLOYEE_DETAIL_LOAD_ERROR = "Không thể tải thông tin chi tiết nhân viên";
     public static final String EMPLOYEE_PERSONAL_UPDATE_SUCCESS = "Cập nhật thông tin cá nhân thành công!";
     public static final String EMPLOYEE_PERSONAL_UPDATE_ERROR = "Có lỗi khi cập nhật thông tin cá nhân. Vui lòng thử lại.";
 
@@ -92,6 +94,8 @@ public class AppMessages {
     public static final String PRODUCT_UPDATE_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
     public static final String PRODUCT_DUPLICATE = "Sản phẩm đã tồn tại trong hệ thống.";
     public static final String PRODUCT_UPDATE_FAILED = "Cập nhật sản phẩm thất bại. Vui lòng thử lại sau.";
+    public static final String PRODUCT_IMAGE_RESET_SUCCESS = "Xóa ảnh sản phẩm thành công.";
+    public static final String PRODUCT_IMAGE_RESET_CONFIRM = "Bạn có chắc chắn muốn xóa ảnh không?";
 
     // ==================== MODULE NHÀ CUNG CẤP (SUPPLIER) ====================
     /**

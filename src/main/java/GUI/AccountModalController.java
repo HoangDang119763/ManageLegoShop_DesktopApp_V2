@@ -5,6 +5,7 @@ import BUS.StatusBUS;
 import DTO.AccountDTO;
 import ENUM.Status;
 import ENUM.StatusType;
+import INTERFACE.IModalController;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
@@ -15,7 +16,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import lombok.Getter;
 
-public class AccountModalController {
+public class AccountModalController implements IModalController {
     @FXML
     private Label modalName;
     @FXML

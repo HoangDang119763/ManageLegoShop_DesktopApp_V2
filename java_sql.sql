@@ -732,22 +732,6 @@ CREATE TABLE `holiday` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-INSERT INTO `holiday` (`name`, `date`) VALUES
-('Tết Dương lịch', '2026-01-01'),
--- Tết Nguyên Đán (Dự kiến nghỉ từ 29 Tết đến mùng 5 Tết)
-('Giao thừa Tết Nguyên Đán', '2026-02-16'),
-('Mùng 1 Tết Nguyên Đán', '2026-02-17'),
-('Mùng 2 Tết Nguyên Đán', '2026-02-18'),
-('Mùng 3 Tết Nguyên Đán', '2026-02-19'),
-('Mùng 4 Tết Nguyên Đán', '2026-02-20'),
-('Mùng 5 Tết Nguyên Đán', '2026-02-21'),
--- Các ngày lễ khác
-('Giỗ tổ Hùng Vương', '2026-04-26'), -- 10/3 Âm lịch rơi vào 26/04
-('Ngày Giải phóng miền Nam', '2026-04-30'),
-('Ngày Quốc tế Lao động', '2026-05-01'),
-('Ngày Quốc khánh', '2026-09-02'),
-('Ngày Quốc khánh (nghỉ thêm)', '2026-09-01');
-
 INSERT INTO `tax` (`employee_id`, `num_dependents`)
 SELECT id, 0 FROM `employee`; -- Mặc định ai cũng 0 người phụ thuộc cho nhanh
 

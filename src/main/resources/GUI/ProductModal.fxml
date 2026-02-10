@@ -108,15 +108,15 @@
 
                   <VBox alignment="TOP_CENTER" prefWidth="280.0" spacing="15.0">
                      <children>
-                        <AnchorPane maxHeight="250.0" maxWidth="250.0" minHeight="250.0" minWidth="250.0" prefHeight="250.0" prefWidth="250.0" style="-fx-border-color: #30bac4; -fx-border-radius: 5; -fx-border-width: 2;">
+                        <AnchorPane maxHeight="250.0" maxWidth="250.0" minHeight="250.0" minWidth="270.0" prefHeight="250.0" prefWidth="250.0" style="-fx-border-color: #30bac4; -fx-border-radius: 5; -fx-border-width: 2;">
                            <children>
-                              <ImageView fx:id="imageView" fitHeight="245.0" fitWidth="245.0" pickOnBounds="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                              <ImageView fx:id="imageView" fitHeight="246.0" fitWidth="266.0" pickOnBounds="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <image><Image url="@../images/default/default.png" /></image>
                               </ImageView>
                            </children>
                         </AnchorPane>
 
-                        <HBox alignment="CENTER" spacing="10.0">
+                        <HBox fx:id="functionImg" alignment="CENTER" spacing="10.0">
                            <children>
                               <Button fx:id="resetImgBtn" prefHeight="40.0" prefWidth="120.0" styleClass="action-btn" text="RESET">
                                  <graphic><FontAwesomeIcon fill="WHITE" glyphName="UNDO" size="1.2em" /></graphic>

@@ -28,6 +28,7 @@ public class NotificationUtils {
         alert.showAndWait();
     }
 
+    @SuppressWarnings("hiding")
     public static <T> boolean showConfirmAlert(String message, ArrayList<T> list, String title, String extraFooter) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(title);

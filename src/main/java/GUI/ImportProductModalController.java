@@ -4,6 +4,7 @@ import BUS.ProductBUS;
 import DTO.ProductDTO;
 import DTO.RoleDTO;
 import DTO.TempDetailImportDTO;
+import INTERFACE.IModalController;
 import SERVICE.RolePermissionService;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
@@ -19,7 +20,7 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 
-public class ImportProductModalController {
+public class ImportProductModalController implements IModalController {
     @FXML
     private Label modalName;
     @FXML
@@ -29,7 +30,7 @@ public class ImportProductModalController {
     @FXML
     private TextField txtPrice;
     @FXML
-    private Button saveBtn,closeBtn;
+    private Button saveBtn, closeBtn;
     @FXML
     private HBox hbInputPrice, hbInputSellingPrice;
     @FXML
@@ -39,9 +40,11 @@ public class ImportProductModalController {
     private int typeModal;
     @Getter
     private TempDetailImportDTO tempDetailImport;
+
     @FXML
     public void initialize() {
-        if(ProductBUS.getInstance().getAllLocal().isEmpty()) ProductBUS.getInstance().loadLocal();
+        if (ProductBUS.getInstance().getAllLocal().isEmpty())
+            ProductBUS.getInstance().loadLocal();
         setupListeners();
     }
 
@@ -50,14 +53,16 @@ public class ImportProductModalController {
         closeBtn.setOnAction(e -> handleClose());
     }
 
-//   add handle for selling here
+    // add handle for selling here
     public void setTypeModal(int type) {
-        if (type != 0 && type != 1) handleClose();
+        if (type != 0 && type != 1)
+            handleClose();
         typeModal = type;
         if (typeModal == 0) {
             modalName.setText("Thêm chi tiết phiếu nhập");
-        } else if (typeModal == 1){
-            if (tempDetailImport == null) handleClose();
+        } else if (typeModal == 1) {
+            if (tempDetailImport == null)
+                handleClose();
             modalName.setText("Sửa chi tiết phiếu nhập");
         }
     }
@@ -78,8 +83,7 @@ public class ImportProductModalController {
                 1,
                 BigDecimal.ZERO, // hoặc product.getImportPrice() nếu bạn muốn
                 BigDecimal.ZERO,
-                BigDecimal.ZERO
-        );
+                BigDecimal.ZERO);
     }
 
     private boolean isValidInput() {
@@ -101,10 +105,12 @@ public class ImportProductModalController {
                     clearAndFocus(txtQuantity);
                     isValid = false;
                 }
-//                if (!isValidQuantity(ValidationUtils.getInstance().canParseToInt(txtQuantity.getText().trim()), ProductBUS.getInstance().getByIdLocal(tempDetailImport.getProductId()))) {
-//                        clearAndFocus(txtQuantity);
-//                        isValid = false;
-//                }
+                // if
+                // (!isValidQuantity(ValidationUtils.getInstance().canParseToInt(txtQuantity.getText().trim()),
+                // ProductBUS.getInstance().getByIdLocal(tempDetailImport.getProductId()))) {
+                // clearAndFocus(txtQuantity);
+                // isValid = false;
+                // }
 
             } catch (NumberFormatException e) {
                 NotificationUtils.showErrorAlert("Số lượng phải là số nguyên hợp lệ.", "Thông báo");
@@ -122,7 +128,9 @@ public class ImportProductModalController {
             try {
                 priceValue = new BigDecimal(price);
                 if (!validator.validateSalary(priceValue, 10, 2, false)) {
-                    NotificationUtils.showErrorAlert("Giá nhập không hợp lệ (tối đa 10 chữ số, 2 số thập phân, không âm hoặc bằng 0).", "Thông báo");
+                    NotificationUtils.showErrorAlert(
+                            "Giá nhập không hợp lệ (tối đa 10 chữ số, 2 số thập phân, không âm hoặc bằng 0).",
+                            "Thông báo");
                     clearAndFocus(txtPrice);
                     isValid = false;
                 }
@@ -157,15 +165,14 @@ public class ImportProductModalController {
                     quantity,
                     price,
                     sellingPrice,
-                    totalPrice
-            );
+                    totalPrice);
 
             if (temp != null) {
                 isSaved = true;
                 tempDetailImport = new TempDetailImportDTO(temp);
                 handleClose();
             } else {
-               NotificationUtils.showErrorAlert("Có lỗi khi thêm chi tiết phiếu nhập. Vui lòng thử lại.", "Thông báo");
+                NotificationUtils.showErrorAlert("Có lỗi khi thêm chi tiết phiếu nhập. Vui lòng thử lại.", "Thông báo");
             }
         }
     }

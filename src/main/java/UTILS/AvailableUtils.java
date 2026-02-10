@@ -1,12 +1,9 @@
 package UTILS;
 
 import BUS.*;
-import DTO.CategoryDTO;
-import DTO.DetailInvoiceDTO;
 import DTO.InvoiceDTO;
 import DTO.StatusDTO;
 import ENUM.StatusType;
-import ENUM.Status;
 
 import java.util.ArrayList;
 

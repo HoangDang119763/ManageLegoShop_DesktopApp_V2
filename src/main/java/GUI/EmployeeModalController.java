@@ -11,6 +11,7 @@ import DTO.RoleDTO;
 import DTO.SalaryDTO;
 import DTO.StatusDTO;
 import ENUM.StatusType;
+import INTERFACE.IModalController;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
  * Controller cho modal thêm/sửa/xem thông tin nhân viên
  * typeModal: 0 = Add, 1 = Edit, 2 = View (readonly)
  */
-public class EmployeeModalController {
+public class EmployeeModalController implements IModalController {
     @FXML
     private Label modalName;
     @FXML
