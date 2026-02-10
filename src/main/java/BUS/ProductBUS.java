@@ -4,16 +4,11 @@ import DAL.ProductDAL;
 
 import DTO.ProductDTO;
 import DTO.BUSResult;
-import DTO.EmployeeDTO;
 import ENUM.*;
-import SERVICE.AuthorizationService;
 import UTILS.AppMessages;
-import UTILS.AvailableUtils;
 import UTILS.ValidationUtils;
 
 import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
@@ -126,7 +121,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
 
         // 2. Check logic (Lúc này tên đã sạch sẽ)
         if (!CategoryBUS.getInstance().isValidCategory(obj.getCategoryId()))
-            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.PRODUCT_CATEGORY_INVALID);
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.PRODUCT_ADD_CATEGORY_INVALID);
 
         if (isDuplicateProductName("", obj.getName())) {
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_ADD_DUPLICATE);

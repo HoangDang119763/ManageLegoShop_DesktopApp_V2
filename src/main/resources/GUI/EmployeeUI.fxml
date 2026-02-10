@@ -13,7 +13,7 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="650.0" prefWidth="1074.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.EmployeeController">
+<AnchorPane fx:id="mainContent" prefHeight="650.0" prefWidth="1074.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.EmployeeController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -72,8 +72,16 @@
                <children>
                   <AnchorPane prefHeight="50.0" prefWidth="880.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="0.0">
+                        <HBox alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="0.0">
                            <children>
+                              <Button fx:id="detailBtn" layoutX="10.0" layoutY="17.0" mnemonicParsing="false" prefHeight="34.0" prefWidth="94.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Chi tiết">
+                                 <graphic>
+                                    <FontAwesomeIcon glyphName="EYE" size="1.2em" styleClass="action-icon" />
+                                 </graphic>
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Button>
                               <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Thêm">
                                  <graphic>
                                     <FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" />
@@ -102,7 +110,7 @@
                         </HBox>
                         <HBox layoutX="10.399999618530273" layoutY="4.800000190734863" spacing="10.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="10.0">
                            <children>
-                              <Button fx:id="refreshBtn" mnemonicParsing="false" prefHeight="35.0" prefWidth="108.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Làm mới">
+                              <Button fx:id="refreshBtn" mnemonicParsing="false" prefHeight="35.0" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Làm mới">
                                  <font>
                                     <Font size="14.0" />
                                  </font>

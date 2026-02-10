@@ -300,18 +300,22 @@ public class ProductModalController implements IModalController {
 
         // Check product name
         if (name.isEmpty()) {
-            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NAME_EMPTY, AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert("Tên sản phẩm không được để trống.", AppMessages.DIALOG_TITLE);
             focus(txtProductName);
             isValid = false;
         } else if (!validator.validateVietnameseText255(name)) {
-            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NAME_INVALID, AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert(
+                    "Tên sản phẩm không hợp lệ (Tối đa 50 ký tự, chỉ chữ và số, \"_\", \"-\", \"/\").",
+                    AppMessages.DIALOG_TITLE);
             focus(txtProductName);
             isValid = false;
         }
 
         // Check description
         if (isValid && !description.isEmpty() && !validator.validateVietnameseText65k4(description)) {
-            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_DESCRIPTION_INVALID, AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert(
+                    "Mô tả không hợp lệ (Tối đa 65.400 ký tự, chỉ chữ và số, \"_\", \"-\", \"/\").",
+                    AppMessages.DIALOG_TITLE);
             focus(txtDescription);
             isValid = false;
         }
@@ -319,22 +323,36 @@ public class ProductModalController implements IModalController {
         // Check selling price
         String sellingPrice = txtSellingPrice.getText().trim();
         if (isValid && sellingPrice.isEmpty()) {
-            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_PRICE_EMPTY, AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert("Giá bán không được để trống.", AppMessages.DIALOG_TITLE);
             focus(txtSellingPrice);
             isValid = false;
         } else if (isValid) {
             try {
                 BigDecimal sellingPriceValue = new BigDecimal(sellingPrice);
                 if (!validator.validateBigDecimal(sellingPriceValue, 10, 2, false)) {
-                    NotificationUtils.showErrorAlert(AppMessages.PRODUCT_PRICE_INVALID, AppMessages.DIALOG_TITLE);
+                    NotificationUtils.showErrorAlert(
+                            "Giá bạn không hợp lệ (tối đa 10 chữ số, 2 số thập phân, không âm hoặc bằng 0).",
+                            AppMessages.DIALOG_TITLE);
                     focus(txtSellingPrice);
                     isValid = false;
                 }
             } catch (NumberFormatException e) {
-                NotificationUtils.showErrorAlert(AppMessages.PRODUCT_PRICE_NOT_NUMBER, AppMessages.DIALOG_TITLE);
+                NotificationUtils.showErrorAlert("Giá bạn phải là số.", AppMessages.DIALOG_TITLE);
                 focus(txtSellingPrice);
                 isValid = false;
             }
+        }
+
+        StatusDTO selectedStatus = cbSelectStatus.getValue();
+        CategoryDTO selectedCategory = cbSelectCategory.getValue();
+
+        if (isValid && selectedStatus == null) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn trạng thái", AppMessages.DIALOG_TITLE);
+            isValid = false;
+        }
+        if (isValid && selectedCategory == null) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn thể loại", AppMessages.DIALOG_TITLE);
+            isValid = false;
         }
 
         return isValid;
@@ -342,28 +360,16 @@ public class ProductModalController implements IModalController {
 
     private void insertProduct() throws IOException {
         if (isValidInput()) {
-            StatusDTO selectedStatus = cbSelectStatus.getValue();
-            CategoryDTO selectedCategory = cbSelectCategory.getValue();
-
-            if (selectedStatus == null) {
-                NotificationUtils.showErrorAlert(AppMessages.PRODUCT_STATUS_REQUIRED, AppMessages.DIALOG_TITLE);
-                return;
-            }
-            if (selectedCategory == null) {
-                NotificationUtils.showErrorAlert(AppMessages.PRODUCT_CATEGORY_REQUIRED, AppMessages.DIALOG_TITLE);
-                return;
-            }
-
             String newImgUrl = ImageService.gI().saveProductImage(txtProductId.getText().trim(), imageUrl);
             ProductDTO temp = new ProductDTO(
                     txtProductId.getText().trim(),
                     txtProductName.getText().trim(), 0,
                     BigDecimal.ZERO,
                     BigDecimal.ZERO,
-                    selectedStatus.getId(),
+                    cbSelectStatus.getValue().getId(),
                     txtDescription.getText().trim(),
                     newImgUrl,
-                    selectedCategory.getId());
+                    cbSelectCategory.getValue().getId());
 
             BUSResult insertResult = SecureExecutor.runSafeBUSResult(
                     PermissionKey.PRODUCT_INSERT,
@@ -381,33 +387,20 @@ public class ProductModalController implements IModalController {
 
     private void updateProduct() throws IOException {
         if (isValidInput()) {
-            StatusDTO selectedStatus = cbSelectStatus.getValue();
-            CategoryDTO selectedCategory = cbSelectCategory.getValue();
-
-            if (selectedStatus == null) {
-                NotificationUtils.showErrorAlert(AppMessages.PRODUCT_STATUS_REQUIRED, AppMessages.DIALOG_TITLE);
-                return;
-            }
-            if (selectedCategory == null) {
-                NotificationUtils.showErrorAlert(AppMessages.PRODUCT_CATEGORY_REQUIRED, AppMessages.DIALOG_TITLE);
-                return;
-            }
-
             String newImgUrl = product.getImageUrl();
             if (imageUrl != null && !imageUrl.equals(product.getImageUrl())) {
                 newImgUrl = ImageService.gI().saveProductImage(txtProductId.getText().trim(), imageUrl);
             }
-
             ProductDTO temp = new ProductDTO(
                     txtProductId.getText().trim(),
                     txtProductName.getText().trim(),
                     product.getStockQuantity(),
                     new BigDecimal(txtSellingPrice.getText().trim()),
                     new BigDecimal(txtImportPrice.getText().trim()),
-                    selectedStatus.getId(),
+                    cbSelectStatus.getValue().getId(),
                     txtDescription.getText().trim(),
                     newImgUrl,
-                    selectedCategory.getId());
+                    cbSelectCategory.getValue().getId());
 
             BUSResult updateResult = SecureExecutor.runSafeBUSResult(
                     PermissionKey.PRODUCT_UPDATE,

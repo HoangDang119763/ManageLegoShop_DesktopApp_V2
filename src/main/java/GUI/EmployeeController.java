@@ -1,11 +1,12 @@
 package GUI;
 
+import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
+import BUS.EmploymentHistoryBUS;
 import BUS.RoleBUS;
 import BUS.SalaryBUS;
 import BUS.StatusBUS;
 import BUS.TaxBUS;
-import DTO.EmployeeDTO;
 import DTO.EmployeeDetailDTO;
 import DTO.RoleDTO;
 import DTO.StatusDTO;
@@ -17,8 +18,8 @@ import PROVIDER.EmployeeDetailFilterer;
 import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
+import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
-import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -26,7 +27,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.AnchorPane;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,9 +52,9 @@ public class EmployeeController implements IController {
     @FXML
     private TableColumn<EmployeeDetailDTO, String> tlb_col_status;
     @FXML
-    private HBox functionBtns;
+    private Button addBtn, editBtn, deleteBtn, refreshBtn, detailBtn, exportExcel;
     @FXML
-    private Button addBtn, editBtn, deleteBtn, refreshBtn, exportExcel;
+    private AnchorPane mainContent;
     @FXML
     private TextField txtSearch;
     @FXML
@@ -67,7 +68,6 @@ public class EmployeeController implements IController {
     private String keyword = "";
     private RoleDTO roleFilter = null;
     private StatusDTO statusFilter = null;
-    private ArrayList<EmployeeDetailDTO> cachedTableData = new ArrayList<>();
     private EmployeeDetailDTO selectedEmployeeTable;
 
     // BUS instances
@@ -76,6 +76,8 @@ public class EmployeeController implements IController {
     private StatusBUS statusBUS;
     private SalaryBUS salaryBUS;
     private TaxBUS taxBUS;
+    private DepartmentBUS departmentBUS;
+    private EmploymentHistoryBUS employmentHistoryBUS;
 
     @FXML
     public void initialize() {
@@ -85,6 +87,8 @@ public class EmployeeController implements IController {
         statusBUS = StatusBUS.getInstance();
         salaryBUS = SalaryBUS.getInstance();
         taxBUS = TaxBUS.getInstance();
+        departmentBUS = DepartmentBUS.getInstance();
+        employmentHistoryBUS = EmploymentHistoryBUS.getInstance();
 
         if (employeeBUS.isLocalEmpty())
             employeeBUS.loadLocal();
@@ -96,6 +100,10 @@ public class EmployeeController implements IController {
             salaryBUS.loadLocal();
         if (taxBUS.isLocalEmpty())
             taxBUS.loadLocal();
+        if (departmentBUS.isLocalEmpty())
+            departmentBUS.loadLocal();
+        if (employmentHistoryBUS.isLocalEmpty())
+            employmentHistoryBUS.loadLocal();
 
         tblEmployee.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblEmployee.getSelectionModel().clearSelection());
@@ -149,17 +157,12 @@ public class EmployeeController implements IController {
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
         txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
 
-        tblEmployee.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                handleDetailView();
-            }
-        });
-
         refreshBtn.setOnAction(event -> {
             resetFilters();
             NotificationUtils.showInfoAlert("Làm mới thành công", AppMessages.DIALOG_TITLE);
         });
 
+        detailBtn.setOnAction(event -> handleDetailView());
         addBtn.setOnAction(event -> handleAddBtn());
         deleteBtn.setOnAction(e -> handleDeleteBtn());
         editBtn.setOnAction(e -> handleEditBtn());
@@ -203,15 +206,12 @@ public class EmployeeController implements IController {
         // Step 1: Transform employee data using provider
         ArrayList<EmployeeDetailDTO> tableData = provider.toTableDTOs(employeeBUS.getAllLocal());
 
-        // Step 2: Apply filters using dedicated filterer
-        cachedTableData = filterer.applyAllFilters(
+        tblEmployee.setItems(FXCollections.observableArrayList(filterer.applyAllFilters(
                 tableData,
                 searchBy,
                 keyword,
                 roleFilterName,
-                statusFilterDesc);
-
-        tblEmployee.setItems(FXCollections.observableArrayList(cachedTableData));
+                statusFilterDesc)));
         tblEmployee.getSelectionModel().clearSelection();
     }
 
@@ -232,73 +232,112 @@ public class EmployeeController implements IController {
     @Override
     public void hideButtonWithoutPermission() {
         SessionManagerService session = SessionManagerService.getInstance();
-        boolean canAdd = session.hasPermission(PermissionKey.EMPLOYEE_INSERT);
-        // boolean canEdit = session.hasPermission(PermissionKey.EMPLOYEE_UPDATE);
-        boolean canDelete = session.hasPermission(PermissionKey.EMPLOYEE_DELETE);
+        boolean canView = session.hasPermission(PermissionKey.PRODUCT_LIST_VIEW);
 
-        if (!canAdd)
-            functionBtns.getChildren().remove(addBtn);
-        // if (!canEdit)
-        // functionBtns.getChildren().remove(editBtn);
-        if (!canDelete)
-            functionBtns.getChildren().remove(deleteBtn);
+        if (!canView) {
+            mainContent.setVisible(false);
+            mainContent.setManaged(false);
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+            return;
+        }
+        boolean canAdd = session.hasPermission(PermissionKey.EMPLOYEE_INSERT);
+        boolean canViewPersonal = session.hasPermission(PermissionKey.EMPLOYEE_PERSONAL_VIEW);
+        boolean canUpdatePersonal = session.hasPermission(PermissionKey.EMPLOYEE_PERSONAL_UPDATE);
+        boolean canViewJob = session.hasPermission(PermissionKey.EMPLOYEE_JOB_VIEW);
+        boolean canUpdateJob = session.hasPermission(PermissionKey.EMPLOYEE_JOB_UPDATE);
+        boolean canViewPayrollInfo = session.hasPermission(PermissionKey.EMPLOYEE_PAYROLLINFO_VIEW);
+        boolean canUpdatePayrollInfo = session.hasPermission(PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE);
+        boolean canviewAccount = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_VIEW);
+        boolean canResetAccountPassword = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD);
+        boolean canUpdateAccountStatus = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS);
+        boolean canDelete = session.hasPermission(PermissionKey.EMPLOYEE_DELETE);
+        boolean canViewDetail = canViewPersonal || canViewJob || canViewPayrollInfo || canviewAccount;
+        boolean canEdit = canUpdatePersonal || canUpdateJob || canUpdatePayrollInfo || canUpdateAccountStatus
+                || canResetAccountPassword;
+
+        detailBtn.setVisible(canViewDetail);
+        detailBtn.setManaged(canViewDetail);
+
+        addBtn.setVisible(canAdd);
+        addBtn.setManaged(canAdd);
+
+        editBtn.setVisible(canEdit);
+        editBtn.setManaged(canEdit);
+
+        deleteBtn.setVisible(canDelete);
+        deleteBtn.setManaged(canDelete);
     }
 
     public void handleAddBtn() {
-        EmployeeModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/EmployeeModal.fxml",
-                controller -> controller.setTypeModal(0),
-                "Thêm nhân viên");
+        EmployeeModalController modalController = new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
+                EmployeeModalController.class)
+                .setTitle("Thêm nhân viên")
+                .modeAdd()
+                .open();
         if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Thêm nhân viên thành công", AppMessages.DIALOG_TITLE);
             resetFilters();
         }
     }
 
     public void handleDeleteBtn() {
-//        if (isNotSelectedEmployee()) {
-//            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên", AppMessages.DIALOG_TITLE);
-//            return;
-//        }
-//
-//        // Lấy thông tin đầy đủ của nhân viên
-//        EmployeeDTO employee = employeeBUS.getByIdLocal(selectedEmployeeTable.getEmployeeId());
-//
-//        if (employee == null) {
-//            NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên", AppMessages.DIALOG_TITLE);
-//            return;
-//        }
-//
-//        SessionManagerService session = SessionManagerService.getInstance();
-//        if (employee.getId() == session.employeeLoginId()) {
-//            NotificationUtils.showErrorAlert("Bạn không thể xóa thông tin của chính mình", AppMessages.DIALOG_TITLE);
-//            return;
-//        }
-//
-//        if (employee.getId() == 1) {
-//            NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc", AppMessages.DIALOG_TITLE);
-//            return;
-//        }
-//
-//        int deleteResult = employeeBUS.delete(employee.getId(), session.employeeRoleId(), session.employeeLoginId());
-//
-//        switch (deleteResult) {
-//            case 1 -> {
-//                NotificationUtils.showInfoAlert("Xóa nhân viên thành công", AppMessages.DIALOG_TITLE);
-//                resetFilters();
-//            }
-//            case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi xóa nhân viên", AppMessages.DIALOG_TITLE);
-//            case 3 ->
-//                NotificationUtils.showErrorAlert("Không thể xóa thông tin của chính mình", AppMessages.DIALOG_TITLE);
-//            case 4 -> NotificationUtils.showErrorAlert("Bạn không có quyền xóa nhân viên", AppMessages.DIALOG_TITLE);
-//            case 5 ->
-//                NotificationUtils.showErrorAlert("Bạn không thể xóa nhân viên ngang quyền", AppMessages.DIALOG_TITLE);
-//            case 6 -> NotificationUtils.showErrorAlert("Xóa nhân viên thất bại", AppMessages.DIALOG_TITLE);
-//            case 7 ->
-//                NotificationUtils.showErrorAlert("Nhân viên không hợp lệ hoặc đã bị xóa", AppMessages.DIALOG_TITLE);
-//            case 8 -> NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc", AppMessages.DIALOG_TITLE);
-//            default -> NotificationUtils.showErrorAlert("Lỗi không xác định", AppMessages.DIALOG_TITLE);
-//        }
+        // if (isNotSelectedEmployee()) {
+        // NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên",
+        // AppMessages.DIALOG_TITLE);
+        // return;
+        // }
+        //
+        // // Lấy thông tin đầy đủ của nhân viên
+        // EmployeeDTO employee =
+        // employeeBUS.getByIdLocal(selectedEmployeeTable.getEmployeeId());
+        //
+        // if (employee == null) {
+        // NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên",
+        // AppMessages.DIALOG_TITLE);
+        // return;
+        // }
+        //
+        // SessionManagerService session = SessionManagerService.getInstance();
+        // if (employee.getId() == session.employeeLoginId()) {
+        // NotificationUtils.showErrorAlert("Bạn không thể xóa thông tin của chính
+        // mình", AppMessages.DIALOG_TITLE);
+        // return;
+        // }
+        //
+        // if (employee.getId() == 1) {
+        // NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc",
+        // AppMessages.DIALOG_TITLE);
+        // return;
+        // }
+        //
+        // int deleteResult = employeeBUS.delete(employee.getId(),
+        // session.employeeRoleId(), session.employeeLoginId());
+        //
+        // switch (deleteResult) {
+        // case 1 -> {
+        // NotificationUtils.showInfoAlert("Xóa nhân viên thành công",
+        // AppMessages.DIALOG_TITLE);
+        // resetFilters();
+        // }
+        // case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi xóa nhân viên",
+        // AppMessages.DIALOG_TITLE);
+        // case 3 ->
+        // NotificationUtils.showErrorAlert("Không thể xóa thông tin của chính mình",
+        // AppMessages.DIALOG_TITLE);
+        // case 4 -> NotificationUtils.showErrorAlert("Bạn không có quyền xóa nhân
+        // viên", AppMessages.DIALOG_TITLE);
+        // case 5 ->
+        // NotificationUtils.showErrorAlert("Bạn không thể xóa nhân viên ngang quyền",
+        // AppMessages.DIALOG_TITLE);
+        // case 6 -> NotificationUtils.showErrorAlert("Xóa nhân viên thất bại",
+        // AppMessages.DIALOG_TITLE);
+        // case 7 ->
+        // NotificationUtils.showErrorAlert("Nhân viên không hợp lệ hoặc đã bị xóa",
+        // AppMessages.DIALOG_TITLE);
+        // case 8 -> NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc",
+        // AppMessages.DIALOG_TITLE);
+        // default -> NotificationUtils.showErrorAlert("Lỗi không xác định",
+        // AppMessages.DIALOG_TITLE);
+        // }
     }
 
     public void handleEditBtn() {
@@ -307,50 +346,30 @@ public class EmployeeController implements IController {
             return;
         }
 
-        EmployeeDTO employee = employeeBUS.getByIdLocal(selectedEmployeeTable.getEmployeeId());
-
-        if (employee == null) {
-            NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên", AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        SessionManagerService session = SessionManagerService.getInstance();
-        if (employee.getId() == 1 && session.employeeLoginId() != 1) {
-            NotificationUtils.showErrorAlert("Không thể sửa nhân viên gốc", AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        EmployeeModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/EmployeeModal.fxml",
-                controller -> {
-                    controller.setTypeModal(1);
-                    controller.setEmployee(employee);
-                },
-                "Sửa nhân viên");
+        EmployeeModalController modalController = new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
+                EmployeeModalController.class)
+                .setTitle("Sửa nhân viên")
+                .modeEdit()
+                .configure(c -> c.setEmployee(selectedEmployeeTable))
+                .open();
 
         if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Sửa nhân viên thành công", AppMessages.DIALOG_TITLE);
             applyFilters();
         }
     }
 
     private void handleDetailView() {
-        // selectedEmployeeTable = tblEmployee.getSelectionModel().getSelectedItem();
-        // if (selectedEmployeeTable != null) {
-        // EmployeeBUS employeeBUS = EmployeeBUS.getInstance();
-        // EmployeeDTO employee =
-        // employeeBUS.getByIdLocal(selectedEmployeeTable.getEmployeeId());
+        if (isNotSelectedEmployee()) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên", AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-        // if (employee != null) {
-        // UiUtils.gI().openStageWithController(
-        // "/GUI/EmployeeModal.fxml",
-        // controller -> {
-        // controller.setTypeModal(2);
-        // controller.setEmployee(employee);
-        // },
-        // "Xem thông tin nhân viên");
-        // }
-        // }
+        new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml", EmployeeModalController.class)
+                .setTitle("Xem thông tin nhân viên")
+                .modeDetail()
+                .configure(c -> c.setEmployee(selectedEmployeeTable))
+                .open();
+
     }
 
     private void handleExportExcel() throws IOException {

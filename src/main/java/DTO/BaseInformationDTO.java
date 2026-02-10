@@ -15,21 +15,6 @@ public abstract class BaseInformationDTO {
     public BaseInformationDTO() {
     }
 
-    public BaseInformationDTO(int id, LocalDate dateOfBirth, String phone) {
-        this.id = id;
-        this.dateOfBirth = dateOfBirth;
-        this.phone = phone;
-        this.updatedAt = null;
-    }
-
-    public BaseInformationDTO(int id, LocalDate dateOfBirth, String phone, int statusId) {
-        this.id = id;
-        this.dateOfBirth = dateOfBirth;
-        this.phone = phone;
-        this.updatedAt = null;
-        this.statusId = statusId;
-    }
-
     public BaseInformationDTO(BaseInformationDTO other) {
         if (other != null) {
             this.id = other.id;
@@ -38,6 +23,21 @@ public abstract class BaseInformationDTO {
             this.updatedAt = other.updatedAt;
             this.statusId = other.statusId;
         }
+    }
+
+    public BaseInformationDTO(int id, LocalDate dateOfBirth, String phone, int statusId, LocalDateTime updatedAt) {
+        this.id = id;
+        this.dateOfBirth = dateOfBirth;
+        this.phone = phone;
+        this.updatedAt = updatedAt;
+        this.statusId = statusId;
+    }
+
+    public BaseInformationDTO(int id, LocalDate dateOfBirth, String phone, int statusId) {
+        this.id = id;
+        this.dateOfBirth = dateOfBirth;
+        this.phone = phone;
+        this.statusId = statusId;
     }
 
     public int getId() {

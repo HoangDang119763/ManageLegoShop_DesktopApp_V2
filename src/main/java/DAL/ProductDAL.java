@@ -1,6 +1,5 @@
 package DAL;
 
-import DTO.DetailInvoiceDTO;
 import DTO.ProductDTO;
 import java.sql.*;
 import java.util.ArrayList;
@@ -56,7 +55,8 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
 
     @Override
     protected String getUpdateQuery() {
-        // Loại bỏ import_price để tránh làm sai lệch giá vốn khi chỉ sửa thông tin sản phẩm
+        // Loại bỏ import_price để tránh làm sai lệch giá vốn khi chỉ sửa thông tin sản
+        // phẩm
         return "SET name = ?, selling_price = ?, status_id = ?, description = ?, image_url = ?, category_id = ? WHERE id = ?";
     }
 
@@ -143,10 +143,10 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
         // SQL tự tìm ID dựa vào tên trạng thái 'INACTIVE' hoặc 'DELETED'
         String query = "UPDATE product SET status_id = ? WHERE id = ?";
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
-                statement.setInt(1, obj.getStatusId());
-                statement.setString(2, obj.getId());
+            statement.setInt(1, obj.getStatusId());
+            statement.setString(2, obj.getId());
 
             return statement.executeUpdate() > 0;
 

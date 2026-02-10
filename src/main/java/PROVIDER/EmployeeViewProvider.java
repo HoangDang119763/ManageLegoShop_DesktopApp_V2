@@ -1,19 +1,20 @@
 package PROVIDER;
 
 import BUS.AccountBUS;
+import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
 import BUS.RoleBUS;
 import BUS.SalaryBUS;
 import BUS.StatusBUS;
 import BUS.TaxBUS;
 import DTO.AccountDTO;
+import DTO.DepartmentDTO;
 import DTO.EmployeeDTO;
 import DTO.EmployeeDetailDTO;
 import DTO.RoleDTO;
 import DTO.SalaryDTO;
 import DTO.StatusDTO;
 import DTO.TaxDTO;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,22 +35,17 @@ public class EmployeeViewProvider {
         return INSTANCE;
     }
 
-    // Cache maps per call (not global cache)
-    private Map<Integer, RoleDTO> roleMap;
-    private Map<Integer, SalaryDTO> salaryMap;
-    private Map<Integer, StatusDTO> statusMap;
-    private Map<Integer, AccountDTO> accountMap;
-    private Map<Integer, TaxDTO> taxMap;
-
     /**
-     * Build maps once per request
+     * Load tất cả data từ BUS (sử dụng mapLocal đã có sẵn trong BaseBUS)
      */
-    private void buildMaps() {
+    private void loadAllData() {
         RoleBUS roleBUS = RoleBUS.getInstance();
         SalaryBUS salaryBUS = SalaryBUS.getInstance();
         StatusBUS statusBUS = StatusBUS.getInstance();
         AccountBUS accountBUS = AccountBUS.getInstance();
+        DepartmentBUS departmentBUS = DepartmentBUS.getInstance();
         TaxBUS taxBUS = TaxBUS.getInstance();
+
         if (roleBUS.isLocalEmpty())
             roleBUS.loadLocal();
         if (salaryBUS.isLocalEmpty())
@@ -58,29 +54,17 @@ public class EmployeeViewProvider {
             statusBUS.loadLocal();
         if (accountBUS.isLocalEmpty())
             accountBUS.loadLocal();
+        if (departmentBUS.isLocalEmpty())
+            departmentBUS.loadLocal();
         if (taxBUS.isLocalEmpty())
             taxBUS.loadLocal();
-        roleMap = roleBUS.getAllLocal().stream()
-                .collect(Collectors.toMap(RoleDTO::getId, r -> r));
-
-        salaryMap = salaryBUS.getAllLocal().stream()
-                .collect(Collectors.toMap(SalaryDTO::getId, s -> s));
-
-        statusMap = statusBUS.getAllLocal().stream()
-                .collect(Collectors.toMap(StatusDTO::getId, s -> s));
-
-        accountMap = accountBUS.getAllLocal().stream()
-                .collect(Collectors.toMap(AccountDTO::getId, a -> a));
-
-        taxMap = taxBUS.getAllLocal().stream()
-                .collect(Collectors.toMap(TaxDTO::getEmployeeId, t -> t));
     }
 
     /**
      * Convert list EmployeeDTO -> EmployeeDetailDTO
      */
     public ArrayList<EmployeeDetailDTO> toTableDTOs(List<EmployeeDTO> employees) {
-        buildMaps();
+        loadAllData();
 
         return employees.stream()
                 .map(this::transform)
@@ -95,48 +79,82 @@ public class EmployeeViewProvider {
         if (emp == null)
             return null;
 
-        buildMaps();
+        loadAllData();
         return transform(emp);
     }
 
     /**
-     * Transform core method
+     * Transform core method - sử dụng getByIdLocal từ BaseBUS (map lookup O(1))
      */
     private EmployeeDetailDTO transform(EmployeeDTO emp) {
+        RoleBUS roleBUS = RoleBUS.getInstance();
+        SalaryBUS salaryBUS = SalaryBUS.getInstance();
+        StatusBUS statusBUS = StatusBUS.getInstance();
+        AccountBUS accountBUS = AccountBUS.getInstance();
+        DepartmentBUS departmentBUS = DepartmentBUS.getInstance();
+        TaxBUS taxBUS = TaxBUS.getInstance();
 
-        RoleDTO role = roleMap.get(emp.getRoleId());
-        SalaryDTO salary = role != null ? salaryMap.get(role.getSalaryId()) : null;
-        StatusDTO empStatus = statusMap.get(emp.getStatusId());
-        AccountDTO account = accountMap.get(emp.getAccountId());
-        TaxDTO tax = taxMap.get(emp.getId());
+        RoleDTO role = roleBUS.getByIdLocal(emp.getRoleId());
+        SalaryDTO salary = role != null ? salaryBUS.getByIdLocal(role.getSalaryId()) : null;
+        StatusDTO empStatus = statusBUS.getByIdLocal(emp.getStatusId());
+        AccountDTO account = accountBUS.getByIdLocal(emp.getAccountId());
+        DepartmentDTO department = emp.getDepartmentId() != null ? departmentBUS.getByIdLocal(emp.getDepartmentId())
+                : null;
+        TaxDTO tax = taxBUS.getByIdLocal(emp.getId());
 
-        StatusDTO accStatus = account != null ? statusMap.get(account.getStatusId()) : null;
+        StatusDTO accStatus = account != null ? statusBUS.getByIdLocal(account.getStatusId()) : null;
 
         return EmployeeDetailDTO.builder()
+                // BaseInformation fields
+                .id(emp.getId())
+                .dateOfBirth(emp.getDateOfBirth())
+                .createdAt(emp.getCreatedAt())
+                .updatedAt(emp.getUpdatedAt())
+                .statusId(emp.getStatusId())
+
+                // Employee display ID
                 .employeeId(emp.getId())
+
+                // Core employee info
                 .firstName(emp.getFirstName())
                 .lastName(emp.getLastName())
                 .email(emp.getEmail())
                 .phone(emp.getPhone())
                 .gender(emp.getGender())
 
+                // Department info
+                .departmentId(emp.getDepartmentId())
+                .departmentName(department != null ? department.getName() : "")
+
+                // Role info
                 .roleId(emp.getRoleId())
                 .roleName(role != null ? role.getName() : "")
 
-                .salaryId(role != null ? role.getSalaryId() : 0)
-                .baseSalary(salary != null ? salary.getBase() : null)
-                .salaryCoefficient(salary != null ? salary.getCoefficient() : null)
-
+                // Account info
                 .accountId(emp.getAccountId())
                 .username(account != null ? account.getUsername() : "")
                 .accountStatusId(account != null ? account.getStatusId() : 0)
                 .accountStatus(accStatus != null ? accStatus.getDescription() : "")
 
-                .statusId(emp.getStatusId())
+                // Employee status
                 .statusDescription(empStatus != null ? empStatus.getDescription() : "")
 
+                // Salary info
+                .salaryId(role != null ? role.getSalaryId() : 0)
+                .baseSalary(salary != null ? salary.getBase() : null)
+                .salaryCoefficient(salary != null ? salary.getCoefficient() : null)
+
+                // Tax info
                 .taxId(tax != null ? tax.getId() : 0)
-                .numDependents(tax != null ? tax.getNumDependents() : 0)
+                .numDependents(tax != null ? tax.getNumDependents() : null)
+
+                // Health & Support flags
+                .healthInsCode(emp.getHealthInsCode() != null ? emp.getHealthInsCode() : "")
+                .isSocialInsurance(emp.isSocialInsurance())
+                .isUnemploymentInsurance(emp.isUnemploymentInsurance())
+                .isPersonalIncomeTax(emp.isPersonalIncomeTax())
+                .isTransportationSupport(emp.isTransportationSupport())
+                .isAccommodationSupport(emp.isAccommodationSupport())
 
                 .build();
     }

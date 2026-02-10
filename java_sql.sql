@@ -156,36 +156,36 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 ('Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
 
 -- === 👥 MODULE KHÁCH HÀNG (Module ID: 2) ===
-('Xem danh sách khách hàng', 'CUSTOMER_VIEW', 2),
+('Xem danh sách khách hàng', 'CUSTOMER_LIST_VIEW', 2),
 ('Thêm khách hàng', 'CUSTOMER_INSERT', 2),
 ('Cập nhật khách hàng', 'CUSTOMER_UPDATE', 2),
 ('Xóa khách hàng', 'CUSTOMER_DELETE', 2),
 
 -- === 📦 MODULE SẢN PHẨM (Module ID: 3) ===
-('Xem danh sách sản phẩm', 'PRODUCT_VIEW', 3),
+('Xem danh sách sản phẩm', 'PRODUCT_LIST_VIEW', 3),
 ('Thêm sản phẩm', 'PRODUCT_INSERT', 3),
 ('Cập nhật sản phẩm', 'PRODUCT_UPDATE', 3),
 ('Xóa sản phẩm', 'PRODUCT_DELETE', 3),
 
 -- === 🏭 MODULE NHÀ CUNG CẤP (Module ID: 4) ===
-('Xem danh sách nhà cung cấp', 'SUPPLIER_VIEW', 4),
+('Xem danh sách nhà cung cấp', 'SUPPLIER_LIST_VIEW', 4),
 ('Thêm nhà cung cấp', 'SUPPLIER_INSERT', 4),
 ('Cập nhật nhà cung cấp', 'SUPPLIER_UPDATE', 4),
 ('Xóa nhà cung cấp', 'SUPPLIER_DELETE', 4),
 
 -- === 💰 MODULE GIAO DỊCH (Module ID: 5 & 6) ===
-('Xem danh sách đơn hàng', 'ORDER_VIEW', 5),
+('Xem danh sách đơn hàng', 'ORDER_LIST_VIEW', 5),
 ('Tạo đơn hàng mới', 'ORDER_CREATE', 5),
-('Xem phiếu nhập hàng', 'IMPORT_VIEW', 6),
+('Xem phiếu nhập hàng', 'IMPORT_LIST_VIEW', 6),
 ('Tạo phiếu nhập hàng mới', 'IMPORT_CREATE', 6),
 
 -- === 📑 MODULE DANH MỤC & KHUYẾN MÃI (Module ID: 7 & 8) ===
-('Xem danh mục sản phẩm', 'CATEGORY_VIEW', 7),
+('Xem danh mục sản phẩm', 'CATEGORY_LIST_VIEW', 7),
 ('Thêm danh mục sản phẩm', 'CATEGORY_INSERT', 7),
 ('Cập nhật danh mục sản phẩm', 'CATEGORY_UPDATE', 7),
 ('Xóa danh mục sản phẩm', 'CATEGORY_DELETE', 7),
 
-('Xem chương trình khuyến mãi', 'PROMOTION_VIEW', 8),
+('Xem chương trình khuyến mãi', 'PROMOTION_LIST_VIEW', 8),
 ('Thêm chương trình khuyến mãi', 'PROMOTION_INSERT', 8),
 ('Cập nhật chương trình khuyến mãi', 'PROMOTION_UPDATE', 8),
 ('Xóa chương trình khuyến mãi', 'PROMOTION_DELETE', 8),
