@@ -91,7 +91,7 @@ public class CustomerController implements IController {
         tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(
                 StatusBUS.getInstance().getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
         tlb_col_updatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatDateTime(cellData.getValue().getUpdatedAt())));
+                validationUtils.formatDateTimeWithHour(cellData.getValue().getUpdatedAt())));
         UiUtils.gI().addTooltipToColumn(tlb_col_fullName, 10);
         UiUtils.gI().addTooltipToColumn(tlb_col_address, 10);
     }

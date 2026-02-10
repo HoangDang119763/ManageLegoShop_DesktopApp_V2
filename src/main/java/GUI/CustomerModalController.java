@@ -8,6 +8,7 @@ import BUS.StatusBUS;
 import DTO.CustomerDTO;
 import DTO.StatusDTO;
 import ENUM.StatusType;
+import INTERFACE.IModalController;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
@@ -23,7 +24,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import lombok.Getter;
 
-public class CustomerModalController {
+public class CustomerModalController implements IModalController {
     // FXML Controls
     @FXML
     public Label modalName;

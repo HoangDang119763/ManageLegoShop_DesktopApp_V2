@@ -4,6 +4,7 @@ import BUS.DetailDiscountBUS;
 import BUS.DiscountBUS;
 import DTO.*;
 import ENUM.ServiceAccessCode;
+import INTERFACE.IModalController;
 import SERVICE.DiscountService;
 import SERVICE.SessionManagerService;
 import UTILS.AvailableUtils;
@@ -23,7 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class DiscountModalController {
+public class DiscountModalController implements IModalController {
     @FXML
     private Label modalName;
     @FXML

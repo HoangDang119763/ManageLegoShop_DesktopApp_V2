@@ -11,6 +11,7 @@ import SERVICE.ExcelService;
 import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
+import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
@@ -81,55 +82,53 @@ public class ProductController implements IController {
     private CategoryBUS categoryBUS;
     private StatusBUS statusBUS;
 
+    // =====================
+    // 1️⃣ LIFECYCLE & INITIALIZATION
+    // =====================
     @FXML
     public void initialize() {
-        // Initialize BUS instances once
         productBUS = ProductBUS.getInstance();
         if (productBUS.isLocalEmpty())
             productBUS.loadLocal();
-
         categoryBUS = CategoryBUS.getInstance();
         if (categoryBUS.isLocalEmpty())
             categoryBUS.loadLocal();
-
         statusBUS = StatusBUS.getInstance();
         if (statusBUS.isLocalEmpty())
             statusBUS.loadLocal();
 
         tblProduct.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-        // Tránh deprecated
         Platform.runLater(() -> tblProduct.getSelectionModel().clearSelection());
 
         hideButtonWithoutPermission();
         loadComboBox();
-        setupListeners();
-
         loadTable();
+        setupListeners();
         applyFilters();
     }
 
+    // =====================
+    // 2️⃣ UI SETUP (LOAD & CONFIG)
+    // =====================
     private void loadComboBox() {
         cbSearchBy.getItems().addAll("Mã sản phẩm", "Tên sản phẩm");
 
-        // Load Status ComboBox
         ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.PRODUCT);
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả cả trạng thái");
-        cbStatusFilter.getItems().add(allStatus); // "Tất cả" option
+        cbStatusFilter.getItems().add(allStatus);
         cbStatusFilter.getItems().addAll(statusList);
 
-        // Load Category ComboBox
         CategoryDTO allCategory = new CategoryDTO(-1, "Tất cả thể loại");
-        cbCategoryFilter.getItems().add(allCategory); // "Tất cả" option
+        cbCategoryFilter.getItems().add(allCategory);
         cbCategoryFilter.getItems().addAll(categoryBUS.getAllLocal());
 
         cbSearchBy.getSelectionModel().selectFirst();
-        cbStatusFilter.getSelectionModel().selectFirst(); // "Tất cả"
-        cbCategoryFilter.getSelectionModel().selectFirst(); // "Tất cả"
+        cbStatusFilter.getSelectionModel().selectFirst();
+        cbCategoryFilter.getSelectionModel().selectFirst();
     }
 
     @Override
     public void loadTable() {
-        // Cập nhật dữ liệu vào bảng
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
         tlb_col_imageUrl.setCellValueFactory(cellData -> {
@@ -137,17 +136,14 @@ public class ProductController implements IController {
             File imageFile = null;
             Image image = null;
 
-            // Kiểm tra nếu có ảnh sản phẩm
             if (imageUrl != null && !imageUrl.isEmpty()) {
-                imageFile = new File(imageUrl); // Đường dẫn ảnh người dùng nhập
-                // System.out.println("Đường dẫn ảnh: " + imageFile.getAbsolutePath());
+                imageFile = new File(imageUrl);
             }
 
             if (imageFile != null && imageFile.exists()) {
                 try {
                     image = new Image(imageFile.toURI().toString(), 200, 200, true, true);
                 } catch (Exception e) {
-                    // System.err.println("Lỗi khi tải ảnh: " + e.getMessage());
                 }
             } else {
                 URL defaultImageUrl = getClass().getResource("/images/default/default.png");
@@ -188,6 +184,7 @@ public class ProductController implements IController {
         txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
         txtStartPrice.textProperty().addListener((observable, oldValue, newValue) -> handlePriceChange());
         txtEndPrice.textProperty().addListener((observable, oldValue, newValue) -> handlePriceChange());
+
         refreshBtn.setOnAction(event -> {
             resetFilters();
             NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
@@ -197,103 +194,56 @@ public class ProductController implements IController {
         editBtn.setOnAction(e -> handleEdit());
         deleteBtn.setOnAction(e -> handleDelete());
         tblProduct.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
+            if (event.getClickCount() == 2)
                 handleDetail();
-            }
         });
         btnImportExcel.setOnMouseClicked(event -> {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             importProductExcel(stage);
         });
-
     }
 
-    private void handlePriceChange() {
-        try {
-            String startText = txtStartPrice.getText().trim();
-            if (!startText.isEmpty()) {
-                startPrice = new BigDecimal(startText);
-            } else {
-                startPrice = null;
-            }
-            // System.out.println(startPrice);
-
-            String endText = txtEndPrice.getText().trim();
-            if (!endText.isEmpty()) {
-                endPrice = new BigDecimal(endText);
-            } else {
-                endPrice = null;
-            }
-            // System.out.println(endPrice);
-
-            applyFilters();
-        } catch (NumberFormatException e) {
-            // System.out.println("Giá không hợp lệ: " + e.getMessage());
+    // =====================
+    // 3️⃣ CRUD HANDLERS (Add/Edit/Detail/Delete)
+    // =====================
+    private void handleAdd() {
+        ProductModalController modalController = new ModalBuilder<ProductModalController>("/GUI/ProductModal.fxml",
+                ProductModalController.class)
+                .setTitle("Thêm sản phẩm")
+                .modeAdd()
+                .open();
+        if (modalController != null && modalController.isSaved()) {
+            resetFilters();
         }
     }
 
-    private void handleSearchByChange() {
-        searchBy = cbSearchBy.getValue();
-        applyFilters();
+    private void handleEdit() {
+        if (isNotSelectedProduct()) {
+            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
+        ProductModalController modalController = new ModalBuilder<ProductModalController>("/GUI/ProductModal.fxml",
+                ProductModalController.class)
+                .setTitle("Sửa sản phẩm")
+                .modeEdit()
+                .configure(c -> c.setProduct(selectedProduct))
+                .open();
+        if (modalController != null && modalController.isSaved()) {
+            applyFilters();
+        }
+        tblProduct.refresh();
     }
 
-    private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
-        applyFilters();
-    }
-
-    private void handleCategoryFilterChange() {
-        categoryFilter = cbCategoryFilter.getValue();
-        applyFilters();
-    }
-
-    private void handleStatusFilterChange() {
-        statusFilter = cbStatusFilter.getValue();
-        applyFilters();
-    }
-
-    @Override
-    public void applyFilters() {
-        int statusId = statusFilter == null ? -1 : statusFilter.getId();
-        int categoryId = categoryFilter == null ? -1 : categoryFilter.getId();
-        tblProduct.setItems(FXCollections.observableArrayList(
-                ProductBUS.getInstance().filterProducts(searchBy, keyword, categoryId,
-                        statusId, startPrice, endPrice)));
-        tblProduct.getSelectionModel().clearSelection();
-    }
-
-    @Override
-    public void resetFilters() {
-        cbSearchBy.getSelectionModel().selectFirst(); // Chọn giá trị đầu tiên
-        cbStatusFilter.getSelectionModel().selectFirst(); // "Tất cả"
-        cbCategoryFilter.getSelectionModel().selectFirst(); // "Tất cả"
-        txtSearch.clear();
-        txtStartPrice.clear();
-        txtEndPrice.clear();
-
-        // Cập nhật lại các biến bộ lọc
-        searchBy = "Mã sản phẩm";
-        keyword = "";
-        categoryFilter = null;
-        statusFilter = null;
-        startPrice = null;
-        endPrice = null;
-        applyFilters(); // Áp dụng lại bộ lọc
-    }
-
-    @Override
-    public void hideButtonWithoutPermission() {
-        SessionManagerService session = SessionManagerService.getInstance();
-        boolean canAdd = session.hasPermission(PermissionKey.PRODUCT_INSERT);
-        boolean canEdit = session.hasPermission(PermissionKey.PRODUCT_UPDATE);
-        boolean canDelete = session.hasPermission(PermissionKey.PRODUCT_DELETE);
-
-        if (!canAdd)
-            functionBtns.getChildren().remove(addBtn);
-        if (!canEdit)
-            functionBtns.getChildren().remove(editBtn);
-        if (!canDelete)
-            functionBtns.getChildren().remove(deleteBtn);
+    private void handleDetail() {
+        if (isNotSelectedProduct()) {
+            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
+        new ModalBuilder<ProductModalController>("/GUI/ProductModal.fxml", ProductModalController.class)
+                .setTitle("Xem chi tiết sản phẩm")
+                .modeDetail()
+                .configure(c -> c.setProduct(selectedProduct))
+                .open();
     }
 
     private void handleDelete() {
@@ -318,56 +268,96 @@ public class ProductController implements IController {
         if (updateResult.isSuccess()) {
             NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
             resetFilters();
-            return;
         } else {
             NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-            return;
         }
     }
 
-    private void handleDetail() {
-        if (isNotSelectedProduct()) {
-            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
-            return;
-        }
-        ProductModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/ProductModal.fxml",
-                controller -> {
-                    controller.setTypeModal(2);
-                    controller.setProduct(selectedProduct);
-                },
-                "Xem chi tiết sản phẩm");
+    // =====================
+    // 4️⃣ FILTER HANDLERS
+    // =====================
+    private void handlePriceChange() {
+        try {
+            String startText = txtStartPrice.getText().trim();
+            startPrice = startText.isEmpty() ? null : new BigDecimal(startText);
 
-    }
+            String endText = txtEndPrice.getText().trim();
+            endPrice = endText.isEmpty() ? null : new BigDecimal(endText);
 
-    private void handleAdd() {
-        ProductModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/ProductModal.fxml",
-                controller -> controller.setTypeModal(0),
-                "Thêm sản phẩm");
-        if (modalController != null && modalController.isSaved()) {
-            resetFilters();
-        }
-    }
-
-    private void handleEdit() {
-        if (isNotSelectedProduct()) {
-            NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
-            return;
-        }
-        ProductModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/ProductModal.fxml",
-                controller -> {
-                    controller.setTypeModal(1);
-                    controller.setProduct(selectedProduct);
-                },
-                "Sửa sản phẩm");
-        if (modalController != null && modalController.isSaved()) {
             applyFilters();
+        } catch (NumberFormatException e) {
         }
-        tblProduct.refresh();
     }
 
+    private void handleSearchByChange() {
+        searchBy = cbSearchBy.getValue();
+        applyFilters();
+    }
+
+    private void handleKeywordChange() {
+        keyword = txtSearch.getText().trim();
+        applyFilters();
+    }
+
+    private void handleCategoryFilterChange() {
+        categoryFilter = cbCategoryFilter.getValue();
+        applyFilters();
+    }
+
+    private void handleStatusFilterChange() {
+        statusFilter = cbStatusFilter.getValue();
+        applyFilters();
+    }
+
+    // =====================
+    // 5️⃣ INTERFACE METHODS
+    // =====================
+    @Override
+    public void applyFilters() {
+        int statusId = statusFilter == null ? -1 : statusFilter.getId();
+        int categoryId = categoryFilter == null ? -1 : categoryFilter.getId();
+        tblProduct.setItems(FXCollections.observableArrayList(
+                ProductBUS.getInstance().filterProducts(searchBy, keyword, categoryId,
+                        statusId, startPrice, endPrice)));
+        tblProduct.getSelectionModel().clearSelection();
+    }
+
+    @Override
+    public void resetFilters() {
+        cbSearchBy.getSelectionModel().selectFirst();
+        cbStatusFilter.getSelectionModel().selectFirst();
+        cbCategoryFilter.getSelectionModel().selectFirst();
+        txtSearch.clear();
+        txtStartPrice.clear();
+        txtEndPrice.clear();
+
+        searchBy = "Mã sản phẩm";
+        keyword = "";
+        categoryFilter = null;
+        statusFilter = null;
+        startPrice = null;
+        endPrice = null;
+        applyFilters();
+    }
+
+    @Override
+    public void hideButtonWithoutPermission() {
+        SessionManagerService session = SessionManagerService.getInstance();
+        boolean canAdd = session.hasPermission(PermissionKey.PRODUCT_INSERT);
+        boolean canEdit = session.hasPermission(PermissionKey.PRODUCT_UPDATE);
+        boolean canDelete = session.hasPermission(PermissionKey.PRODUCT_DELETE);
+
+        if (!canAdd)
+            functionBtns.getChildren().remove(addBtn);
+        if (!canEdit)
+            functionBtns.getChildren().remove(editBtn);
+        if (!canDelete)
+            functionBtns.getChildren().remove(deleteBtn);
+    }
+
+    // =====================
+    // 6️⃣ UTILITY METHODS
+    // =====================
     private boolean isNotSelectedProduct() {
         selectedProduct = tblProduct.getSelectionModel().getSelectedItem();
         return selectedProduct == null;

@@ -5,6 +5,7 @@ import BUS.StatusBUS;
 import DTO.CategoryDTO;
 import DTO.StatusDTO;
 import ENUM.StatusType;
+import INTERFACE.IModalController;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
@@ -20,7 +21,7 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 
-public class CategoryModalController {
+public class CategoryModalController implements IModalController {
 
     // FXML Controller
     public Label modalName;

@@ -10,7 +10,6 @@ import DTO.AccountDTO;
 import DTO.BUSResult;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDetailDTO;
-import ENUM.*;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
@@ -117,6 +116,8 @@ public class EmployeeInfoController {
     private StatusBUS statusBUS;
     public SessionManagerService sessionManagerService;
 
+    // ==================== 📍 LIFECYCLE & INITIALIZATION ====================
+
     @FXML
     public void initialize() {
         // Khởi tạo BUS instances một lần
@@ -142,6 +143,8 @@ public class EmployeeInfoController {
         loadEmployeeInfo();
     }
 
+    // ==================== 🎨 UI SETUP & DATA LOADING ====================
+
     /**
      * Thiết lập sự kiện cho các nút
      */
@@ -152,42 +155,38 @@ public class EmployeeInfoController {
     }
 
     /**
-     * PHẦN 1: TẢI THÔNG TIN NHÂN VIÊN
-     * Lấy thông tin nhân viên hiện tại từ session và hiển thị
+     * Tải thông tin nhân viên từ session và hiển thị
      * Sử dụng cache để tránh load lại nhiều lần
      */
     private void loadEmployeeInfo() {
-        try {
-            EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
-            EmployeeDTO employee = employeeBUS.getByIdLocal(sessionManagerService.employeeLoginId());
+        EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
+        EmployeeDTO employee = employeeBUS.getByIdLocal(sessionManagerService.employeeLoginId());
 
-            if (employee == null) {
-                hidePersonalInfo();
-                NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên", AppMessages.DIALOG_TITLE);
-                return;
-            }
+        if (employee == null) {
+            hidePersonalInfo();
+            NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_NOT_FOUND, AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-            // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
-            if (employee.getRoleId() != -1 && employee.getRoleId() == 1) {
-                hidePersonalInfo();
-                return;
-            }
+        // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
+        if (employee.getRoleId() != -1 && employee.getRoleId() == 1) {
+            hidePersonalInfo();
+            return;
+        }
 
-            cachedEmployeeDetail = provider.getDetailById(employee.getId());
+        cachedEmployeeDetail = provider.getDetailById(employee.getId());
 
-            if (cachedEmployeeDetail != null) {
-                displayEmployeeInfo();
-            } else {
-                NotificationUtils.showErrorAlert("Không thể tải thông tin chi tiết nhân viên",
-                        AppMessages.DIALOG_TITLE);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            NotificationUtils.showErrorAlert("Lỗi khi tải thông tin nhân viên", AppMessages.DIALOG_TITLE);
+        if (cachedEmployeeDetail != null) {
+            displayEmployeeInfo();
+        } else {
+            NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_DETAIL_LOAD_ERROR,
+                    AppMessages.DIALOG_TITLE);
         }
     }
 
+    /**
+     * Ẩn thông tin nhân viên khỏi UI
+     */
     private void hidePersonalInfo() {
         vboxPersonalInfo.setVisible(false);
         vboxPersonalInfo.setManaged(false);
@@ -262,101 +261,11 @@ public class EmployeeInfoController {
         }
     }
 
-    /**
-     * PHẦN 2: XỬ LÝ ĐỔI MẬT KHẨU
-     * Kiểm tra và cập nhật mật khẩu tài khoản
-     */
-    private void handleChangePassword() {
-        // ===== BƯỚC 1: KIỂM TRA DỮ LIỆU ĐẦU VÀO =====
-        if (!validatePasswordInput()) {
-            return; // Nếu validation thất bại, dừng lại
-        }
-
-        AccountDTO account = new AccountDTO(accountBUS.getByIdLocal(sessionManagerService.employeeLoginId()));
-        account.setPassword(txtNewPassword.getText().trim());
-        BUSResult updateResult = SecureExecutor
-                .executePublicBUSResult(
-                        () -> accountBUS.changePasswordBySelf(account, txtOldPassword.getText().trim()));
-
-        if (updateResult.isSuccess()) {
-            NotificationUtils.showInfoAlert(AppMessages.ACCOUNT_PASSWORD_CHANGE_SUCCESS,
-                    AppMessages.DIALOG_TITLE);
-            handleClear(); // Xóa form sau khi đổi thành công
-        } else {
-            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-        }
-    }
+    // ==================== 👤 EMPLOYEE INFO HANDLERS ====================
 
     /**
-     * KIỂM TRA DỮ LIỆU ĐẦU VÀO CHO FORM ĐỔI MẬT KHẨU
-     * Các điều kiện cần kiểm tra:
-     * - Mật khẩu cũ không được để trống
-     * - Mật khẩu mới không được để trống
-     * - Xác nhận mật khẩu không được để trống
-     * - Mật khẩu mới và xác nhận phải giống nhau
-     * - Mật khẩu mới phải khác mật khẩu cũ
-     */
-    private boolean validatePasswordInput() {
-        boolean isValid = true;
-        String oldPassword = txtOldPassword.getText().trim();
-        String newPassword = txtNewPassword.getText().trim();
-        String confirmPassword = txtConfirmPassword.getText().trim();
-
-        ValidationUtils validator = ValidationUtils.getInstance();
-
-        // 1. Kiểm tra mật khẩu cũ
-        if (oldPassword.isEmpty()) {
-            NotificationUtils.showErrorAlert("Vui lòng nhập mật khẩu hiện tại.", "Thông báo");
-            clearAndFocus(txtOldPassword);
-            isValid = false;
-        }
-
-        // 2. Kiểm tra mật khẩu mới (Bắt buộc & Định dạng)
-        if (isValid && newPassword.isEmpty()) {
-            NotificationUtils.showErrorAlert("Mật khẩu mới không được để trống.", "Thông báo");
-            clearAndFocus(txtNewPassword);
-            isValid = false;
-        } else if (isValid && !validator.validatePassword(newPassword, 6, 255)) {
-            NotificationUtils.showErrorAlert("Mật khẩu mới không hợp lệ (tối thiểu 6 ký tự).", "Thông báo");
-            clearAndFocus(txtNewPassword);
-            isValid = false;
-        }
-
-        // 3. Kiểm tra xác nhận mật khẩu
-        if (isValid && confirmPassword.isEmpty()) {
-            NotificationUtils.showErrorAlert("Vui lòng xác nhận mật khẩu mới.", "Thông báo");
-            clearAndFocus(txtConfirmPassword);
-            isValid = false;
-        } else if (isValid && !confirmPassword.equals(newPassword)) {
-            NotificationUtils.showErrorAlert("Xác nhận mật khẩu không trùng khớp.", "Thông báo");
-            clearAndFocus(txtConfirmPassword);
-            isValid = false;
-        }
-
-        // 4. Kiểm tra logic nghiệp vụ: Mới phải khác Cũ
-        if (isValid && newPassword.equals(oldPassword)) {
-            NotificationUtils.showErrorAlert("Mật khẩu mới phải khác mật khẩu cũ.", "Thông báo");
-            clearAndFocus(txtNewPassword);
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
-    /**
-     * PHẦN 3: XỬ LÝ XÓA FORM
-     * Xóa tất cả dữ liệu trong form đổi mật khẩu
-     */
-    private void handleClear() {
-        txtOldPassword.clear();
-        txtNewPassword.clear();
-        txtConfirmPassword.clear();
-        txtOldPassword.requestFocus();
-    }
-
-    /**
-     * PHẦN 4: XỬ LÝ CẬP NHẬT THÔNG TIN NHÂN VIÊN
-     * Cập nhật thông tin cơ bản của nhân viên (tên, điện thoại, email, etc.)
+     * Xử lý cập nhật thông tin cá nhân của nhân viên
+     * Validate input trước khi gửi request cập nhật
      */
     private void handleUpdateInfo() {
         // Validate input trước
@@ -374,13 +283,12 @@ public class EmployeeInfoController {
         employee.setDateOfBirth(dpDateOfBirth.getValue());
         employee.setPhone(lblPhone.getText().trim());
         employee.setEmail(lblEmail.getText().trim());
-        employee.setGender(lblGender.getText().trim());
 
         BUSResult updateResult = SecureExecutor
                 .executePublicBUSResult(() -> employeeBUS.updatePersonalInfoBySelf(employee));
 
         if (updateResult.isSuccess()) {
-            NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+            NotificationUtils.showInfoAlert(AppMessages.EMPLOYEE_PERSONAL_UPDATE_SUCCESS, AppMessages.DIALOG_TITLE);
             sessionManagerService.updateCurrentEmployee();
             loadEmployeeInfo(); // Refresh UI
         } else {
@@ -389,8 +297,8 @@ public class EmployeeInfoController {
     }
 
     /**
-     * VALIDATE TỪNG FIELD CỦA FORM CẬP NHẬT THÔNG TIN
-     * Kiểm tra và trả về thông báo lỗi cụ thể cho từng field
+     * Validate các field của form cập nhật thông tin
+     * Kiểm tra validation cho: Họ đệm, Tên, Ngày sinh, Điện thoại, Email, Giới tính
      * 
      * @return null nếu hợp lệ, message cụ thể nếu lỗi
      */
@@ -451,25 +359,116 @@ public class EmployeeInfoController {
             return "Email không hợp lệ (VD: user@example.com).";
         }
 
-        // 6. Kiểm tra Giới tính
-        String gender = lblGender.getText().trim();
-        if (gender.isEmpty()) {
-            focus(lblGender);
-            return "Giới tính không được để trống.";
-        }
-        if (!gender.equals("Nam") && !gender.equals("Nữ") && !gender.equals("Khác")) {
-            focus(lblGender);
-            return "Giới tính không hợp lệ (Nam, Nữ, hoặc Khác).";
-        }
-
         return null; // Hợp lệ
     }
 
+    // ==================== 🔐 PASSWORD CHANGE HANDLERS ====================
+
+    /**
+     * Xử lý thay đổi mật khẩu
+     * Kiểm tra dữ liệu đầu vào, validate, rồi cập nhật mật khẩu
+     */
+    private void handleChangePassword() {
+        // ===== BƯỚC 1: KIỂM TRA DỮ LIỆU ĐẦU VÀO =====
+        if (!validatePasswordInput()) {
+            return; // Nếu validation thất bại, dừng lại
+        }
+
+        AccountDTO account = new AccountDTO(accountBUS.getByIdLocal(sessionManagerService.employeeLoginId()));
+        account.setPassword(txtNewPassword.getText().trim());
+        BUSResult updateResult = SecureExecutor
+                .executePublicBUSResult(
+                        () -> accountBUS.changePasswordBySelf(account, txtOldPassword.getText().trim()));
+
+        if (updateResult.isSuccess()) {
+            NotificationUtils.showInfoAlert(AppMessages.ACCOUNT_PASSWORD_CHANGE_SUCCESS,
+                    AppMessages.DIALOG_TITLE);
+            handleClear(); // Xóa form sau khi đổi thành công
+        } else {
+            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+        }
+    }
+
+    /**
+     * Validate dữ liệu đầu vào cho form đổi mật khẩu
+     * Các điều kiện kiểm tra:
+     * - Mật khẩu cũ không được để trống
+     * - Mật khẩu mới không được để trống và hợp lệ
+     * - Xác nhận mật khẩu không được để trống và khớp với mật khẩu mới
+     * - Mật khẩu mới phải khác mật khẩu cũ
+     * 
+     * @return true nếu hợp lệ, false nếu lỗi
+     */
+    private boolean validatePasswordInput() {
+        boolean isValid = true;
+        String oldPassword = txtOldPassword.getText().trim();
+        String newPassword = txtNewPassword.getText().trim();
+        String confirmPassword = txtConfirmPassword.getText().trim();
+
+        ValidationUtils validator = ValidationUtils.getInstance();
+
+        // 1. Kiểm tra mật khẩu cũ
+        if (oldPassword.isEmpty()) {
+            NotificationUtils.showErrorAlert("Vui lòng nhập mật khẩu hiện tại.", "Thông báo");
+            clearAndFocus(txtOldPassword);
+            isValid = false;
+        }
+
+        // 2. Kiểm tra mật khẩu mới (Bắt buộc & Định dạng)
+        if (isValid && newPassword.isEmpty()) {
+            NotificationUtils.showErrorAlert("Mật khẩu mới không được để trống.", "Thông báo");
+            clearAndFocus(txtNewPassword);
+            isValid = false;
+        } else if (isValid && !validator.validatePassword(newPassword, 6, 255)) {
+            NotificationUtils.showErrorAlert("Mật khẩu mới không hợp lệ (tối thiểu 6 ký tự).", "Thông báo");
+            clearAndFocus(txtNewPassword);
+            isValid = false;
+        }
+
+        // 3. Kiểm tra xác nhận mật khẩu
+        if (isValid && confirmPassword.isEmpty()) {
+            NotificationUtils.showErrorAlert("Vui lòng xác nhận mật khẩu mới.", "Thông báo");
+            clearAndFocus(txtConfirmPassword);
+            isValid = false;
+        } else if (isValid && !confirmPassword.equals(newPassword)) {
+            NotificationUtils.showErrorAlert("Xác nhận mật khẩu không trùng khớp.", "Thông báo");
+            clearAndFocus(txtConfirmPassword);
+            isValid = false;
+        }
+
+        // 4. Kiểm tra logic nghiệp vụ: Mới phải khác Cũ
+        if (isValid && newPassword.equals(oldPassword)) {
+            NotificationUtils.showErrorAlert("Mật khẩu mới phải khác mật khẩu cũ.", "Thông báo");
+            clearAndFocus(txtNewPassword);
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    /**
+     * Xóa tất cả dữ liệu trong form đổi mật khẩu
+     */
+    private void handleClear() {
+        txtOldPassword.clear();
+        txtNewPassword.clear();
+        txtConfirmPassword.clear();
+        txtOldPassword.requestFocus();
+    }
+
+    // ==================== 🛠️ UTILITY METHODS ====================
+
+    /**
+     * Xóa content của TextField và focus vào nó
+     */
     private void clearAndFocus(TextField textField) {
         textField.clear();
         textField.requestFocus();
     }
 
+    /**
+     * Focus vào một TextField cụ thể
+     */
     private void focus(TextField textField) {
         textField.requestFocus();
     }
