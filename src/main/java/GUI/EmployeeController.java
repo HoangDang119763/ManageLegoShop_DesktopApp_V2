@@ -20,6 +20,7 @@ import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
+import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -255,17 +256,14 @@ public class EmployeeController implements IController {
         boolean canEdit = canUpdatePersonal || canUpdateJob || canUpdatePayrollInfo || canUpdateAccountStatus
                 || canResetAccountPassword;
 
-        detailBtn.setVisible(canViewDetail);
-        detailBtn.setManaged(canViewDetail);
-
-        addBtn.setVisible(canAdd);
-        addBtn.setManaged(canAdd);
-
-        editBtn.setVisible(canEdit);
-        editBtn.setManaged(canEdit);
-
-        deleteBtn.setVisible(canDelete);
-        deleteBtn.setManaged(canDelete);
+        if (!canViewDetail)
+            UiUtils.gI().setVisibleItem(detailBtn);
+        if (!canAdd)
+            UiUtils.gI().setVisibleItem(addBtn);
+        if (!canEdit)
+            UiUtils.gI().setVisibleItem(editBtn);
+        if (!canDelete)
+            UiUtils.gI().setVisibleItem(deleteBtn);
     }
 
     public void handleAddBtn() {

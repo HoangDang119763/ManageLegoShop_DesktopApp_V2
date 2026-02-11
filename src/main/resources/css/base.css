@@ -135,7 +135,7 @@
     /* Màu nền */
     -fx-border-color: #58c9c9;
     /* Viền */
-
+-fx-cursor: hand;
 }
 
 .combo-box .list-cell:hover {
@@ -143,6 +143,7 @@
     /* Màu nền khi hover */
     -fx-text-fill: white;
     /* Màu chữ khi hover */
+    -fx-cursor: hand;
 }
 
 .combo-box .list-view .list-cell:selected {
@@ -150,6 +151,7 @@
     /* Màu nền khi lựa chọn */
     -fx-text-fill: white;
     /* Màu chữ khi lựa chọn */
+    -fx-cursor: hand;
 }
 
 .combo-box .arrow-button {

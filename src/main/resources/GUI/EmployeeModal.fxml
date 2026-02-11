@@ -107,7 +107,7 @@
                                                 <VBox spacing="4.0">
                                                     <Label styleClass="label-s" text="Trạng thái tài khoản" textFill="#30bac4" />
                                                     <ComboBox fx:id="cbAccountStatus" prefHeight="35.0" prefWidth="350.0" />
-                                                    <HBox alignment="CENTER_LEFT" spacing="5.0">
+                                                    <HBox fx:id="detailPassword" alignment="CENTER_LEFT" spacing="5.0">
                                                         <children>
                                                             <FontAwesomeIcon fill="#e67e22" glyphName="INFO_CIRCLE" />
                                                             <Label text="Mật khẩu reset là: 123456" textFill="#e67e22"><font><Font name="System Italic" size="12.0" /></font></Label>
@@ -187,9 +187,9 @@
                                                     </placeholder>
                                                     <columns>
                                                         <TableColumn fx:id="colEffectiveDate" prefWidth="110.0" text="Ngày áp dụng" />
-                                                        <TableColumn fx:id="colDepartment" prefWidth="160.0" text="Phòng ban" />
-                                                        <TableColumn fx:id="colRole" prefWidth="160.0" text="Chức vụ" />
-                                                        <TableColumn fx:id="colCreatedAt" prefWidth="190.0" text="Ngày tạo" />
+                                                        <TableColumn fx:id="colDepartment" prefWidth="201.59999084472656" text="Phòng ban" />
+                                                        <TableColumn fx:id="colRole" prefWidth="148.79998779296875" text="Chức vụ" />
+                                                        <TableColumn fx:id="colCreatedAt" prefWidth="171.19989013671875" text="Ngày tạo" />
                                                     </columns>
                                                 </TableView>
                                                 <HBox alignment="CENTER_RIGHT" minHeight="45.0">

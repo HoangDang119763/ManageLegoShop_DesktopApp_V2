@@ -1,3 +1,4 @@
+
 package UTILS;
 
 import GUI.LoginController;
@@ -11,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -24,14 +26,17 @@ public class UiUtils {
     private static final UiUtils INSTANCE = new UiUtils();
     private double xOffset = 0;
     private double yOffset = 0;
+
     private UiUtils() {
 
     }
+
     public static UiUtils gI() {
         return INSTANCE;
     }
 
-    public <S, T> void addTooltipToColumn(TableColumn<S, T> column, int maxLength, Function<T, String> toStringFunction) {
+    public <S, T> void addTooltipToColumn(TableColumn<S, T> column, int maxLength,
+            Function<T, String> toStringFunction) {
         column.setCellFactory(tc -> new TableCell<>() {
             private final Tooltip tooltip = new Tooltip();
 
@@ -40,7 +45,7 @@ public class UiUtils {
                 tooltip.setShowDelay(Duration.millis(100));
                 tooltip.setHideDelay(Duration.millis(50));
                 tooltip.setWrapText(true); // Cho phép hiển thị nhiều dòng nếu cần
-                tooltip.setMaxWidth(300);  // Giới hạn độ rộng tooltip
+                tooltip.setMaxWidth(300); // Giới hạn độ rộng tooltip
             }
 
             @Override
@@ -51,7 +56,8 @@ public class UiUtils {
                     setTooltip(null);
                 } else {
                     String text = toStringFunction.apply(item);
-                    if (text == null) text = ""; // Tránh lỗi null
+                    if (text == null)
+                        text = ""; // Tránh lỗi null
 
                     if (text.length() > maxLength) {
                         setText(text.substring(0, maxLength) + "...");
@@ -66,8 +72,141 @@ public class UiUtils {
         });
     }
 
+    public void setReadOnlyItem(Control control) {
+        control.setMouseTransparent(true);
+        control.setFocusTraversable(false);
+    }
+
+    public void setVisibleItem(Control control) {
+        control.setVisible(false);
+        control.setManaged(false);
+    }
+
+    public void setVisibleItem(HBox control) {
+        control.setVisible(false);
+        control.setManaged(false);
+    }
+
+    public void setReadOnlyComboBox(ComboBox<?> comboBox) {
+        comboBox.addEventFilter(javafx.scene.input.MouseEvent.ANY, e -> {
+            if (e.getEventType() == javafx.scene.input.MouseEvent.MOUSE_PRESSED ||
+                    e.getEventType() == javafx.scene.input.MouseEvent.MOUSE_RELEASED ||
+                    e.getEventType() == javafx.scene.input.MouseEvent.MOUSE_CLICKED) {
+                e.consume();
+            }
+        });
+
+        comboBox.addEventFilter(javafx.scene.input.ScrollEvent.ANY, javafx.event.Event::consume);
+
+        comboBox.addEventFilter(javafx.scene.input.KeyEvent.ANY, e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.SPACE || e.getCode() == javafx.scene.input.KeyCode.ENTER) {
+                e.consume();
+            }
+        });
+        comboBox.setFocusTraversable(false);
+    }
+
+    public void setReadonlyBtn(Button button) {
+        button.setVisible(false);
+        button.setManaged(false);
+    }
+
     public <S> void addTooltipToColumn(TableColumn<S, String> column, int maxLength) {
         addTooltipToColumn(column, maxLength, Function.identity());
+    }
+
+    public <T> void addTooltipToComboBox(ComboBox<T> comboBox, int maxLength, Function<T, String> toStringFunction) {
+        comboBox.setCellFactory(lv -> new ListCell<T>() {
+            private final Tooltip tooltip = new Tooltip();
+
+            {
+                tooltip.setShowDelay(Duration.millis(100));
+                tooltip.setHideDelay(Duration.millis(50));
+                tooltip.setWrapText(true);
+                tooltip.setMaxWidth(300);
+            }
+
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setTooltip(null);
+                } else {
+                    String text = toStringFunction.apply(item);
+                    if (text == null)
+                        text = "";
+
+                    if (text.length() > maxLength) {
+                        setText(text.substring(0, maxLength) + "...");
+                        tooltip.setText(text);
+                        setTooltip(tooltip);
+                    } else {
+                        setText(text);
+                        setTooltip(null);
+                    }
+                }
+            }
+        });
+    }
+
+    public <T> void addTooltipToComboBoxValue(ComboBox<T> comboBox, int maxLength,
+            Function<T, String> toStringFunction) {
+        // 1. Vẫn dùng setButtonCell để lo việc hiển thị dấu "..." trên nút
+        comboBox.setButtonCell(new ListCell<T>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    String text = toStringFunction.apply(item);
+                    if (text != null && text.length() > maxLength) {
+                        setText(text.substring(0, maxLength) + "...");
+                    } else {
+                        setText(text);
+                    }
+                }
+            }
+        });
+
+        // 2. Lắng nghe thay đổi giá trị để gắn Tooltip cho toàn bộ ComboBox
+        comboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            updateComboBoxTooltip(comboBox, newVal, maxLength, toStringFunction);
+        });
+
+        // 3. Gọi cập nhật ngay lập tức cho trường hợp ComboBox đã có giá trị sẵn (lúc
+        // load dữ liệu)
+        updateComboBoxTooltip(comboBox, comboBox.getValue(), maxLength, toStringFunction);
+    }
+
+    /**
+     * Hàm hỗ trợ cập nhật Tooltip cho ComboBox node
+     */
+    private <T> void updateComboBoxTooltip(ComboBox<T> comboBox, T item, int maxLength,
+            Function<T, String> toStringFunction) {
+        if (item == null) {
+            comboBox.setTooltip(null);
+            return;
+        }
+
+        String fullText = toStringFunction.apply(item);
+        if (fullText != null && fullText.length() > maxLength) {
+            Tooltip tooltip = new Tooltip(fullText);
+            tooltip.setShowDelay(javafx.util.Duration.millis(150));
+            tooltip.setHideDelay(javafx.util.Duration.millis(50));
+            tooltip.setWrapText(true);
+            tooltip.setMaxWidth(300);
+
+            // Gán Tooltip cho chính ComboBox thay vì Cell
+            comboBox.setTooltip(tooltip);
+        } else {
+            comboBox.setTooltip(null);
+        }
+    }
+
+    public <T> void addTooltipToComboBox(ComboBox<T> comboBox, int maxLength) {
+        addTooltipToComboBox(comboBox, maxLength, T::toString);
     }
 
     public void makeWindowDraggable(Parent root, Stage stage) {
@@ -149,7 +288,6 @@ public class UiUtils {
             FXMLLoader fxmlLoader = new FXMLLoader(LoginController.class.getResource(fxmlFile));
             Parent root = fxmlLoader.load(); // Gọi .load() để lấy root từ FXML
 
-
             Stage stage = new Stage();
             Scene scene = new Scene(root);
 
@@ -168,7 +306,7 @@ public class UiUtils {
         }
     }
 
-//    for show double form
+    // for show double form
     public void openStage(String fxmlFile, String title, Stage owner) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(LoginController.class.getResource(fxmlFile));
@@ -194,7 +332,5 @@ public class UiUtils {
             e.printStackTrace();
         }
     }
-
-
 
 }

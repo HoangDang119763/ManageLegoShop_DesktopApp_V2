@@ -357,14 +357,12 @@ public class ProductController implements IController {
         boolean canEdit = session.hasPermission(PermissionKey.PRODUCT_UPDATE);
         boolean canDelete = session.hasPermission(PermissionKey.PRODUCT_DELETE);
 
-        addBtn.setVisible(canAdd);
-        addBtn.setManaged(canAdd);
-
-        editBtn.setVisible(canEdit);
-        editBtn.setManaged(canEdit);
-
-        deleteBtn.setVisible(canDelete);
-        deleteBtn.setManaged(canDelete);
+        if (!canAdd)
+            UiUtils.gI().setVisibleItem(addBtn);
+        if (!canEdit)
+            UiUtils.gI().setVisibleItem(editBtn);
+        if (!canDelete)
+            UiUtils.gI().setVisibleItem(deleteBtn);
     }
 
     // =====================
