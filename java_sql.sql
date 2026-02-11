@@ -608,18 +608,19 @@ CREATE TABLE `time_sheet` (
   `check_in` DATETIME NOT NULL,  -- Ngày và giờ vào ca
   `check_out` DATETIME DEFAULT NULL, -- Ngày và giờ ra ca (có thể NULL nếu chưa ra)
   `work_hours` DECIMAL(10,2) DEFAULT 0,
+  `ot_hours` DECIMAL(5,2) DEFAULT 0,
   PRIMARY KEY (`id`),
   CONSTRAINT `time_sheet_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- Seed cho mỗi nhân viên 1 ngày làm việc mẫu 8 tiếng để test
-INSERT INTO `time_sheet` (`employee_id`, `check_in`, `check_out`, `work_hours`)
-SELECT id, '2026-02-01 08:00:00', '2026-02-01 17:00:00', 8.00 FROM `employee`;
+INSERT INTO `time_sheet` (`employee_id`, `check_in`, `check_out`, `work_hours`, `ot_hours`)
+SELECT id, '2026-02-01 08:00:00', '2026-02-01 17:00:00', 8.00, 0.00 FROM `employee`;
 
 -- Thêm một ngày OT (làm 10 tiếng) cho nhân viên ID 2 và 3 để test Overtime
-INSERT INTO `time_sheet` (`employee_id`, `check_in`, `check_out`, `work_hours`) VALUES 
-(2, '2026-02-02 08:00:00', '2026-02-02 19:00:00', 10.00),
-(3, '2026-02-02 08:00:00', '2026-02-02 20:00:00', 11.00);
+INSERT INTO `time_sheet` (`employee_id`, `check_in`, `check_out`, `work_hours`, `ot_hours`) VALUES 
+(2, '2026-02-02 08:00:00', '2026-02-02 19:00:00', 10.00, 2.00),
+(3, '2026-02-02 08:00:00', '2026-02-02 20:00:00', 11.00, 3.00);
 
 CREATE TABLE `profit_stat` (
   `id` INT NOT NULL AUTO_INCREMENT,
