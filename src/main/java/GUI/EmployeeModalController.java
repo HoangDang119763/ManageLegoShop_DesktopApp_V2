@@ -1,11 +1,13 @@
 package GUI;
 
+import BUS.AccountBUS;
 import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
 import BUS.EmploymentHistoryBUS;
 import BUS.RoleBUS;
 import BUS.SalaryBUS;
 import BUS.StatusBUS;
+import DTO.AccountDTO;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDTO;
 import DTO.EmployeeDetailDTO;
@@ -21,11 +23,18 @@ import PROVIDER.EmploymentHistoryViewProvider;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import lombok.Getter;
 
@@ -81,6 +90,8 @@ public class EmployeeModalController implements IModalController {
     private Button btnResetPassword;
     @FXML
     private Button saveAccountBtn;
+    @FXML
+    private HBox detailPassword;
 
     // ==================== TAB 3: JOB INFO ====================
     @FXML
@@ -146,6 +157,7 @@ public class EmployeeModalController implements IModalController {
     private SessionManagerService session;
     private EmploymentHistoryBUS employmentHistoryBUS;
     private ValidationUtils validationUtils;
+    private AccountBUS accountBUS;
 
     @FXML
     public void initialize() {
@@ -158,7 +170,7 @@ public class EmployeeModalController implements IModalController {
         session = SessionManagerService.getInstance();
         employmentHistoryBUS = EmploymentHistoryBUS.getInstance();
         validationUtils = ValidationUtils.getInstance();
-
+        accountBUS = AccountBUS.getInstance();
         // Load initial data
         loadGenderComboBox();
         loadDepartmentComboBox();
@@ -300,10 +312,18 @@ public class EmployeeModalController implements IModalController {
                         .ifPresent(item -> cbAccountStatus.getSelectionModel().select(item));
             }
         }
-        lblLastLogin.setText("Chưa có lần đăng nhập"); // TODO: Load from Account table if available
-
+        AccountDTO account = accountBUS.getByIdLocal(empDetail.getAccountId());
+        if (account != null) {
+            lblLastLogin.setText(
+                    account.getLastLogin() != null ? validationUtils.formatDateTimeWithHour(account.getLastLogin())
+                            : "Chưa có lần đăng nhập");
+        } else {
+            lblLastLogin.setText("Chưa có lần đăng nhập");
+        }
         // tab3 Job Info
-        if (empDetail.getDepartmentId() != null) {
+        if (empDetail.getDepartmentId() != null)
+
+        {
             DepartmentDTO dept = departmentBUS.getByIdLocal(empDetail.getDepartmentId());
             cbDepartment.getSelectionModel().select(dept);
         }
@@ -318,6 +338,7 @@ public class EmployeeModalController implements IModalController {
         // Load Job History with department and role names
         ArrayList<EmploymentHistoryDetailDTO> jobHistory = EmploymentHistoryViewProvider.getInstance()
                 .getJobHistoryByEmployeeIdDecrease(empDetail.getEmployeeId());
+
         setupJobHistoryTable();
         if (jobHistory != null)
             tblJobHistory.setItems(FXCollections.observableArrayList(jobHistory));
@@ -333,7 +354,7 @@ public class EmployeeModalController implements IModalController {
 
         // Tab4 Payroll & Benefits
         cbSocialIns.setSelected(empDetail.isSocialInsurance());
-        cbHealthIns.setSelected(empDetail.getHealthInsCode() != null);
+        cbHealthIns.setSelected(empDetail.isHealthInsurance());
         cbUnemploymentIns.setSelected(empDetail.isUnemploymentInsurance());
         cbPersonalTax.setSelected(empDetail.isPersonalIncomeTax());
         cbTransportSupport.setSelected(empDetail.isTransportationSupport());
@@ -350,39 +371,43 @@ public class EmployeeModalController implements IModalController {
             lblUpdatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(empDetail.getUpdatedAt()));
         }
 
+        UiUtils.gI().addTooltipToComboBoxValue(cbAccountStatus, 25, as -> as.getDescription());
+        UiUtils.gI().addTooltipToComboBoxValue(cbDepartment, 15, d -> d.getName());
+        UiUtils.gI().addTooltipToComboBoxValue(cbRole, 15, r -> r.getName());
+        UiUtils.gI().addTooltipToComboBoxValue(cbStatus, 15, s -> s.getDescription());
     }
 
     private void setReadOnly() {
-        txtFirstName.setDisable(true);
-        txtLastName.setDisable(true);
-        dpDateOfBirth.setDisable(true);
-        cbGender.setDisable(true);
-        txtPhone.setDisable(true);
-        txtEmail.setDisable(true);
-        cbDepartment.setDisable(true);
-        cbRole.setDisable(true);
-        txtNumDependents.setDisable(true);
-        cbStatus.setDisable(true);
-        txtHealthInsCode.setDisable(true);
-        cbSocialIns.setDisable(true);
-        cbHealthIns.setDisable(true);
-        cbUnemploymentIns.setDisable(true);
-        cbPersonalTax.setDisable(true);
-        cbTransportSupport.setDisable(true);
-        cbAccommodationSupport.setDisable(true);
+        // Disable all input controls
+        txtFirstName.setEditable(false);
+        txtLastName.setEditable(false);
+        txtPhone.setEditable(false);
+        txtEmail.setEditable(false);
+        txtNumDependents.setEditable(false);
+        txtHealthInsCode.setEditable(false);
 
+        UiUtils.gI().setReadOnlyComboBox(cbAccountStatus);
+        UiUtils.gI().setReadOnlyItem(dpDateOfBirth);
+        UiUtils.gI().setReadOnlyComboBox(cbGender);
+        UiUtils.gI().setReadOnlyComboBox(cbDepartment);
+        UiUtils.gI().setReadOnlyComboBox(cbRole);
+        UiUtils.gI().setReadOnlyComboBox(cbStatus);
+        UiUtils.gI().setReadOnlyItem(cbSocialIns);
+        UiUtils.gI().setReadOnlyItem(cbHealthIns);
+        UiUtils.gI().setReadOnlyItem(cbUnemploymentIns);
+        UiUtils.gI().setReadOnlyItem(cbPersonalTax);
+        UiUtils.gI().setReadOnlyItem(cbTransportSupport);
+        UiUtils.gI().setReadOnlyItem(cbAccommodationSupport);
+        UiUtils.gI().setVisibleItem(detailPassword);
         // Hide all save buttons
-        savePersonalBtn.setVisible(false);
-        savePersonalBtn.setManaged(false);
-        saveAccountBtn.setVisible(false);
-        saveAccountBtn.setManaged(false);
-        saveJobBtn.setVisible(false);
-        saveJobBtn.setManaged(false);
-        savePayrollBtn.setVisible(false);
-        savePayrollBtn.setManaged(false);
-        btnResetPassword.setVisible(false);
-        btnResetPassword.setManaged(false);
+        UiUtils.gI().setReadonlyBtn(savePersonalBtn);
+        UiUtils.gI().setReadonlyBtn(saveAccountBtn);
+        UiUtils.gI().setReadonlyBtn(saveJobBtn);
+        UiUtils.gI().setReadonlyBtn(savePayrollBtn);
+        UiUtils.gI().setReadonlyBtn(btnResetPassword);
     }
+
+    // ...existing code...
 
     private void handleSave() {
         // Validation

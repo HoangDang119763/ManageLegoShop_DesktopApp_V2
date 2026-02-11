@@ -69,6 +69,10 @@ public class EmployeeDetailDTO {
         return firstName + " " + lastName;
     }
 
+    public boolean isHealthInsurance() {
+        return healthInsCode != null && !healthInsCode.isEmpty();
+    }
+
     @Override
     public String toString() {
         return "EmployeeDetailDTO{" +
