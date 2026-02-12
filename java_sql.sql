@@ -57,11 +57,11 @@ INSERT INTO `status` (`name`, `description`, `type`) VALUES
 ('Active', 'Hoạt động', 'CUSTOMER'),
 ('Inactive', 'Ngưng tương tác', 'CUSTOMER'),
 -- Nhóm Hóa Đơn - Invoice 
-('Completed', 'Giao dịch thành công', 'INVOICE'),
-('Canceled', 'Giao dịch đã bị hủy bỏ', 'INVOICE'),
+('Completed', 'Hoàn thành', 'INVOICE'),
+('Canceled', 'Hủy bỏ', 'INVOICE'),
 -- Nhóm Phiếu nhập - Import 
-('Completed', 'Giao dịch thành công', 'IMPORT'),
-('Canceled', 'Giao dịch đã bị hủy bỏ', 'IMPORT'),
+('Completed', 'Hoàn thành', 'IMPORT'),
+('Canceled', 'Hủy bỏ', 'IMPORT'),
 -- Nhóm Xin nghỉ phép - Leave Request
 ('Pending', 'Đơn đang chờ quản lý phê duyệt', 'LEAVE_REQUEST'),
 ('Approved', 'Đơn đã được chấp thuận', 'LEAVE_REQUEST'),

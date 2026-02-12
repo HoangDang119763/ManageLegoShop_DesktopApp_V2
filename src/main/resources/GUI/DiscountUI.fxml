@@ -119,24 +119,24 @@
 
                                        <children>
                                           <Label styleClass="label-s" text="Mã khuyến mãi:" GridPane.rowIndex="0" />
-                                          <TextField fx:id="code" editable="false" prefHeight="32.0" prefWidth="188.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="0" />
+                                          <TextField fx:id="code" editable="false" prefHeight="32.0" prefWidth="188.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="0" />
 
                                           <Label styleClass="label-s" text="Tên chương trình:" GridPane.rowIndex="1" />
-                                          <TextField fx:id="name" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1" />
+                                          <TextField fx:id="name" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1" />
 
                                           <Label styleClass="label-s" text="Kiểu KM:" GridPane.rowIndex="2" />
-                                          <TextField fx:id="type" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
+                                          <TextField fx:id="type" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
 
                                           <Label styleClass="label-s" text="Ngày hiệu lực:" GridPane.rowIndex="3" />
                                           <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3">
                                              <children>
-                                                <TextField fx:id="startDate" editable="false" minWidth="89.6" prefHeight="32.0" prefWidth="90.0" text="01/01/2024">
+                                                <TextField fx:id="startDate" editable="false" minWidth="89.6" prefHeight="32.0" prefWidth="90.0">
                                                    <styleClass>
                                                       <String fx:value="textfield" />
                                                       <String fx:value="readonly" />
                                                    </styleClass></TextField>
                                                 <FontAwesomeIcon fill="#95a5a6" glyphName="ARROW_RIGHT" size="0.9em" />
-                                                <TextField fx:id="endDate" editable="false" minWidth="89.6" prefHeight="32.0" prefWidth="89.6" text="01/01/2024">
+                                                <TextField fx:id="endDate" editable="false" minWidth="89.6" prefHeight="32.0" prefWidth="89.6">
                                                    <styleClass>
                                                       <String fx:value="textfield" />
                                                       <String fx:value="readonly" />

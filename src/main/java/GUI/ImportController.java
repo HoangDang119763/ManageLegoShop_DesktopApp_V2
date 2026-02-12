@@ -2,15 +2,11 @@
 package GUI;
 
 import BUS.DetailImportBUS;
-import BUS.DetailInvoiceBUS;
 import BUS.ImportBUS;
-import BUS.InvoiceBUS;
+import BUS.StatusBUS;
 import DTO.DetailImportDTO;
-import DTO.DetailInvoiceDTO;
 import DTO.ImportDTO;
-import DTO.InvoiceDTO;
 import INTERFACE.IController;
-import SERVICE.PrintService;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
@@ -20,6 +16,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 
 public class ImportController implements IController {
     @FXML
@@ -35,6 +32,8 @@ public class ImportController implements IController {
     @FXML
     private TableColumn<ImportDTO, String> tlb_col_totalPrice;
     @FXML
+    private TableColumn<ImportDTO, String> tlb_col_status;
+    @FXML
     private TableView<DetailImportDTO> tblDetailImport;
     @FXML
     private TableColumn<DetailImportDTO, String> tlb_col_productId;
@@ -45,74 +44,97 @@ public class ImportController implements IController {
     @FXML
     private TableColumn<DetailImportDTO, String> tlb_col_totalPriceP;
     @FXML
-    private Label id;
+    private TextField id;
 
     @FXML
-    private Label createDate;
+    private TextField createDate;
 
     @FXML
-    private Label employeeId;
+    private TextField employeeId;
 
     @FXML
-    private Label supplierId;
+    private TextField supplierId;
 
     @FXML
-    private Label totalPrice;
+    private TextField totalPrice;
+
+    @FXML
+    private TextField status;
+    @FXML
+    private HBox functionBtns;
+    @FXML
+    private Button addImportBtn;
+    @FXML
+    private Button exportPdf;
     @FXML
     private Button refreshBtn;
+    @FXML
+    private Button advanceSearchBtn;
     @FXML
     private TextField txtSearch;
     private String keyword = "";
     private ImportDTO selectedImport;
+    private StatusBUS statusBUS;
+    private ImportBUS importBUS;
+    private DetailImportBUS detailImportBUS;
 
     @FXML
     public void initialize() {
-        if (ImportBUS.getInstance().isLocalEmpty()) ImportBUS.getInstance().loadLocal();
-        if (DetailImportBUS.getInstance().isLocalEmpty()) DetailImportBUS.getInstance().loadLocal();
+        statusBUS = StatusBUS.getInstance();
+        importBUS = ImportBUS.getInstance();
+        detailImportBUS = DetailImportBUS.getInstance();
+
+        if (importBUS.isLocalEmpty())
+            importBUS.loadLocal();
+        if (detailImportBUS.isLocalEmpty())
+            detailImportBUS.loadLocal();
+        if (statusBUS.isLocalEmpty())
+            statusBUS.loadLocal();
+
         tblImport.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-//        tblDetailImport.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblImport.getSelectionModel().clearSelection());
         Platform.runLater(() -> tblDetailImport.getSelectionModel().clearSelection());
-
 
         hideButtonWithoutPermission();
         setupListeners();
 
         loadTable();
     }
+
     @Override
     public void loadTable() {
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
-        tlb_col_createDate.setCellValueFactory(cellData ->
-                formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreateDate())));
+        tlb_col_createDate.setCellValueFactory(
+                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreateDate())));
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_supplierId.setCellValueFactory(new PropertyValueFactory<>("supplierId"));
-        tlb_col_totalPrice.setCellValueFactory(cellData ->
-                formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
+        tlb_col_totalPrice.setCellValueFactory(
+                cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
+        tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(statusBUS
+                .getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
         UiUtils.gI().addTooltipToColumn(tlb_col_createDate, 10);
         tblImport.setItems(FXCollections.observableArrayList(ImportBUS.getInstance().getAllLocal()));
     }
 
     public void loadSubTable(int importId) {
-        if (importId <= 0) return;
+        if (importId <= 0)
+            return;
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         this.id.setText(String.valueOf(selectedImport.getId()));
         this.createDate.setText(validationUtils.formatDateTime(selectedImport.getCreateDate()));
         this.employeeId.setText(String.valueOf(selectedImport.getEmployeeId()));
         this.supplierId.setText(String.valueOf(selectedImport.getSupplierId()));
         this.totalPrice.setText(validationUtils.formatCurrency(selectedImport.getTotalPrice()));
-
+        this.status.setText(statusBUS.getByIdLocal(selectedImport.getStatusId()).getDescription());
         tlb_col_productId.setCellValueFactory(new PropertyValueFactory<>("productId"));
         tlb_col_quantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-        tlb_col_price.setCellValueFactory(cellData ->
-                formatCell(validationUtils.formatCurrency(cellData.getValue().getPrice())));
-        tlb_col_totalPriceP.setCellValueFactory(cellData ->
-                formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
-//        UiUtils.gI().addTooltipToColumn(tlb_col_productId, 3);
-//        UiUtils.gI().addTooltipToColumn(tlb_col_price, 3);
-//        UiUtils.gI().addTooltipToColumn(tlb_col_totalPriceP, 3);
-        tblDetailImport.setItems(FXCollections.observableArrayList(DetailImportBUS.getInstance().getAllDetailImportByImportIdLocal(importId)));
+        tlb_col_price.setCellValueFactory(
+                cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getPrice())));
+        tlb_col_totalPriceP.setCellValueFactory(
+                cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
+        tblDetailImport.setItems(FXCollections
+                .observableArrayList(detailImportBUS.getAllDetailImportByImportIdLocal(importId)));
         tblDetailImport.getSelectionModel().clearSelection();
     }
 
@@ -163,8 +185,7 @@ public class ImportController implements IController {
             try {
                 int id = Integer.parseInt(keyword);
                 tblImport.setItems(FXCollections.observableArrayList(
-                        importBUS.getByIdLocal(id)
-                ));
+                        importBUS.getByIdLocal(id)));
             } catch (NumberFormatException e) {
                 // X�+� l++ tr���+�ng h�+�p kh+�ng phߦ�i s�+�
                 tblImport.setItems(FXCollections.observableArrayList());
