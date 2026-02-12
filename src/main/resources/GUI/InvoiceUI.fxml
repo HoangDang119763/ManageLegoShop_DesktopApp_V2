@@ -18,12 +18,12 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="650.0" prefWidth="1074.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.InvoiceController">
+<AnchorPane maxHeight="650.0" maxWidth="1074.0" minHeight="650.0" minWidth="1074.0" prefHeight="650.0" prefWidth="1074.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.InvoiceController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
             <top>
-                <AnchorPane prefHeight="60.0" BorderPane.alignment="CENTER">
+                <AnchorPane maxWidth="1074.0" prefHeight="60.0" prefWidth="1074.0" BorderPane.alignment="CENTER">
                     <children>
                         <TextField fx:id="txtSearch" layoutX="15.0" layoutY="15.0" prefHeight="26.0" prefWidth="150.0" promptText="Tìm mã hóa đơn..." styleClass="textfield" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="15.0" />
                         <FontAwesomeIcon fill="#58c9c9" glyphName="SEARCH" layoutX="175.0" layoutY="35.0" size="1.8em" AnchorPane.leftAnchor="175.0" AnchorPane.topAnchor="15.0" />
@@ -37,39 +37,41 @@
             </top>
 
             <center>
-                <HBox spacing="10.0" BorderPane.alignment="CENTER">
-                    <padding><Insets bottom="10.0" left="10.0" right="10.0" top="-5.0" /></padding>
+                <HBox maxWidth="1074.0" prefHeight="590.0" prefWidth="1074.0" spacing="10.0" BorderPane.alignment="CENTER">
+                    <padding><Insets bottom="10.0" left="10.0" right="10.0" top="0.0" /></padding>
                     <children>
 
-                        <VBox prefHeight="585.0" prefWidth="638.0" spacing="0.0" styleClass="white-bg, shadow" HBox.hgrow="ALWAYS">
+                        <VBox maxWidth="638.0" minWidth="638.0" prefWidth="638.0" spacing="0.0" styleClass="white-bg, shadow" HBox.hgrow="ALWAYS">
                             <children>
-                                <AnchorPane VBox.vgrow="ALWAYS">
+                                <AnchorPane prefHeight="503.0" prefWidth="629.0" VBox.vgrow="ALWAYS">
                                     <children>
-                                        <AnchorPane AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
-                                            <children>
-                                                <TableView fx:id="tblInvoice" tableMenuButtonVisible="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                    <columns>
-                                                        <TableColumn fx:id="tlb_col_id" prefWidth="70.0" text="Mã HĐ" />
-                                                        <TableColumn fx:id="tlb_col_createDate" prefWidth="100.0" text="Ngày tạo" />
-                                                        <TableColumn fx:id="tlb_col_employeeId" prefWidth="80.0" text="Mã NV" />
-                                                        <TableColumn fx:id="tlb_col_customerId" prefWidth="80.0" text="Mã KH" />
-                                                        <TableColumn fx:id="tlb_col_totalPrice" prefWidth="120.0" text="Tổng tiền" />
-                                                        <TableColumn fx:id="tlb_col_status" prefWidth="100.0" text="Trạng thái" />
-                                                    </columns>
-                                                    <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
-                                                </TableView>
-                                            </children>
-                                            <styleClass><String fx:value="shadow" /><String fx:value="white-bg" /></styleClass>
-                                        </AnchorPane>
+                                        <TableView fx:id="tblInvoice" layoutX="80.0" layoutY="5.0" prefHeight="513.6" prefWidth="629.0" tableMenuButtonVisible="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                            <columns>
+                                                <TableColumn fx:id="tlb_col_id" prefWidth="70.0" text="Mã HĐ" />
+                                                <TableColumn fx:id="tlb_col_createDate" prefWidth="100.0" text="Ngày tạo" />
+                                                <TableColumn fx:id="tlb_col_employeeId" prefWidth="80.0" text="Mã NV" />
+                                                <TableColumn fx:id="tlb_col_customerId" prefWidth="80.0" text="Mã KH" />
+                                                <TableColumn fx:id="tlb_col_totalPrice" prefWidth="120.0" text="Tổng tiền" />
+                                                <TableColumn fx:id="tlb_col_status" prefWidth="100.0" text="Trạng thái" />
+                                            </columns>
+                                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
+                                        </TableView>
                                     </children>
+                           <styleClass>
+                              <String fx:value="white-bg" />
+                              <String fx:value="shadow" />
+                           </styleClass>
+                           <VBox.margin>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </VBox.margin>
                                 </AnchorPane>
 
                                 <AnchorPane prefHeight="65.0">
                                     <children>
-                                        <Line endX="618.0" stroke="#58c9c9" strokeWidth="1.5" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="0.0" />
+                                        <Line endX="627.0" stroke="#58c9c9" strokeWidth="1.5" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="0.0" />
                                         <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" prefHeight="50.0" spacing="12.0" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
                                             <children>
-                                                <Button fx:id="exportPdf" mnemonicParsing="false" prefHeight="38.0" prefWidth="123.0" styleClass="action-btn" text="XUẤT PDF">
+                                                <Button fx:id="exportPdf" mnemonicParsing="false" prefHeight="38.0" prefWidth="121.0" styleClass="action-btn" text="XUẤT PDF">
                                                     <graphic><FontAwesomeIcon fill="WHITE" glyphName="FILE_TEXT" size="1.2em" /></graphic>
                                                 </Button>
                                             </children>
@@ -79,12 +81,12 @@
                             </children>
                         </VBox>
 
-                        <VBox prefWidth="426.0" spacing="0.0" styleClass="white-bg, shadow">
+                        <VBox maxWidth="350.0" minWidth="405.0" prefWidth="350.0" spacing="0.0" styleClass="white-bg, shadow">
                             <children>
-                                <VBox spacing="5.0" VBox.vgrow="ALWAYS">
+                                <VBox maxWidth="414.0" prefHeight="515.0" prefWidth="414.0" spacing="10.0" VBox.vgrow="ALWAYS">
                                     <padding><Insets bottom="10.0" left="15.0" right="15.0" top="15.0" /></padding>
                                     <children>
-                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                        <HBox alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="386.0" spacing="10.0">
                                             <children>
                                                 <FontAwesomeIcon fill="#1f7d84" glyphName="FILE_TEXT_ALT" size="1.8em" />
                                                 <Label styleClass="label-header" text="CHI TIẾT HÓA ĐƠN" textFill="#1f7d84">
@@ -94,59 +96,62 @@
                                             </children>
                                         </HBox>
 
-                                        <Line endX="396.0" stroke="#58c9c9" strokeWidth="2.0" />
+                                        <Line endX="372.0" stroke="#58c9c9" strokeWidth="2.0" />
 
-                                        <GridPane hgap="10.0" vgap="5.0">
+                                        <GridPane hgap="10.0" vgap="8.0">
                                             <columnConstraints>
-                                                <ColumnConstraints halignment="RIGHT" maxWidth="149.79996337890626" minWidth="93.40000762939454" prefWidth="97.40000762939454" />
-                                                <ColumnConstraints hgrow="ALWAYS" maxWidth="110.80003662109374" minWidth="30.400000000000006" prefWidth="77.60004882812501" />
-                                                <ColumnConstraints halignment="RIGHT" maxWidth="138.40003356933593" minWidth="65.59993896484372" prefWidth="90.39997558593751" />
-                                                <ColumnConstraints hgrow="ALWAYS" maxWidth="143.99995117187498" minWidth="60.0" prefWidth="101.60002441406249" />
+                                                <ColumnConstraints halignment="RIGHT" maxWidth="103.60001220703126" minWidth="94.8000244140625" prefWidth="97.19998779296876" />
+                                                <ColumnConstraints hgrow="ALWAYS" maxWidth="124.99996643066407" minWidth="47.39995117187499" prefWidth="59.20001220703125" />
+                                                <ColumnConstraints halignment="RIGHT" maxWidth="125.60009765625" minWidth="57.60002441406249" prefWidth="87.20004882812498" />
+                                                <ColumnConstraints hgrow="ALWAYS" maxWidth="105.5999755859375" minWidth="46.19990234375001" prefWidth="102.4000244140625" />
                                             </columnConstraints>
                                             <children>
                                                 <Label styleClass="label-s" text="Mã hóa đơn:" />
-                                                <TextField fx:id="id" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="1" />
-                                                <Label styleClass="label-s" text="Trạng thái:" GridPane.columnIndex="2" />
-                                                <TextField fx:id="status" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="3" />
+                                                <TextField fx:id="id" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" />
 
-                                                <Label styleClass="label-s" text="Mã NV" GridPane.rowIndex="1" />
-                                                <TextField fx:id="employeeId" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                <Label styleClass="label-s" text="Mã KH" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                                                <TextField fx:id="customerId" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                                <Label styleClass="label-s" text="Trạng thái:" GridPane.columnIndex="2" />
+                                                <TextField fx:id="status" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="3" />
+
+                                                <Label styleClass="label-s" text="Mã NV:" GridPane.rowIndex="1" />
+                                                <TextField fx:id="employeeId" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                                <Label styleClass="label-s" text="Mã KH:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                                <TextField fx:id="customerId" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="3" GridPane.rowIndex="1" />
 
                                                 <Label styleClass="label-s" text="Mã KM:" GridPane.rowIndex="2" />
-                                                <TextField fx:id="discountCode" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                <Label styleClass="label-s" text="Mức giảm:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                                                <TextField fx:id="discountAmount" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="---" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                                                <TextField fx:id="discountCode" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                                                <Label styleClass="label-m" text="Tổng tiền:" textFill="#1f7d84" GridPane.rowIndex="3">
+                                                <Label styleClass="label-s" text="Mức giảm:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                                <TextField fx:id="discountAmount" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+
+                                                <Label styleClass="label-s" text="TỔNG TIỀN:" textFill="#1f7d84" GridPane.rowIndex="3">
                                                     <font><Font name="System Bold" size="13.0" /></font>
                                                 </Label>
-                                                <TextField fx:id="totalPrice" editable="false" prefHeight="38.0" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 16px;" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+                                                <TextField fx:id="totalPrice" editable="false" prefHeight="40.0" style="-fx-font-weight: bold; -fx-font-size: 16px;" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
 
                                                 <Label styleClass="label-s" text="Ngày lập:" textFill="#7f8c8d" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                                                <TextField fx:id="createDate" editable="false" prefHeight="30.0" style="-fx-font-style: italic;" styleClass="textfield-1, readonly" text="01/01/2020" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                                                <TextField fx:id="createDate" editable="false" prefHeight="30.0" style="-fx-font-style: italic;" styleClass="textfield-1, readonly" GridPane.columnIndex="3" GridPane.rowIndex="4" />
                                             </children>
                                             <rowConstraints>
-                                                <RowConstraints minHeight="35.0" /><RowConstraints minHeight="35.0" /><RowConstraints minHeight="35.0" /><RowConstraints minHeight="45.0" /><RowConstraints minHeight="35.0" />
+                                                <RowConstraints minHeight="35.0" /><RowConstraints minHeight="35.0" />
+                                                <RowConstraints minHeight="35.0" /><RowConstraints minHeight="45.0" />
+                                                <RowConstraints minHeight="35.0" />
                                             </rowConstraints>
                                         </GridPane>
 
                                         <VBox spacing="5.0" VBox.vgrow="ALWAYS">
                                             <children>
-                                                <AnchorPane VBox.vgrow="ALWAYS">
+                                                <AnchorPane prefHeight="206.0" prefWidth="388.0" styleClass="white-bg, shadow" VBox.vgrow="ALWAYS">
                                                     <children>
-                                                        <TableView fx:id="tblDetailInvoice" prefHeight="225.6" prefWidth="398.4" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                        <TableView fx:id="tblDetailInvoice" prefHeight="205.6" prefWidth="375.2" tableMenuButtonVisible="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                             <columns>
-                                                                <TableColumn fx:id="tlb_col_productId" prefWidth="60.0" text="Mã SP" />
-                                                                <TableColumn fx:id="tlb_col_quantity" prefWidth="70.0" text="SL" />
-                                                                <TableColumn fx:id="tlb_col_price" prefWidth="90.0" text="Đơn giá" />
-                                                                <TableColumn fx:id="tlb_col_totalPriceP" prefWidth="90.0" text="Thành tiền" />
+                                                                <TableColumn fx:id="tlb_col_productId" text="Mã SP" />
+                                                                <TableColumn fx:id="tlb_col_quantity" prefWidth="60.0" text="SL" />
+                                                                <TableColumn fx:id="tlb_col_price" prefWidth="120.0" text="Đơn giá" />
+                                                                <TableColumn fx:id="tlb_col_totalPriceP" prefWidth="120.0" text="Thành tiền" />
                                                             </columns>
-                                                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
                                                         </TableView>
                                                     </children>
-                                                    <styleClass><String fx:value="white-bg" /><String fx:value="shadow" /></styleClass>
                                                 </AnchorPane>
                                             </children>
                                         </VBox>
@@ -155,7 +160,7 @@
 
                                 <AnchorPane prefHeight="65.0">
                                     <children>
-                                        <Line endX="396.0" stroke="#58c9c9" strokeWidth="1.5" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="0.0" />
+                                        <Line endX="372.0" stroke="#58c9c9" strokeWidth="1.5" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="0.0" />
                                         <Button fx:id="refreshBtn" prefHeight="38.0" styleClass="action-btn" text="Làm mới" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" />
                                     </children>
                                 </AnchorPane>
