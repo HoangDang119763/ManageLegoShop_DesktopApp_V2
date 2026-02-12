@@ -9,6 +9,7 @@ import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
@@ -18,8 +19,8 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-
 
 public class CustomerController implements IController {
     @FXML
@@ -48,18 +49,22 @@ public class CustomerController implements IController {
     private ComboBox<String> cbSearchBy;
     @FXML
     private ComboBox<StatusDTO> cbStatusFilter;
+    @FXML
+    private AnchorPane mainContent;
 
     private String searchBy = "Mã KH";
     private String keyword = "";
     private StatusDTO statusFilter = null;
     private CustomerDTO selectedCustomer;
     private CustomerBUS customerBUS;
+    private SessionManagerService session;
 
     @FXML
     public void initialize() {
         customerBUS = CustomerBUS.getInstance();
         if (CustomerBUS.getInstance().isLocalEmpty())
             CustomerBUS.getInstance().loadLocal();
+        session = SessionManagerService.getInstance();
         tblCustomer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblCustomer.getSelectionModel().clearSelection());
 
@@ -93,9 +98,8 @@ public class CustomerController implements IController {
                 StatusBUS.getInstance().getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
         tlb_col_updatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
                 validationUtils.formatDateTimeWithHour(cellData.getValue().getUpdatedAt())));
-        UiUtils.gI().addTooltipToColumn(tlb_col_fullName, 10);
-        UiUtils.gI().addTooltipToColumn(tlb_col_address, 10);
-        System.out.println(customerBUS.getAllLocal().toString());
+        UiUtils.gI().addTooltipToColumn(tlb_col_fullName, 20);
+        UiUtils.gI().addTooltipToColumn(tlb_col_address, 30);
     }
 
     @Override
@@ -149,15 +153,23 @@ public class CustomerController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
-        boolean canAdd = SessionManagerService.getInstance().hasPermission(PermissionKey.CUSTOMER_INSERT);
-        boolean canEdit = SessionManagerService.getInstance().hasPermission(PermissionKey.CUSTOMER_UPDATE);
-        boolean canDelete = SessionManagerService.getInstance().hasPermission(PermissionKey.CUSTOMER_DELETE);
+        boolean canView = session.hasPermission(PermissionKey.CUSTOMER_LIST_VIEW);
+
+        if (!canView) {
+            mainContent.setVisible(false);
+            mainContent.setManaged(false);
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+            return;
+        }
+        boolean canAdd = session.hasPermission(PermissionKey.CUSTOMER_INSERT);
+        boolean canEdit = session.hasPermission(PermissionKey.CUSTOMER_UPDATE);
+        boolean canDelete = session.hasPermission(PermissionKey.CUSTOMER_DELETE);
         if (!canAdd)
-            functionBtns.getChildren().remove(addBtn);
+            UiUtils.gI().setReadOnlyItem(addBtn);
         if (!canEdit)
-            functionBtns.getChildren().remove(editBtn);
+            UiUtils.gI().setReadOnlyItem(editBtn);
         if (!canDelete)
-            functionBtns.getChildren().remove(deleteBtn);
+            UiUtils.gI().setReadOnlyItem(deleteBtn);
     }
 
     private void handleAddBtn() {

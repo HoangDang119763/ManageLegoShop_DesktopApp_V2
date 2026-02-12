@@ -171,9 +171,9 @@ public class ProductController implements IController {
         tlb_col_stockQuantity.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
         tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(statusBUS
                 .getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
-        UiUtils.gI().addTooltipToColumn(tlb_col_name, 10);
-        UiUtils.gI().addTooltipToColumn(tlb_col_description, 10);
-        UiUtils.gI().addTooltipToColumn(tlb_col_categoryName, 10);
+        UiUtils.gI().addTooltipToColumn(tlb_col_name, 15);
+        UiUtils.gI().addTooltipToColumn(tlb_col_description, 15);
+        UiUtils.gI().addTooltipToColumn(tlb_col_categoryName, 15);
     }
 
     @Override

@@ -42,21 +42,23 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
         keyword = keyword.trim().toLowerCase();
 
         for (SupplierDTO sup : arrLocal) {
+            // Check keyword match
             boolean matchesSearch = true;
-            boolean matchesStatus = (statusFilter == -1) || (sup.isStatus() == (statusFilter == 1));
-
-            // Kiểm tra null tránh lỗi khi gọi .toLowerCase()
             String name = sup.getName() != null ? sup.getName().toLowerCase() : "";
             String id = String.valueOf(sup.getId());
 
             if (!keyword.isEmpty()) {
-                switch (searchBy) {
-                    case "Mã nhà cung cấp" -> matchesSearch = id.contains(keyword);
-                    case "Tên nhà cung cấp" -> matchesSearch = name.contains(keyword);
-                }
+                matchesSearch = switch (searchBy) {
+                    case "Mã nhà cung cấp" -> id.contains(keyword);
+                    case "Tên nhà cung cấp" -> name.contains(keyword);
+                    default -> false;
+                };
             }
 
-            // Chỉ thêm vào danh sách nếu thỏa tất cả điều kiện
+            // Check status match (-1 = all, 1 = active, 0 = inactive)
+            boolean matchesStatus = (statusFilter == -1) || sup.getStatusId() == statusFilter;
+
+            // Add if matches all conditions
             if (matchesSearch && matchesStatus) {
                 filteredList.add(sup);
             }
@@ -73,7 +75,7 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
         }
 
         for (SupplierDTO s : arrLocal) {
-            if (s.getPhone() != null && s.getPhone().contains(phone.trim()) && s.isStatus()) {
+            if (s.getPhone() != null && s.getPhone().contains(phone.trim())) {
                 temp.add(s);
             }
         }
@@ -91,9 +93,9 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
             return 4; // Không có quyền xóa
         }
 
-        // 3.Kiểm tra Nhà cung cấp da bi xoa hoac khong ton tai
+        // 3.Kiểm tra Nhà cung cấp da bi xoa hoac khong ton tai || !targetSup.isStatus()
         SupplierDTO targetSup = getByIdLocal(id);
-        if (targetSup == null || !targetSup.isStatus())
+        if (targetSup == null)
             return 5;
 
         // 4.Kiểm tra đã xoá ở CSDL
@@ -104,7 +106,7 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
         // Cập nhật trạng thái trong bộ nhớ local
         for (SupplierDTO sup : arrLocal) {
             if (Objects.equals(sup.getId(), id)) {
-                sup.setStatus(false);
+                // sup.setStatus(false);
                 break;
             }
         }
@@ -121,24 +123,7 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
         }
     }
 
-    public boolean isDuplicateSupplier(int id, String name, String phone, String address, String email) {
-        if (name == null || phone == null || address == null || email == null)
-            return false;
-
-        // chỉ check trùng với các thể loại active, non active không check
-        for (SupplierDTO sup : arrLocal) {
-            if (sup.getId() != id &&
-                    sup.getName().trim().equalsIgnoreCase(name.trim()) &&
-                    sup.getPhone().trim().equalsIgnoreCase(phone.trim()) &&
-                    sup.getAddress().trim().equalsIgnoreCase(address.trim()) &&
-                    sup.getEmail().trim().equalsIgnoreCase(email.trim()) &&
-                    sup.isStatus())
-                return true;
-        }
-        return false;
-    }
-
-    public boolean isDuplicateSupplierS(SupplierDTO obj) {
+    public boolean isDuplicateSupplier(SupplierDTO obj) {
         SupplierDTO existingPro = getByIdLocal(obj.getId());
         ValidationUtils validate = ValidationUtils.getInstance();
 
@@ -150,7 +135,7 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
                 Objects.equals(existingPro.getEmail(),
                         obj.getEmail() != null ? validate.normalizeWhiteSpace(obj.getEmail()) : obj.getEmail())
                 &&
-                Objects.equals(existingPro.isStatus(), obj.isStatus());
+                Objects.equals(existingPro.getStatusId(), obj.getStatusId());
     }
 
     private boolean isValidSupplierInput(SupplierDTO obj) {
@@ -180,13 +165,12 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
             return 6;
 
         // 4. Kiểm tra trùng
-        if (isDuplicateSupplier(-1, obj.getName(), obj.getPhone(), obj.getAddress(),
-                obj.getEmail() != null ? obj.getEmail() : ""))
+        if (isDuplicateSupplier(obj))
             return 3;
 
         // 5. validate khi chuyen xuong database
         ValidationUtils validate = ValidationUtils.getInstance();
-        obj.setStatus(true);
+        // obj.setStatus(true);
         obj.setName(validate.normalizeWhiteSpace(obj.getName()));
         obj.setPhone(obj.getPhone());
         obj.setAddress(validate.normalizeWhiteSpace(obj.getAddress()));
@@ -217,18 +201,17 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
             return 6;
 
         // 4. Kiểm tra trùng lặp
-        if (isDuplicateSupplier(obj.getId(), obj.getName(), obj.getPhone(), obj.getAddress(),
-                obj.getEmail() != null ? obj.getEmail() : ""))
+        if (isDuplicateSupplier(obj))
             return 3;
 
         // 5. Kiểm tra dữ liệu mới xem có trùng dữ liệu cũ không, nếu trùng thì return 1
         // tức là không update xuống CSDL
-        if (isDuplicateSupplierS(obj))
+        if (isDuplicateSupplier(obj))
             return 1;
 
         // 6. Kiểm tra đầu vào hợp lệ khi truyền xuống CSDL
         ValidationUtils validate = ValidationUtils.getInstance();
-        obj.setStatus(true);
+        // obj.setStatus(true);
         obj.setName(validate.normalizeWhiteSpace(obj.getName()));
         obj.setPhone(validate.normalizeWhiteSpace(obj.getPhone()));
         obj.setAddress(validate.normalizeWhiteSpace(obj.getAddress()));
@@ -244,6 +227,28 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
         // Sửa thành công
         updateLocalCache(obj);
         return 1;
+    }
+
+    public boolean isExistsSupplier(SupplierDTO obj) {
+        ValidationUtils validate = ValidationUtils.getInstance();
+
+        // Chuẩn hóa dữ liệu đầu vào một lần để tối ưu hiệu năng
+        String nName = validate.normalizeWhiteSpace(obj.getName());
+        String nPhone = validate.normalizeWhiteSpace(obj.getPhone());
+        String nAddress = validate.normalizeWhiteSpace(obj.getAddress());
+        String nEmail = validate.normalizeWhiteSpace(obj.getEmail());
+
+        for (SupplierDTO sup : arrLocal) {
+            // Chỉ coi là trùng nếu khác ID nhưng KHỚP HẾT 4 trường quan trọng
+            if (sup.getId() != obj.getId() &&
+                    sup.getName().equalsIgnoreCase(nName) &&
+                    sup.getPhone().equalsIgnoreCase(nPhone) &&
+                    sup.getAddress().equalsIgnoreCase(nAddress) &&
+                    sup.getEmail().equalsIgnoreCase(nEmail)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

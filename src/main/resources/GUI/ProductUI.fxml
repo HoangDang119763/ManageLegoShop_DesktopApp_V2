@@ -61,16 +61,16 @@
                                 <String fx:value="shadow" />
                             </styleClass>
                             <children>
-                                <TableView fx:id="tblProduct" prefHeight="444.0" prefWidth="859.2" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <TableView fx:id="tblProduct" prefHeight="444.0" prefWidth="859.2" tableMenuButtonVisible="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                     <columns>
-                                        <TableColumn fx:id="tlb_col_id" prefWidth="110.0" text="Mã sản phẩm" />
-                                        <TableColumn fx:id="tlb_col_name" prefWidth="112.0" text="Tên sản phẩm" />
+                                        <TableColumn fx:id="tlb_col_id" prefWidth="102.39996385574341" text="Mã sản phẩm" />
+                                        <TableColumn fx:id="tlb_col_name" prefWidth="144.800048828125" text="Tên sản phẩm" />
                                         <TableColumn fx:id="tlb_col_imageUrl" prefWidth="93.0" text="Hình ảnh" />
-                                        <TableColumn fx:id="tlb_col_description" prefWidth="111.0" text="Mô tả" />
-                                        <TableColumn fx:id="tlb_col_categoryName" prefWidth="99.0" text="Thể loại" />
-                                        <TableColumn fx:id="tlb_col_sellingPrice" prefWidth="134.0" text="Giá bán" />
-                                        <TableColumn fx:id="tlb_col_stockQuantity" prefWidth="94.0" text="Còn lại" />
-                                        <TableColumn fx:id="tlb_col_status" prefWidth="110.0" text="Trạng thái" />
+                                        <TableColumn fx:id="tlb_col_description" prefWidth="122.4000244140625" text="Mô tả" />
+                                        <TableColumn fx:id="tlb_col_categoryName" prefWidth="122.39996337890625" text="Thể loại" />
+                                        <TableColumn fx:id="tlb_col_sellingPrice" prefWidth="159.20001220703125" text="Giá bán" />
+                                        <TableColumn fx:id="tlb_col_stockQuantity" prefWidth="111.9998779296875" text="Còn lại" />
+                                        <TableColumn fx:id="tlb_col_status" prefWidth="176.7999267578125" text="Trạng thái" />
                                     </columns>
                                     <columnResizePolicy>
                                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -105,7 +105,7 @@
                                     <font><Font size="14.0" /></font>
                                 </Button>
                                 <Button fx:id="editBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Sửa">
-                                    <graphic><FontAwesomeIcon glyphName="PENCIL" size="1.2em" styleClass="action-icon" /></graphic>
+                                    <graphic><FontAwesomeIcon glyphName="EDIT" size="1.2em" styleClass="action-icon" /></graphic>
                                     <font><Font size="14.0" /></font>
                                 </Button>
                                 <Button fx:id="deleteBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Xóa">

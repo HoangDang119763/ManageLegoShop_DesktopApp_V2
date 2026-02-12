@@ -1,14 +1,15 @@
 package BUS;
 
 import DAL.RoleDAL;
+import DTO.EmployeeDTO;
 import DTO.RoleDTO;
 import ENUM.ServiceAccessCode;
 import SERVICE.AuthorizationService;
-import UTILS.AvailableUtils;
 import UTILS.ValidationUtils;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
     private static final RoleBUS INSTANCE = new RoleBUS();
@@ -20,6 +21,14 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
     @Override
     public ArrayList<RoleDTO> getAll() {
         return RoleDAL.getInstance().getAll();
+    }
+
+    // Không lấy Role id = 1 (System Admin)
+    @Override
+    public ArrayList<RoleDTO> getAllLocal() {
+        return arrLocal.stream()
+                .filter(role -> role.getId() != 1)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override

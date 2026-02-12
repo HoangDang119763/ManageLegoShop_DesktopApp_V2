@@ -1,226 +1,265 @@
-// package GUI;
+package GUI;
 
-// import BUS.CategoryBUS;
-// import BUS.SupplierBUS;
-// import DTO.CategoryDTO;
-// import DTO.SupplierDTO;
-// import INTERFACE.IController;
-// import SERVICE.SessionManagerService;
-// import UTILS.NotificationUtils;
-// import UTILS.UiUtils;
-// import javafx.application.Platform;
-// import javafx.beans.property.SimpleStringProperty;
-// import javafx.collections.FXCollections;
-// import javafx.fxml.FXML;
-// import javafx.scene.control.*;
-// import javafx.scene.control.cell.PropertyValueFactory;
-// import javafx.scene.layout.HBox;
+import BUS.StatusBUS;
+import BUS.SupplierBUS;
+import DTO.BUSResult;
+import DTO.StatusDTO;
+import DTO.SupplierDTO;
+import ENUM.PermissionKey;
+import ENUM.StatusType;
+import INTERFACE.IController;
+import SERVICE.SecureExecutor;
+import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
+import UTILS.ModalBuilder;
+import UTILS.NotificationUtils;
+import UTILS.UiUtils;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 
-// public class SupplierController implements IController {
-// @FXML
-// private TableView<SupplierDTO> tblSupplier;
-// @FXML
-// private TableColumn<SupplierDTO, Integer> tlb_col_id;
-// @FXML
-// private TableColumn<SupplierDTO, String> tlb_col_name;
-// @FXML
-// private TableColumn<SupplierDTO, String> tlb_col_phone;
-// @FXML
-// private TableColumn<SupplierDTO, String> tlb_col_email;
-// @FXML
-// private TableColumn<SupplierDTO, String> tlb_col_address;
-// @FXML
-// private TableColumn<SupplierDTO, String> tlb_col_status;
-// @FXML
-// private HBox functionBtns;
-// @FXML
-// private Button addBtn, editBtn, deleteBtn, refreshBtn;
-// @FXML
-// private TextField txtSearch;
-// @FXML
-// private CheckBox ckbStatusFilter;
-// @FXML
-// private ComboBox<String> cbSearchBy;
-// private String keyword = "";
-// private String searchBy = "Mã nhà cung cấp";
-// private int statusFilter = 1;
+import java.util.ArrayList;
 
-// @FXML
-// public void initialize() {
-// if (SupplierBUS.getInstance().isLocalEmpty())
-// SupplierBUS.getInstance().loadLocal();
-// tblSupplier.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-// Platform.runLater(() -> tblSupplier.getSelectionModel().clearSelection());
+public class SupplierController implements IController {
+    @FXML
+    private TableView<SupplierDTO> tblSupplier;
+    @FXML
+    private TableColumn<SupplierDTO, Integer> tlb_col_id;
+    @FXML
+    private TableColumn<SupplierDTO, String> tlb_col_name;
+    @FXML
+    private TableColumn<SupplierDTO, String> tlb_col_phone;
+    @FXML
+    private TableColumn<SupplierDTO, String> tlb_col_email;
+    @FXML
+    private TableColumn<SupplierDTO, String> tlb_col_address;
+    @FXML
+    private TableColumn<SupplierDTO, String> tlb_col_status;
+    @FXML
+    private HBox functionBtns;
+    @FXML
+    private Button addBtn, editBtn, deleteBtn, refreshBtn;
+    @FXML
+    private TextField txtSearch;
+    @FXML
+    private ComboBox<StatusDTO> cbStatusFilter;
+    @FXML
+    private ComboBox<String> cbSearchBy;
 
-// hideButtonWithoutPermission();
-// loadComboBox();
-// setupListeners();
+    // BUS instances
+    private SupplierBUS supplierBUS;
+    private StatusBUS statusBUS;
 
-// loadTable();
-// applyFilters();
-// }
+    // Filter states
+    private String searchBy = "Mã nhà cung cấp";
+    private String keyword = "";
+    private StatusDTO statusFilter = null;
+    private SupplierDTO selectedSupplier;
 
-// @Override
-// public void loadTable() {
-// tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
-// tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
-// tlb_col_phone.setCellValueFactory(new PropertyValueFactory<>("phone"));
-// tlb_col_email.setCellValueFactory(new PropertyValueFactory<>("email"));
-// tlb_col_address.setCellValueFactory(new PropertyValueFactory<>("address"));
-// tlb_col_status.setCellValueFactory(
-// cellData -> formatCell(cellData.getValue().isStatus() ? "Hoạt động" : "Ngưng
-// hoạt động"));
-// UiUtils.gI().addTooltipToColumn(tlb_col_name, 10);
-// UiUtils.gI().addTooltipToColumn(tlb_col_address, 10);
-// tblSupplier.setItems(FXCollections.observableArrayList(SupplierBUS.getInstance().getAllLocal()));
-// }
+    // =====================
+    // 1️⃣ LIFECYCLE & INITIALIZATION
+    // =====================
+    @FXML
+    public void initialize() {
+        supplierBUS = SupplierBUS.getInstance();
+        if (supplierBUS.isLocalEmpty())
+            supplierBUS.loadLocal();
 
-// private SimpleStringProperty formatCell(String value) {
-// return new SimpleStringProperty(value);
-// }
+        statusBUS = StatusBUS.getInstance();
+        if (statusBUS.isLocalEmpty())
+            statusBUS.loadLocal();
 
-// private void loadComboBox() {
-// cbSearchBy.getItems().addAll("Mã nhà cung cấp", "Tên nhà cung cấp");
-// cbSearchBy.getSelectionModel().selectFirst();
-// ckbStatusFilter.setSelected(false);
-// }
+        tblSupplier.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        Platform.runLater(() -> tblSupplier.getSelectionModel().clearSelection());
 
-// @Override
-// public void setupListeners() {
-// cbSearchBy.setOnAction(event -> handleSearchByChange());
-// ckbStatusFilter.setOnAction(event -> handleStatusFilterChange());
-// txtSearch.textProperty().addListener((observable, oldValue, newValue) ->
-// handleKeywordChange());
-// refreshBtn.setOnAction(event -> {
-// resetFilters();
-// NotificationUtils.showInfoAlert("Làm mới thành công", "Thông báo");
-// });
+        hideButtonWithoutPermission();
+        loadComboBox();
+        loadTable();
+        setupListeners();
+        applyFilters();
+    }
 
-// addBtn.setOnAction(event -> handleAddBtn());
-// editBtn.setOnAction(event -> handleEditBtn());
-// deleteBtn.setOnAction(event -> handleDeleteBtn());
-// }
+    // =====================
+    // 2️⃣ UI SETUP (LOAD & CONFIG)
+    // =====================
+    private void loadComboBox() {
+        cbSearchBy.getItems().addAll("Mã nhà cung cấp", "Tên nhà cung cấp");
+        cbSearchBy.getSelectionModel().selectFirst();
 
-// private void handleSearchByChange() {
-// searchBy = cbSearchBy.getValue();
-// applyFilters();
-// }
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.SUPPLIER);
+        StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
+        cbStatusFilter.getItems().add(allStatus);
+        cbStatusFilter.getItems().addAll(statusList);
+        cbStatusFilter.getSelectionModel().selectFirst();
+    }
 
-// private void handleKeywordChange() {
-// keyword = txtSearch.getText().trim();
-// applyFilters();
-// }
+    @Override
+    public void loadTable() {
+        tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
+        tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
+        tlb_col_phone.setCellValueFactory(new PropertyValueFactory<>("phone"));
+        tlb_col_email.setCellValueFactory(new PropertyValueFactory<>("email"));
+        tlb_col_address.setCellValueFactory(new PropertyValueFactory<>("address"));
 
-// private void handleStatusFilterChange() {
-// statusFilter = ckbStatusFilter.isSelected() ? -1 : 1;
-// applyFilters();
-// }
+        tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(
+                statusBUS.getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
 
-// @Override
-// public void applyFilters() {
-// tblSupplier.setItems(FXCollections.observableArrayList(
-// SupplierBUS.getInstance().filterSuppliers(searchBy, keyword, statusFilter)));
-// tblSupplier.getSelectionModel().clearSelection();
-// }
+        UiUtils.gI().addTooltipToColumn(tlb_col_name, 20);
+        UiUtils.gI().addTooltipToColumn(tlb_col_email, 20);
+        UiUtils.gI().addTooltipToColumn(tlb_col_address, 30);
+    }
 
-// @Override
-// public void resetFilters() {
-// cbSearchBy.getSelectionModel().selectFirst();
-// ckbStatusFilter.setSelected(false); // Mặc định lọc Active
-// txtSearch.clear();
+    @Override
+    public void setupListeners() {
+        cbSearchBy.setOnAction(event -> handleSearchByChange());
+        cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
+        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
 
-// searchBy = "Mã khách hàng";
-// keyword = "";
-// statusFilter = 1;
-// applyFilters();
-// }
+        refreshBtn.setOnAction(event -> {
+            resetFilters();
+            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+        });
 
-// @Override
-// public void hideButtonWithoutPermission() {
-// boolean canAdd = SessionManagerService.getInstance().hasPermission(10);
-// boolean canEdit = SessionManagerService.getInstance().hasPermission(12);
-// boolean canDelete = SessionManagerService.getInstance().hasPermission(11);
+        addBtn.setOnAction(event -> handleAdd());
+        editBtn.setOnAction(event -> handleEdit());
+        deleteBtn.setOnAction(event -> handleDelete());
 
-// if (!canAdd)
-// functionBtns.getChildren().remove(addBtn);
-// if (!canEdit)
-// functionBtns.getChildren().remove(editBtn);
-// if (!canDelete)
-// functionBtns.getChildren().remove(deleteBtn);
-// }
+        // Hỗ trợ xem chi tiết khi double click
+        tblSupplier.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2)
+                handleDetail();
+        });
+    }
 
-// private void handleAddBtn() {
-// SupplierModalController modalController =
-// UiUtils.gI().openStageWithController(
-// "/GUI/SupplierModal.fxml",
-// controller -> controller.setTypeModal(0),
-// "Thêm nhà cung cấp ");
-// if (modalController != null && modalController.isSaved()) {
-// NotificationUtils.showInfoAlert("Thêm nhà cung cấp thành công", "Thông báo");
-// resetFilters();
-// }
-// }
+    // =====================
+    // 3️⃣ CRUD HANDLERS (Add/Edit/Detail/Delete)
+    // =====================
+    private void handleAdd() {
+        SupplierModalController modalController = new ModalBuilder<SupplierModalController>("/GUI/SupplierModal.fxml",
+                SupplierModalController.class)
+                .setTitle("Thêm nhà cung cấp")
+                .modeAdd()
+                .open();
+        if (modalController != null && modalController.isSaved()) {
+            resetFilters();
+        }
+    }
 
-// private void handleDeleteBtn() {
-// // Get selected supplier
-// SupplierDTO selectedSupplier =
-// tblSupplier.getSelectionModel().getSelectedItem();
+    private void handleEdit() {
+        if (isNotSelectedSupplier()) {
+            NotificationUtils.showErrorAlert(AppMessages.SUPPLIER_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
+        SupplierModalController modalController = new ModalBuilder<SupplierModalController>("/GUI/SupplierModal.fxml",
+                SupplierModalController.class)
+                .setTitle("Sửa nhà cung cấp")
+                .modeEdit()
+                .configure(c -> c.setSupplier(selectedSupplier))
+                .open();
+        if (modalController != null && modalController.isSaved()) {
+            applyFilters();
+        }
+        tblSupplier.refresh();
+    }
 
-// if (selectedSupplier == null) {
-// NotificationUtils.showErrorAlert("Vui lòng chọn một nhà cung cấp để xóa!",
-// "Thông báo");
-// return;
-// }
+    private void handleDetail() {
+        if (isNotSelectedSupplier())
+            return;
+        new ModalBuilder<SupplierModalController>("/GUI/SupplierModal.fxml", SupplierModalController.class)
+                .setTitle("Chi tiết nhà cung cấp")
+                .modeDetail()
+                .configure(c -> c.setSupplier(selectedSupplier))
+                .open();
+    }
 
-// int deleteResult = SupplierBUS.getInstance().delete(
-// selectedSupplier.getId(),
-// SessionManagerService.getInstance().employeeRoleId(),
-// SessionManagerService.getInstance().employeeLoginId());
+    private void handleDelete() {
+        if (isNotSelectedSupplier()) {
+            NotificationUtils.showErrorAlert(AppMessages.SUPPLIER_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-// switch (deleteResult) {
-// case 1 -> {
-// NotificationUtils.showInfoAlert("Xóa nhà cung cấp thành công!", "Thông báo");
-// resetFilters();
-// }
-// case 2 -> NotificationUtils.showErrorAlert("Lỗi xoá nhà cung cấp không thành
-// công. Vui lòng thử lại",
-// "Thông báo");
-// case 4 -> NotificationUtils.showErrorAlert("Không có quyền xóa nhà cung
-// cấp.", "Thông báo");
-// case 6 -> NotificationUtils.showErrorAlert("Không thể xoá nhà cung cấp ở
-// CSDL.", "Thông báo");
-// case 5 -> NotificationUtils.showErrorAlert("Nhà cung cấp không tồn tại hoặc
-// đã bị xoá.", "Thông báo");
-// default -> NotificationUtils.showErrorAlert("Lỗi không xác định. Xóa nhà cung
-// cấp thất bại.", "Thông báo");
-// }
+        if (!UiUtils.gI().showConfirmAlert(AppMessages.SUPPLIER_DELETE_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM)) {
+            return;
+        }
 
-// applyFilters();
+        // BUSResult result =
+        // SecureExecutor.runSafeBUSResult(PermissionKey.SUPPLIER_DELETE,
+        // () -> supplierBUS.delete(selectedSupplier.getId(),
+        // SessionManagerService.getInstance().employeeRoleId(),
+        // SessionManagerService.getInstance().employeeLoginId()));
 
-// }
+        // if (result.isSuccess()) {
+        // NotificationUtils.showInfoAlert(result.getMessage(),
+        // AppMessages.DIALOG_TITLE);
+        // resetFilters();
+        // } else {
+        // NotificationUtils.showErrorAlert(result.getMessage(),
+        // AppMessages.DIALOG_TITLE);
+        // }
+    }
 
-// private void handleEditBtn() {
-// // Get selected supplier
-// SupplierDTO selectedSupplier =
-// tblSupplier.getSelectionModel().getSelectedItem();
+    // =====================
+    // 4️⃣ FILTER HANDLERS
+    // =====================
+    private void handleSearchByChange() {
+        searchBy = cbSearchBy.getValue();
+        applyFilters();
+    }
 
-// if (selectedSupplier == null) {
-// NotificationUtils.showErrorAlert("Vui lòng chọn một nhà cung cấp để chỉnh
-// sửa!", "Thông báo");
-// return;
-// }
+    private void handleStatusFilterChange() {
+        statusFilter = cbStatusFilter.getValue();
+        applyFilters();
+    }
 
-// SupplierModalController modalController =
-// UiUtils.gI().openStageWithController(
-// "/GUI/SupplierModal.fxml",
-// controller -> {
-// controller.setTypeModal(1);
-// controller.setSupplier(selectedSupplier);
-// },
-// "Sửa nhà cung cấp");
-// if (modalController != null && modalController.isSaved()) {
-// NotificationUtils.showInfoAlert("Sửa nhà cung cấp thành công", "Thông báo");
-// applyFilters();
-// }
-// }
-// }
+    private void handleKeywordChange() {
+        keyword = txtSearch.getText().trim();
+        applyFilters();
+    }
+
+    @Override
+    public void applyFilters() {
+        int statusId = (statusFilter == null) ? -1 : statusFilter.getId();
+        tblSupplier.setItems(FXCollections.observableArrayList(
+                supplierBUS.filterSuppliers(searchBy, keyword, statusId)));
+        tblSupplier.getSelectionModel().clearSelection();
+    }
+
+    @Override
+    public void resetFilters() {
+        cbSearchBy.getSelectionModel().selectFirst();
+        cbStatusFilter.getSelectionModel().selectFirst();
+        txtSearch.clear();
+
+        searchBy = "Mã nhà cung cấp";
+        keyword = "";
+        statusFilter = null;
+        applyFilters();
+    }
+
+    @Override
+    public void hideButtonWithoutPermission() {
+        SessionManagerService session = SessionManagerService.getInstance();
+
+        // Kiểm tra quyền xem danh sách (Nếu cần thiết chặn view)
+        // boolean canView = session.hasPermission(PermissionKey.SUPPLIER_LIST_VIEW);
+
+        if (!session.hasPermission(PermissionKey.SUPPLIER_INSERT))
+            UiUtils.gI().setVisibleItem(addBtn);
+        if (!session.hasPermission(PermissionKey.SUPPLIER_UPDATE))
+            UiUtils.gI().setVisibleItem(editBtn);
+        if (!session.hasPermission(PermissionKey.SUPPLIER_DELETE))
+            UiUtils.gI().setVisibleItem(deleteBtn);
+    }
+
+    // =====================
+    // 5️⃣ UTILITY METHODS
+    // =====================
+    private boolean isNotSelectedSupplier() {
+        selectedSupplier = tblSupplier.getSelectionModel().getSelectedItem();
+        return selectedSupplier == null;
+    }
+}

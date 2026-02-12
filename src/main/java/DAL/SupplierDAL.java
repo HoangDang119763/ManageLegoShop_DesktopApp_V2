@@ -1,6 +1,5 @@
 package DAL;
 
-import DTO.ModuleDTO;
 import DTO.SupplierDTO;
 
 import java.sql.*;
@@ -24,7 +23,7 @@ public class SupplierDAL extends BaseDAL<SupplierDTO, Integer> {
                 resultSet.getString("phone"),
                 resultSet.getString("address"),
                 resultSet.getString("email"),
-                resultSet.getInt("status"));
+                resultSet.getInt("status_id"));
     }
 
     @Override
@@ -41,7 +40,7 @@ public class SupplierDAL extends BaseDAL<SupplierDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(name, phone, address, email, status) VALUES (?, ?, ?, ?, ?)";
+        return "(name, phone, address, email, status_id) VALUES (?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -55,7 +54,7 @@ public class SupplierDAL extends BaseDAL<SupplierDTO, Integer> {
 
     @Override
     protected String getUpdateQuery() {
-        return "SET name = ?, phone = ?, address = ?, email = ?, status = ? WHERE id = ?";
+        return "SET name = ?, phone = ?, address = ?, email = ?, status_id = ? WHERE id = ?";
     }
 
     @Override

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 public class ValidationUtils {
     private static final ValidationUtils INSTANCE = new ValidationUtils();
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter DATE_TIME_WITH_HOUR_FORMATTER = DateTimeFormatter
             .ofPattern("dd/MM/yyyy-HH:mm:ss");
     private static final Pattern VIETNAMESE_TEXT_PATTERN = Pattern

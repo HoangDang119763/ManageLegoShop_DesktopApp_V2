@@ -43,7 +43,7 @@ public class EmployeeController implements IController {
     @FXML
     private TableColumn<EmployeeDetailDTO, String> tlb_col_gender;
     @FXML
-    private TableColumn<EmployeeDetailDTO, String> tlb_col_email;
+    private TableColumn<EmployeeDetailDTO, String> tlb_col_role;
     @FXML
     private TableColumn<EmployeeDetailDTO, String> tlb_col_baseSalary;
     @FXML
@@ -126,9 +126,12 @@ public class EmployeeController implements IController {
         tlb_col_salaryCoefficient.setCellValueFactory(cellData -> new SimpleStringProperty(
                 validationUtils.formatCurrency(cellData.getValue().getSalaryCoefficient())));
         tlb_col_username.setCellValueFactory(new PropertyValueFactory<>("username"));
-        tlb_col_email.setCellValueFactory(new PropertyValueFactory<>("email"));
+        tlb_col_role.setCellValueFactory(new PropertyValueFactory<>("roleName"));
         tlb_col_gender.setCellValueFactory(new PropertyValueFactory<>("gender"));
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
+        UiUtils.gI().addTooltipToColumn(tlb_col_username, 10);
+        UiUtils.gI().addTooltipToColumn(tlb_col_fullName, 15);
+        UiUtils.gI().addTooltipToColumn(tlb_col_role, 13);
     }
 
     private void loadComboBox() {
@@ -200,10 +203,8 @@ public class EmployeeController implements IController {
     public void applyFilters() {
         EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
         EmployeeDetailFilterer filterer = EmployeeDetailFilterer.getInstance();
-
-        String roleFilterName = roleFilter != null ? roleFilter.getName() : "";
-        String statusFilterDesc = statusFilter != null ? statusFilter.getDescription() : "";
-
+        int statusId = statusFilter == null ? -1 : statusFilter.getId();
+        int roleId = roleFilter == null ? -1 : roleFilter.getId();
         // Step 1: Transform employee data using provider
         ArrayList<EmployeeDetailDTO> tableData = provider.toTableDTOs(employeeBUS.getAllLocal());
 
@@ -211,8 +212,8 @@ public class EmployeeController implements IController {
                 tableData,
                 searchBy,
                 keyword,
-                roleFilterName,
-                statusFilterDesc)));
+                roleId,
+                statusId)));
         tblEmployee.getSelectionModel().clearSelection();
     }
 

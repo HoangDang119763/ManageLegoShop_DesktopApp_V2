@@ -79,12 +79,4 @@ public abstract class BaseInformationDTO {
     public void setStatusId(int statusId) {
         this.statusId = statusId;
     }
-
-    public boolean isStatus() {
-        return statusId == 1; // 1 = ACTIVE
-    }
-
-    public void setStatus(boolean status) {
-        this.statusId = status ? 1 : 2; // 1 = ACTIVE, 2 = INACTIVE
-    }
 }

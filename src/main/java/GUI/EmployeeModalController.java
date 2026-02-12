@@ -11,7 +11,6 @@ import DTO.AccountDTO;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDTO;
 import DTO.EmployeeDetailDTO;
-import DTO.EmploymentHistoryDTO;
 import DTO.EmploymentHistoryDetailDTO;
 import DTO.RoleDTO;
 import DTO.SalaryDTO;
@@ -27,13 +26,8 @@ import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -400,11 +394,11 @@ public class EmployeeModalController implements IModalController {
         UiUtils.gI().setReadOnlyItem(cbAccommodationSupport);
         UiUtils.gI().setVisibleItem(detailPassword);
         // Hide all save buttons
-        UiUtils.gI().setReadonlyBtn(savePersonalBtn);
-        UiUtils.gI().setReadonlyBtn(saveAccountBtn);
-        UiUtils.gI().setReadonlyBtn(saveJobBtn);
-        UiUtils.gI().setReadonlyBtn(savePayrollBtn);
-        UiUtils.gI().setReadonlyBtn(btnResetPassword);
+        UiUtils.gI().setReadOnlyItem(savePersonalBtn);
+        UiUtils.gI().setReadOnlyItem(saveAccountBtn);
+        UiUtils.gI().setReadOnlyItem(saveJobBtn);
+        UiUtils.gI().setReadOnlyItem(savePayrollBtn);
+        UiUtils.gI().setReadOnlyItem(btnResetPassword);
     }
 
     // ...existing code...

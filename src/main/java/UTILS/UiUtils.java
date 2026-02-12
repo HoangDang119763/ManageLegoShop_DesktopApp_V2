@@ -2,11 +2,9 @@
 package UTILS;
 
 import GUI.LoginController;
-import GUI.MainController;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -106,7 +104,7 @@ public class UiUtils {
         comboBox.setFocusTraversable(false);
     }
 
-    public void setReadonlyBtn(Button button) {
+    public void setReadOnlyItem(Button button) {
         button.setVisible(false);
         button.setManaged(false);
     }
@@ -116,7 +114,7 @@ public class UiUtils {
     }
 
     public <T> void addTooltipToComboBox(ComboBox<T> comboBox, int maxLength, Function<T, String> toStringFunction) {
-        comboBox.setCellFactory(lv -> new ListCell<T>() {
+        comboBox.setCellFactory(lv -> new ListCell<>() {
             private final Tooltip tooltip = new Tooltip();
 
             {
@@ -153,7 +151,7 @@ public class UiUtils {
     public <T> void addTooltipToComboBoxValue(ComboBox<T> comboBox, int maxLength,
             Function<T, String> toStringFunction) {
         // 1. Vẫn dùng setButtonCell để lo việc hiển thị dấu "..." trên nút
-        comboBox.setButtonCell(new ListCell<T>() {
+        comboBox.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
@@ -171,9 +169,7 @@ public class UiUtils {
         });
 
         // 2. Lắng nghe thay đổi giá trị để gắn Tooltip cho toàn bộ ComboBox
-        comboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
-            updateComboBoxTooltip(comboBox, newVal, maxLength, toStringFunction);
-        });
+        comboBox.valueProperty().addListener((obs, oldVal, newVal) -> updateComboBoxTooltip(comboBox, newVal, maxLength, toStringFunction));
 
         // 3. Gọi cập nhật ngay lập tức cho trường hợp ComboBox đã có giá trị sẵn (lúc
         // load dữ liệu)

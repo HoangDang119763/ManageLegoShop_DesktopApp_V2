@@ -99,6 +99,9 @@ public class AppMessages {
     public static final String SUPPLIER_UPDATE_DUPLICATE = "Thông tin nhà cung cấp bị trùng lặp.";
     public static final String SUPPLIER_UPDATE_NO_PERMISSION = "Không có quyền cập nhật thông tin nhà cung cấp.";
     public static final String SUPPLIER_UPDATE_FAILED = "Không thể cập nhật thông tin nhà cung cấp. Vui lòng thử lại.";
+    public static final String SUPPLIER_NOT_FOUND = "Nhà cung cấp không tồn tại hoặc đã bị xóa.";
+    public static final String SUPPLIER_NO_SELECTION = "Vui lòng chọn nhà cung cấp.";
+    public static final String SUPPLIER_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa nhà cung cấp này không?";
 
     // ==================== MODULE LOẠI SẢN PHẨM (CATEGORY) ====================
     /**

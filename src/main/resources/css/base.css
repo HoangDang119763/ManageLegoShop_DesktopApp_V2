@@ -101,26 +101,34 @@
     -fx-font-size: 16px;
 }
 
-/* Khi một dòng được chọn */
-.table-view .table-row-cell:selected {
-    -fx-background-color: #279FA5;
-    -fx-text-fill: white;
-
-}
-
-/* Khi hover vào một dòng */
+/* 1. Khi Hover: Sử dụng màu cực nhạt để tạo cảm giác mượt mà */
 .table-view .table-row-cell:hover {
-    -fx-background-color: #3AE2F4;
-    /* Màu khi di chuột */
-    -fx-text-fill: white;
-    /* Màu chữ */
+    -fx-background-color: #f1fafa; /* Xanh Ghost Teal cực nhạt */
+    -fx-text-fill: #1f7d84;        /* Chữ chuyển sang màu thương hiệu */
     -fx-cursor: hand;
 }
 
-/* Khi dòng có focus (có thể chỉnh nếu cần) */
-.table-view .table-row-cell:focused {
-    -fx-background-color: #279FA5;
+/* 2. Khi được chọn (Selected): Giảm độ rực, tăng tính thanh lịch */
+.table-view .table-row-cell:selected {
+    /* Sử dụng màu Teal trung tính hơn, không quá chói */
+    -fx-background-color: #1f7d84;
+    -fx-background-insets: 0;
+}
+
+/* 3. Tinh chỉnh màu chữ khi được chọn để đảm bảo độ tương phản (Contrast) */
+.table-view .table-row-cell:selected .table-cell {
     -fx-text-fill: white;
+    -fx-font-weight: bold; /* Tăng độ đậm của chữ thay vì độ đậm của nền */
+}
+
+/* 4. Hiệu ứng khi mất Focus: Quan trọng trong HCI để người dùng biết bảng vẫn đang chọn dòng đó */
+.table-view .table-row-cell:selected:filled:focused,
+.table-view .table-row-cell:selected:filled {
+    -fx-background-color: #279FA5; /* Giữ màu bạn thích khi đang thao tác trực tiếp */
+}
+
+.table-view:focused .table-row-cell:selected {
+    -fx-background-color: #1f7d84; /* Màu chủ đạo khi đang làm việc với bảng */
 }
 
 .combo-box {
