@@ -177,7 +177,7 @@
                                                     </children>
                                                 </HBox>
                                                 <Line endX="630.0" stroke="#eee" strokeWidth="2.0" />
-                                                <TableView fx:id="tblJobHistory" minHeight="140.0" prefHeight="180.0" styleClass="table-view">
+                                                <TableView fx:id="tblJobHistory" minHeight="140.0" prefHeight="180.0" prefWidth="635.0" styleClass="table-view">
                                                     <placeholder>
                                                         <Label text="Chưa có lịch sử điều chuyển" textFill="#95a5a6">
                                                             <font>
@@ -189,8 +189,14 @@
                                                         <TableColumn fx:id="colEffectiveDate" prefWidth="110.0" text="Ngày áp dụng" />
                                                         <TableColumn fx:id="colDepartment" prefWidth="201.59999084472656" text="Phòng ban" />
                                                         <TableColumn fx:id="colRole" prefWidth="148.79998779296875" text="Chức vụ" />
-                                                        <TableColumn fx:id="colCreatedAt" prefWidth="171.19989013671875" text="Ngày tạo" />
+                                                        <TableColumn fx:id="colCreatedAt" prefWidth="174.39999999999998" text="Ngày tạo" />
                                                     </columns>
+                                       <VBox.margin>
+                                          <Insets />
+                                       </VBox.margin>
+                                       <padding>
+                                          <Insets left="-3.0" right="-2.0" top="-10.0" />
+                                       </padding>
                                                 </TableView>
                                                 <HBox alignment="CENTER_RIGHT" minHeight="45.0">
                                                     <Button fx:id="saveJobBtn" prefHeight="38.0" prefWidth="100.0" styleClass="action-btn" text="LƯU"><graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.1em" /></graphic></Button>

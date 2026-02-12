@@ -44,7 +44,7 @@ public class DiscountController implements IController {
     @FXML
     private TableColumn<DetailDiscountDTO, String> tlb_col_discountAmount;
     @FXML
-    private Label code, name, type, startDate, endDate;
+    private TextField code, name, type, startDate, endDate;
     @FXML
     private HBox functionBtns;
     @FXML

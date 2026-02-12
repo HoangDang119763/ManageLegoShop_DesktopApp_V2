@@ -191,7 +191,7 @@ public class ProductModalController implements IModalController {
 
         cbSelectCategory.setMouseTransparent(true);
         cbSelectCategory.setFocusTraversable(false);
-        cbSelectCategory.setPrefWidth(382);
+        cbSelectCategory.setPrefWidth(406.4);
         cbSelectStatus.setMouseTransparent(true);
         cbSelectStatus.setFocusTraversable(false);
 

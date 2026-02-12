@@ -43,14 +43,6 @@ public class SupplierDTO {
         this.id = id;
     }
 
-    public boolean isStatus() {
-        return statusId == 1; // 1 = ACTIVE
-    }
-
-    public void setStatus(boolean status) {
-        this.statusId = status ? 1 : 2; // 1 = ACTIVE, 2 = INACTIVE
-    }
-
     public int getStatusId() {
         return statusId;
     }

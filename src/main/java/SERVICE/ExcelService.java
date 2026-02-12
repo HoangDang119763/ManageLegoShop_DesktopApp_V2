@@ -117,7 +117,7 @@ public class ExcelService {
             dataRow.createCell(2).setCellValue(employee.getLastName());
             dataRow.createCell(3).setCellValue(ValidationUtils.getInstance().formatDateTime(employee.getDateOfBirth()));
             dataRow.createCell(4).setCellValue(role != null ? role.getName() : "");
-            dataRow.createCell(7).setCellValue(employee.isStatus() ? "Hoạt động" : "Ngưng hoạt động");
+//            dataRow.createCell(7).setCellValue(employee.isStatus() ? "Hoạt động" : "Ngưng hoạt động");
         }
 
         return sheet;

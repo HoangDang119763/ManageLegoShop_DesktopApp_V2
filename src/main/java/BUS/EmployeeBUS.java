@@ -9,6 +9,7 @@ import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
     private static final EmployeeBUS INSTANCE = new EmployeeBUS();
@@ -29,6 +30,14 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
     @Override
     protected Integer getKey(EmployeeDTO obj) {
         return obj.getId();
+    }
+
+    // Không lấy employeeId = 1 (system employee)
+    @Override
+    public ArrayList<EmployeeDTO> getAllLocal() {
+        return arrLocal.stream()
+                .filter(emp -> emp.getId() != 1)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
@@ -81,7 +90,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
         for (EmployeeDTO employee : arrLocal) {
             if (Objects.equals(employee.getId(), id)) {
-                employee.setStatus(false);
+                // employee.setStatus(false);
                 break;
             }
         }
@@ -163,7 +172,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         for (EmployeeDTO emp : arrLocal) {
             boolean matchesSearch = true;
             boolean matchesRole = (roleIdFilter == -1) || (emp.getRoleId() == roleIdFilter);
-            boolean matchesStatus = (statusFilter == -1) || (emp.isStatus() == (statusFilter == 1)); // Sửa lỗi ở đây
+            boolean matchesStatus = (statusFilter == -1) || (emp.getStatusId() == statusFilter); // Sửa lỗi ở đây
 
             // Kiểm tra null tránh lỗi khi gọi .toLowerCase()
             String firstName = emp.getFirstName() != null ? emp.getFirstName().toLowerCase() : "";
@@ -430,7 +439,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
                 Objects.equals(existingEm.getFirstName(), validate.normalizeWhiteSpace(obj.getFirstName())) &&
                 Objects.equals(existingEm.getLastName(), validate.normalizeWhiteSpace(obj.getLastName())) &&
                 Objects.equals(existingEm.getDateOfBirth(), obj.getDateOfBirth()) &&
-                Objects.equals(existingEm.isStatus(), obj.isStatus()) &&
+                Objects.equals(existingEm.getStatusId(), obj.getStatusId()) &&
                 Objects.equals(existingEm.getRoleId(), obj.getRoleId());
     }
 }
