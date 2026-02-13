@@ -11,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -81,6 +82,11 @@ public class UiUtils {
     }
 
     public void setVisibleItem(HBox control) {
+        control.setVisible(false);
+        control.setManaged(false);
+    }
+
+    public void setVisibleItem(VBox control) {
         control.setVisible(false);
         control.setManaged(false);
     }
@@ -169,7 +175,8 @@ public class UiUtils {
         });
 
         // 2. Lắng nghe thay đổi giá trị để gắn Tooltip cho toàn bộ ComboBox
-        comboBox.valueProperty().addListener((obs, oldVal, newVal) -> updateComboBoxTooltip(comboBox, newVal, maxLength, toStringFunction));
+        comboBox.valueProperty().addListener(
+                (obs, oldVal, newVal) -> updateComboBoxTooltip(comboBox, newVal, maxLength, toStringFunction));
 
         // 3. Gọi cập nhật ngay lập tức cho trường hợp ComboBox đã có giá trị sẵn (lúc
         // load dữ liệu)

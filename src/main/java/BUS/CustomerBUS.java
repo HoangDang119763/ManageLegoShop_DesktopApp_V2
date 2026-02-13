@@ -64,46 +64,69 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
     }
 
     public BUSResult delete(int id) {
-        if (id <= 0)
+        // 1. Kiểm tra đầu vào cơ bản
+        if (id <= 0) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        }
 
-        // 1. Bảo vệ khách hàng hệ thống
+        // 2. Bảo vệ khách hàng hệ thống (ID 1: Khách vãng lai/Mặc định)
         if (id == 1) {
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.CUSTOMER_CANNOT_DELETE_SYSTEM);
         }
 
+        // 3. Kiểm tra thực thể có tồn tại trong Cache không
         CustomerDTO targetCustomer = getByIdLocal(id);
-        if (targetCustomer == null)
+        if (targetCustomer == null) {
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
-
-        // 2. Kiểm tra ràng buộc: Có hóa đơn nào liên kết không? (Bất kể trạng thái)
-        // Sửa tên hàm thành isCustomerInAnyInvoice để an toàn khóa ngoại
-        boolean hasInvoice = InvoiceBUS.getInstance().isCustomerInAnyInvoice(id);
-
-        boolean success = hasInvoice
-                ? CustomerDAL.getInstance().softDelete(targetCustomer) // Chuyển status sang INACTIVE
-                : CustomerDAL.getInstance().delete(targetCustomer.getId()); // Xóa hẳn
-
-        if (!success)
-            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
-
-        // 3. Đồng bộ Cache
-        if (hasInvoice) {
-            int inactiveStatusId = StatusBUS.getInstance()
-                    .getByTypeAndStatusNameLocal(StatusType.CUSTOMER, Status.Customer.INACTIVE).getId();
-
-            targetCustomer.setStatusId(inactiveStatusId);
-            // mapLocal và mapByPhone thường trỏ cùng 1 object,
-            // nhưng ghi đè lại cho chắc chắn và an toàn tham chiếu
-            mapLocal.put(id, targetCustomer);
-            mapByPhone.put(targetCustomer.getPhone(), targetCustomer);
-        } else {
-            // Xóa cứng: Xóa sạch dấu vết
-            arrLocal.remove(targetCustomer);
-            mapLocal.remove(id);
-            mapByPhone.remove(targetCustomer.getPhone());
         }
 
+        // 4. Lấy ID trạng thái INACTIVE để so sánh và sử dụng
+        int inactiveStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusNameLocal(StatusType.CUSTOMER, Status.Customer.INACTIVE).getId();
+
+        // 5. Kiểm tra ràng buộc dữ liệu (Quyết định Xóa mềm hay Xóa cứng)
+        boolean hasInvoice = InvoiceBUS.getInstance().isCustomerInAnyInvoice(id);
+
+        // --- CHỐT CHẶN: XỬ LÝ KHI ĐÃ INACTIVE ---
+        if (targetCustomer.getStatusId() == inactiveStatusId) {
+            if (hasInvoice) {
+                // Đã ẩn rồi và có lịch sử -> Trả về thành công luôn
+                return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.DATA_ALREADY_DELETED);
+            }
+            // Nếu đã Inactive mà không có hóa đơn (do dữ liệu rác) -> Cho phép rơi xuống
+            // Xóa Cứng bên dưới
+        }
+
+        boolean success;
+        if (hasInvoice) {
+            // --- XỬ LÝ XÓA MỀM (SOFT DELETE) ---
+            // Gọi DAL truyền trực tiếp ID và Status ID mới
+            success = CustomerDAL.getInstance().updateStatus(id, inactiveStatusId);
+        } else {
+            // --- XỬ LÝ XÓA CỨNG (HARD DELETE) ---
+            success = CustomerDAL.getInstance().delete(id);
+        }
+
+        // 6. Kiểm tra kết quả thực thi Database
+        if (!success) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+
+        // 7. ĐỒNG BỘ CACHE LOCAL (Chỉ chạy khi DB đã thành công)
+        if (hasInvoice) {
+            // Cập nhật trạng thái mới cho object trong bộ nhớ
+            targetCustomer.setStatusId(inactiveStatusId);
+            updateLocalCache(targetCustomer);
+        } else {
+            // Xóa hoàn toàn khỏi tất cả danh sách local
+            arrLocal.remove(targetCustomer);
+            mapLocal.remove(id);
+            if (targetCustomer.getPhone() != null) {
+                mapByPhone.remove(targetCustomer.getPhone());
+            }
+        }
+
+        // 8. Trả về kết quả thành công
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.CUSTOMER_DELETE_SUCCESS);
     }
 
@@ -339,7 +362,7 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
     }
 
     public String nextId() {
-        return String.valueOf(CustomerBUS.getInstance().getAllLocal().size() + 1);
+        return String.valueOf(arrLocal.size() + 1);
     }
 
     public ArrayList<CustomerDTO> searchCustomerByPhone(String phone) {

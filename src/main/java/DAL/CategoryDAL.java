@@ -1,6 +1,7 @@
 package DAL;
 
 import DTO.CategoryDTO;
+import DTO.CustomerDTO;
 import ENUM.Status;
 import java.sql.*;
 
@@ -60,6 +61,21 @@ public class CategoryDAL extends BaseDAL<CategoryDTO, Integer> {
         statement.setString(1, obj.getName());
         statement.setInt(2, obj.getStatusId());
         statement.setInt(3, obj.getId());
+    }
+
+    public boolean updateStatus(int id, int newStatusId) {
+        String query = "UPDATE category SET status_id = ? WHERE id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, newStatusId);
+            statement.setInt(2, id);
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating category status: " + e.getMessage());
+            return false;
+        }
     }
 
 }

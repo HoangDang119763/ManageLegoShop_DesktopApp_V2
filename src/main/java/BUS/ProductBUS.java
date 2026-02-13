@@ -7,6 +7,7 @@ import DTO.BUSResult;
 import ENUM.*;
 import UTILS.AppMessages;
 import UTILS.ValidationUtils;
+import de.jensd.fx.glyphs.testapps.App;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -138,32 +139,65 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
     }
 
     public BUSResult delete(String id) {
-        if (id == null || id.isEmpty())
+        // 1. Kiểm tra đầu vào & tồn tại
+        if (id == null || id.isEmpty()) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        }
+
         ProductDTO targetProduct = getByIdLocal(id);
-        if (targetProduct == null)
+        if (targetProduct == null) {
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+        }
 
-        // LEGO còn trong kho thì không được xóa
-        if (targetProduct.getStockQuantity() != 0)
+        // 2. Chặn nghiệp vụ: Còn hàng thì cấm xóa
+        if (targetProduct.getStockQuantity() != 0) {
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_DELETE_WITH_STOCK);
+        }
 
-        boolean isInInvoice = InvoiceBUS.getInstance().isProductInAnyInvoice(id);
-        boolean success = isInInvoice ? ProductDAL.getInstance().softDelete(targetProduct)
-                : ProductDAL.getInstance().delete(id);
+        // 3. Lấy ID trạng thái INACTIVE để so sánh
+        int inactiveStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
 
-        if (!success)
+        // 4. Kiểm tra ràng buộc lịch sử (Invoice & Import)
+        boolean hasSalesHistory = InvoiceBUS.getInstance().isProductInAnyInvoice(id);
+        boolean hasImportHistory = ImportBUS.getInstance().isProductInAnyImport(id);
+        boolean isRelatedToHistory = hasSalesHistory || hasImportHistory;
+
+        // --- CHỐT CHẶN: XỬ LÝ KHI ĐÃ INACTIVE ---
+        if (targetProduct.getStatusId() == inactiveStatusId) {
+            if (isRelatedToHistory) {
+                // Đã ẩn rồi và có lịch sử -> Trả về thành công luôn vì mục tiêu "xóa" đã đạt
+                // được
+                return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.DATA_ALREADY_DELETED);
+            }
+            // Nếu đã Inactive mà chưa có lịch sử (Lúc tạo có thể Inactive) -> Cho phép rơi
+            // xuống
+            // Xóa Cứng bên dưới
+        }
+
+        boolean success;
+        if (isRelatedToHistory) {
+            // --- XỬ LÝ XÓA MỀM ---
+            success = ProductDAL.getInstance().updateStatus(id, inactiveStatusId);
+        } else {
+            // --- XỬ LÝ XÓA CỨNG ---
+            success = ProductDAL.getInstance().delete(id);
+        }
+
+        // 5. Kiểm tra kết quả DB
+        if (!success) {
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
 
-        if (isInInvoice) {
-            int inactiveStatusId = StatusBUS.getInstance()
-                    .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
+        // 6. ĐỒNG BỘ CACHE
+        if (isRelatedToHistory) {
             targetProduct.setStatusId(inactiveStatusId);
             updateLocalCache(targetProduct);
         } else {
             arrLocal.remove(targetProduct);
             mapLocal.remove(id);
         }
+
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_DELETE_SUCCESS);
     }
 
@@ -411,4 +445,15 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return filterProducts(searchBy, keyword, categoryIdFilter, statusFilter, startPrice, endPrice, false);
     }
 
+    public boolean isCategoryInAnyProduct(int categoryId) {
+        // 1. Đảm bảo dữ liệu đã được load (Giữ nguyên logic của bạn)
+        if (this.isLocalEmpty())
+            this.loadLocal();
+        for (ProductDTO p : arrLocal) {
+            if (p.getCategoryId() == categoryId) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

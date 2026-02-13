@@ -60,7 +60,7 @@
 
                         <VBox prefWidth="180.0" spacing="10.0">
                             <children>
-                                <VBox spacing="8.0" style="-fx-background-color: #f9f9f9; -fx-background-radius: 5; -fx-padding: 10;">
+                                <VBox fx:id="containerMetadata" spacing="8.0" style="-fx-background-color: #f9f9f9; -fx-background-radius: 5; -fx-padding: 10;">
                                     <children>
                                         <VBox spacing="2.0">
                                             <Label styleClass="label-metadata" text="Ngày tạo:"><font><Font size="11.0" /></font></Label>
