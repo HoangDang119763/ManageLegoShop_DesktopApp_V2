@@ -75,19 +75,17 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
         statement.setInt(7, obj.getId());
     }
 
-    public boolean softDelete(CustomerDTO obj) {
-        // SQL tự tìm ID dựa vào tên trạng thái 'INACTIVE' hoặc 'DELETED'
+    public boolean updateStatus(int id, int newStatusId) {
         String query = "UPDATE customer SET status_id = ? WHERE id = ?";
         try (Connection connection = connectionFactory.newConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
 
-            statement.setInt(1, obj.getStatusId());
-            statement.setInt(2, obj.getId());
+            statement.setInt(1, newStatusId);
+            statement.setInt(2, id);
 
             return statement.executeUpdate() > 0;
-
         } catch (SQLException e) {
-            System.err.println("Error soft delete customer: " + e.getMessage());
+            System.err.println("Error updating customer status: " + e.getMessage());
             return false;
         }
     }

@@ -139,19 +139,17 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
         }
     }
 
-    public boolean softDelete(ProductDTO obj) {
-        // SQL tự tìm ID dựa vào tên trạng thái 'INACTIVE' hoặc 'DELETED'
+    public boolean updateStatus(String id, int newStatusId) {
         String query = "UPDATE product SET status_id = ? WHERE id = ?";
         try (Connection connection = connectionFactory.newConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
-            statement.setInt(1, obj.getStatusId());
-            statement.setString(2, obj.getId());
+            statement.setInt(1, newStatusId);
+            statement.setString(2, id);
 
             return statement.executeUpdate() > 0;
-
         } catch (SQLException e) {
-            System.err.println("Error soft delete product: " + e.getMessage());
+            System.err.println("Error updating product status: " + e.getMessage());
             return false;
         }
     }

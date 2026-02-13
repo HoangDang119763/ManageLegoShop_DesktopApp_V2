@@ -87,22 +87,22 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý nhà cung cấp
      */
-    public static final String SUPPLIER_NAME_EMPTY = "Tên nhà cung cấp không được để trống.";
-    public static final String SUPPLIER_NAME_INVALID = "Tên nhà cung cấp không hợp lệ (tối đa 100 ký tự).";
-    public static final String SUPPLIER_PHONE_EMPTY = "Số điện thoại không được để trống.";
-    public static final String SUPPLIER_PHONE_INVALID = "Số điện thoại không hợp lệ (Số 0 đứng đầu và 10 số).";
-    public static final String SUPPLIER_ADDRESS_EMPTY = "Địa chỉ không được để trống.";
-    public static final String SUPPLIER_ADDRESS_INVALID = "Địa chỉ không hợp lệ (tối đa 255 ký tự).";
-    public static final String SUPPLIER_ADD_ERROR = "Có lỗi khi thêm nhà cung cấp. Vui lòng thử lại.";
-    public static final String SUPPLIER_ADD_DUPLICATE = "Đã có nhà cung cấp trong cơ sở dữ liệu.";
-    public static final String SUPPLIER_ADD_NO_PERMISSION = "Không có quyền thêm nhà cung cấp.";
-    public static final String SUPPLIER_ADD_DB_ERROR = "Thêm nhà cung cấp vào CSDL thất bại.";
-    public static final String SUPPLIER_ADD_INVALID_DATA = "Dữ liệu nhập không hợp lệ.";
-    public static final String SUPPLIER_UPDATE_ERROR = "Có lỗi khi cập nhật thông tin nhà cung cấp. Vui lòng thử lại.";
-    public static final String SUPPLIER_UPDATE_DUPLICATE = "Thông tin nhà cung cấp bị trùng lặp.";
-    public static final String SUPPLIER_UPDATE_NO_PERMISSION = "Không có quyền cập nhật thông tin nhà cung cấp.";
-    public static final String SUPPLIER_UPDATE_FAILED = "Không thể cập nhật thông tin nhà cung cấp. Vui lòng thử lại.";
-    public static final String SUPPLIER_NOT_FOUND = "Nhà cung cấp không tồn tại hoặc đã bị xóa.";
+//    public static final String SUPPLIER_NAME_EMPTY = "Tên nhà cung cấp không được để trống.";
+//    public static final String SUPPLIER_NAME_INVALID = "Tên nhà cung cấp không hợp lệ (tối đa 100 ký tự).";
+//    public static final String SUPPLIER_PHONE_EMPTY = "Số điện thoại không được để trống.";
+//    public static final String SUPPLIER_PHONE_INVALID = "Số điện thoại không hợp lệ (Số 0 đứng đầu và 10 số).";
+//    public static final String SUPPLIER_ADDRESS_EMPTY = "Địa chỉ không được để trống.";
+//    public static final String SUPPLIER_ADDRESS_INVALID = "Địa chỉ không hợp lệ (tối đa 255 ký tự).";
+//    public static final String SUPPLIER_ADD_ERROR = "Có lỗi khi thêm nhà cung cấp. Vui lòng thử lại.";
+//    public static final String SUPPLIER_ADD_DUPLICATE = "Đã có nhà cung cấp trong cơ sở dữ liệu.";
+//    public static final String SUPPLIER_ADD_NO_PERMISSION = "Không có quyền thêm nhà cung cấp.";
+//    public static final String SUPPLIER_ADD_DB_ERROR = "Thêm nhà cung cấp vào CSDL thất bại.";
+//    public static final String SUPPLIER_ADD_INVALID_DATA = "Dữ liệu nhập không hợp lệ.";
+//    public static final String SUPPLIER_UPDATE_ERROR = "Có lỗi khi cập nhật thông tin nhà cung cấp. Vui lòng thử lại.";
+//    public static final String SUPPLIER_UPDATE_DUPLICATE = "Thông tin nhà cung cấp bị trùng lặp.";
+//    public static final String SUPPLIER_UPDATE_NO_PERMISSION = "Không có quyền cập nhật thông tin nhà cung cấp.";
+//    public static final String SUPPLIER_UPDATE_FAILED = "Không thể cập nhật thông tin nhà cung cấp. Vui lòng thử lại.";
+//    public static final String SUPPLIER_NOT_FOUND = "Nhà cung cấp không tồn tại hoặc đã bị xóa.";
     public static final String SUPPLIER_NO_SELECTION = "Vui lòng chọn nhà cung cấp.";
     public static final String SUPPLIER_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa nhà cung cấp này không?";
 
@@ -110,26 +110,15 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý danh mục/loại sản phẩm
      */
-    public static final String CATEGORY_NAME_EMPTY = "Tên thể loại không được để trống.";
-    public static final String CATEGORY_NAME_INVALID = "Tên thể loại không hợp lệ (1-50 ký tự, chỉ chữ và số).";
-    public static final String CATEGORY_STATUS_REQUIRED = "Vui lòng chọn trạng thái";
-    public static final String CATEGORY_ADD_ERROR = "Có lỗi khi thêm thể loại. Vui lòng thử lại.";
-    public static final String CATEGORY_ADD_NO_PERMISSION = "Bạn không có quyền \"Thêm thể loại\" để thực hiện thao tác này.";
     public static final String CATEGORY_ADD_DUPLICATE = "Tên thể loại đã tồn tại trong hệ thống.";
-    public static final String CATEGORY_ADD_FAILED = "Thêm thể loại thất bại. Vui lòng thử lại sau.";
-    public static final String CATEGORY_UPDATE_ERROR = "Có lỗi khi cập nhật thể loại. Vui lòng thử lại.";
-    public static final String CATEGORY_UPDATE_NO_PERMISSION = "Bạn không có quyền \"Cập nhật thể loại\" để thực hiện thao tác này.";
+    public static final String CATEGORY_ADD_SUCCESS = "Thêm thể loại thành công";
+    public static final String CATEGORY_CANNOT_DELETE_SYSTEM = "Không thể xóa thể loại gốc";
+    public static final String CATEGORY_DELETE_SUCCESS = "Xóa thể loại thành công";
+    public static final String CATEGORY_UPDATE_SUCCESS = "Cập nhật thể loại thành công";
+    public static final String CATEGORY_CANNOT_UPDATE_SYSTEM = "Không thể sửa thể loại gốc!";
     public static final String CATEGORY_UPDATE_DUPLICATE = "Tên thể loại đã tồn tại trong hệ thống.";
-    public static final String CATEGORY_UPDATE_FAILED = "Cập nhật thể loại thất bại. Vui lòng thử lại sau.";
-    public static final String CATEGORY_DELETE_NO_PERMISSION = "Bạn không có quyền \"Xóa thể loại\" để thực hiện thao tác này.";
-    public static final String CATEGORY_DELETE_ERROR = "Lỗi xoá thể loại không thành công. Vui lòng thử lại.";
-    public static final String CATEGORY_DELETE_FAILED = "Xóa thể loại thất bại. Vui lòng thử lại sau.";
-    public static final String CATEGORY_CANNOT_DELETE_DEFAULT = "Không thể xóa thể loại gốc!";
-    public static final String CATEGORY_CANNOT_UPDATE_DEFAULT = "Không thể sửa thể loại gốc!";
-    public static final String CATEGORY_NOT_FOUND = "Thể loại không tồn tại hoặc đã bị xoá.";
-    public static final String CATEGORY_DELETE_DB_ERROR = "Không thể xoá thể loại ở CSDL.";
-    public static final String CATEGORY_DATA_INVALID = "Dữ liệu thể loại không hợp lệ. Vui lòng kiểm tra lại.";
-
+    public static final String CATEGORY_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa thể loại này không?";
+    public static final String CATEGORY_NO_SELECTION = "Vui lòng chọn thể loại.";
     // ==================== MODULE CHIẾT KHẤU (DISCOUNT) ====================
     /**
      * Các thông báo liên quan đến quản lý chiết khấu và khuyến mãi
@@ -149,7 +138,6 @@ public class AppMessages {
      */
     public static final String ACCOUNT_PASSWORD_CHANGE_SUCCESS = "Đổi mật khẩu thành công!";
     public static final String ACCOUNT_DELETE_SUCCESS = "Xóa tài khoản thành công!";
-    public static final String ACCOUNT_PASSWORD_CHANGE_ERROR = "Có lỗi khi đổi mật khẩu. Vui lòng thử lại.";
     public static final String ACCOUNT_OLD_PASSWORD_WRONG = "Mật khẩu cũ không đúng. Vui lòng thử lại.";
     public static final String ACCOUNT_CANNOT_DELETE_SYSTEM = "Không thể xóa tài khoản gốc hệ thống";
     public static final String ACCOUNT_CANNOT_DELETE_SELF = "Không thể xóa tài khoản của chính mình";
@@ -182,4 +170,5 @@ public class AppMessages {
     public static final String INVALID_PARAMS = "Tham số không hợp lệ";
     public static final String NOT_FOUND = "Không tìm thấy dữ liệu yêu cầu";
     public static final String UNAUTHORIZED = "Bạn không có quyền để thực hiện thao tác này.";
+    public static final String DATA_ALREADY_DELETED = "Dữ liệu này đã ở trạng thái Inactive (xóa hoặc ngừng hoạt động)";
 }

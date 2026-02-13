@@ -6,7 +6,6 @@ import ENUM.ServiceAccessCode;
 import SERVICE.AuthorizationService;
 import UTILS.ValidationUtils;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -64,6 +63,21 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
 
         ValidationUtils validator = ValidationUtils.getInstance();
         return validator.validateBigDecimal(obj.getTotalPrice(), 12, 2, false);
+    }
+
+    public boolean isProductInAnyImport(String productId) {
+        DetailImportBUS detailImportBUS = DetailImportBUS.getInstance();
+
+        // 1. Đảm bảo dữ liệu đã được load (Giữ nguyên logic của bạn)
+        if (this.isLocalEmpty())
+            this.loadLocal();
+        if (detailImportBUS.isLocalEmpty())
+            detailImportBUS.loadLocal();
+
+        // 2. Sử dụng Stream để tìm kiếm nhanh và hiện đại
+        // Kiểm tra xem có bất kỳ dòng chi tiết nhập hàng nào chứa mã sản phẩm này không
+        return detailImportBUS.arrLocal.stream()
+                .anyMatch(detail -> detail.getProductId().equals(productId));
     }
 
 }
