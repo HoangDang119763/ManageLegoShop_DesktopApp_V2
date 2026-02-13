@@ -323,7 +323,7 @@ CREATE TABLE `customer` (
   `last_name` VARCHAR(100) NOT NULL,
   `date_of_birth` DATE DEFAULT NULL,
   `phone` VARCHAR(15) NOT NULL,
-  `address` VARCHAR(255) NOT NULL,
+  `address` VARCHAR(255) DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `status_id` INT NOT NULL,
   PRIMARY KEY (`id`),

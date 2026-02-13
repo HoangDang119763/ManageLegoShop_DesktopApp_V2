@@ -1,8 +1,12 @@
 package BUS;
 
 import DAL.CustomerDAL;
+import DTO.BUSResult;
 import DTO.CustomerDTO;
-import SERVICE.AuthorizationService;
+import ENUM.BUSOperationResult;
+import ENUM.Status;
+import ENUM.StatusType;
+import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
 import java.util.ArrayList;
@@ -59,62 +63,72 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
         return cus != null ? new CustomerDTO(cus) : null;
     }
 
-    public int delete(Integer id, int employee_roleId, int employeeLoginId) {
-        // Kiểm tra ID hợp lệ
-        if (id == null || id <= 0)
-            return 2; // Khách hàng không tồn tại
+    public BUSResult delete(int id) {
+        if (id <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
 
-        // Kiểm tra quyền xóa khách hàng (permission ID = 5)
-        if (employee_roleId <= 0
-                || !AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 5)) {
-            return 4; // Không có quyền xóa
+        // 1. Bảo vệ khách hàng hệ thống
+        if (id == 1) {
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.CUSTOMER_CANNOT_DELETE_SYSTEM);
         }
 
-        // Kiểm tra ID khách hàng vãng lai(gốc)
-        if (id == 1)
-            return 3;
-
-        // Khach hang da bi xoa hoac khong ton tai || !targetCustomer.isStatus()
         CustomerDTO targetCustomer = getByIdLocal(id);
         if (targetCustomer == null)
-            return 5;
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        // Xóa khách hàng trong database
-        if (!CustomerDAL.getInstance().delete(id)) {
-            return 6;
+        // 2. Kiểm tra ràng buộc: Có hóa đơn nào liên kết không? (Bất kể trạng thái)
+        // Sửa tên hàm thành isCustomerInAnyInvoice để an toàn khóa ngoại
+        boolean hasInvoice = InvoiceBUS.getInstance().isCustomerInAnyInvoice(id);
+
+        boolean success = hasInvoice
+                ? CustomerDAL.getInstance().softDelete(targetCustomer) // Chuyển status sang INACTIVE
+                : CustomerDAL.getInstance().delete(targetCustomer.getId()); // Xóa hẳn
+
+        if (!success)
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+
+        // 3. Đồng bộ Cache
+        if (hasInvoice) {
+            int inactiveStatusId = StatusBUS.getInstance()
+                    .getByTypeAndStatusNameLocal(StatusType.CUSTOMER, Status.Customer.INACTIVE).getId();
+
+            targetCustomer.setStatusId(inactiveStatusId);
+            // mapLocal và mapByPhone thường trỏ cùng 1 object,
+            // nhưng ghi đè lại cho chắc chắn và an toàn tham chiếu
+            mapLocal.put(id, targetCustomer);
+            mapByPhone.put(targetCustomer.getPhone(), targetCustomer);
+        } else {
+            // Xóa cứng: Xóa sạch dấu vết
+            arrLocal.remove(targetCustomer);
+            mapLocal.remove(id);
+            mapByPhone.remove(targetCustomer.getPhone());
         }
 
-        // Cập nhật trạng thái trong bộ nhớ local (soft delete)
-        for (CustomerDTO customer : arrLocal) {
-            if (Objects.equals(customer.getId(), id)) {
-                // customer.setStatus(false);
-                // Cập nhật mapLocal (primary cache)
-                mapLocal.put(id, customer);
-                // mapByPhone không cần cập nhật vì vẫn giữ số điện thoại
-                break;
-            }
-        }
-        return 1;
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.CUSTOMER_DELETE_SUCCESS);
     }
 
-    public int insert(CustomerDTO obj, int employee_roleId, int employeeLoginId) {
-        if (obj == null || employee_roleId <= 0
-                || !AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 4)
-                || !isValidCustomerInput(obj)) {
-            return 2;
+    public BUSResult insert(CustomerDTO obj) {
+        if (obj == null) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        }
+        ValidationUtils validate = ValidationUtils.getInstance();
+        obj.setAddress(validate.convertEmptyStringToNull(obj.getAddress()));
+        if (!isValidCustomerInput(obj)) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 4))
-            return 4;
+        // Đảm bảo trạng thái có id hợp lệ
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.CUSTOMER, obj.getStatusId()))
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.STATUS_IDForType_INVALID);
 
-        if (isDuplicateCustomer(-1, obj.getFirstName(), obj.getLastName(), obj.getPhone(), obj.getAddress())) {
-            return 3;
+        if (isExistCustomer(obj)) {
+            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.CUSTOMER_ADD_DUPLICATE);
+
         }
-
-        // image_url và date_of_birth có thể null
 
         // validate khi chuyen xuong database
-        ValidationUtils validate = ValidationUtils.getInstance();
+
         // obj.setStatus(true);
         obj.setFirstName(validate.normalizeWhiteSpace(obj.getFirstName()));
         obj.setLastName(validate.normalizeWhiteSpace(obj.getLastName()));
@@ -122,7 +136,7 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
         obj.setPhone(validate.normalizeWhiteSpace(obj.getPhone()));
 
         if (!CustomerDAL.getInstance().insert(obj)) {
-            return 5;
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
 
         // Cập nhật cache: thêm vào cả mapLocal (primary) và mapByPhone (secondary)
@@ -131,119 +145,158 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
         mapLocal.put(newCus.getId(), newCus);
         mapByPhone.put(newCus.getPhone(), newCus);
 
-        return 1;// them thanh cong
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.CUSTOMER_ADD_SUCCESS);
     }
 
-    public int update(CustomerDTO obj, int employee_roleId, int employeeLoginId) {
-        if (obj == null || obj.getId() <= 0 || employee_roleId <= 0) {
-            return 2;
-        }
-
-        if (!isValidCustomerInput(obj))
-            return 6;
-
-        // Không có quyền sửa
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 6))
-            return 4;
-
-        // Kiểm tra trùng lặp trước khi cập nhật
-        if (isDuplicateCustomer(obj.getId(), obj.getFirstName(), obj.getLastName(), obj.getPhone(), obj.getAddress())) {
-            return 3;
-        }
-
-        // Kiểm tra input ở database
-        if (isDuplicateCustomerS(obj))
-            return 1;
-        ValidationUtils validate = ValidationUtils.getInstance();
-        // obj.setStatus(true);
-        obj.setFirstName(validate.normalizeWhiteSpace(obj.getFirstName()));
-        obj.setLastName(validate.normalizeWhiteSpace(obj.getLastName()));
-        obj.setAddress(validate.normalizeWhiteSpace(obj.getAddress()));
-        obj.setPhone(validate.normalizeWhiteSpace(obj.getPhone()));
-
-        // Thực hiện update trong database
-        if (!CustomerDAL.getInstance().update(obj)) {
-            return 5;
-        }
-
-        // Sửa thành công
-        updateLocalCache(obj);
-        return 1;
+    private void addToLocalCache(CustomerDTO obj) {
+        // Deep copy để an toàn tham chiếu
+        CustomerDTO newCus = new CustomerDTO(obj);
+        // Thêm mới hoàn toàn vào Map và List
+        mapLocal.put(newCus.getId(), newCus);
+        arrLocal.add(newCus);
+        mapByPhone.put(newCus.getPhone(), newCus);
     }
 
-    // Cap nhat cache local (primary: mapLocal + arrLocal, secondary: mapByPhone)
-    private void updateLocalCache(CustomerDTO obj) {
-        if (obj == null || obj.getId() <= 0)
-            return;
+    // Khớp cả 5 trường dữ liệu (không tính status) thì là trùng
 
-        CustomerDTO clonedObj = new CustomerDTO(obj);
-
-        // Cập nhật arrLocal (ArrayList để hiển thị TableView)
-        for (int i = 0; i < arrLocal.size(); i++) {
-            if (Objects.equals(arrLocal.get(i).getId(), obj.getId())) {
-                // Lấy object cũ để xóa từ mapByPhone
-                CustomerDTO oldObj = arrLocal.get(i);
-                if (oldObj.getPhone() != null) {
-                    mapByPhone.remove(oldObj.getPhone());
-                }
-                // Cập nhật dữ liệu
-                arrLocal.set(i, clonedObj);
-                break;
-            }
-        }
-
-        // Cập nhật mapLocal (HashMap primary - O(1))
-        mapLocal.put(clonedObj.getId(), clonedObj);
-
-        // Cập nhật mapByPhone (HashMap secondary - O(1))
-        if (clonedObj.getPhone() != null && !clonedObj.getPhone().isEmpty()) {
-            mapByPhone.put(clonedObj.getPhone(), clonedObj);
-        }
-    }
-
-    public boolean isDuplicateCustomer(int id, String firstName, String lastName, String phone, String address) {
-        if (firstName == null || lastName == null || phone == null || address == null)
+    public boolean isExistCustomer(CustomerDTO obj) {
+        if (obj.getFirstName() == null || obj.getLastName() == null || obj.getPhone() == null)
             return false;
 
         for (CustomerDTO customer : arrLocal) {
-            if (customer.getId() != id &&
-                    customer.getFirstName().trim().equalsIgnoreCase(firstName.trim()) &&
-                    customer.getLastName().trim().equalsIgnoreCase(lastName.trim()) &&
+            // 1. Bỏ qua nếu trùng ID (đang sửa chính mình)
+            if (customer.getId() == obj.getId())
+                continue;
 
-                    customer.getPhone().trim().equals(phone.trim()) &&
-                    customer.getAddress().trim().equalsIgnoreCase(address.trim())) {
+            // 2. So sánh các trường bắt buộc (đã đảm bảo không null)
+            boolean isMatchBasic = customer.getFirstName().trim().equalsIgnoreCase(obj.getFirstName().trim()) &&
+                    customer.getLastName().trim().equalsIgnoreCase(obj.getLastName().trim()) &&
+                    customer.getPhone().trim().equals(obj.getPhone().trim());
+
+            if (!isMatchBasic)
+                continue;
+
+            // 3. So sánh Ngày sinh (Dùng Objects.equals để an toàn với null)
+            boolean isMatchDOB = Objects.equals(customer.getDateOfBirth(), obj.getDateOfBirth());
+
+            // 4. So sánh Địa chỉ (Cần xử lý trim() cẩn thận vì có thể null)
+            String addr1 = (customer.getAddress() == null) ? "" : customer.getAddress().trim();
+            String addr2 = (obj.getAddress() == null) ? "" : obj.getAddress().trim();
+            boolean isMatchAddress = addr1.equalsIgnoreCase(addr2);
+
+            // Nếu khớp tất cả thì trả về true
+            if (isMatchDOB && isMatchAddress) {
                 return true;
             }
         }
         return false;
     }
 
+    // Kiểm tra đầu vào Từ UI gửi xuống BUS (insert/update)
     private boolean isValidCustomerInput(CustomerDTO obj) {
-        if (obj.getFirstName() == null || obj.getLastName() == null || obj.getPhone() == null
-                || obj.getAddress() == null) {
+        // 1. Kiểm tra các trường bắt buộc (Không null và không rỗng)
+        if (obj.getFirstName() == null || obj.getFirstName().trim().isEmpty() ||
+                obj.getLastName() == null || obj.getLastName().trim().isEmpty() ||
+                obj.getPhone() == null || obj.getPhone().trim().isEmpty()) {
             return false;
         }
 
         ValidationUtils validator = ValidationUtils.getInstance();
 
-        return validator.validateVietnameseText100(obj.getFirstName()) &&
-                validator.validateVietnameseText100(obj.getLastName()) &&
-                validator.validateVietnamesePhoneNumber(obj.getPhone()) &&
-                validator.validateVietnameseText255(obj.getAddress());
+        // 3. Kiểm tra tính hợp lệ của Địa chỉ (Nếu có)
+        if (obj.getAddress() != null && !validator.validateVietnameseText255(obj.getAddress())) {
+            return false;
+        }
+
+        // 4. Kiểm tra tính hợp lệ của Ngày sinh (Nếu có)
+        // Giữ nguyên giá trị cũ của ngày sinh, chỉ kiểm tra logic
+        if (obj.getDateOfBirth() != null && !validator.validateDateOfBirth(obj.getDateOfBirth())) {
+            return false;
+        }
+
+        // 5. Kiểm tra các trường chính bằng Validator
+        return validator.validateVietnameseText100(obj.getFirstName().trim()) &&
+                validator.validateVietnameseText100(obj.getLastName().trim()) &&
+                validator.validateVietnamesePhoneNumber(obj.getPhone().trim());
     }
 
-    public boolean isDuplicateCustomerS(CustomerDTO obj) {
-        CustomerDTO existingPro = getByIdLocal(obj.getId());
+    public BUSResult update(CustomerDTO obj) {
+        if (obj == null)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+
+        // 5. Kiểm tra Status
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.CUSTOMER, obj.getStatusId()))
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.STATUS_IDForType_INVALID);
+
+        // 1. Chuẩn hóa dữ liệu NGAY LẬP TỨC để các bước check sau chính xác 100%
+        ValidationUtils validate = ValidationUtils.getInstance();
+        obj.setAddress(validate.convertEmptyStringToNull(obj.getAddress()));
+
+        // 2. Validate định dạng
+        if (!isValidCustomerInput(obj))
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+
+        // 3. Kiểm tra không thay đổi dữ liệu (Tránh ghi DB thừa)
+        if (isDataUnchanged(obj))
+            return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.CUSTOMER_UPDATE_SUCCESS);
+
+        // 4. Kiểm tra xem dữ liệu mới có bị trùng với "khách hàng khác" không (5
+        // trường)
+        if (isExistCustomer(obj))
+            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.CUSTOMER_UPDATE_DUPLICATE);
+
+        obj.setFirstName(validate.normalizeWhiteSpace(obj.getFirstName()));
+        obj.setLastName(validate.normalizeWhiteSpace(obj.getLastName()));
+        obj.setAddress(validate.normalizeWhiteSpace(obj.getAddress()));
+        obj.setPhone(validate.normalizeWhiteSpace(obj.getPhone()));
+        // 6. Ghi vào Database
+        if (!CustomerDAL.getInstance().update(obj)) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+
+        // 7. Cập nhật Cache an toàn
+        updateLocalCache(obj);
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.CUSTOMER_UPDATE_SUCCESS);
+    }
+
+    private void updateLocalCache(CustomerDTO obj) {
+        CustomerDTO oldCus = mapLocal.get(obj.getId());
+        CustomerDTO newCus = new CustomerDTO(obj);
+
+        // XỬ LÝ LỖI SECONDARY INDEX: Nếu đổi SĐT thì phải xóa Key cũ
+        if (oldCus != null && !Objects.equals(oldCus.getPhone(), newCus.getPhone())) {
+            mapByPhone.remove(oldCus.getPhone());
+        }
+
+        // Update các Map
+        mapLocal.put(obj.getId(), newCus);
+        if (newCus.getPhone() != null) {
+            mapByPhone.put(newCus.getPhone(), newCus);
+        }
+
+        // Update List arrLocal (Dùng vòng lặp là chấp nhận được nếu cần giữ thứ tự)
+        for (int i = 0; i < arrLocal.size(); i++) {
+            if (arrLocal.get(i).getId() == obj.getId()) {
+                arrLocal.set(i, newCus);
+                break;
+            }
+        }
+    }
+
+    // Kiểm tra dữ liệu trùng lặp khi cập nhật
+    public boolean isDataUnchanged(CustomerDTO obj) {
+        CustomerDTO existingCus = getByIdLocal(obj.getId());
         ValidationUtils validate = ValidationUtils.getInstance();
 
         // Kiểm tra xem tên, mô tả, và hệ số lương có trùng không
-        return existingPro != null &&
-                Objects.equals(existingPro.getFirstName(), validate.normalizeWhiteSpace(obj.getFirstName())) &&
-                Objects.equals(existingPro.getLastName(), validate.normalizeWhiteSpace(obj.getLastName())) &&
-                Objects.equals(existingPro.getDateOfBirth(), obj.getDateOfBirth()) &&
-                Objects.equals(existingPro.getPhone(), obj.getPhone()) &&
-                Objects.equals(existingPro.getStatusId(), obj.getStatusId()) &&
-                Objects.equals(existingPro.getAddress(), validate.normalizeWhiteSpace(obj.getAddress()));
+        return existingCus != null &&
+                Objects.equals(existingCus.getFirstName(), validate.normalizeWhiteSpace(obj.getFirstName())) &&
+                Objects.equals(existingCus.getLastName(), validate.normalizeWhiteSpace(obj.getLastName())) &&
+                Objects.equals(existingCus.getDateOfBirth(), obj.getDateOfBirth()) &&
+                Objects.equals(existingCus.getPhone(), obj.getPhone()) &&
+                Objects.equals(existingCus.getStatusId(), obj.getStatusId()) &&
+                Objects.equals(existingCus.getAddress(), validate.normalizeWhiteSpace(obj.getAddress()));
     }
 
     // searchbar
@@ -283,6 +336,10 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
         }
 
         return filteredList;
+    }
+
+    public String nextId() {
+        return String.valueOf(CustomerBUS.getInstance().getAllLocal().size() + 1);
     }
 
     public ArrayList<CustomerDTO> searchCustomerByPhone(String phone) {

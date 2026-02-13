@@ -161,38 +161,29 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
      * @param productId ID của sản phẩm
      * @return true nếu sản phẩm có trong invoice hoàn thành
      */
-    public boolean isProductInCompletedInvoice(String productId) {
-        InvoiceBUS invoiceBUS = InvoiceBUS.getInstance();
+    public boolean isProductInAnyInvoice(String productId) {
         DetailInvoiceBUS detailInvoiceBUS = DetailInvoiceBUS.getInstance();
 
-        // Đảm bảo dữ liệu đã được load
-        if (invoiceBUS.isLocalEmpty()) {
-            invoiceBUS.loadLocal();
-        }
-        if (detailInvoiceBUS.isLocalEmpty()) {
+        // 1. Đảm bảo dữ liệu đã được load (Giữ nguyên logic của bạn)
+        if (this.isLocalEmpty())
+            this.loadLocal();
+        if (detailInvoiceBUS.isLocalEmpty())
             detailInvoiceBUS.loadLocal();
-        }
 
-        // Lấy statusId của invoice COMPLETED
-        int completedStatusId = StatusBUS.getInstance()
-                .getByTypeAndStatusNameLocal(StatusType.INVOICE, Status.Invoice.COMPLETED).getId();
+        // 2. Sử dụng Stream để tìm kiếm nhanh và hiện đại
+        // Kiểm tra xem có bất kỳ dòng chi tiết hóa đơn nào chứa mã sản phẩm này không
+        return detailInvoiceBUS.arrLocal.stream()
+                .anyMatch(detail -> detail.getProductId().equals(productId));
+    }
 
-        if (completedStatusId <= 0) {
-            return false; // Không tìm thấy status COMPLETED
-        }
+    public boolean isCustomerInAnyInvoice(int customerId) {
+        if (this.isLocalEmpty())
+            this.loadLocal();
 
-        // Kiểm tra tất cả DetailInvoice
-        for (DetailInvoiceDTO detail : detailInvoiceBUS.getAllLocal()) {
-            if (detail.getProductId().equals(productId)) {
-                // Tìm invoice tương ứng
-                InvoiceDTO invoice = invoiceBUS.getByIdLocal(detail.getInvoiceId());
-                if (invoice != null && invoice.getStatusId() == completedStatusId) {
-                    return true; // Sản phẩm này trong invoice COMPLETED
-                }
-            }
-        }
-
-        return false;
+        // Duyệt tìm bất kỳ hóa đơn nào có mã khách hàng này
+        // Sử dụng stream() để code ngắn gọn và hiện đại hơn
+        return this.arrLocal.stream()
+                .anyMatch(invoice -> invoice.getCustomerId() == customerId);
     }
 
 }
