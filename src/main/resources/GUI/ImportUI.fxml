@@ -33,6 +33,9 @@
                             <graphic><FontAwesomeIcon glyphName="FILTER" size="1.2em" styleClass="action-icon" /></graphic>
                         </Button>
                     </children>
+               <BorderPane.margin>
+                  <Insets bottom="-5.0" />
+               </BorderPane.margin>
                 </AnchorPane>
             </top>
 

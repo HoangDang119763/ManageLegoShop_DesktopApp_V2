@@ -5,22 +5,26 @@ import java.util.ArrayList;
 
 import BUS.CustomerBUS;
 import BUS.StatusBUS;
+import DTO.BUSResult;
 import DTO.CustomerDTO;
 import DTO.StatusDTO;
+import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IModalController;
-import SERVICE.SessionManagerService;
+import SERVICE.SecureExecutor;
+import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.util.StringConverter;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import lombok.Getter;
 
@@ -45,6 +49,8 @@ public class CustomerModalController implements IModalController {
     @FXML
     public Button saveBtn;
     @FXML
+    public HBox updatedAt;
+    @FXML
     public ComboBox<StatusDTO> cbSelectStatus;
 
     // State variables
@@ -52,9 +58,15 @@ public class CustomerModalController implements IModalController {
     private boolean isSaved;
     private int typeModal; // 0: Add, 1: Edit
     private CustomerDTO customer;
+    private StatusBUS statusBus;
+    private CustomerBUS customerBus;
+    private ValidationUtils validator;
 
     @FXML
     public void initialize() {
+        statusBus = StatusBUS.getInstance();
+        customerBus = CustomerBUS.getInstance();
+        validator = ValidationUtils.getInstance();
         loadComboBox();
         setupListeners();
     }
@@ -65,26 +77,9 @@ public class CustomerModalController implements IModalController {
     }
 
     private void loadComboBox() {
-        StatusBUS statusBus = StatusBUS.getInstance();
         ArrayList<StatusDTO> statusOptions = statusBus.getAllByTypeLocal(StatusType.CUSTOMER);
-
-        // 1. Đổ trực tiếp danh sách DTO vào ComboBox (Thay vì String)
         ObservableList<StatusDTO> options = FXCollections.observableArrayList(statusOptions);
         cbSelectStatus.setItems(options);
-
-        // 2. Định nghĩa: Hiển thị description nhưng giữ nguyên đối tượng DTO bên dưới
-        cbSelectStatus.setConverter(new StringConverter<StatusDTO>() {
-            @Override
-            public String toString(StatusDTO status) {
-                return (status == null) ? "" : status.getDescription();
-            }
-
-            @Override
-            public StatusDTO fromString(String string) {
-                return null; // Không cần thiết khi chỉ chọn từ danh sách
-            }
-        });
-
         cbSelectStatus.getSelectionModel().selectFirst();
     }
 
@@ -94,7 +89,8 @@ public class CustomerModalController implements IModalController {
         typeModal = type;
         if (typeModal == 0) {
             modalName.setText("Thêm khách hàng");
-            txtCustomerId.setText(String.valueOf(CustomerBUS.getInstance().getAllLocal().size() + 1));
+            txtCustomerId.setText(customerBus.nextId());
+            UiUtils.gI().setVisibleItem(updatedAt);
         } else {
             if (customer == null)
                 handleClose();
@@ -117,14 +113,12 @@ public class CustomerModalController implements IModalController {
 
             txtPhone.setText(customer.getPhone());
             txtAddress.setText(customer.getAddress());
-            // Chọn status trong ComboBox dựa trên customer.statusId
-            if (cbSelectStatus.getItems() != null) {
-                for (StatusDTO status : cbSelectStatus.getItems()) {
-                    if (status.getId() == customer.getStatusId()) {
-                        cbSelectStatus.getSelectionModel().select(status);
-                        break;
-                    }
-                }
+            StatusDTO statusToSelect = statusBus.getByIdLocal(customer.getStatusId());
+            if (statusToSelect != null) {
+                cbSelectStatus.getItems().stream()
+                        .filter(item -> item != null && item.getId() == statusToSelect.getId())
+                        .findFirst()
+                        .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
             }
         }
     }
@@ -136,58 +130,60 @@ public class CustomerModalController implements IModalController {
         String phone = txtPhone.getText().trim();
         String address = txtAddress.getText().trim();
 
-        ValidationUtils validator = ValidationUtils.getInstance();
-
+        // Validate Họ
         if (firstName.isEmpty()) {
-            NotificationUtils.showErrorAlert("Họ khách hàng không được để trống.", "Thông báo");
+            NotificationUtils.showErrorAlert("Họ khách hàng không được để trống.", AppMessages.DIALOG_TITLE);
             clearAndFocus(txtFirstName);
             isValid = false;
         } else if (!validator.validateVietnameseText100(firstName)) {
-            NotificationUtils.showErrorAlert("Họ không hợp lệ (tối đa 100 ký tự).", "Thông báo");
+            NotificationUtils.showErrorAlert("Họ không hợp lệ (tối đa 100 ký tự).", AppMessages.DIALOG_TITLE);
             clearAndFocus(txtFirstName);
             isValid = false;
         }
 
-        if (isValid && lastName.isEmpty()) {
-            NotificationUtils.showErrorAlert("Tên khách hàng không được để trống.", "Thông báo");
-            clearAndFocus(txtLastName);
-            isValid = false;
-        } else if (isValid && !validator.validateVietnameseText100(lastName)) {
-            NotificationUtils.showErrorAlert("Tên không hợp lệ (tối đa 100 ký tự).", "Thông báo");
-            clearAndFocus(txtLastName);
-            isValid = false;
+        // Validate Tên
+        if (isValid) {
+            if (lastName.isEmpty()) {
+                NotificationUtils.showErrorAlert("Tên khách hàng không được để trống.", AppMessages.DIALOG_TITLE);
+                clearAndFocus(txtLastName);
+                isValid = false;
+            } else if (!validator.validateVietnameseText100(lastName)) {
+                NotificationUtils.showErrorAlert("Tên không hợp lệ (tối đa 100 ký tự).", AppMessages.DIALOG_TITLE);
+                clearAndFocus(txtLastName);
+                isValid = false;
+            }
         }
 
-        if (isValid && phone.isEmpty()) {
-            NotificationUtils.showErrorAlert("Số điện thoại không được để trống.", "Thông báo");
-            clearAndFocus(txtPhone);
-            isValid = false;
-        } else if (isValid && !validator.validateVietnamesePhoneNumber(phone)) {
-            NotificationUtils.showErrorAlert("Số điện thoại không hợp lệ(Số 0 đứng đầu và theo sau 9 ký tự)",
-                    "Thông báo");
-            clearAndFocus(txtPhone);
-            isValid = false;
+        // Validate Số điện thoại
+        if (isValid) {
+            if (phone.isEmpty()) {
+                NotificationUtils.showErrorAlert("Số điện thoại không được để trống.", AppMessages.DIALOG_TITLE);
+                clearAndFocus(txtPhone);
+                isValid = false;
+            } else if (!validator.validateVietnamesePhoneNumber(phone)) {
+                NotificationUtils.showErrorAlert("Số điện thoại không hợp lệ (Số 0 đứng đầu và theo sau 9 ký tự).",
+                        AppMessages.DIALOG_TITLE);
+                clearAndFocus(txtPhone);
+                isValid = false;
+            }
         }
 
-        if (isValid && address.isEmpty()) {
-            NotificationUtils.showErrorAlert("Địa chỉ không được để trống.", "Thông báo");
-            clearAndFocus(txtAddress);
-            isValid = false;
-        } else if (isValid && !validator.validateVietnameseText255(address)) {
-            NotificationUtils.showErrorAlert("Địa chỉ không hợp lệ (tối đa 255 ký tự)", "Thông báo");
-            isValid = false;
+        // Validate Địa chỉ (Chỉ validate nếu có nhập)
+        if (isValid && !address.isEmpty()) {
+            if (!validator.validateVietnameseText255(address)) {
+                NotificationUtils.showErrorAlert("Địa chỉ không hợp lệ (tối đa 255 ký tự).", AppMessages.DIALOG_TITLE);
+                clearAndFocus(txtAddress);
+                isValid = false;
+            }
         }
 
-        // Kiem tra ngay sinh
+        // Kiểm tra ngày sinh (Chỉ validate nếu có chọn)
         if (isValid) {
             LocalDate date = dateOfBirth.getValue();
-            if (date != null) {
-                LocalDate today = LocalDate.now();
-                if (date.isAfter(today)) {
-                    NotificationUtils.showErrorAlert(
-                            "Ngày sinh không hợp lệ (ngày sinh không được lớn hơn ngày hiện tại)", "Thông báo");
-                    isValid = false;
-                }
+            if (date != null && !validator.validateDateOfBirth(date)) {
+                NotificationUtils.showErrorAlert("Ngày sinh không hợp lệ (phải trước ngày hiện tại).",
+                        AppMessages.DIALOG_TITLE);
+                isValid = false;
             }
         }
 
@@ -203,56 +199,82 @@ public class CustomerModalController implements IModalController {
     }
 
     private void insertCustomer() {
-        CustomerBUS customerBus = CustomerBUS.getInstance();
-        if (isValidInput()) {
-            // Create CustomerDTO with ID 0, which will be replaced by the generated ID
-            CustomerDTO temp = new CustomerDTO(-1, txtFirstName.getText().trim(),
-                    txtLastName.getText().trim(), txtPhone.getText().trim(), txtAddress.getText().trim(),
-                    dateOfBirth.getValue() != null ? dateOfBirth.getValue() : null,
-                    cbSelectStatus.getValue().getId());
-            int insertResult = customerBus.insert(temp, SessionManagerService.getInstance().employeeRoleId(),
-                    SessionManagerService.getInstance().employeeLoginId());
-            switch (insertResult) {
-                case 1 -> {
-                    isSaved = true;
-                    handleClose();
-                }
-                case 2 ->
-                    NotificationUtils.showErrorAlert("Có lỗi khi thêm khách hàng. Vui lòng thử lại.", "Thông báo");
-                case 3 -> NotificationUtils.showErrorAlert("Đã có khách hàng trong cơ sở dữ liệu", "Thông báo");
-                case 4 -> NotificationUtils.showErrorAlert("Không có quyền thêm khách hàng.", "Thông báo");
-                case 5 -> NotificationUtils.showErrorAlert("Thêm khách hàng thất bại. Vui lòng thử lại.", "Thông báo");
-                case 6 -> NotificationUtils.showErrorAlert("Dữ liệu nhập không hợp lệ.", "Thông báo");
-                default -> NotificationUtils.showErrorAlert("Lỗi không xác định. Vui lòng thử lại.", "Thông báo");
-            }
+        if (!isValidInput())
+            return; // Early return giúp code đỡ bị lồng nhiều khối if
+
+        // 1. Thu thập dữ liệu và xử lý nhanh
+        String fName = txtFirstName.getText().trim();
+        String lName = txtLastName.getText().trim();
+        String phone = txtPhone.getText().trim();
+
+        // Rút gọn logic xử lý address: trim và chuyển rỗng thành null
+        String addressRaw = txtAddress.getText();
+        String address = (addressRaw == null || addressRaw.trim().isEmpty()) ? null : addressRaw.trim();
+
+        // 2. Tạo đối tượng Temp (ID -1 là chuẩn cho insert)
+        CustomerDTO temp = new CustomerDTO(
+                -1,
+                fName,
+                lName,
+                phone,
+                address,
+                dateOfBirth.getValue(),
+                cbSelectStatus.getValue().getId());
+
+        // 3. Thực thi an toàn qua SecureExecutor
+        BUSResult insertResult = SecureExecutor.runSafeBUSResult(
+                PermissionKey.CUSTOMER_INSERT,
+                () -> customerBus.insert(temp));
+
+        // 4. Xử lý phản hồi từ BUS
+        if (insertResult.isSuccess()) {
+            NotificationUtils.showInfoAlert(insertResult.getMessage(), AppMessages.DIALOG_TITLE);
+            isSaved = true;
+            handleClose();
+        } else {
+            // BUS sẽ trả về lỗi nếu "isExistCustomer" (trùng 5 trường) trả về true
+            NotificationUtils.showErrorAlert(insertResult.getMessage(), AppMessages.DIALOG_TITLE);
         }
     }
 
     private void updateCustomer() {
-        CustomerBUS customerBus = CustomerBUS.getInstance();
-        if (isValidInput()) {
-            CustomerDTO temp = new CustomerDTO(customer.getId(), txtFirstName.getText().trim(),
-                    txtLastName.getText().trim(), txtPhone.getText().trim(), txtAddress.getText().trim(),
-                    dateOfBirth.getValue() != null ? dateOfBirth.getValue() : null,
-                    cbSelectStatus.getValue().getId());
-            int updateResult = customerBus.update(temp, SessionManagerService.getInstance().employeeRoleId(),
-                    SessionManagerService.getInstance().employeeLoginId());
-            switch (updateResult) {
-                case 1 -> {
-                    isSaved = true;
-                    handleClose();
-                }
-                case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi cập nhật thông tin khách hàng. Vui lòng thử lại",
-                        "Lỗi");
-                case 3 -> NotificationUtils.showErrorAlert("Thông tin khách hàng bị trùng lặp.", "Lỗi");
-                case 4 ->
-                    NotificationUtils.showErrorAlert("Không có quyền cập nhật thông tin khách hàng.", "Thông báo.");
-                case 5 -> NotificationUtils.showErrorAlert("Không thể cập nhật thông tin khách hàng. Vui lòng thử lại.",
-                        "Lỗi");
-                case 6 -> NotificationUtils.showErrorAlert("Đầu vào không hợp lệ. Vui lòng thử lại.", "Thông báo");
-                case 7 -> NotificationUtils.showErrorAlert("Không thể xoá khách hàng mặc định.", "Thông báo");
-                default -> NotificationUtils.showErrorAlert("Lỗi không xác định. Vui lòng thử lại.", "Lỗi");
-            }
+        // 1. Early Return giúp code thoáng hơn
+        if (!isValidInput())
+            return;
+
+        // 2. Thu thập và làm sạch dữ liệu (UI Clean-up)
+        String fName = txtFirstName.getText().trim();
+        String lName = txtLastName.getText().trim();
+        String phone = txtPhone.getText().trim();
+
+        // Xử lý địa chỉ an toàn: Tránh NPE và đồng bộ logic null với BUS
+        String addressRaw = txtAddress.getText();
+        String address = (addressRaw == null || addressRaw.trim().isEmpty()) ? null : addressRaw.trim();
+
+        // 3. Khởi tạo DTO với dữ liệu đã làm sạch
+        // Sử dụng customer.getId() để đảm bảo Update đúng đối tượng cũ
+        CustomerDTO temp = new CustomerDTO(
+                customer.getId(),
+                fName,
+                lName,
+                phone,
+                address,
+                dateOfBirth.getValue(), // Tối giản: getValue() trả về null nếu không chọn
+                cbSelectStatus.getValue().getId());
+
+        // 4. Thực thi qua lớp bảo mật SecureExecutor
+        BUSResult updateResult = SecureExecutor.runSafeBUSResult(
+                PermissionKey.CUSTOMER_UPDATE,
+                () -> customerBus.update(temp));
+
+        // 5. Phản hồi người dùng dựa trên kết quả từ BUS
+        if (updateResult.isSuccess()) {
+            NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+            isSaved = true;
+            handleClose();
+        } else {
+            // Hiển thị lỗi cụ thể (ví dụ: Trùng 5 trường với khách khác - CONFLICT)
+            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
         }
     }
 

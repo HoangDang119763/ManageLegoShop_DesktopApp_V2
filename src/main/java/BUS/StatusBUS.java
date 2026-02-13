@@ -56,6 +56,19 @@ public class StatusBUS extends BaseBUS<StatusDTO, Integer> {
         return null;
     }
 
+    public boolean isValidStatusIdForType(StatusType type, int statusId) {
+        if (type == null || statusId <= 0)
+            return false;
+
+        for (StatusDTO status : arrLocal) {
+            if (type.name().equalsIgnoreCase(status.getType())
+                    && status.getId() == statusId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public ArrayList<StatusDTO> filterStatus(String searchBy, String keyword) {
         ArrayList<StatusDTO> filteredList = new ArrayList<>();
 

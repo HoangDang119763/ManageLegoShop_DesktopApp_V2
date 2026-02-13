@@ -34,72 +34,22 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return obj.getId();
     }
 
-    private void updateLocalCache(ProductDTO obj) {
-        // Tạo bản sao mới để tránh side-effect từ UI
-        ProductDTO clonedObj = new ProductDTO(obj);
-
-        // Cập nhật Map (Nhanh - O(1))
-        mapLocal.put(clonedObj.getId(), clonedObj);
-
-        // Cập nhật List (Dùng để hiển thị lên TableView)
-        for (int i = 0; i < arrLocal.size(); i++) {
-            if (Objects.equals(arrLocal.get(i).getId(), clonedObj.getId())) {
-                // Thay thế bằng đối tượng đã clone
-                arrLocal.set(i, clonedObj);
-                break;
-            }
-        }
-    }
-
-    public BUSResult delete(String id) {
-        // 1. Kiểm tra đầu vào & kho (Chuẩn)
-        if (id == null || id.isEmpty())
-            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
-
-        ProductDTO targetProduct = getByIdLocal(id);
-        if (targetProduct == null)
-            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
-
-        if (targetProduct.getStockQuantity() != 0)
-            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_DELETE_WITH_STOCK);
-
-        // 2. Quyết định xóa (Chuẩn)
-        boolean isInInvoice = InvoiceBUS.getInstance().isProductInCompletedInvoice(id);
-        boolean success = isInInvoice ? ProductDAL.getInstance().softDelete(targetProduct)
-                : ProductDAL.getInstance().delete(targetProduct.getId());
-
-        if (!success)
-            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
-
-        // 3. Đồng bộ Cache
-        if (isInInvoice) {
-            // Lấy ID từ Cache của StatusBUS (nhanh, không sợ lag)
-            int inactiveStatusId = StatusBUS.getInstance()
-                    .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
-
-            targetProduct.setStatusId(inactiveStatusId);
-            mapLocal.put(id, targetProduct);
-        } else {
-            // Xóa cứng: Bay màu hoàn toàn khỏi cả 2 danh sách
-            arrLocal.remove(targetProduct);
-            mapLocal.remove(id);
-        }
-
-        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_DELETE_SUCCESS);
-    }
-
+    // --- LOGIC XỬ LÝ ID AN TOÀN ---
     public String autoId() {
-        if (isLocalEmpty()) {
+        if (isLocalEmpty())
             return "SP00001";
-        }
 
-        String lastId = arrLocal.get(arrLocal.size() - 1).getId();
-        try {
-            int id = Integer.parseInt(lastId.substring(2)) + 1;
-            return String.format("SP%05d", id);
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Invalid product ID format: " + lastId);
+        // Quét tìm Max ID thực sự thay vì lấy phần tử cuối (tránh lỗi khi list bị sort)
+        int maxId = 0;
+        for (ProductDTO p : arrLocal) {
+            try {
+                int currentNumId = Integer.parseInt(p.getId().substring(2));
+                if (currentNumId > maxId)
+                    maxId = currentNumId;
+            } catch (Exception e) {
+                /* Bỏ qua mã lỗi định dạng */ }
         }
+        return String.format("SP%05d", maxId + 1);
     }
 
     private String nextProductId(String currentId) {
@@ -107,277 +57,301 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return String.format("SP%05d", temp);
     }
 
+    // --- NGHIỆP VỤ CHÍNH ---
     public BUSResult insert(ProductDTO obj) {
-        if (obj == null || obj.getCategoryId() <= 0) {
+        if (obj == null)
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
-        }
-        if (!isValidProductInput(obj)) {
-            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
-        }
-        // 1. Chuẩn hóa ngay từ đầu để Validate cho chính xác
-        ValidationUtils validate = ValidationUtils.getInstance();
-        obj.setName(validate.normalizeWhiteSpace(obj.getName()));
-        obj.setDescription(validate.normalizeWhiteSpace(obj.getDescription()));
 
-        // 2. Check logic (Lúc này tên đã sạch sẽ)
-        if (!CategoryBUS.getInstance().isValidCategory(obj.getCategoryId()))
+        // 2. VALIDATE SAU
+        if (!isValidProductInput(obj))
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        // Chuyển empty string thành null để sạch Database
+        ValidationUtils validate = ValidationUtils.getInstance();
+        obj.setDescription(validate.convertEmptyStringToNull(obj.getDescription()));
+        obj.setImageUrl(validate.convertEmptyStringToNull(obj.getImageUrl()));
+        // Validate categoryId tồn tại (nếu có set)
+        CategoryBUS cateBus = CategoryBUS.getInstance();
+        if (!cateBus.isValidCategory(obj.getCategoryId()))
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.PRODUCT_ADD_CATEGORY_INVALID);
 
-        if (isDuplicateProductName("", obj.getName())) {
+        // Đảm bảo trạng thái có id hợp lệ
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.PRODUCT, obj.getStatusId()))
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.STATUS_IDForType_INVALID);
+
+        if (isExistProductName("", obj.getName()))
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_ADD_DUPLICATE);
-        }
 
-        // 3. Thiết lập thông số mặc định cho hàng mới
+        // 3. THIẾT LẬP MẶC ĐỊNH
         obj.setId(autoId());
+        // 1. CHUẨN HÓA TRƯỚC (Rất quan trọng)
+        obj.setName(validate.normalizeWhiteSpace(obj.getName()));
+        obj.setDescription(validate.normalizeWhiteSpace(obj.getDescription()));
         obj.setStockQuantity(0);
-        obj.setSellingPrice(BigDecimal.ZERO);
-        obj.setImportPrice(BigDecimal.ZERO); // Nên set luôn cả giá nhập mặc định
+        obj.setImportPrice(BigDecimal.ZERO);
 
-        // 4. Ghi DB
         if (!ProductDAL.getInstance().insert(obj))
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
 
-        // 5. Cập nhật Cache
         addToLocalCache(obj);
-
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_ADD_SUCCESS);
     }
 
-    private void addToLocalCache(ProductDTO obj) {
-        // Deep copy để an toàn tham chiếu
-        ProductDTO newProd = new ProductDTO(obj);
-
-        // Thêm mới hoàn toàn vào Map và List
-        mapLocal.put(newProd.getId(), newProd);
-        arrLocal.add(newProd);
-
-        // Nếu dùng JavaFX TableView, nó sẽ tự động hiện dòng mới ngay lập tức tại đây
-    }
-
-    public int insertListProductExcel(ArrayList<ProductDTO> listProducts) {
-        if (listProducts == null || listProducts.isEmpty()) {
-            return 2; // Danh sách rỗng
-        }
-
-        CategoryBUS cate = CategoryBUS.getInstance();
-        Set<String> excelProductNames = new HashSet<>();
-        ValidationUtils validate = ValidationUtils.getInstance();
-        String id = autoId();
-
-        // Duyệt qua từng sản phẩm trong danh sách
-        for (ProductDTO p : listProducts) {
-            if (!isValidProductInputForExcel(p))
-                return 3; // Kiểm tra tính hợp lệ của sản phẩm
-
-            // Kiểm tra tên trùng trong danh sách Excel
-            String normalizedName = validate.normalizeWhiteSpace(p.getName());
-            if (excelProductNames.contains(normalizedName)) {
-                p.setName(p.getName() + " (" + id + ")"); // Nếu trùng, thêm ID vào tên
-            }
-            excelProductNames.add(normalizedName); // Thêm vào danh sách đã kiểm tra tên
-
-            // Kiểm tra danh mục hợp lệ
-            if (!cate.isValidCategory(p.getCategoryId()))
-                return 4;
-
-            // Kiểm tra trùng tên trong hệ thống
-            if (isDuplicateProductName("", p.getName())) {
-                p.setName(p.getName() + " (" + id + ")"); // Thêm ID vào tên sản phẩm nếu trùng
-            }
-
-            // Thiết lập các giá trị còn lại cho sản phẩm
-            p.setId(id); // Tạo ID mới
-            p.setDescription(validate.normalizeWhiteSpace(p.getDescription()));
-            p.setStockQuantity(0);
-            p.setSellingPrice(new BigDecimal(0));
-            id = nextProductId(id); // Tạo ID mới cho sản phẩm tiếp theo
-        }
-
-        // Lưu sản phẩm vào cơ sở dữ liệu
-        if (!ProductDAL.getInstance().insertListProductExcel(listProducts))
-            return 7;
-
-        // Thêm vào danh sách cục bộ (arrLocal)
-        arrLocal.addAll(new ArrayList<>(listProducts));
-
-        return 1; // Thành công
-    }
-
-    // Chỉ sửa name, selling price, description, imageUrl, categoryId, statusId
     public BUSResult update(ProductDTO obj) {
-        // 1. Validate cơ bản
-        if (obj == null || obj.getId().isEmpty() || obj.getCategoryId() <= 0) {
+        if (obj == null || obj.getId() == null)
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
-        }
 
-        // 2. Chuẩn hóa dữ liệu TRƯỚC khi check trùng
+        // Đảm bảo trạng thái có id hợp lệ
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.PRODUCT, obj.getStatusId()))
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.STATUS_IDForType_INVALID);
+        CategoryBUS cateBus = CategoryBUS.getInstance();
+        if (!cateBus.isValidCategory(obj.getCategoryId()))
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.PRODUCT_ADD_CATEGORY_INVALID);
+
+        // Mọi empty string thành null để sạch Database
         ValidationUtils validate = ValidationUtils.getInstance();
-        obj.setName(validate.normalizeWhiteSpace(obj.getName()));
-        obj.setDescription(validate.normalizeWhiteSpace(obj.getDescription()));
-
-        // 3. Kiểm tra logic (Tên, dữ liệu hợp lệ...)
+        obj.setDescription(validate.convertEmptyStringToNull(obj.getDescription()));
+        obj.setImageUrl(validate.convertEmptyStringToNull(obj.getImageUrl()));
+        // 2. VALIDATE
         if (!isValidProductUpdate(obj))
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
 
-        if (isDuplicateProductName(obj.getId(), obj.getName())) {
+        if (isExistProductName(obj.getId(), obj.getName()))
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_UPDATE_DUPLICATE);
-        }
-        if (isDuplicateProduct(obj))
+
+        // Nếu dữ liệu không có gì thay đổi so với cache, trả về success luôn (giảm tải
+        // DB)
+        if (isDataUnchanged(obj))
             return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_UPDATE_SUCCESS);
-        // 5. Ghi xuống Database
+
+        // 1. CHUẨN HÓA TRƯỚC
+
+        obj.setName(validate.normalizeWhiteSpace(obj.getName()));
+        obj.setDescription(validate.normalizeWhiteSpace(obj.getDescription()));
+
         if (!ProductDAL.getInstance().update(obj))
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
 
-        // 6. Cập nhật vào Cache (Truyền thẳng obj vào, hàm cache sẽ tự clone)
         updateLocalCache(obj);
-
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_UPDATE_SUCCESS);
     }
 
-    public boolean updateQuantitySellingPriceListProduct(ArrayList<ProductDTO> listProducts, boolean isAdd) {
-        if (listProducts == null || listProducts.isEmpty()) {
-            return false;
-        }
+    public BUSResult delete(String id) {
+        if (id == null || id.isEmpty())
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        ProductDTO targetProduct = getByIdLocal(id);
+        if (targetProduct == null)
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        ArrayList<ProductDTO> tempList = (ArrayList<ProductDTO>) listProducts.clone();
+        // LEGO còn trong kho thì không được xóa
+        if (targetProduct.getStockQuantity() != 0)
+            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_DELETE_WITH_STOCK);
 
-        if (isAdd) {
-            for (ProductDTO p : tempList) {
-                ProductDTO current = getByIdLocal(p.getId());
-                if (current == null)
-                    continue;
+        boolean isInInvoice = InvoiceBUS.getInstance().isProductInAnyInvoice(id);
+        boolean success = isInInvoice ? ProductDAL.getInstance().softDelete(targetProduct)
+                : ProductDAL.getInstance().delete(id);
 
-                p.setStockQuantity(p.getStockQuantity() + current.getStockQuantity());
-            }
+        if (!success)
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+
+        if (isInInvoice) {
+            int inactiveStatusId = StatusBUS.getInstance()
+                    .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
+            targetProduct.setStatusId(inactiveStatusId);
+            updateLocalCache(targetProduct);
         } else {
-            for (ProductDTO p : tempList) {
-                ProductDTO current = getByIdLocal(p.getId());
-                if (current == null)
-                    return false;
+            arrLocal.remove(targetProduct);
+            mapLocal.remove(id);
+        }
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_DELETE_SUCCESS);
+    }
 
-                int newQty = current.getStockQuantity() - p.getStockQuantity();
-                p.setStockQuantity(Math.max(0, newQty));
-                p.setSellingPrice(p.getSellingPrice()); // giữ nguyên giá
+    // --- EXCEL IMPORT (ĐÃ ÉP CHUẨN) ---
+    public int insertListProductExcel(ArrayList<ProductDTO> listProducts) {
+        if (listProducts == null || listProducts.isEmpty())
+            return 2;
+
+        ValidationUtils validate = ValidationUtils.getInstance();
+        Set<String> excelNames = new HashSet<>();
+        String nextId = autoId();
+
+        // Lấy status mặc định cho hàng mới
+        int activeStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.ACTIVE).getId();
+
+        for (ProductDTO p : listProducts) {
+            // Normalize trước
+            p.setName(validate.normalizeWhiteSpace(p.getName()));
+            if (!isValidProductInputForExcel(p))
+                return 3;
+
+            // Xử lý trùng tên trong file hoặc hệ thống
+            if (excelNames.contains(p.getName()) || isExistProductName("", p.getName())) {
+                p.setName(p.getName() + " (" + nextId + ")");
             }
+            excelNames.add(p.getName());
+
+            if (!CategoryBUS.getInstance().isValidCategory(p.getCategoryId()))
+                return 4;
+
+            // Gán các trường bắt buộc
+            p.setId(nextId);
+            p.setStatusId(activeStatusId);
+            p.setStockQuantity(0);
+            p.setImportPrice(BigDecimal.ZERO);
+            // Note: sellingPrice từ Excel nếu có, nếu không excel cung cấp thì UI phải
+            // validate
+
+            nextId = nextProductId(nextId);
         }
 
-        // Cập nhật database
-        if (!ProductDAL.getInstance().updateProductQuantityAndSellingPrice(tempList))
+        if (!ProductDAL.getInstance().insertListProductExcel(listProducts))
+            return 7;
+
+        for (ProductDTO p : listProducts)
+            addToLocalCache(p);
+        return 1;
+    }
+
+    // --- TỐI ƯU HIỆU NĂNG CACHE ---
+    public boolean updateQuantitySellingPriceListProduct(ArrayList<ProductDTO> listProducts, boolean isAdd) {
+        if (listProducts == null || listProducts.isEmpty())
             return false;
 
-        // Cập nhật lại arrLocal
-        for (ProductDTO updated : tempList) {
-            for (int i = 0; i < arrLocal.size(); i++) {
-                if (Objects.equals(arrLocal.get(i).getId(), updated.getId())) {
-                    ProductDTO local = arrLocal.get(i);
-                    ProductDTO newProduct = new ProductDTO(local); // Giữ nguyên các field khác
+        // Clone và tính toán (Sử dụng Map - O(1))
+        for (ProductDTO p : listProducts) {
+            ProductDTO local = mapLocal.get(p.getId());
+            if (local == null)
+                return false;
 
-                    newProduct.setStockQuantity(updated.getStockQuantity());
-                    newProduct.setSellingPrice(updated.getSellingPrice());
-
-                    arrLocal.set(i, newProduct);
-                    break;
-                }
-            }
+            int newQty = isAdd ? (local.getStockQuantity() + p.getStockQuantity())
+                    : Math.max(0, local.getStockQuantity() - p.getStockQuantity());
+            p.setStockQuantity(newQty);
         }
 
+        if (!ProductDAL.getInstance().updateProductQuantityAndSellingPrice(listProducts))
+            return false;
+
+        // Cập nhật Cache đồng bộ
+        for (ProductDTO updated : listProducts) {
+            ProductDTO local = mapLocal.get(updated.getId());
+            if (local != null) {
+                local.setStockQuantity(updated.getStockQuantity());
+                local.setSellingPrice(updated.getSellingPrice());
+            }
+        }
         return true;
     }
 
-    // VALIDATE IS HERE!!!
-    private boolean isDuplicateProductName(String id, String name) {
+    // --- HÀM HỖ TRỢ & VALIDATE ---
+    private boolean isExistProductName(String id, String name) {
         if (name == null)
             return false;
-        ValidationUtils validate = ValidationUtils.getInstance();
-        name = validate.normalizeWhiteSpace(name);
-        for (ProductDTO product : arrLocal) {
-            if (!Objects.equals(product.getId(), id) && product.getName().equalsIgnoreCase(name)) {
+        String normalized = ValidationUtils.getInstance().normalizeWhiteSpace(name);
+        for (ProductDTO p : arrLocal) {
+            if (!Objects.equals(p.getId(), id) && p.getName().equalsIgnoreCase(normalized))
                 return true;
-            }
         }
         return false;
     }
 
     public boolean isValidProductInput(ProductDTO obj) {
-        if (obj.getName() == null)
+        if (obj.getName() == null || obj.getName().isEmpty())
             return false;
-
-        obj.setDescription(
-                obj.getDescription() != null && obj.getDescription().trim().isEmpty() ? null : obj.getDescription());
-        obj.setImageUrl(obj.getImageUrl() != null && obj.getImageUrl().trim().isEmpty() ? null : obj.getImageUrl());
-        ValidationUtils validator = ValidationUtils.getInstance();
-        // Kiểm tra mô tả nếu có
-        if (obj.getDescription() != null && !validator.validateVietnameseText65k4(obj.getDescription())) {
-            return true;
-        }
-        if (obj.getImageUrl() != null && !validator.validateVietnameseText255(obj.getImageUrl())) {
-            return true;
-        }
-
-        return validator.validateVietnameseText255(obj.getName());
-    }
-
-    public boolean isValidProductInputForExcel(ProductDTO obj) {
-        if (obj.getName() == null)
+        if (obj.getSellingPrice() == null)
             return false;
-
-        obj.setDescription(
-                obj.getDescription() != null && obj.getDescription().trim().isEmpty() ? null : obj.getDescription());
-        obj.setImageUrl(obj.getImageUrl() != null && obj.getImageUrl().trim().isEmpty() ? null : obj.getImageUrl());
-        ValidationUtils validator = ValidationUtils.getInstance();
-        // Kiểm tra mô tả nếu có
-        if (obj.getDescription() != null && !validator.validateVietnameseText65k4(obj.getDescription())) {
-            return true;
-        }
-        if (obj.getImageUrl() != null && !validator.validateVietnameseText255(obj.getImageUrl())) {
-            return true;
-        }
-
-        return validator.validateVietnameseText248(obj.getName());
+        ValidationUtils v = ValidationUtils.getInstance();
+        return v.validateVietnameseText255(obj.getName()) &&
+                v.validateBigDecimal(obj.getSellingPrice(), 10, 2, false) &&
+                (obj.getDescription() == null || v.validateVietnameseText65k4(obj.getDescription()));
     }
 
     private boolean isValidProductUpdate(ProductDTO obj) {
-        if (obj == null || obj.getName() == null || obj.getSellingPrice() == null) {
-            // System.out.println("1");
+        // 1. Kiểm tra các trường bắt buộc không được null
+        if (obj == null || obj.getId() == null || obj.getName() == null || obj.getSellingPrice() == null) {
+            return false;
+        }
+        // 3. Kiểm tra tính tồn tại của các khóa ngoại (Foreign Keys)
+        CategoryBUS cateBus = CategoryBUS.getInstance();
+        if (!cateBus.isValidCategory(obj.getCategoryId())) {
             return false;
         }
 
-        // Xử lý mô tả và ảnh trống
-        obj.setDescription(
-                obj.getDescription() != null && obj.getDescription().trim().isEmpty() ? null : obj.getDescription());
-        obj.setImageUrl(obj.getImageUrl() != null && obj.getImageUrl().trim().isEmpty() ? null : obj.getImageUrl());
-
-        ValidationUtils validator = ValidationUtils.getInstance();
-
-        // Kiểm tra mô tả nếu có
-        if (obj.getDescription() != null && !validator.validateVietnameseText65k4(obj.getDescription())) {
-            return false; // Nếu mô tả không hợp lệ, trả về false
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.PRODUCT, obj.getStatusId())) {
+            return false;
         }
 
-        // Kiểm tra ảnh URL nếu có
-        if (obj.getImageUrl() != null && !validator.validateVietnameseText255(obj.getImageUrl())) {
-            return false; // Nếu ảnh không hợp lệ, trả về false
+        // 4. Validate bằng Regex/Rules thông qua ValidationUtils
+        ValidationUtils v = ValidationUtils.getInstance();
+
+        // Tên sản phẩm: Bắt buộc
+        if (!v.validateVietnameseText255(obj.getName().trim())) {
+            return false;
         }
 
-        // Kiểm tra số lượng tồn kho không âm, tên và giá bán hợp lệ
-        return obj.getStockQuantity() >= 0
-                && validator.validateVietnameseText255(obj.getName()) // Kiểm tra tên
-                && validator.validateBigDecimal(obj.getSellingPrice(), 10, 2, false); // Kiểm tra giá bán
+        // Giá bán: Bắt buộc (10 chữ số, 2 số thập phân, không được âm)
+        if (!v.validateBigDecimal(obj.getSellingPrice(), 10, 2, false)) {
+            return false;
+        }
+
+        // Mô tả: Chỉ validate nếu có nội dung (đã xử lý null ở trên)
+        if (obj.getDescription() != null && !v.validateVietnameseText65k4(obj.getDescription().trim())) {
+            return false;
+        }
+
+        // Đường dẫn ảnh: Chỉ validate nếu có nội dung (đã xử lý null ở trên)
+        if (obj.getImageUrl() != null && !v.validateVietnameseText255(obj.getImageUrl().trim())) {
+            return false;
+        }
+
+        return true;
     }
 
-    public boolean isDuplicateProduct(ProductDTO obj) {
-        ProductDTO existingPro = getByIdLocal(obj.getId());
-        ValidationUtils validate = ValidationUtils.getInstance();
+    public boolean isValidProductInputForExcel(ProductDTO obj) {
+        if (obj.getName() == null || obj.getName().isEmpty())
+            return false;
+        ValidationUtils v = ValidationUtils.getInstance();
 
-        // Kiểm tra xem tên, mô tả, có trùng không (không check stockQuantity vì nó thay
-        // đổi độc lập)
-        return existingPro != null &&
-                Objects.equals(existingPro.getName(), validate.normalizeWhiteSpace(obj.getName())) &&
-                Objects.equals(existingPro.getCategoryId(), obj.getCategoryId()) &&
-                Objects.equals(existingPro.getSellingPrice(), obj.getSellingPrice()) &&
-                Objects.equals(existingPro.getStatusId(), obj.getStatusId()) &&
-                Objects.equals(existingPro.getDescription(), validate.normalizeWhiteSpace(obj.getDescription())) &&
-                Objects.equals(existingPro.getImageUrl(), obj.getImageUrl());
+        // SỬA LỖI LOGIC: Trả về false nếu validate thất bại (!)
+        if (obj.getDescription() != null && !v.validateVietnameseText65k4(obj.getDescription()))
+            return false;
+        if (obj.getImageUrl() != null && !v.validateVietnameseText255(obj.getImageUrl()))
+            return false;
+
+        return v.validateVietnameseText255(obj.getName());
+    }
+
+    public boolean isDataUnchanged(ProductDTO obj) {
+        ProductDTO ex = getByIdLocal(obj.getId());
+        if (ex == null)
+            return false;
+        ValidationUtils v = ValidationUtils.getInstance();
+        // So sánh toàn bộ field quan trọng để kiểm tra dữ liệu có thay đổi hay không
+        return Objects.equals(ex.getName(), v.normalizeWhiteSpace(obj.getName())) &&
+                Objects.equals(ex.getDescription(), v.normalizeWhiteSpace(obj.getDescription())) &&
+                Objects.equals(ex.getCategoryId(), obj.getCategoryId()) &&
+                Objects.equals(ex.getSellingPrice(), obj.getSellingPrice()) &&
+                Objects.equals(ex.getStatusId(), obj.getStatusId()) &&
+                Objects.equals(ex.getImageUrl(), obj.getImageUrl());
+    }
+
+    private void addToLocalCache(ProductDTO obj) {
+        ProductDTO copy = new ProductDTO(obj);
+        mapLocal.put(copy.getId(), copy);
+        arrLocal.add(copy);
+    }
+
+    private void updateLocalCache(ProductDTO obj) {
+        ProductDTO copy = new ProductDTO(obj);
+        mapLocal.put(copy.getId(), copy);
+        for (int i = 0; i < arrLocal.size(); i++) {
+            if (Objects.equals(arrLocal.get(i).getId(), copy.getId())) {
+                arrLocal.set(i, copy);
+                break;
+            }
+        }
     }
 
     public boolean isDuplicateImageUrl(ProductDTO obj) {

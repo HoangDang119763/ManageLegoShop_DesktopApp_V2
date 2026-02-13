@@ -229,9 +229,8 @@ public class ProductController implements IController {
                 .configure(c -> c.setProduct(selectedProduct))
                 .open();
         if (modalController != null && modalController.isSaved()) {
-            applyFilters();
+            resetFilters();
         }
-        tblProduct.refresh();
     }
 
     private void handleDetail() {
@@ -249,12 +248,6 @@ public class ProductController implements IController {
     private void handleDelete() {
         if (isNotSelectedProduct()) {
             NotificationUtils.showErrorAlert(AppMessages.PRODUCT_NO_SELECTION, AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        ProductDTO product = productBUS.getByIdLocal(selectedProduct.getId());
-        if (product == null) {
-            NotificationUtils.showErrorAlert(AppMessages.UNKNOWN_ERROR, AppMessages.DIALOG_TITLE);
             return;
         }
 

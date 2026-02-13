@@ -2,14 +2,17 @@ package GUI;
 
 import BUS.CustomerBUS;
 import BUS.StatusBUS;
+import DTO.BUSResult;
 import DTO.CustomerDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.ExcelService;
+import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
+import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
@@ -52,13 +55,16 @@ public class CustomerController implements IController {
     @FXML
     private AnchorPane mainContent;
 
-    private String searchBy = "Mã KH";
+    private String searchBy = "Mã khách hàng";
     private String keyword = "";
     private StatusDTO statusFilter = null;
     private CustomerDTO selectedCustomer;
     private CustomerBUS customerBUS;
     private SessionManagerService session;
 
+    // =====================
+    // 1️⃣ LIFECYCLE & INITIALIZATION
+    // =====================
     @FXML
     public void initialize() {
         customerBUS = CustomerBUS.getInstance();
@@ -70,13 +76,16 @@ public class CustomerController implements IController {
 
         hideButtonWithoutPermission();
         loadComboBox();
-        setupListeners();
         loadTable();
+        setupListeners();
         applyFilters();
     }
 
+    // =====================
+    // 2️⃣ UI SETUP (LOAD & CONFIG)
+    // =====================
     private void loadComboBox() {
-        cbSearchBy.getItems().addAll("Mã KH", "Họ và tên", "Số điện thoại");
+        cbSearchBy.getItems().addAll("Mã khách hàng", "Họ đệm", "Tên", "Số điện thoại");
         StatusBUS statusBUS = StatusBUS.getInstance();
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus);
@@ -109,12 +118,74 @@ public class CustomerController implements IController {
         txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
-            NotificationUtils.showInfoAlert("Làm mới thành công", "Thông báo");
+            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
         });
         addBtn.setOnAction(event -> handleAddBtn());
         editBtn.setOnAction(event -> handleEditBtn());
         deleteBtn.setOnAction(event -> handleDeleteBtn());
         exportExcel.setOnAction(event -> handleExportExcel());
+    }
+
+    // =====================
+    // 3️⃣ CRUD HANDLERS (Add/Edit/Delete)
+    // =====================
+    private void handleAddBtn() {
+        CustomerModalController modalController = new ModalBuilder<CustomerModalController>(
+                "/GUI/CustomerModal.fxml", CustomerModalController.class)
+                .setTitle("Thêm khách hàng")
+                .modeAdd()
+                .open();
+        if (modalController != null && modalController.isSaved()) {
+            resetFilters();
+        }
+    }
+
+    private void handleEditBtn() {
+        if (isNotSelectedCustomer()) {
+            NotificationUtils.showErrorAlert(AppMessages.CUSTOMER_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
+        CustomerModalController modalController = new ModalBuilder<CustomerModalController>(
+                "/GUI/CustomerModal.fxml", CustomerModalController.class)
+                .setTitle("Sửa khách hàng")
+                .modeEdit()
+                .configure(c -> {
+                    c.setCustomer(selectedCustomer);
+                })
+                .open();
+        if (modalController != null && modalController.isSaved()) {
+            resetFilters();
+        }
+
+    }
+
+    private void handleDeleteBtn() {
+        if (isNotSelectedCustomer()) {
+            NotificationUtils.showErrorAlert(AppMessages.CUSTOMER_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        if (!UiUtils.gI().showConfirmAlert(AppMessages.CUSTOMER_DELETE_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM)) {
+            return;
+        }
+
+        BUSResult updateResult = SecureExecutor.runSafeBUSResult(PermissionKey.CUSTOMER_DELETE,
+                () -> customerBUS.delete(selectedCustomer.getId()));
+
+        if (updateResult.isSuccess()) {
+            NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+            resetFilters();
+        } else {
+            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+        }
+    }
+
+    // =====================
+    // 4️⃣ FILTER HANDLERS
+    // =====================
+    private void handleKeywordChange() {
+        keyword = txtSearch.getText().trim();
+        applyFilters();
     }
 
     private void handleSearchByChange() {
@@ -127,11 +198,9 @@ public class CustomerController implements IController {
         applyFilters();
     }
 
-    private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
-        applyFilters();
-    }
-
+    // =====================
+    // 5️⃣ INTERFACE METHODS
+    // =====================
     @Override
     public void applyFilters() {
         int statusId = statusFilter == null ? -1 : statusFilter.getId();
@@ -172,64 +241,9 @@ public class CustomerController implements IController {
             UiUtils.gI().setReadOnlyItem(deleteBtn);
     }
 
-    private void handleAddBtn() {
-        CustomerModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/CustomerModal.fxml",
-                controller -> controller.setTypeModal(0),
-                "Thêm khách hàng");
-        if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Thêm khách hàng thành công", "Thông báo");
-            applyFilters();
-        }
-    }
-
-    private void handleEditBtn() {
-        selectedCustomer = tblCustomer.getSelectionModel().getSelectedItem();
-        if (selectedCustomer == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn khách hàng cần sửa", "Lỗi");
-            return;
-        }
-        CustomerModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/CustomerModal.fxml",
-                controller -> {
-                    controller.setTypeModal(1);
-                    controller.setCustomer(selectedCustomer);
-                },
-                "Sửa khách hàng");
-        if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Sửa khách hàng thành công", "Thông báo");
-            applyFilters();
-        }
-    }
-
-    private void handleDeleteBtn() {
-        selectedCustomer = tblCustomer.getSelectionModel().getSelectedItem();
-        if (selectedCustomer == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn khách hàng cần xóa", "Lỗi");
-            return;
-        }
-        if (selectedCustomer.getId() == 1) {
-            NotificationUtils.showErrorAlert("Bạn không thể xóa khách hàng vãng lai.", "Thông báo");
-            return;
-        }
-        int deleteResult = CustomerBUS.getInstance().delete(
-                selectedCustomer.getId(),
-                SessionManagerService.getInstance().employeeRoleId(),
-                SessionManagerService.getInstance().employeeLoginId());
-        switch (deleteResult) {
-            case 1 -> {
-                NotificationUtils.showInfoAlert("Xóa khách hàng thành công", "Thông báo");
-                resetFilters();
-            }
-            case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi xóa khách hàng. Vui lòng thử lại.", "Thông báo");
-            case 3 -> NotificationUtils.showErrorAlert("Bạn không thể xóa khách hàng vãng lai.", "Thông báo");
-            case 4 -> NotificationUtils.showErrorAlert("Bạn không có quyền xóa khách hàng", "Thông báo");
-            case 5 -> NotificationUtils.showErrorAlert("Khách hàng không tồn tại hoặc đã bị xóa", "Thông báo");
-            case 6 -> NotificationUtils.showErrorAlert("Xoá khách hàng thất bại. Vui lòng thử lại.", "Thông báo");
-            default -> NotificationUtils.showErrorAlert("Lỗi không xác định", "Thông báo");
-        }
-    }
-
+    // =====================
+    // 6️⃣ UTILITY METHODS
+    // =====================
     private void handleExportExcel() {
         // try {
         // ExcelService.getInstance().ExportSheet("customers");
@@ -237,4 +251,10 @@ public class CustomerController implements IController {
         // NotificationUtils.showErrorAlert("Xuất Excel thất bại", "Lỗi");
         // }
     }
+
+    private boolean isNotSelectedCustomer() {
+        selectedCustomer = tblCustomer.getSelectionModel().getSelectedItem();
+        return selectedCustomer == null;
+    }
+
 }

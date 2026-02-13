@@ -152,7 +152,7 @@ public class ValidationUtils {
         if (dateOfBirth == null)
             return false; // Ng+�y sinh kh+�ng -榦�+�c l+� null
         LocalDate today = LocalDate.now();
-        return dateOfBirth.toLocalDate().isBefore(today); // Ng+�y sinh phߦ�i tr���+�c ng+�y h+�m nay
+        return dateOfBirth.toLocalDate().isBefore(today);
     }
 
     // validate and return for quick get data or return -1 for get error
@@ -204,5 +204,19 @@ public class ValidationUtils {
             System.err.println("Lỗi định dạng ngày tháng (dd-MM-yyyy): " + e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Chuyển chuỗi rỗng hoặc chỉ toàn khoảng trắng thành null
+     * Dùng để làm sạch dữ liệu trước khi lưu vào DB (null thay vì empty string)
+     * 
+     * @param value chuỗi cần kiểm tra
+     * @return null nếu value rỗng/khoảng trắng, ngược lại trả về value
+     */
+    public String convertEmptyStringToNull(String value) {
+        if (value != null && value.trim().isEmpty()) {
+            return null;
+        }
+        return value;
     }
 }

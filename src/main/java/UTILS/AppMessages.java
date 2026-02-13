@@ -58,10 +58,13 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý thông tin khách hàng
      */
-    public static final String CUSTOMER_REFRESH_SUCCESS = "Làm mới thành công";
     public static final String CUSTOMER_ADD_SUCCESS = "Thêm khách hàng thành công";
+    public static final String CUSTOMER_ADD_DUPLICATE = "Đã có khách hàng trong cơ sở dữ liệu";
     public static final String CUSTOMER_DELETE_SUCCESS = "Xóa khách hàng thành công!";
-    public static final String CUSTOMER_DELETE_NO_SELECTION = "Vui lòng chọn một khách hàng để xóa!";
+    public static final String CUSTOMER_CANNOT_DELETE_SYSTEM = "Không thể xóa khách hàng vãng lai.";
+    public static final String CUSTOMER_DELETE_CONFIRM = "Bạn chắc muốn xóa khách hàng này?";
+    public static final String CUSTOMER_NO_SELECTION = "Vui lòng chọn một khách hàng để xóa!";
+    public static final String CUSTOMER_UPDATE_DUPLICATE = "Đã có khách hàng trong cơ sở dữ liệu";
     public static final String CUSTOMER_UPDATE_SUCCESS = "Sửa khách hàng thành công";
 
     // ==================== MODULE SẢN PHẨM (PRODUCT) ====================
@@ -159,6 +162,9 @@ public class AppMessages {
      * Các thông báo liên quan đến báo cáo và thống kê
      */
     // Placeholder cho các messages về thống kê
+
+    // ==================== MODULE TRẠNG THÁI (STATUS) ====================
+    public static final String STATUS_IDForType_INVALID = "Status ID không hợp lệ.";
 
     // ==================== CÁC THÔNG BÁO CHUNG (GENERAL) ====================
     /**

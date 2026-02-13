@@ -35,7 +35,9 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
 
     @Override
     protected String getInsertQuery() {
-        return "(id, name, stock_quantity, selling_price, import_price, status_id, description, image_url, category_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Chỉ giữ lại: id, name, stock_quantity, selling_price, status_id, description, image_url, category_id
+        // Bỏ qua: import_price (set mặc định 0 ở BUS/DB), created_at, updated_at (DB tự sinh)
+        return "(id, name, stock_quantity, selling_price, import_price, status_id, description, image_url, category_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -49,8 +51,6 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
         statement.setString(7, obj.getDescription());
         statement.setString(8, obj.getImageUrl());
         statement.setInt(9, obj.getCategoryId());
-        statement.setObject(10, obj.getCreatedAt());
-        statement.setObject(11, obj.getUpdatedAt());
     }
 
     @Override

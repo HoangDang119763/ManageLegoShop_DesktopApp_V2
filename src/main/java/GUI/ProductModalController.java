@@ -255,7 +255,7 @@ public class ProductModalController implements IModalController {
 
         if (image != null) {
             imageView.setImage(image);
-            imageUrl = "";
+            imageUrl = null;
             NotificationUtils.showInfoAlert(AppMessages.PRODUCT_IMAGE_RESET_SUCCESS, AppMessages.DIALOG_TITLE);
         }
     }
@@ -343,76 +343,92 @@ public class ProductModalController implements IModalController {
             }
         }
 
-        StatusDTO selectedStatus = cbSelectStatus.getValue();
-        CategoryDTO selectedCategory = cbSelectCategory.getValue();
-
-        if (isValid && selectedStatus == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn trạng thái", AppMessages.DIALOG_TITLE);
-            isValid = false;
-        }
-        if (isValid && selectedCategory == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn thể loại", AppMessages.DIALOG_TITLE);
-            isValid = false;
-        }
-
         return isValid;
     }
 
     private void insertProduct() throws IOException {
-        if (isValidInput()) {
-            String newImgUrl = ImageService.gI().saveProductImage(txtProductId.getText().trim(), imageUrl);
-            ProductDTO temp = new ProductDTO(
-                    txtProductId.getText().trim(),
-                    txtProductName.getText().trim(), 0,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    cbSelectStatus.getValue().getId(),
-                    txtDescription.getText().trim(),
-                    newImgUrl,
-                    cbSelectCategory.getValue().getId());
+        if (!isValidInput())
+            return;
 
-            BUSResult insertResult = SecureExecutor.runSafeBUSResult(
-                    PermissionKey.PRODUCT_INSERT,
-                    () -> productBUS.insert(temp));
+        // 1. Tiền xử lý dữ liệu: Trống -> Null
+        String desc = (txtDescription.getText() == null || txtDescription.getText().trim().isEmpty())
+                ? null
+                : txtDescription.getText().trim();
 
-            if (insertResult.isSuccess()) {
-                NotificationUtils.showInfoAlert(insertResult.getMessage(), AppMessages.DIALOG_TITLE);
-                isSaved = true;
-                handleClose();
-            } else {
-                NotificationUtils.showErrorAlert(insertResult.getMessage(), AppMessages.DIALOG_TITLE);
-            }
+        // 2. Xử lý ảnh: Nếu imageUrl (từ FileChooser) null thì không lưu, trả về null
+        // luôn
+        String newImgUrl = null;
+        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            newImgUrl = ImageService.gI().saveProductImage(txtProductId.getText().trim(), imageUrl);
         }
+
+        // 3. Tạo DTO
+        ProductDTO temp = new ProductDTO(
+                txtProductId.getText().trim(),
+                txtProductName.getText().trim(),
+                0,
+                new BigDecimal(txtSellingPrice.getText().trim()),
+                BigDecimal.ZERO,
+                cbSelectStatus.getValue().getId(),
+                desc,
+                newImgUrl, // Có thể là null
+                cbSelectCategory.getValue().getId());
+
+        BUSResult insertResult = SecureExecutor.runSafeBUSResult(
+                PermissionKey.PRODUCT_INSERT,
+                () -> productBUS.insert(temp));
+
+        handleResult(insertResult);
     }
 
     private void updateProduct() throws IOException {
-        if (isValidInput()) {
-            String newImgUrl = product.getImageUrl();
-            if (imageUrl != null && !imageUrl.equals(product.getImageUrl())) {
-                newImgUrl = ImageService.gI().saveProductImage(txtProductId.getText().trim(), imageUrl);
-            }
-            ProductDTO temp = new ProductDTO(
-                    txtProductId.getText().trim(),
-                    txtProductName.getText().trim(),
-                    product.getStockQuantity(),
-                    new BigDecimal(txtSellingPrice.getText().trim()),
-                    new BigDecimal(txtImportPrice.getText().trim()),
-                    cbSelectStatus.getValue().getId(),
-                    txtDescription.getText().trim(),
-                    newImgUrl,
-                    cbSelectCategory.getValue().getId());
+        if (!isValidInput())
+            return;
 
-            BUSResult updateResult = SecureExecutor.runSafeBUSResult(
-                    PermissionKey.PRODUCT_UPDATE,
-                    () -> productBUS.update(temp));
+        // 1. Xử lý Description
+        String desc = (txtDescription.getText() == null || txtDescription.getText().trim().isEmpty())
+                ? null
+                : txtDescription.getText().trim();
 
-            if (updateResult.isSuccess()) {
-                NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-                isSaved = true;
-                handleClose();
-            } else {
-                NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-            }
+        // 2. Xử lý ImageUrl (Logic 3 trường hợp)
+        String finalImgUrl = product.getImageUrl(); // Mặc định giữ ảnh cũ
+
+        if (imageUrl != null && !imageUrl.equals(product.getImageUrl())) {
+            // Trường hợp 1: Có chọn ảnh mới và khác ảnh cũ -> Lưu ảnh mới
+            finalImgUrl = ImageService.gI().saveProductImage(txtProductId.getText().trim(), imageUrl);
+        } else if (imageUrl == null) {
+            // Trường hợp 2: UI không có ảnh (người dùng đã xóa hoặc không chọn) -> Set null
+            finalImgUrl = null;
+        }
+        // Trường hợp 3: imageUrl giống product.getImageUrl() -> Giữ nguyên (finalImgUrl
+        // không đổi)
+
+        // 3. Tạo DTO cập nhật
+        ProductDTO temp = new ProductDTO(
+                txtProductId.getText().trim(),
+                txtProductName.getText().trim(),
+                product.getStockQuantity(),
+                new BigDecimal(txtSellingPrice.getText().trim()),
+                product.getImportPrice(),
+                cbSelectStatus.getValue().getId(),
+                desc,
+                finalImgUrl,
+                cbSelectCategory.getValue().getId());
+
+        BUSResult updateResult = SecureExecutor.runSafeBUSResult(
+                PermissionKey.PRODUCT_UPDATE,
+                () -> productBUS.update(temp));
+
+        handleResult(updateResult);
+    }
+
+    private void handleResult(BUSResult result) {
+        if (result.isSuccess()) {
+            NotificationUtils.showInfoAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+            isSaved = true;
+            handleClose();
+        } else {
+            NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
         }
     }
 

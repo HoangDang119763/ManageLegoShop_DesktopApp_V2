@@ -1,6 +1,8 @@
 package DAL;
 
 import DTO.CustomerDTO;
+import DTO.ProductDTO;
+
 import java.sql.*;
 
 public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
@@ -71,6 +73,23 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
         statement.setObject(5, obj.getDateOfBirth());
         statement.setInt(6, obj.getStatusId());
         statement.setInt(7, obj.getId());
+    }
+
+    public boolean softDelete(CustomerDTO obj) {
+        // SQL tự tìm ID dựa vào tên trạng thái 'INACTIVE' hoặc 'DELETED'
+        String query = "UPDATE customer SET status_id = ? WHERE id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, obj.getStatusId());
+            statement.setInt(2, obj.getId());
+
+            return statement.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error soft delete customer: " + e.getMessage());
+            return false;
+        }
     }
 
 }

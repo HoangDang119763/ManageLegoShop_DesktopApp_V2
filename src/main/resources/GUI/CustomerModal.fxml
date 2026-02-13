@@ -54,7 +54,7 @@
                                 <VBox spacing="5.0">
                                     <children>
                                         <Label styleClass="label-s" text="Mã KH" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
-                                        <TextField fx:id="txtCustomerId" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" text="Hệ thống tự tạo" />
+                                        <TextField fx:id="txtCustomerId" editable="false" prefHeight="32.0" styleClass="textfield-1, readonly" />
                                     </children>
                                 </VBox>
                                 <VBox spacing="5.0" GridPane.columnIndex="1">
@@ -78,12 +78,12 @@
                                 <VBox spacing="5.0" GridPane.rowIndex="2">
                                     <children>
                                         <Label styleClass="label-s" text="Ngày sinh" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
-                                        <DatePicker fx:id="dpDateOfBirth" prefHeight="32.0" prefWidth="300.0" promptText="dd/mm/yyyy" />
+                                        <DatePicker fx:id="dateOfBirth" prefHeight="32.0" prefWidth="300.0" promptText="dd/mm/yyyy" />
                                     </children>
                                 </VBox>
                                 <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                     <children>
-                                        <Label styleClass="label-s" text="Điện thoại" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <Label styleClass="label-s" text="Điện thoại *" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
                                         <TextField fx:id="txtPhone" prefHeight="32.0" promptText="090x..." styleClass="textfield-1" />
                                     </children>
                                 </VBox>
@@ -102,14 +102,14 @@
                             </rowConstraints>
                         </GridPane>
 
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                        <HBox fx:id="updatedAt" alignment="CENTER_LEFT" spacing="10.0">
                             <children>
                                 <Label styleClass="label-metadata" text="Cập nhật lần cuối:" textFill="#95a5a6">
                                     <font><Font name="System Italic" size="12.0" /></font>
                                 </Label>
-                                <TextField fx:id="txtUpdatedAt" editable="false" prefHeight="25.0" prefWidth="180.0" style="-fx-background-color: transparent; -fx-padding: 0;" styleClass="field-metadata" text="10/02/2026 15:30" />
+                                <TextField fx:id="txtUpdatedAt" editable="false" prefHeight="25.0" prefWidth="180.0" style="-fx-background-color: transparent; -fx-padding: 0;" styleClass="field-metadata" />
                                 <AnchorPane HBox.hgrow="ALWAYS" />
-                                <FontAwesomeIcon fill="#30bac4" glyphName="USER" opacity="0.05" size="3em" />
+                                <FontAwesomeIcon fill="#30bac4" glyphName="USER" opacity="0.3" size="3em" />
                             </children>
                             <VBox.margin><Insets top="5.0" /></VBox.margin>
                         </HBox>
