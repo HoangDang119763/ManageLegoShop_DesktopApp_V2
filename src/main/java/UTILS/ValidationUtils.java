@@ -37,10 +37,30 @@ public class ValidationUtils {
     public boolean validateBigDecimal(BigDecimal value, int precision, int scale, boolean allowNegative) {
         if (value == null)
             return false;
+
+        // 1. Check âm
         if (!allowNegative && value.compareTo(BigDecimal.ZERO) < 0)
             return false;
-        value = value.stripTrailingZeros();
-        return value.scale() <= scale && value.precision() - value.scale() <= precision - scale;
+
+        try {
+            // 2. ÉP QUY MÔ (Normalization)
+            // Thay vì strip, ta ép nó về đúng scale (VD: 2)
+            // Nếu người dùng nhập 10.000 -> nó sẽ thành 10.00
+            BigDecimal normalized = value.setScale(scale, java.math.RoundingMode.HALF_UP);
+
+            // 3. Kiểm tra tổng số chữ số (Precision)
+            // Công thức: Tổng chữ số - chữ số sau dấu phẩy <= Precision - Scale
+            // Ví dụ: DECIMAL(10,2) thì phần nguyên tối đa có 8 chữ số
+            int currentPrecision = normalized.precision();
+            int currentScale = normalized.scale();
+
+            return (currentPrecision - currentScale) <= (precision - scale);
+
+        } catch (ArithmeticException e) {
+            // Trường hợp người dùng nhập quá nhiều số lẻ mà không cho phép làm tròn (nếu
+            // cần chặt chẽ)
+            return false;
+        }
     }
 
     public boolean validateSalary(BigDecimal value, int precision, int scale, boolean allowNegative) {

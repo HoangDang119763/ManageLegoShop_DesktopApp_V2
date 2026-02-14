@@ -127,7 +127,7 @@
                            </children>
                         </HBox>
 
-                        <VBox spacing="10.0" style="-fx-background-color: #f9f9f9; -fx-background-radius: 5; -fx-padding: 10;">
+                        <VBox fx:id="metaData" spacing="10.0" style="-fx-background-color: #f9f9f9; -fx-background-radius: 5; -fx-padding: 10;">
                            <children>
                               <VBox spacing="2.0">
                                  <Label styleClass="label-metadata" text="Ngày tạo:" />

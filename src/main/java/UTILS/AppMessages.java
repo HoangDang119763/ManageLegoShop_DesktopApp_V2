@@ -75,7 +75,7 @@ public class AppMessages {
     public static final String PRODUCT_ADD_SUCCESS = "Thêm sản phẩm thành công";
     public static final String PRODUCT_ADD_DUPLICATE = "Tên sản phẩm đã tồn tại trong hệ thống.";
     public static final String PRODUCT_NO_SELECTION = "Vui lòng chọn sản phẩm";
-    public static final String PRODUCT_DELETE_WITH_STOCK = "Sản phẩm còn hàng tồn, không thể xóa!";
+    public static final String PRODUCT_DELETE_WITH_STOCK = "Sản phẩm còn tồn kho, không thể ngừng kinh doanh hoặc xóa!";
     public static final String PRODUCT_DELETE_CONFIRM = "Bạn chắc muốn xóa sản phẩm này?";
     public static final String PRODUCT_DELETE_SUCCESS = "Xóa sản phẩm thành công!";
     public static final String PRODUCT_UPDATE_SUCCESS = "Sửa sản phẩm thành công";
@@ -119,6 +119,7 @@ public class AppMessages {
     public static final String CATEGORY_UPDATE_DUPLICATE = "Tên thể loại đã tồn tại trong hệ thống.";
     public static final String CATEGORY_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa thể loại này không?";
     public static final String CATEGORY_NO_SELECTION = "Vui lòng chọn thể loại.";
+    public static final String CATEGORY_DELETED_WARNING = "Thể loại này đã ngưng dùng, không nên chọn cho sản phẩm";
     // ==================== MODULE CHIẾT KHẤU (DISCOUNT) ====================
     /**
      * Các thông báo liên quan đến quản lý chiết khấu và khuyến mãi
@@ -165,7 +166,6 @@ public class AppMessages {
     public static final String GENERAL_ERROR = "Lỗi không xác định. Thao tác thất bại.";
     public static final String UNKNOWN_ERROR = "Lỗi không xác định. Vui lòng thử lại.";
     public static final String OPERATION_SUCCESS = "Thao tác thành công!";
-    public static final String OPERATION_FAILED = "Thao tác thất bại!";
     public static final String INVALID_DATA = "Dữ liệu đầu vào không hợp lệ";
     public static final String INVALID_PARAMS = "Tham số không hợp lệ";
     public static final String NOT_FOUND = "Không tìm thấy dữ liệu yêu cầu";

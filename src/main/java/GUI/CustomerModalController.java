@@ -90,7 +90,6 @@ public class CustomerModalController implements IModalController {
         if (typeModal == 0) {
             modalName.setText("Thêm khách hàng");
             txtCustomerId.setText(customerBus.nextId());
-            UiUtils.gI().setVisibleItem(updatedAt);
         } else {
             if (customer == null)
                 handleClose();
@@ -121,6 +120,9 @@ public class CustomerModalController implements IModalController {
                         .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
             }
         }
+        if (typeModal == 0)
+            UiUtils.gI().setVisibleItem(updatedAt);
+
     }
 
     private boolean isValidInput() {

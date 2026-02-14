@@ -9,6 +9,7 @@ import ENUM.StatusType;
 import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -33,9 +34,17 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
     }
 
     public String nextId() {
-        return String.valueOf(arrLocal.size() + 1);
-    }
+        if (arrLocal.isEmpty())
+            return "1";
 
+        // Tìm ID lớn nhất hiện có trong Cache
+        int maxId = arrLocal.stream()
+                .mapToInt(CategoryDTO::getId)
+                .max()
+                .orElse(0);
+
+        return String.valueOf(maxId + 1);
+    }
     // --- NGHIỆP VỤ CHÍNH ---
 
     // Trong CategoryBUS.java
@@ -43,22 +52,26 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
         if (obj == null)
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
 
-        // 1. CHUẨN HÓA TRƯỚC
+        // 1. CHUẨN HÓA & VALIDATE
         ValidationUtils validate = ValidationUtils.getInstance();
         obj.setName(validate.normalizeWhiteSpace(obj.getName()));
 
-        // 2. KIỂM TRA ĐẦU VÀO & STATUS (Gộp lại cho gọn)
         if (!isValidCategoryInput(obj))
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
 
         if (!StatusBUS.getInstance().isValidStatusIdForType(StatusType.CATEGORY, obj.getStatusId()))
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.STATUS_IDForType_INVALID);
 
-        // 3. KIỂM TRA TRÙNG TÊN
         if (isExistCategory(-1, obj.getName()))
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.CATEGORY_ADD_DUPLICATE);
 
-        // 4. GHI DB & CACHE
+        // 2. THIẾT LẬP ID & THỜI GIAN (Java quản lý hoàn toàn)
+        LocalDateTime now = LocalDateTime.now();
+        obj.setId(Integer.parseInt(nextId())); // Gán ID dựa trên logic Max+1 của bạn
+        obj.setCreatedAt(now);
+        obj.setUpdatedAt(now);
+
+        // 3. GHI DB & CACHE (Dùng luôn obj, không refetch)
         if (!CategoryDAL.getInstance().insert(obj))
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
 
@@ -253,12 +266,16 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
      */
     public boolean isValidCategory(int categoryId) {
         CategoryDTO temp = getByIdLocal(categoryId);
-        if (temp == null)
+        if (!isExist(categoryId))
             return false;
 
         int activeStatusId = StatusBUS.getInstance()
                 .getByTypeAndStatusNameLocal(StatusType.CATEGORY, Status.Category.ACTIVE).getId();
 
         return temp.getStatusId() == activeStatusId;
+    }
+
+    public boolean isExist(int id) {
+        return getByIdLocal(id) != null;
     }
 }
