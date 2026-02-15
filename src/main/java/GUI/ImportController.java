@@ -84,13 +84,6 @@ public class ImportController implements IController {
         importBUS = ImportBUS.getInstance();
         detailImportBUS = DetailImportBUS.getInstance();
 
-        if (importBUS.isLocalEmpty())
-            importBUS.loadLocal();
-        if (detailImportBUS.isLocalEmpty())
-            detailImportBUS.loadLocal();
-        if (statusBUS.isLocalEmpty())
-            statusBUS.loadLocal();
-
         tblImport.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblImport.getSelectionModel().clearSelection());
         Platform.runLater(() -> tblDetailImport.getSelectionModel().clearSelection());
@@ -112,9 +105,9 @@ public class ImportController implements IController {
         tlb_col_totalPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
         tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(statusBUS
-                .getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
+                .getById(cellData.getValue().getStatusId()).getDescription()));
         UiUtils.gI().addTooltipToColumn(tlb_col_createDate, 10);
-        tblImport.setItems(FXCollections.observableArrayList(ImportBUS.getInstance().getAllLocal()));
+        tblImport.setItems(FXCollections.observableArrayList(ImportBUS.getInstance().getAll()));
     }
 
     public void loadSubTable(int importId) {
@@ -126,15 +119,15 @@ public class ImportController implements IController {
         this.employeeId.setText(String.valueOf(selectedImport.getEmployeeId()));
         this.supplierId.setText(String.valueOf(selectedImport.getSupplierId()));
         this.totalPrice.setText(validationUtils.formatCurrency(selectedImport.getTotalPrice()));
-        this.status.setText(statusBUS.getByIdLocal(selectedImport.getStatusId()).getDescription());
+        this.status.setText(statusBUS.getById(selectedImport.getStatusId()).getDescription());
         tlb_col_productId.setCellValueFactory(new PropertyValueFactory<>("productId"));
         tlb_col_quantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         tlb_col_price.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getPrice())));
         tlb_col_totalPriceP.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
-        tblDetailImport.setItems(FXCollections
-                .observableArrayList(detailImportBUS.getAllDetailImportByImportIdLocal(importId)));
+        // tblDetailImport.setItems(FXCollections
+        // .observableArrayList(detailImportBUS.getAllDetailImportByImportIdLocal(importId)));
         tblDetailImport.getSelectionModel().clearSelection();
     }
 
@@ -180,12 +173,12 @@ public class ImportController implements IController {
         clearSubTable();
         if (keyword.isEmpty()) {
             // Nߦ+u keyword r�+�ng, lߦ�y tߦ�t cߦ� h+�a -��n
-            tblImport.setItems(FXCollections.observableArrayList(importBUS.getAllLocal()));
+            tblImport.setItems(FXCollections.observableArrayList(importBUS.getAll()));
         } else {
             try {
                 int id = Integer.parseInt(keyword);
                 tblImport.setItems(FXCollections.observableArrayList(
-                        importBUS.getByIdLocal(id)));
+                        importBUS.getById(id)));
             } catch (NumberFormatException e) {
                 // X�+� l++ tr���+�ng h�+�p kh+�ng phߦ�i s�+�
                 tblImport.setItems(FXCollections.observableArrayList());

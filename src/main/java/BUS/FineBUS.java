@@ -3,7 +3,6 @@ package BUS;
 import DTO.FineDTO;
 import DAL.FineDAL;
 import UTILS.ValidationUtils;
-import SERVICE.AuthorizationService;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
@@ -57,17 +56,6 @@ public class FineBUS extends BaseBUS<FineDTO, Integer> {
         if (!isValidFineInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (FineDAL.getInstance().insert(obj)) {
-            if (arrLocal.isEmpty()) {
-                loadLocal();
-            } else {
-                arrLocal.add(new FineDTO(obj));
-            }
-            return true;
-        }
         return false;
     }
 
@@ -75,23 +63,7 @@ public class FineBUS extends BaseBUS<FineDTO, Integer> {
         if (!isValidFineInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (FineDAL.getInstance().update(obj)) {
-            for (FineDTO fine : arrLocal) {
-                if (fine.getId() == obj.getId()) {
-                    fine.setReason(obj.getReason());
-                    fine.setCreatedAt(obj.getCreatedAt());
-                    fine.setFineLevel(obj.getFineLevel());
-                    fine.setAmount(obj.getAmount());
-                    fine.setFinePay(obj.getFinePay());
-                    fine.setEmployeeId(obj.getEmployeeId());
-                    break;
-                }
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -99,13 +71,7 @@ public class FineBUS extends BaseBUS<FineDTO, Integer> {
         if (id == null || id <= 0) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (FineDAL.getInstance().delete(id)) {
-            arrLocal.removeIf(fine -> fine.getId() == id);
-            return true;
-        }
+
         return false;
     }
 

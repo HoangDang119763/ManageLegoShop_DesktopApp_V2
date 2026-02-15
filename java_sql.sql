@@ -46,7 +46,8 @@ INSERT INTO `status` (`name`, `description`, `type`) VALUES
 ('Locked', 'Bị khóa (do sai pass/vi phạm)', 'ACCOUNT'),
 -- Nhóm Sản Phẩm - Product
 ('Active', 'Đang kinh doanh', 'PRODUCT'),
-('Inactive', 'Ngừng kinh doanh', 'PRODUCT'),
+('Suspended', 'Ngừng kinh doanh', 'PRODUCT'),
+('Inactive', 'Vô hiệu', 'PRODUCT'),
 -- Nhóm Thể Loại - Category
 ('Active', 'Hoạt động', 'CATEGORY'),
 ('Inactive', 'Vô hiệu', 'CATEGORY'),
@@ -109,7 +110,7 @@ CREATE TABLE `module` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 INSERT INTO `module` (`id`, `name`) VALUES
-(1, 'Quản lý nhân viên'),
+(1, 'Quản lý nhân viên & Tài khoản'),
 (2, 'Quản lý khách hàng'),
 (3, 'Quản lý sản phẩm'),
 (4, 'Quản lý nhà cung cấp'),
@@ -118,8 +119,7 @@ INSERT INTO `module` (`id`, `name`) VALUES
 (7, 'Quản lý thể loại'),
 (8, 'Quản lý khuyến mãi'),
 (9, 'Quản lý chức vụ'),
-(10, 'Quản lý tài khoản'),
-(11, 'Thống kê');
+(10, 'Thống kê');
 
 CREATE TABLE `permission` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -152,7 +152,7 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 ('Cập nhật trạng thái tài khoản', 'EMPLOYEE_ACCOUNT_UPDATE_STATUS', 1),
 
 -- Các thao tác quản trị danh sách
-('Thêm mới nhân viên', 'EMPLOYEE_INSERT', 1),
+('Thêm mới nhân viên, tài khoản', 'EMPLOYEE_INSERT', 1),
 ('Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
 
 -- === 👥 MODULE KHÁCH HÀNG (Module ID: 2) ===
@@ -198,22 +198,86 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 ('Xem bảng phân quyền', 'PERMISSION_VIEW', 9),
 ('Cập nhật cấu hình phân quyền', 'PERMISSION_UPDATE', 9),
 
--- === 📊 MODULE THỐNG KÊ (Module ID: 11) ===
-('Xem báo cáo thống kê', 'STATISTICS_VIEW', 11);
+-- === 📊 MODULE THỐNG KÊ (Module ID: 10) ===
+('Xem báo cáo thống kê', 'STATISTICS_VIEW', 10);
 
 CREATE TABLE `role_permission` (
   `role_id` int(11) NOT NULL,
   `permission_id` int(11) NOT NULL,
-  `status` TINYINT(1) NOT NULL DEFAULT 1 CHECK (`status` IN (0,1)),
    PRIMARY KEY (`role_id`, `permission_id`),
    FOREIGN KEY (`role_id`) REFERENCES `role` (`id`),
    FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Bước 2: Tạo "Phôi" (Mặc định tất cả 8 Role x 30 Quyền đều tắt - status = 0)
-INSERT INTO `role_permission` (`role_id`, `permission_id`, `status`)
-SELECT r.id, p.id, 0
-FROM `role` r CROSS JOIN `permission` p;
+INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+SELECT 1, id FROM `permission`;
+
+INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+SELECT 2, id FROM `permission`;
+
+-- INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+-- SELECT 2, id
+-- FROM `permission`
+-- WHERE permission_key IN (
+--     'EMPLOYEE_LIST_VIEW',
+--     'EMPLOYEE_PERSONAL_VIEW',
+--     'EMPLOYEE_JOB_VIEW',
+--     'EMPLOYEE_PAYROLL_VIEW',
+--     'PRODUCT_VIEW',
+--     'CUSTOMER_VIEW',
+--     'STATISTICS_VIEW'
+-- );
+
+INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+SELECT 3, id
+FROM `permission`
+WHERE permission_key IN (
+    'EMPLOYEE_LIST_VIEW',
+    'EMPLOYEE_PERSONAL_VIEW',
+    'EMPLOYEE_JOB_VIEW',
+    'PRODUCT_VIEW',
+    'PRODUCT_UPDATE',
+    'CUSTOMER_VIEW',
+    'ORDER_VIEW',
+    'STATISTICS_VIEW'
+);
+
+INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+SELECT 4, id
+FROM `permission`
+WHERE permission_key IN (
+    'PRODUCT_VIEW',
+    'ORDER_CREATE',
+    'CUSTOMER_VIEW'
+);
+
+INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+SELECT r.role_id, p.id
+FROM (
+    SELECT 5 AS role_id
+    UNION SELECT 6
+    UNION SELECT 7
+) AS r
+JOIN `permission` p
+    ON p.permission_key IN (
+        'PRODUCT_VIEW',
+        'CUSTOMER_VIEW',
+        'ORDER_CREATE'
+    );
+
+INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+SELECT r.role_id, p.id
+FROM (
+    SELECT 8 AS role_id
+    UNION SELECT 9
+) AS r
+JOIN `permission` p
+    ON p.permission_key IN (
+        'PRODUCT_VIEW',
+        'PRODUCT_UPDATE',
+        'IMPORT_CREATE',
+        'IMPORT_VIEW'
+    );
 
 CREATE TABLE `department` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -256,6 +320,9 @@ CREATE TABLE `employee` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
+    KEY `idx_employee_role` (`role_id`),
+  KEY `idx_employee_department` (`department_id`),
+  KEY `idx_employee_account` (`account_id`),
   CONSTRAINT `fk_employee_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_employee_department` FOREIGN KEY (`department_id`) REFERENCES `department` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_employee_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
@@ -296,6 +363,7 @@ CREATE TABLE `account` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `last_login` DATETIME NULL,
   `status_id` INT NOT NULL,
+    `require_relogin` TINYINT(1) DEFAULT 0, 
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_account_employee` FOREIGN KEY (`id`) REFERENCES `employee` (`id`),
   CONSTRAINT `fk_account_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
@@ -777,56 +845,7 @@ CREATE TABLE `employment_history` (
 -- 1. CẬP NHẬT TRẠNG THÁI CHO CÁC THỰC THỂ (ACTIVE)
 -- =============================================
 SET SQL_SAFE_UPDATES = 0;
--- Bước 3: Bật quyền (status = 1)
-UPDATE role_permission SET status = 1 WHERE role_id = 1;
 
--- 1. Tổng giám đốc
--- UPDATE role_permission rp
--- JOIN permission p ON rp.permission_id = p.id
--- SET rp.status = 1
--- WHERE rp.role_id = 2
--- AND p.permission_key IN (
--- 'EMPLOYEE_LIST_VIEW','EMPLOYEE_PERSONAL_VIEW','EMPLOYEE_JOB_VIEW','EMPLOYEE_PAYROLL_VIEW',
--- 'PRODUCT_VIEW','CUSTOMER_VIEW','STATISTICS_VIEW'
--- );
-UPDATE role_permission SET status = 1 WHERE role_id = 2;
--- 2. Quản lý cửa hàng
-UPDATE role_permission rp
-JOIN permission p ON rp.permission_id = p.id
-SET rp.status = 1
-WHERE rp.role_id = 3
-AND p.permission_key IN (
-'EMPLOYEE_LIST_VIEW','EMPLOYEE_PERSONAL_VIEW','EMPLOYEE_JOB_VIEW',
-'PRODUCT_VIEW','PRODUCT_UPDATE',
-'CUSTOMER_VIEW','ORDER_VIEW','STATISTICS_VIEW'
-);
-
--- 3. Trưởng nhóm bán hàng
-UPDATE role_permission rp
-JOIN permission p ON rp.permission_id = p.id
-SET rp.status = 1
-WHERE rp.role_id = 4
-AND p.permission_key IN (
-'PRODUCT_VIEW','ORDER_CREATE','CUSTOMER_VIEW'
-);
-
--- 4. Nhóm Bán hàng
-UPDATE role_permission rp
-JOIN permission p ON rp.permission_id = p.id
-SET rp.status = 1
-WHERE rp.role_id IN (5,6,7)
-AND p.permission_key IN (
-'PRODUCT_VIEW','CUSTOMER_VIEW','ORDER_CREATE'
-);
-
--- 5. Nhóm Kho
-UPDATE role_permission rp
-JOIN permission p ON rp.permission_id = p.id
-SET rp.status = 1
-WHERE rp.role_id IN (8,9)
-AND p.permission_key IN (
-'PRODUCT_VIEW','PRODUCT_UPDATE','IMPORT_CREATE','IMPORT_VIEW'
-);
 UPDATE department SET status_id = (SELECT id FROM status WHERE type = 'DEPARTMENT' AND name = 'Active' LIMIT 1);
 UPDATE employee   SET status_id = (SELECT id FROM status WHERE type = 'EMPLOYEE' AND name = 'Active' LIMIT 1);
 UPDATE account    SET status_id = (SELECT id FROM status WHERE type = 'ACCOUNT' AND name = 'Active' LIMIT 1);

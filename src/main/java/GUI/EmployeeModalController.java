@@ -201,17 +201,11 @@ public class EmployeeModalController implements IModalController {
     }
 
     private void loadDepartmentComboBox() {
-        if (departmentBUS.isLocalEmpty()) {
-            departmentBUS.loadLocal();
-        }
-        cbDepartment.getItems().addAll(departmentBUS.getAllLocal());
+        cbDepartment.getItems().addAll(departmentBUS.getAll());
     }
 
     private void loadRoleComboBox() {
-        if (roleBUS.isLocalEmpty()) {
-            roleBUS.loadLocal();
-        }
-        cbRole.getItems().addAll(roleBUS.getAllLocal());
+        cbRole.getItems().addAll(roleBUS.getAll());
 
         // Auto-update salary when role changes
         cbRole.setOnAction(event -> handleRoleSelectChange());
@@ -223,7 +217,7 @@ public class EmployeeModalController implements IModalController {
     private void handleRoleSelectChange() {
         RoleDTO selectedRole = cbRole.getSelectionModel().getSelectedItem();
         if (selectedRole != null && selectedRole.getSalaryId() != null) {
-            SalaryDTO salary = salaryBUS.getByIdLocal(selectedRole.getSalaryId());
+            SalaryDTO salary = salaryBUS.getById(selectedRole.getSalaryId());
             if (salary != null) {
                 txtBaseSalary.setText(salary.getBase() != null ? salary.getBase().toString() : "0");
                 txtCoefficient.setText(salary.getCoefficient() != null ? salary.getCoefficient().toString() : "0");
@@ -232,12 +226,12 @@ public class EmployeeModalController implements IModalController {
     }
 
     private void loadStatusComboBox() {
-        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.EMPLOYEE);
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByType(StatusType.EMPLOYEE);
         cbStatus.getItems().addAll(statusList);
     }
 
     private void loadAccountStatusComboBox() {
-        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.ACCOUNT);
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByType(StatusType.ACCOUNT);
         cbAccountStatus.getItems().addAll(statusList);
     }
 
@@ -298,7 +292,7 @@ public class EmployeeModalController implements IModalController {
         // tab2 Account Info
         txtUsername.setText(empDetail.getUsername() != null ? empDetail.getUsername() : "");
         if (empDetail.getAccountStatusId() > 0) {
-            StatusDTO accountStatus = statusBUS.getByIdLocal(empDetail.getAccountStatusId());
+            StatusDTO accountStatus = statusBUS.getById(empDetail.getAccountStatusId());
             if (accountStatus != null) {
                 cbAccountStatus.getItems().stream()
                         .filter(item -> item != null && item.getId() == accountStatus.getId())
@@ -306,7 +300,7 @@ public class EmployeeModalController implements IModalController {
                         .ifPresent(item -> cbAccountStatus.getSelectionModel().select(item));
             }
         }
-        AccountDTO account = accountBUS.getByIdLocal(empDetail.getAccountId());
+        AccountDTO account = accountBUS.getById(empDetail.getAccountId());
         if (account != null) {
             lblLastLogin.setText(
                     account.getLastLogin() != null ? validationUtils.formatDateTimeWithHour(account.getLastLogin())
@@ -318,12 +312,12 @@ public class EmployeeModalController implements IModalController {
         if (empDetail.getDepartmentId() != null)
 
         {
-            DepartmentDTO dept = departmentBUS.getByIdLocal(empDetail.getDepartmentId());
+            DepartmentDTO dept = departmentBUS.getById(empDetail.getDepartmentId());
             cbDepartment.getSelectionModel().select(dept);
         }
 
         // Set Role (this will trigger auto-update of salary)
-        RoleDTO role = roleBUS.getByIdLocal(empDetail.getRoleId());
+        RoleDTO role = roleBUS.getById(empDetail.getRoleId());
         if (role != null) {
             cbRole.getSelectionModel().select(role);
             handleRoleSelectChange(); // Trigger salary update
@@ -338,7 +332,7 @@ public class EmployeeModalController implements IModalController {
             tblJobHistory.setItems(FXCollections.observableArrayList(jobHistory));
 
         // Set Status
-        StatusDTO status = statusBUS.getByIdLocal(empDetail.getStatusId());
+        StatusDTO status = statusBUS.getById(empDetail.getStatusId());
         if (status != null) {
             cbStatus.getItems().stream()
                     .filter(item -> item != null && item.getId() == status.getId())

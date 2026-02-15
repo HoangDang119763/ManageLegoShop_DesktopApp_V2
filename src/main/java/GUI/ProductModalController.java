@@ -91,15 +91,15 @@ public class ProductModalController implements IModalController {
     // =====================
     private void setupComboBoxData() {
         // 1. Tải dữ liệu vào Items
-        ArrayList<StatusDTO> statusOptions = statusBUS.getAllByTypeLocal(StatusType.PRODUCT);
+        ArrayList<StatusDTO> statusOptions = statusBUS.getAllByType(StatusType.PRODUCT);
         cbSelectStatus.setItems(FXCollections.observableArrayList(statusOptions));
 
-        ArrayList<CategoryDTO> categoryOptions = categoryBUS.getAllLocal();
+        ArrayList<CategoryDTO> categoryOptions = categoryBUS.getAll();
         cbSelectCategory.setItems(FXCollections.observableArrayList(categoryOptions));
 
         // 2. Định dạng hiển thị (Chữ xám, in nghiêng cho Inactive)
         int inactiveCateId = statusBUS
-                .getByTypeAndStatusNameLocal(StatusType.CATEGORY, Status.Category.INACTIVE).getId();
+                .getByTypeAndStatusName(StatusType.CATEGORY, Status.Category.INACTIVE).getId();
 
         UiUtils.gI().formatInactiveComboBox(
                 cbSelectCategory,
@@ -110,7 +110,7 @@ public class ProductModalController implements IModalController {
 
     private void attachCategoryWarning(int initialCateId) {
         int inactiveCateId = statusBUS
-                .getByTypeAndStatusNameLocal(StatusType.CATEGORY, Status.Category.INACTIVE).getId();
+                .getByTypeAndStatusName(StatusType.CATEGORY, Status.Category.INACTIVE).getId();
 
         UiUtils.gI().addSmartInactiveWarningListener(
                 cbSelectCategory,
@@ -183,7 +183,7 @@ public class ProductModalController implements IModalController {
         // Gắn listener với ID thật của sản phẩm đang sửa
         prepareCategorySelection(product.getCategoryId());
         // Select Category
-        CategoryDTO selectedCategory = categoryBUS.getByIdLocal(product.getCategoryId());
+        CategoryDTO selectedCategory = categoryBUS.getById(product.getCategoryId());
         if (selectedCategory != null) {
             cbSelectCategory.getItems().stream()
                     .filter(item -> item != null && item.getId() == selectedCategory.getId())
@@ -192,7 +192,7 @@ public class ProductModalController implements IModalController {
         }
 
         // Select Status
-        StatusDTO statusToSelect = statusBUS.getByIdLocal(product.getStatusId());
+        StatusDTO statusToSelect = statusBUS.getById(product.getStatusId());
         if (statusToSelect != null) {
             cbSelectStatus.getItems().stream()
                     .filter(item -> item != null && item.getId() == statusToSelect.getId())
@@ -420,7 +420,7 @@ public class ProductModalController implements IModalController {
                 newImgUrl, // Có thể là null
                 cbSelectCategory.getValue().getId());
 
-        BUSResult insertResult = SecureExecutor.runSafeBUSResult(
+        BUSResult insertResult = SecureExecutor.executeSafeBusResult(
                 PermissionKey.PRODUCT_INSERT,
                 () -> productBUS.insert(temp));
 
@@ -461,7 +461,7 @@ public class ProductModalController implements IModalController {
                 finalImgUrl,
                 cbSelectCategory.getValue().getId());
 
-        BUSResult updateResult = SecureExecutor.runSafeBUSResult(
+        BUSResult updateResult = SecureExecutor.executeSafeBusResult(
                 PermissionKey.PRODUCT_UPDATE,
                 () -> productBUS.update(temp));
 

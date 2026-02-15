@@ -65,7 +65,7 @@ public class SupplierModalController implements IModalController {
     // 2️⃣ UI SETUP
     // =====================
     private void loadComboBox() {
-        ArrayList<StatusDTO> statusOptions = statusBUS.getAllByTypeLocal(StatusType.SUPPLIER);
+        ArrayList<StatusDTO> statusOptions = statusBUS.getAllByType(StatusType.SUPPLIER);
         cbSelectStatus.setItems(FXCollections.observableArrayList(statusOptions));
         cbSelectStatus.getSelectionModel().selectFirst();
     }
@@ -93,7 +93,7 @@ public class SupplierModalController implements IModalController {
 
         if (typeModal == 0) {
             modalName.setText("THÊM NHÀ CUNG CẤP");
-            txtSupplierId.setText(String.valueOf(supplierBUS.getAllLocal().size() + 1));
+            txtSupplierId.setText(String.valueOf(supplierBUS.getAll().size() + 1));
         } else if (typeModal == 1) {
             modalName.setText("SỬA NHÀ CUNG CẤP");
         } else if (typeModal == 2) {

@@ -1,7 +1,6 @@
 package BUS;
 
 import DAL.ProductDAL;
-
 import DTO.ProductDTO;
 import DTO.BUSResult;
 import ENUM.*;
@@ -35,22 +34,17 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return obj.getId();
     }
 
-    // --- LOGIC XỬ LÝ ID AN TOÀN ---
-    public String autoId() {
-        if (isLocalEmpty())
-            return "SP00001";
+    @Override
+    public ProductDTO getById(String id) {
+        if (id == null || id.isEmpty())
+            return null;
+        return ProductDAL.getInstance().getById(id);
+    }
 
-        // Quét tìm Max ID thực sự thay vì lấy phần tử cuối (tránh lỗi khi list bị sort)
-        int maxId = 0;
-        for (ProductDTO p : arrLocal) {
-            try {
-                int currentNumId = Integer.parseInt(p.getId().substring(2));
-                if (currentNumId > maxId)
-                    maxId = currentNumId;
-            } catch (Exception e) {
-                /* Bỏ qua mã lỗi định dạng */ }
-        }
-        return String.format("SP%05d", maxId + 1);
+    // [STATELESS] --- LOGIC XỬ LÝ ID AN TOÀN ---
+    // Auto-generate next product ID by querying database (no local cache)
+    public String autoId() {
+        return ProductDAL.getInstance().getNextProductId();
     }
 
     private String nextProductId(String currentId) {
@@ -72,7 +66,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         obj.setImageUrl(validate.convertEmptyStringToNull(obj.getImageUrl()));
         // Validate categoryId tồn tại (nếu có set)
         CategoryBUS cateBus = CategoryBUS.getInstance();
-        if (!cateBus.isValidCategory(obj.getCategoryId()))
+        if (!cateBus.isCategoryActive(obj.getCategoryId()))
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.PRODUCT_ADD_CATEGORY_INVALID);
 
         // Đảm bảo trạng thái có id hợp lệ
@@ -96,8 +90,8 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
 
         if (!ProductDAL.getInstance().insert(obj))
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
-        ProductDTO freshProduct = ProductDAL.getInstance().getById(obj.getId());
-        addToLocalCache(freshProduct);
+        // [STATELESS] No cache update needed - data will refresh from DB on next
+        // getAll()
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_ADD_SUCCESS);
     }
 
@@ -105,12 +99,13 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         if (obj == null || obj.getId() == null)
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
 
-        ProductDTO oldProduct = getByIdLocal(obj.getId());
+        // [STATELESS] Query database instead of local cache
+        ProductDTO oldProduct = ProductDAL.getInstance().getById(obj.getId());
         if (oldProduct == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
         int inactiveId = StatusBUS.getInstance()
-                .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
+                .getByTypeAndStatusName(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
 
         // 1. Check chuyển sang Inactive (Đồng bộ với logic Delete)
         if (oldProduct.getStatusId() != inactiveId && obj.getStatusId() == inactiveId) {
@@ -133,8 +128,6 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         if (isExistProductName(obj.getId(), obj.getName()))
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.PRODUCT_UPDATE_DUPLICATE);
-        if (isDataUnchanged(obj))
-            return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_UPDATE_SUCCESS);
 
         obj.setName(val.normalizeWhiteSpace(obj.getName()));
         obj.setDescription(val.normalizeWhiteSpace(obj.getDescription()));
@@ -143,19 +136,19 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         // 4. Lưu DB & Cache
         if (!ProductDAL.getInstance().update(obj))
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
-        ProductDTO freshProduct = ProductDAL.getInstance().getById(obj.getId());
-        // 3. Cập nhật Cache bằng đối tượng "Tươi" này
-        updateLocalCache(freshProduct);
+        // [STATELESS] No cache update needed - data will refresh from DB on next
+        // getAll()
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_UPDATE_SUCCESS);
     }
 
     public BUSResult delete(String id) {
-        ProductDTO target = getByIdLocal(id);
+        // [STATELESS] Query database instead of local cache
+        ProductDTO target = ProductDAL.getInstance().getById(id);
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
         int inactiveId = StatusBUS.getInstance()
-                .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
+                .getByTypeAndStatusName(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
 
         // 1. Check tồn kho trước khi cho phép "biến mất" hoặc "ngừng bán"
         BUSResult checkStock = validateTransitionToInactive(target);
@@ -178,15 +171,8 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         if (!success)
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
 
-        // 5. Cập nhật Cache
-        if (hasHistory) {
-            ProductDTO freshProduct = ProductDAL.getInstance().getById(id);
-            updateLocalCache(freshProduct);
-        } else {
-            arrLocal.remove(target);
-            mapLocal.remove(id); // Giả sử bạn có hàm remove cache theo ID
-        }
-
+        // [STATELESS] No cache update needed - data will refresh from DB on next
+        // getAll()
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_DELETE_SUCCESS);
     }
 
@@ -201,7 +187,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
     // Kiểm tra tính hợp lệ của Category khi thay đổi
     private BUSResult validateCategoryTransition(int oldCateId, int newCateId) {
         if (oldCateId != newCateId) {
-            if (!CategoryBUS.getInstance().isValidCategory(newCateId)) {
+            if (!CategoryBUS.getInstance().isCategoryActive(newCateId)) {
                 return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.PRODUCT_ADD_CATEGORY_INVALID);
             }
         }
@@ -219,7 +205,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
 
         // Lấy status mặc định cho hàng mới
         int activeStatusId = StatusBUS.getInstance()
-                .getByTypeAndStatusNameLocal(StatusType.PRODUCT, Status.Product.ACTIVE).getId();
+                .getByTypeAndStatusName(StatusType.PRODUCT, Status.Product.ACTIVE).getId();
 
         for (ProductDTO p : listProducts) {
             // Normalize trước
@@ -233,7 +219,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
             }
             excelNames.add(p.getName());
 
-            if (!CategoryBUS.getInstance().isValidCategory(p.getCategoryId()))
+            if (!CategoryBUS.getInstance().isCategoryActive(p.getCategoryId()))
                 return 4;
 
             // Gán các trường bắt buộc
@@ -250,51 +236,39 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         if (!ProductDAL.getInstance().insertListProductExcel(listProducts))
             return 7;
 
-        for (ProductDTO p : listProducts)
-            addToLocalCache(p);
+        // [STATELESS] No cache update needed - data will refresh from DB on next
+        // getAll()
         return 1;
     }
 
-    // --- TỐI ƯU HIỆU NĂNG CACHE ---
+    // [STATELESS] TỐI ƯU HIỆU NĂNG CACHE
     public boolean updateQuantitySellingPriceListProduct(ArrayList<ProductDTO> listProducts, boolean isAdd) {
         if (listProducts == null || listProducts.isEmpty())
             return false;
 
-        // Clone và tính toán (Sử dụng Map - O(1))
+        // [STATELESS] Get fresh data from DB for calculation instead of map Local
         for (ProductDTO p : listProducts) {
-            ProductDTO local = mapLocal.get(p.getId());
-            if (local == null)
+            ProductDTO dbProduct = ProductDAL.getInstance().getById(p.getId());
+            if (dbProduct == null)
                 return false;
 
-            int newQty = isAdd ? (local.getStockQuantity() + p.getStockQuantity())
-                    : Math.max(0, local.getStockQuantity() - p.getStockQuantity());
+            int newQty = isAdd ? (dbProduct.getStockQuantity() + p.getStockQuantity())
+                    : Math.max(0, dbProduct.getStockQuantity() - p.getStockQuantity());
             p.setStockQuantity(newQty);
         }
 
         if (!ProductDAL.getInstance().updateProductQuantityAndSellingPrice(listProducts))
             return false;
 
-        // Cập nhật Cache đồng bộ
-        for (ProductDTO updated : listProducts) {
-            ProductDTO local = mapLocal.get(updated.getId());
-            if (local != null) {
-                local.setStockQuantity(updated.getStockQuantity());
-                local.setSellingPrice(updated.getSellingPrice());
-            }
-        }
+        // [STATELESS] No cache update needed - data will refresh from DB on next
+        // getAll()
         return true;
     }
 
-    // --- HÀM HỖ TRỢ & VALIDATE ---
+    // [STATELESS] HÀM HỖ TRỢ & VALIDATE
     private boolean isExistProductName(String id, String name) {
-        if (name == null)
-            return false;
-        String normalized = ValidationUtils.getInstance().normalizeWhiteSpace(name);
-        for (ProductDTO p : arrLocal) {
-            if (!Objects.equals(p.getId(), id) && p.getName().equalsIgnoreCase(normalized))
-                return true;
-        }
-        return false;
+        // [STATELESS] Query database instead of iterating local cache
+        return ProductDAL.getInstance().isProductNameExists(id, name);
     }
 
     public boolean isValidProductInput(ProductDTO obj) {
@@ -354,48 +328,19 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return v.validateVietnameseText255(obj.getName());
     }
 
-    public boolean isDataUnchanged(ProductDTO obj) {
-        ProductDTO ex = getByIdLocal(obj.getId());
-        if (ex == null)
-            return false;
-        ValidationUtils v = ValidationUtils.getInstance();
-        // So sánh toàn bộ field quan trọng để kiểm tra dữ liệu có thay đổi hay không
-        return Objects.equals(ex.getName(), v.normalizeWhiteSpace(obj.getName())) &&
-                Objects.equals(ex.getDescription(), v.normalizeWhiteSpace(obj.getDescription())) &&
-                Objects.equals(ex.getCategoryId(), obj.getCategoryId()) &&
-                obj.getSellingPrice().compareTo(ex.getSellingPrice()) == 0 &&
-                Objects.equals(ex.getStatusId(), obj.getStatusId()) &&
-                Objects.equals(ex.getImageUrl(), obj.getImageUrl());
-    }
-
-    private void addToLocalCache(ProductDTO obj) {
-        ProductDTO copy = new ProductDTO(obj);
-        mapLocal.put(copy.getId(), copy);
-        arrLocal.add(copy);
-    }
-
-    private void updateLocalCache(ProductDTO product) {
-        // 1. Cập nhật Map (Ghi đè reference mới)
-        mapLocal.put(product.getId(), product);
-
-        // 2. Cập nhật List (Tìm và thay thế)
-        for (int i = 0; i < arrLocal.size(); i++) {
-            if (arrLocal.get(i).getId().equals(product.getId())) {
-                arrLocal.set(i, product);
-                break;
-            }
-        }
-    }
-
     public boolean isDuplicateImageUrl(ProductDTO obj) {
-        ProductDTO existingPro = getByIdLocal(obj.getId());
+        ProductDTO existingPro = ProductDAL.getInstance().getById(obj.getId());
         return existingPro != null &&
                 Objects.equals(existingPro.getImageUrl(), obj.getImageUrl());
     }
 
+    // [STATELESS] Filter products from fresh DB data
     public ArrayList<ProductDTO> filterProducts(String searchBy, String keyword, int categoryIdFilter, int statusFilter,
             BigDecimal startPrice, BigDecimal endPrice, boolean inStockOnly) {
         ArrayList<ProductDTO> filteredList = new ArrayList<>();
+
+        // [STATELESS] Query fresh data from DB instead of using arrLocal
+        ArrayList<ProductDTO> allProducts = getAll();
 
         if (keyword == null)
             keyword = "";
@@ -404,7 +349,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
 
         keyword = keyword.trim().toLowerCase();
 
-        for (ProductDTO pro : arrLocal) {
+        for (ProductDTO pro : allProducts) {
             boolean matchesSearch = true;
             boolean matchesCategory = (categoryIdFilter == -1) || (pro.getCategoryId() == categoryIdFilter);
             boolean matchesStatus = (statusFilter == -1) || (pro.getStatusId() == statusFilter);
@@ -444,15 +389,9 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return filterProducts(searchBy, keyword, categoryIdFilter, statusFilter, startPrice, endPrice, false);
     }
 
+    // [STATELESS] Check if category is used in any product
     public boolean isCategoryInAnyProduct(int categoryId) {
-        // 1. Đảm bảo dữ liệu đã được load (Giữ nguyên logic của bạn)
-        if (this.isLocalEmpty())
-            this.loadLocal();
-        for (ProductDTO p : arrLocal) {
-            if (p.getCategoryId() == categoryId) {
-                return true;
-            }
-        }
-        return false;
+        // [STATELESS] Query database instead of loading cache
+        return ProductDAL.getInstance().isCategoryInUse(categoryId);
     }
 }

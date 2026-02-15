@@ -3,7 +3,6 @@ package BUS;
 import DTO.FileDTO;
 import DAL.FileDAL;
 import UTILS.ValidationUtils;
-import SERVICE.AuthorizationService;
 import java.util.ArrayList;
 
 public class FileBUS extends BaseBUS<FileDTO, Integer> {
@@ -45,17 +44,6 @@ public class FileBUS extends BaseBUS<FileDTO, Integer> {
         if (!isValidFileInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (FileDAL.getInstance().insert(obj)) {
-            if (arrLocal.isEmpty()) {
-                loadLocal();
-            } else {
-                arrLocal.add(new FileDTO(obj));
-            }
-            return true;
-        }
         return false;
     }
 
@@ -63,20 +51,7 @@ public class FileBUS extends BaseBUS<FileDTO, Integer> {
         if (!isValidFileInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (FileDAL.getInstance().update(obj)) {
-            for (FileDTO file : arrLocal) {
-                if (file.getId() == obj.getId()) {
-                    file.setFilePath(obj.getFilePath());
-                    file.setFileName(obj.getFileName());
-                    file.setCreatedAt(obj.getCreatedAt());
-                    break;
-                }
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -84,13 +59,7 @@ public class FileBUS extends BaseBUS<FileDTO, Integer> {
         if (id == null || id <= 0) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (FileDAL.getInstance().delete(id)) {
-            arrLocal.removeIf(file -> file.getId() == id);
-            return true;
-        }
+
         return false;
     }
 

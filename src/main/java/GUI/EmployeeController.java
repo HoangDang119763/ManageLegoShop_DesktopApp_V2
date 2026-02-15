@@ -91,21 +91,6 @@ public class EmployeeController implements IController {
         departmentBUS = DepartmentBUS.getInstance();
         employmentHistoryBUS = EmploymentHistoryBUS.getInstance();
 
-        if (employeeBUS.isLocalEmpty())
-            employeeBUS.loadLocal();
-        if (roleBUS.isLocalEmpty())
-            roleBUS.loadLocal();
-        if (statusBUS.isLocalEmpty())
-            statusBUS.loadLocal();
-        if (salaryBUS.isLocalEmpty())
-            salaryBUS.loadLocal();
-        if (taxBUS.isLocalEmpty())
-            taxBUS.loadLocal();
-        if (departmentBUS.isLocalEmpty())
-            departmentBUS.loadLocal();
-        if (employmentHistoryBUS.isLocalEmpty())
-            employmentHistoryBUS.loadLocal();
-
         tblEmployee.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblEmployee.getSelectionModel().clearSelection());
 
@@ -138,13 +123,13 @@ public class EmployeeController implements IController {
         cbSearchBy.getItems().addAll("Mã nhân viên", "Họ tên", "SDT", "Email");
 
         // Load Status ComboBox
-        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.EMPLOYEE);
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByType(StatusType.EMPLOYEE);
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus); // "Tất cả" option
         cbStatusFilter.getItems().addAll(statusList);
 
         // Load Role ComboBox
-        ArrayList<RoleDTO> roleList = roleBUS.getAllLocal();
+        ArrayList<RoleDTO> roleList = roleBUS.getAll();
         RoleDTO allRole = new RoleDTO(-1, "Tất cả chức vụ");
         cbRoleFilter.getItems().add(allRole); // "Tất cả" option
         cbRoleFilter.getItems().addAll(roleList);
@@ -206,7 +191,7 @@ public class EmployeeController implements IController {
         int statusId = statusFilter == null ? -1 : statusFilter.getId();
         int roleId = roleFilter == null ? -1 : roleFilter.getId();
         // Step 1: Transform employee data using provider
-        ArrayList<EmployeeDetailDTO> tableData = provider.toTableDTOs(employeeBUS.getAllLocal());
+        ArrayList<EmployeeDetailDTO> tableData = provider.toTableDTOs(employeeBUS.getAll());
 
         tblEmployee.setItems(FXCollections.observableArrayList(filterer.applyAllFilters(
                 tableData,

@@ -3,16 +3,14 @@ package BUS;
 import DAL.AccountDAL;
 import DTO.AccountDTO;
 import DTO.BUSResult;
+import DTO.EmployeeSessionDTO;
 import ENUM.*;
-import SERVICE.AuthorizationService;
+import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
-import UTILS.AvailableUtils;
 import UTILS.PasswordUtils;
 import UTILS.ValidationUtils;
-import de.jensd.fx.glyphs.testapps.App;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
     private static final AccountBUS INSTANCE = new AccountBUS();
@@ -30,217 +28,136 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
     }
 
     @Override
+    public AccountDTO getById(Integer id) {
+        if (id == null || id <= 0)
+            return null;
+        return AccountDAL.getInstance().getById(id);
+    }
+
+    @Override
     protected Integer getKey(AccountDTO obj) {
         return obj.getId();
     }
 
-    public BUSResult delete(Integer id, int employee_roleId, int employeeLoginId) {
-        if (id == null || id <= 0)
-            return new BUSResult(BUSOperationResult.INVALID_PARAMS);
+    // ============================================================
+    // NGHIỆP VỤ CRUD (Đã bỏ tham số roleId/loginId thừa)
+    // ============================================================
 
-        // Ngăn chặn xóa tài khoản gốc (id = 1) để bảo vệ hệ thống
-        if (id == 1) {
-            return new BUSResult(BUSOperationResult.FAIL, AppMessages.ACCOUNT_CANNOT_DELETE_SYSTEM);
-        }
-
-        // Ngăn chặn tự xóa tài khoản của chính mình
-        if (employeeLoginId == id) {
-            return new BUSResult(BUSOperationResult.FAIL, AppMessages.ACCOUNT_CANNOT_DELETE_SELF);
-        }
-
-        // Nếu người thực hiện không có quyền 28, từ chối
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 28))
-            return new BUSResult(BUSOperationResult.UNAUTHORIZED, AppMessages.UNAUTHORIZED);
-
-        if (!AccountDAL.getInstance().delete(id)) {
-            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
-        }
-        arrLocal.removeIf(account -> Objects.equals(account.getId(), id));
-        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.ACCOUNT_DELETE_SUCCESS);
-    }
-
-    public BUSResult insert(AccountDTO obj, int employee_roleId, int employeeLoginId) {
+    public BUSResult insert(AccountDTO obj) {
         if (obj == null || isInvalidAccountInput(obj)) {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 27))
-            return new BUSResult(BUSOperationResult.UNAUTHORIZED, AppMessages.UNAUTHORIZED);
-
-        // Không phân biệt hoa thường
-        if (isDuplicateUsername(obj.getUsername()))
+        // Kiểm tra trùng username trực tiếp dưới DB
+        if (AccountDAL.getInstance().getByUsername(obj.getUsername()) != null) {
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.ACCOUNT_USERNAME_DUPLICATE);
+        }
 
+        // Logic xử lý dữ liệu trước khi lưu
         obj.setUsername(obj.getUsername().toLowerCase());
         obj.setPassword(PasswordUtils.getInstance().hashPassword(obj.getPassword()));
+        obj.setRequireRelogin(false); // Mặc định tài khoản mới không cần relogin
 
         if (!AccountDAL.getInstance().insert(obj)) {
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
 
-        arrLocal.add(new AccountDTO(obj));
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.ACCOUNT_ADD_SUCCESS);
     }
 
+    public BUSResult delete(Integer id, int currentLoginId) {
+        if (id == null || id <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS);
+
+        if (id == 1)
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.ACCOUNT_CANNOT_DELETE_SYSTEM);
+        if (id == currentLoginId)
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.ACCOUNT_CANNOT_DELETE_SELF);
+
+        if (!AccountDAL.getInstance().delete(id)) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.ACCOUNT_DELETE_SUCCESS);
+    }
+
+    // ============================================================
+    // BẢO MẬT & XÁC THỰC
+    // ============================================================
+
+    public BUSResult authenticate(String username, String password) {
+        // 1. Lấy dữ liệu tươi từ DB
+        AccountDTO acc = AccountDAL.getInstance().getByUsername(username);
+        if (acc == null)
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.ACCOUNT_NOT_FOUND);
+
+        // 2. Kiểm tra trạng thái Active (Sử dụng Static Cache từ StatusBUS)
+        int lockedId = StatusBUS.getInstance().getByTypeAndStatusName(StatusType.ACCOUNT, Status.Account.LOCKED)
+                .getId();
+        if (acc.getStatusId() == lockedId)
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.LOGIN_ACCOUNT_LOCKED);
+
+        // 3. So khớp mật khẩu
+        if (!PasswordUtils.getInstance().verifyPassword(password, acc.getPassword()))
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.LOGIN_INVALID_CREDENTIALS);
+
+        // 4. RESET FLAG require_relogin sau khi đăng nhập thành công
+        AccountDAL.getInstance().setRequireRelogin(acc.getId(), false);
+        // 5. Set session
+        EmployeeSessionDTO session = EmployeeBUS.getInstance().getEmployeeSessionByAccountId(acc.getId());
+        // Sau khi có session, tải permission và moduleIds vào session luôn để sau này
+        // check quyền chỉ cần check trong "cái thẻ" này
+        if (session != null) {
+            session.setPermissions(PermissionBUS.getInstance().getPermissionKeysByRoleId(session.getRoleId()));
+            session.setAllowedModuleIds(
+                    RolePermissionBUS.getInstance().getAllowedModuleIdsByRoleId(session.getRoleId()));
+        }
+        SessionManagerService.getInstance().login(session);
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.LOGIN_SUCCESS);
+    }
+
     public BUSResult changePasswordBySelf(AccountDTO obj, String oldPassword) {
-        // Kiểm tra tham số đầu vào
         if (obj == null || obj.getId() <= 0 || oldPassword == null) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
 
-        if (obj.getUsername() == null || obj.getPassword() == null) {
-            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
-        }
-
-        ValidationUtils validator = ValidationUtils.getInstance();
-        if (!validator.validateUsername(obj.getUsername(), 4, 50) ||
-                !validator.validatePassword(obj.getPassword(), 6, 255)) {
-            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
-        }
-
-        AccountDTO existingAcc = getByIdLocal(obj.getId());
-
-        // Kiểm tra xem tài khoản có tồn tại và mật khẩu cũ có đúng không
-        if (existingAcc == null ||
-                !PasswordUtils.getInstance().verifyPassword(oldPassword, existingAcc.getPassword())) {
+        // Chọc DB lấy bản ghi hiện tại để verify mật khẩu cũ
+        AccountDTO existingAcc = getById(obj.getId());
+        if (existingAcc == null
+                || !PasswordUtils.getInstance().verifyPassword(oldPassword, existingAcc.getPassword())) {
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.ACCOUNT_OLD_PASSWORD_WRONG);
         }
 
-        // Kiểm tra xem mật khẩu mới có giống mật khẩu cũ không
-        if (PasswordUtils.getInstance().verifyPassword(obj.getPassword(), existingAcc.getPassword())) {
-            return new BUSResult(BUSOperationResult.NO_CHANGES, AppMessages.ACCOUNT_PASSWORD_CHANGE_SUCCESS);
-        }
-
-        // Cập nhật mật khẩu
+        // Hash mật khẩu mới và lưu
         obj.setPassword(PasswordUtils.getInstance().hashPassword(obj.getPassword()));
         if (!AccountDAL.getInstance().changePasswordBySelf(obj)) {
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
 
-        updateLocalCache(obj);
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.ACCOUNT_PASSWORD_CHANGE_SUCCESS);
     }
 
-    private void updateLocalCache(AccountDTO obj) {
-        AccountDTO newAcc = new AccountDTO(obj);
+    // ============================================================
+    // CƠ CHẾ ĐỒNG BỘ (RELOGIN FLAG)
+    // ============================================================
 
-        // Update primary map
-        mapLocal.put(obj.getId(), newAcc);
-
-        for (int i = 0; i < arrLocal.size(); i++) {
-            if (Objects.equals(arrLocal.get(i).getId(), obj.getId())) {
-                arrLocal.set(i, newAcc);
-                break;
-            }
-        }
-    }
-
-    private boolean isDuplicateUsername(String username) {
-        if (username == null)
+    public boolean isRequireRelogin(int accountId) {
+        if (accountId <= 0)
             return false;
-        for (AccountDTO account : arrLocal) {
-            if (account.getUsername().equalsIgnoreCase(username)) {
-                return true;
-            }
-        }
-        return false;
+        return AccountDAL.getInstance().isRequireRelogin(accountId);
     }
 
-    public int checkLogin(String username, String password) {
-        // 1. Kiểm tra đầu vào cơ bản
-        if (username == null || password == null) {
-            return -1;
-        }
-
-        for (AccountDTO account : arrLocal) {
-            // 2. Tìm đúng tài khoản dựa trên Username
-            if (account.getUsername().equalsIgnoreCase(username)) {
-
-                // 3. Nếu tìm thấy Username, kiểm tra Trạng thái (Status) đầu tiên
-                int lockedStatusId = StatusBUS.getInstance()
-                        .getByTypeAndStatusNameLocal(StatusType.ACCOUNT, Status.Account.LOCKED).getId();
-
-                if (account.getStatusId() == lockedStatusId) {
-                    return -2; // Tài khoản bị khóa
-                }
-
-                // 4. Nếu không khóa, mới kiểm tra mật khẩu
-                if (PasswordUtils.getInstance().verifyPassword(password, account.getPassword())) {
-                    updateLastLogin(account.getId());
-                    return account.getId(); // Đăng nhập thành công
-                } else {
-                    return -1; // Sai mật khẩu
-                }
-            }
-        }
-        return -1;
+    /**
+     * Kích hoạt yêu cầu đăng nhập lại cho TẤT CẢ nhân viên thuộc một Role
+     * Dùng khi Manager thay đổi phân quyền của Role đó.
+     */
+    public boolean setRequireReloginByRoleId(int roleId, boolean requireRelogin) {
+        return AccountDAL.getInstance().setRequireReloginByRoleId(roleId, requireRelogin);
     }
 
     private boolean isInvalidAccountInput(AccountDTO obj) {
-        if (obj.getUsername() == null || obj.getPassword() == null)
-            return true;
-
         ValidationUtils validator = ValidationUtils.getInstance();
-        return !validator.validateUsername(obj.getUsername(), 4, 50) ||
+        return obj.getUsername() == null || obj.getPassword() == null ||
+                !validator.validateUsername(obj.getUsername(), 4, 50) ||
                 !validator.validatePassword(obj.getPassword(), 6, 255);
-    }
-
-    public boolean isValidForCreateAccount(int employeeId, int type) {
-        if (employeeId <= 0 || (type != 0 && type != 1))
-            return false;
-
-        if (type == 0) {
-            return AccountBUS.getInstance().getByIdLocal(employeeId) == null
-                    && EmployeeBUS.getInstance().getByIdLocal(employeeId).getRoleId() != 1;
-        } else {
-            return AccountBUS.getInstance().getByIdLocal(employeeId) == null;
-        }
-    }
-
-    public boolean isExistAccount(int employeeId) {
-        if (employeeId <= 0)
-            return false;
-
-        // Kiểm tra xem tài khoản có tồn tại không
-        return AccountBUS.getInstance().getByIdLocal(employeeId) != null;
-    }
-
-
-    public ArrayList<AccountDTO> filterAccounts(String searchBy, String keyword) {
-        ArrayList<AccountDTO> filteredList = new ArrayList<>();
-
-        if (keyword == null)
-            keyword = "";
-        if (searchBy == null)
-            searchBy = "";
-
-        keyword = keyword.trim().toLowerCase();
-
-        for (AccountDTO acc : arrLocal) {
-            boolean matchesSearch = true;
-
-            // Kiểm tra null tránh lỗi khi gọi .toLowerCase()
-            String id = String.valueOf(acc.getId());
-            String username = acc.getUsername() != null ? acc.getUsername().toLowerCase() : "";
-
-            if (!keyword.isEmpty()) {
-                switch (searchBy) {
-                    case "Mã tài khoản" -> matchesSearch = id.contains(keyword);
-                    case "Tài khoản" -> matchesSearch = username.contains(keyword);
-                }
-            }
-
-            // Chỉ thêm vào danh sách nếu thỏa tất cả điều kiện
-            if (matchesSearch) {
-                filteredList.add(acc);
-            }
-        }
-
-        return filteredList;
-    }
-
-    // Cập nhật thời gian đăng nhập cuối cùng cho tài khoản
-    public void updateLastLogin(int accountId) {
-        AccountDAL.getInstance().updateLastLogin(accountId);
     }
 }

@@ -23,8 +23,8 @@ public abstract class BaseDAL<T, K> implements IDAL<T, K> {
         ArrayList<T> list = new ArrayList<>();
 
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query);
-             ResultSet resultSet = statement.executeQuery()) {
+                PreparedStatement statement = connection.prepareStatement(query);
+                ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next())
                 list.add(mapResultSetToObject(resultSet));
@@ -38,7 +38,7 @@ public abstract class BaseDAL<T, K> implements IDAL<T, K> {
     public T getById(K id) {
         final String query = "SELECT * FROM " + table + " WHERE " + idColumn + " = ?";
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             setIdParameter(statement, id, 1);
 
@@ -61,9 +61,9 @@ public abstract class BaseDAL<T, K> implements IDAL<T, K> {
             throw new UnsupportedOperationException("Insert operation not supported for " + table);
 
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = shouldUseGeneratedKeys() ?
-                     connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS) :
-                     connection.prepareStatement(query)) {
+                PreparedStatement statement = shouldUseGeneratedKeys()
+                        ? connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+                        : connection.prepareStatement(query)) {
 
             setInsertParameters(statement, obj);
             int affectedRows = statement.executeUpdate();
@@ -103,9 +103,9 @@ public abstract class BaseDAL<T, K> implements IDAL<T, K> {
         if (query.isEmpty())
             throw new UnsupportedOperationException("Update operation not supported for " + table);
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
             setUpdateParameters(statement, obj);
-            return statement.executeUpdate() > 0;
+            return statement.executeUpdate() >= 0;
         } catch (SQLException e) {
             System.err.println("Error updating " + table + ": " + e.getMessage());
             return false;
@@ -122,13 +122,13 @@ public abstract class BaseDAL<T, K> implements IDAL<T, K> {
 
     @Override
     public boolean delete(K id) {
-            final String query = "DELETE FROM " + table + " WHERE " + idColumn + " = ?";
-            return executeDeleteQuery(query, id);
+        final String query = "DELETE FROM " + table + " WHERE " + idColumn + " = ?";
+        return executeDeleteQuery(query, id);
     }
 
     private boolean executeDeleteQuery(String query, K id) {
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             setIdParameter(statement, id, 1);
             return statement.executeUpdate() > 0;

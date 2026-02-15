@@ -44,7 +44,8 @@ public class DiscountForSellingModalController {
 
     @Getter
     private boolean isSaved;
-    @Getter @Setter
+    @Getter
+    @Setter
     private BigDecimal price;
     @Getter
     private DiscountDTO selectedDiscount;
@@ -53,8 +54,9 @@ public class DiscountForSellingModalController {
 
     @FXML
     public void initialize() {
-        if(DiscountBUS.getInstance().getAllLocal().isEmpty()) DiscountBUS.getInstance().loadLocal();
-        if(DetailDiscountBUS.getInstance().getAllLocal().isEmpty()) DetailDiscountBUS.getInstance().loadLocal();
+        // Load data on-demand from DB
+        ArrayList<DiscountDTO> allDiscounts = DiscountBUS.getInstance().getAll();
+        ArrayList<DetailDiscountDTO> allDetailDiscounts = DetailDiscountBUS.getInstance().getAll();
         setOnMouseClicked();
         loadTable();
     }
@@ -63,12 +65,12 @@ public class DiscountForSellingModalController {
     public void loadTable() {
         tbcCode.setCellValueFactory(new PropertyValueFactory<>("code"));
         tbcDiscountName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        tbcDiscountType.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getType() == 0 ? "Phần trăm" : "Giảm cứng"));
-        tbcStartDate.setCellValueFactory(cellData ->
-                new SimpleStringProperty(ValidationUtils.getInstance().formatDateTime(cellData.getValue().getStartDate())));
-        tbcEndDate.setCellValueFactory(cellData ->
-                new SimpleStringProperty(ValidationUtils.getInstance().formatDateTime(cellData.getValue().getEndDate())));
+        tbcDiscountType.setCellValueFactory(
+                cellData -> new SimpleStringProperty(cellData.getValue().getType() == 0 ? "Phần trăm" : "Giảm cứng"));
+        tbcStartDate.setCellValueFactory(cellData -> new SimpleStringProperty(
+                ValidationUtils.getInstance().formatDateTime(cellData.getValue().getStartDate())));
+        tbcEndDate.setCellValueFactory(cellData -> new SimpleStringProperty(
+                ValidationUtils.getInstance().formatDateTime(cellData.getValue().getEndDate())));
 
         tbvDiscount.setItems(FXCollections.observableArrayList(DiscountBUS.getInstance().filterDiscountsActive()));
         tbvDiscount.getSelectionModel().clearSelection();
@@ -78,13 +80,14 @@ public class DiscountForSellingModalController {
     public void setOnMouseClicked() {
         btnExitGetDiscount.setOnAction(e -> handleClose());
         btnSubmitDiscount.setOnAction(e -> handleGetDiscount());
-//        btnSearchCustomer.setOnMouseClicked(e -> handleSearch());
+        // btnSearchCustomer.setOnMouseClicked(e -> handleSearch());
         txtSearchDiscount.textProperty().addListener((observable, oldValue, newValue) -> handleSearch());
     }
 
     // handle search
     private void handleSearch() {
-        tbvDiscount.setItems(FXCollections.observableArrayList(DiscountBUS.getInstance().searchByCodeLocal(txtSearchDiscount.getText().trim())));
+        tbvDiscount.setItems(FXCollections
+                .observableArrayList(DiscountBUS.getInstance().searchByCodeLocal(txtSearchDiscount.getText().trim())));
         tbvDiscount.getSelectionModel().clearSelection();
     }
 
@@ -102,7 +105,10 @@ public class DiscountForSellingModalController {
         detailDiscountList.clear();
         detailDiscountList = getDetails(selectedDiscount.getCode());
         if (!isValid(detailDiscountList)) {
-            NotificationUtils.showErrorAlert("Vui lòng mua thêm tối thiểu " + ValidationUtils.getInstance().formatCurrency(detailDiscountList.getFirst().getTotalPriceInvoice().subtract(price)) + " Đ để dùng voucher này!", "Thông báo");
+            NotificationUtils.showErrorAlert("Vui lòng mua thêm tối thiểu "
+                    + ValidationUtils.getInstance()
+                            .formatCurrency(detailDiscountList.getFirst().getTotalPriceInvoice().subtract(price))
+                    + " Đ để dùng voucher này!", "Thông báo");
             return;
         }
         isSaved = true;
@@ -110,16 +116,16 @@ public class DiscountForSellingModalController {
     }
 
     private ArrayList<DetailDiscountDTO> getDetails(String discountID) {
-        return DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountIdLocal(discountID);
+        return DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountId(discountID);
     }
 
     private boolean isValid(ArrayList<DetailDiscountDTO> details) {
         for (DetailDiscountDTO detail : details) {
             // Kiểm tra nếu price >= mốc giá trị của detail
             if (detail.getTotalPriceInvoice().compareTo(price) <= 0) {
-                return true;  // Nếu có ít nhất một mốc thỏa mãn thì trả về true
+                return true; // Nếu có ít nhất một mốc thỏa mãn thì trả về true
             }
         }
-        return false;  // Nếu không có mốc nào thỏa mãn thì trả về false
+        return false; // Nếu không có mốc nào thỏa mãn thì trả về false
     }
 }

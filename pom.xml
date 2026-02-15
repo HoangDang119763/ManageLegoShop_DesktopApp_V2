@@ -126,6 +126,13 @@
           <artifactId>javafx-swing</artifactId>
           <version>22.0.1</version>
       </dependency>
+
+      <!-- HikariCP - High Performance Connection Pool -->
+      <dependency>
+          <groupId>com.zaxxer</groupId>
+          <artifactId>HikariCP</artifactId>
+          <version>5.1.0</version>
+      </dependency>
   </dependencies>
 
   <build>
@@ -137,6 +144,13 @@
         <configuration>
           <source>21</source>
           <target>21</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>1.18.42</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
       <plugin>

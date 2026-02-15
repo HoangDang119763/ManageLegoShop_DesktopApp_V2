@@ -2,18 +2,15 @@ package BUS;
 
 import DAL.RolePermissionDAL;
 import DTO.RolePermissionDTO;
-import ENUM.PermissionKey;
-import ENUM.ServiceAccessCode;
-import SERVICE.AuthorizationService;
-import UTILS.AvailableUtils;
-
+import DTO.BUSResult;
+import ENUM.BUSOperationResult;
+import UTILS.AppMessages;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
 
 public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
     private static final RolePermissionBUS INSTANCE = new RolePermissionBUS();
-    private final HashMap<Integer, ArrayList<RolePermissionDTO>> mapByRoleId = new HashMap<>();
 
     private RolePermissionBUS() {
     }
@@ -28,146 +25,60 @@ public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
     }
 
     @Override
+    public RolePermissionDTO getById(Integer id) {
+        // Với bảng quan hệ n-n, getById thường không dùng theo 1 ID duy nhất
+        return null;
+    }
+
+    public ArrayList<RolePermissionDTO> getAllByRoleId(int roleId) {
+        return RolePermissionDAL.getInstance().getAllRolePermissionByRoleId(roleId);
+    }
+
+    /**
+     * Logic Mới: Cập nhật quyền (Toggle)
+     * Nếu isSelected = true -> Thêm vào DB
+     * Nếu isSelected = false -> Xóa khỏi DB
+     */
+    public BUSResult togglePermission(int roleId, int permissionId, boolean isSelected) {
+        if (roleId <= 0 || permissionId <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+
+        // Chặn chỉnh sửa Admin (RoleID = 1)
+        if (roleId == 1)
+            return new BUSResult(BUSOperationResult.FAIL, "Không thể chỉnh sửa quyền của Admin hệ thống");
+
+        boolean success;
+        if (isSelected) {
+            // Cấp quyền: Thêm bản ghi
+            if (RolePermissionDAL.getInstance().exists(roleId, permissionId))
+                return new BUSResult(BUSOperationResult.SUCCESS, "Đã có quyền này");
+            success = RolePermissionDAL.getInstance().insert(new RolePermissionDTO(roleId, permissionId));
+        } else {
+            // Tước quyền: Xóa bản ghi
+            success = RolePermissionDAL.getInstance().revokePermission(roleId, permissionId);
+        }
+
+        if (!success)
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+
+        // Đánh dấu yêu cầu đăng nhập lại cho các User thuộc Role này
+        AccountBUS.getInstance().setRequireReloginByRoleId(roleId, true);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.OPERATION_SUCCESS);
+    }
+
+    public boolean hasPermission(int roleId, int permissionId) {
+        return RolePermissionDAL.getInstance().exists(roleId, permissionId);
+    }
+
+    @Override
     protected Integer getKey(RolePermissionDTO obj) {
         return obj.getPermissionId();
     }
 
-    @Override
-    public void loadLocal() {
-        super.loadLocal();
-        mapByRoleId.clear();
-        for (RolePermissionDTO rp : arrLocal) {
-            if (rp.getRoleId() > 0) {
-                mapByRoleId.computeIfAbsent(rp.getRoleId(), k -> new ArrayList<>()).add(rp);
-            }
-        }
-    }
-
-    public int delete(Integer roleId, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || roleId == null || roleId <= 0) {
-            return 2;
-        }
-
-        // Ngăn chặn tự xóa phân quyền role của chính mình
-        if (roleId == employee_roleId)
-            return 3;
-
-        // Nếu người thực hiện không có quyền 24, từ chối
-        if (employee_roleId <= 0 || !hasPermission(employee_roleId, 24)
-                || AuthorizationService.getInstance().isInvalidUserRole(employeeLoginId, employee_roleId)) {
-            return 4;
-        }
-
-        // Nếu phân quyền của role đang bị xóa có quyền 24, chỉ cho phép role 1 xóa nó
-        if (hasPermission(roleId, 24) && employee_roleId != 1) {
-            return 5;
-        }
-
-        if (!RoleBUS.getInstance().isValidRole(roleId))
-            return 7;
-
-        if (!RolePermissionDAL.getInstance().delete(roleId)) {
-            return 6;
-        }
-
-        arrLocal.removeIf(rp -> rp.getRoleId() == roleId);
-        return 1;
-    }
-
-    public ArrayList<RolePermissionDTO> getAllRolePermissionByRoleIdLocal(int roleId) {
+    public Set<Integer> getAllowedModuleIdsByRoleId(int roleId) {
         if (roleId <= 0)
-            return new ArrayList<>();
-        ArrayList<RolePermissionDTO> cached = mapByRoleId.get(roleId);
-        if (cached == null)
-            return new ArrayList<>();
-        ArrayList<RolePermissionDTO> result = new ArrayList<>();
-        for (RolePermissionDTO rp : cached) {
-            result.add(new RolePermissionDTO(rp));
-        }
-        return result;
-    }
-
-    public int update(RolePermissionDTO obj, int employee_roleId, int employeeLoginId) {
-        if (obj == null || obj.getRoleId() <= 0 || obj.getPermissionId() <= 0)
-            return 2;
-
-        // Ngăn chặn tự cập nhật phân quyền của chính mình
-        if (obj.getRoleId() == employee_roleId)
-            return 3;
-
-        // Kiểm tra nếu role bị cập nhật có quyền 26
-        boolean roleHasPermission26 = hasPermission(obj.getRoleId(), 26);
-
-        // Nếu role này có quyền 26 nhưng không phải role 1 đang cập nhật -> Từ chối
-        if (roleHasPermission26 && employee_roleId != 1)
-            return 4;
-
-        // Nếu người thực hiện không có quyền 26 -> Từ chối
-        if (employee_roleId <= 0 || !hasPermission(employee_roleId, 26)
-                || AuthorizationService.getInstance().isInvalidUserRole(employeeLoginId, employee_roleId))
-            return 5;
-
-        if (obj.isStatus() == hasPermission(obj.getRoleId(), obj.getPermissionId())) {
-            return 1;
-        }
-
-        if (!RolePermissionDAL.getInstance().update(obj)) {
-            return 6;
-        }
-
-        // Cập nhật trong arrLocal
-        for (RolePermissionDTO current : arrLocal) {
-            if (current.getRoleId() == obj.getRoleId() && current.getPermissionId() == obj.getPermissionId()) {
-                arrLocal.set(arrLocal.indexOf(current), new RolePermissionDTO(obj));
-                return 1;
-            }
-        }
-
-        return 1;
-    }
-
-    public boolean createDefaultPermissionsForRole(int roleId, int employee_roleId, ServiceAccessCode codeAccess,
-            int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || roleId <= 0
-                || !hasPermission(employee_roleId, 23)
-                || AuthorizationService.getInstance().isInvalidUserRole(employeeLoginId, employee_roleId)) {
-            return false;
-        }
-        if (!RolePermissionDAL.getInstance().insertDefaultRolePermissionByRoleId(roleId)) {
-            return false;
-        }
-        ArrayList<RolePermissionDTO> newPermissions = RolePermissionDAL.getInstance()
-                .getAllRolePermissionByRoleId(roleId);
-        arrLocal.addAll(newPermissions);
-        return true;
-    }
-
-    public boolean insertRollbackPermission(ArrayList<RolePermissionDTO> rolePermission, int employee_roleId,
-            ServiceAccessCode codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.ROLE_PERMISSION_SERVICE || rolePermission == null
-                || rolePermission.isEmpty() || !hasPermission(employee_roleId, 24)
-                || AuthorizationService.getInstance().isInvalidUserRole(employeeLoginId, employee_roleId)) {
-            return false;
-        }
-        if (!RolePermissionDAL.getInstance().insertListRolePermission(rolePermission.get(0).getRoleId(),
-                rolePermission)) {
-            return false;
-        }
-        ArrayList<RolePermissionDTO> newPermissions = RolePermissionDAL.getInstance()
-                .getAllRolePermissionByRoleId(rolePermission.get(0).getRoleId());
-        arrLocal.addAll(newPermissions);
-        return true;
-    }
-
-    public boolean hasPermission(int roleId, int permissionId) {
-        if (roleId <= 0 || permissionId <= 0)
-            return false;
-        for (RolePermissionDTO rp : arrLocal) {
-            if (Objects.equals(rp.getRoleId(), roleId) && Objects.equals(rp.getPermissionId(), permissionId)
-                    && rp.isStatus()) {
-                return true;
-            }
-        }
-        return false;
+            return new HashSet<>();
+        return RolePermissionDAL.getInstance().getAllowedModuleIdsByRoleId(roleId);
     }
 }

@@ -83,12 +83,9 @@ public class InvoiceController implements IController {
         invoiceBUS = InvoiceBUS.getInstance();
         detailInvoiceBUS = DetailInvoiceBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
-        if (invoiceBUS.isLocalEmpty())
-            invoiceBUS.loadLocal();
-        if (detailInvoiceBUS.isLocalEmpty())
-            detailInvoiceBUS.loadLocal();
-        if (statusBUS.isLocalEmpty())
-            statusBUS.loadLocal();
+        // [STATELESS] No pre-load needed - InvoiceBUS, DetailInvoiceBUS, StatusBUS load
+        // on-demand
+
         tblInvoice.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblInvoice.getSelectionModel().clearSelection());
         Platform.runLater(() -> tblDetailInvoice.getSelectionModel().clearSelection());
@@ -111,10 +108,10 @@ public class InvoiceController implements IController {
         tlb_col_totalPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
         tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(statusBUS
-                .getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
+                .getById(cellData.getValue().getStatusId()).getDescription()));
         UiUtils.gI().addTooltipToColumn(tlb_col_createDate, 10);
         UiUtils.gI().addTooltipToColumn(tlb_col_totalPrice, 10);
-        tblInvoice.setItems(FXCollections.observableArrayList(invoiceBUS.getAllLocal()));
+        // tblInvoice.setItems(FXCollections.observableArrayList(invoiceBUS.getAllLocal()));
     }
 
     public void loadSubTable(int invoiceId) {
@@ -129,7 +126,7 @@ public class InvoiceController implements IController {
                 .setText(selectedInvoice.getDiscountCode() != null ? selectedInvoice.getDiscountCode() : "");
         this.discountAmount.setText(validationUtils.formatCurrency(selectedInvoice.getDiscountAmount()));
         this.totalPrice.setText(validationUtils.formatCurrency(selectedInvoice.getTotalPrice()));
-        this.status.setText(statusBUS.getByIdLocal(selectedInvoice.getStatusId()).getDescription());
+        this.status.setText(statusBUS.getById(selectedInvoice.getStatusId()).getDescription());
         tlb_col_productId.setCellValueFactory(new PropertyValueFactory<>("productId"));
         tlb_col_quantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         tlb_col_price.setCellValueFactory(
@@ -139,8 +136,8 @@ public class InvoiceController implements IController {
 
         UiUtils.gI().addTooltipToColumn(tlb_col_price, 10);
         UiUtils.gI().addTooltipToColumn(tlb_col_totalPriceP, 10);
-        tblDetailInvoice.setItems(FXCollections
-                .observableArrayList(detailInvoiceBUS.getAllDetailInvoiceByInvoiceIdLocal(invoiceId)));
+        // tblDetailInvoice.setItems(FXCollections
+        // .observableArrayList(detailInvoiceBUS.getAllDetailInvoiceByInvoiceIdLocal(invoiceId)));
         tblDetailInvoice.getSelectionModel().clearSelection();
     }
 
@@ -190,12 +187,12 @@ public class InvoiceController implements IController {
         clearSubTable();
         if (keyword.isEmpty()) {
             // Nߦ+u keyword r�+�ng, lߦ�y tߦ�t cߦ� h+�a -��n
-            tblInvoice.setItems(FXCollections.observableArrayList(invoiceBUS.getAllLocal()));
+            tblInvoice.setItems(FXCollections.observableArrayList(invoiceBUS.getAll()));
         } else {
             try {
                 int id = Integer.parseInt(keyword);
                 tblInvoice.setItems(FXCollections.observableArrayList(
-                        invoiceBUS.getByIdLocal(id)));
+                        invoiceBUS.getById(id)));
             } catch (NumberFormatException e) {
                 // X�+� l++ tr���+�ng h�+�p kh+�ng phߦ�i s�+�
                 tblInvoice.setItems(FXCollections.observableArrayList());

@@ -2,7 +2,6 @@ package BUS;
 
 import DTO.TimeSheetDTO;
 import DAL.TimeSheetDAL;
-import SERVICE.AuthorizationService;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -27,17 +26,6 @@ public class TimeSheetBUS extends BaseBUS<TimeSheetDTO, Integer> {
         return obj.getId();
     }
 
-    @Override
-    public void loadLocal() {
-        super.loadLocal();
-        mapByEmployeeId.clear();
-        for (TimeSheetDTO ts : arrLocal) {
-            if (ts.getEmployeeId() > 0) {
-                mapByEmployeeId.computeIfAbsent(ts.getEmployeeId(), k -> new ArrayList<>()).add(ts);
-            }
-        }
-    }
-
     public TimeSheetDTO getById(Integer id) {
         return TimeSheetDAL.getInstance().getById(id);
     }
@@ -53,17 +41,7 @@ public class TimeSheetBUS extends BaseBUS<TimeSheetDTO, Integer> {
         if (!isValidTimeSheetInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (TimeSheetDAL.getInstance().insert(obj)) {
-            if (arrLocal.isEmpty()) {
-                loadLocal();
-            } else {
-                arrLocal.add(new TimeSheetDTO(obj));
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -71,20 +49,7 @@ public class TimeSheetBUS extends BaseBUS<TimeSheetDTO, Integer> {
         if (!isValidTimeSheetInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (TimeSheetDAL.getInstance().update(obj)) {
-            for (TimeSheetDTO ts : arrLocal) {
-                if (ts.getId() == obj.getId()) {
-                    ts.setEmployeeId(obj.getEmployeeId());
-                    ts.setCheckIn(obj.getCheckIn());
-                    ts.setCheckOut(obj.getCheckOut());
-                    break;
-                }
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -92,13 +57,7 @@ public class TimeSheetBUS extends BaseBUS<TimeSheetDTO, Integer> {
         if (id == null || id <= 0) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (TimeSheetDAL.getInstance().delete(id)) {
-            arrLocal.removeIf(ts -> ts.getId() == id);
-            return true;
-        }
+
         return false;
     }
 

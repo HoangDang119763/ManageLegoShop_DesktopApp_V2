@@ -2,9 +2,10 @@ package INTERFACE;
 
 import java.util.ArrayList;
 
-public interface IBUS <T, K> {
+public interface IBUS<T, K> {
     ArrayList<T> getAll();
-    ArrayList<T> getAllLocal();
-    void loadLocal();
-    boolean isLocalEmpty();
+
+    T getById(K id);
+
+    boolean exists(K id);
 }

@@ -9,7 +9,6 @@ import DTO.EmployeeDTO;
 import DTO.ProductDTO;
 import DTO.RoleDTO;
 import DTO.StatisticDTO;
-import UTILS.AvailableUtils;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
@@ -49,9 +48,9 @@ public class ExcelService {
         Sheet sheet = workbook.createSheet("Source");
 
         if (exportData.equalsIgnoreCase("employee"))
-            sheet = sheetOfEmployee(sheet, EmployeeBUS.getInstance().getAllLocal());
+            sheet = sheetOfEmployee(sheet, EmployeeBUS.getInstance().getAll());
         else if (exportData.equalsIgnoreCase("product"))
-            sheet = sheetOfProduct(sheet, ProductBUS.getInstance().getAllLocal());
+            sheet = sheetOfProduct(sheet, ProductBUS.getInstance().getAll());
 
         // Auto-size all columns
         int numberOfColumns = sheet.getRow(0).getPhysicalNumberOfCells();
@@ -111,13 +110,14 @@ public class ExcelService {
         ValidationUtils validate = ValidationUtils.getInstance();
         for (EmployeeDTO employee : employeeDTOList) {
             Row dataRow = sheet.createRow(rowIndex++);
-            RoleDTO role = rolBus.getByIdLocal(employee.getRoleId());
+            RoleDTO role = rolBus.getById(employee.getRoleId());
             dataRow.createCell(0).setCellValue(employee.getId());
             dataRow.createCell(1).setCellValue(employee.getFirstName());
             dataRow.createCell(2).setCellValue(employee.getLastName());
             dataRow.createCell(3).setCellValue(ValidationUtils.getInstance().formatDateTime(employee.getDateOfBirth()));
             dataRow.createCell(4).setCellValue(role != null ? role.getName() : "");
-//            dataRow.createCell(7).setCellValue(employee.isStatus() ? "Hoạt động" : "Ngưng hoạt động");
+            // dataRow.createCell(7).setCellValue(employee.isStatus() ? "Hoạt động" : "Ngưng
+            // hoạt động");
         }
 
         return sheet;
@@ -248,12 +248,14 @@ public class ExcelService {
                         break;
                     continue;
                 }
-                if (categoryId < 0 || !CategoryBUS.getInstance().isValidCategory(categoryId)) {
-                    if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ hoặc đã bị xóa.",
-                            ++errorCount))
-                        break;
-                    continue;
-                }
+                // if (categoryId < 0 || !CategoryBUS.getInstance().isValidCategory(categoryId))
+                // {
+                // if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ hoặc
+                // đã bị xóa.",
+                // ++errorCount))
+                // break;
+                // continue;
+                // }
 
                 int statusInt;
                 try {

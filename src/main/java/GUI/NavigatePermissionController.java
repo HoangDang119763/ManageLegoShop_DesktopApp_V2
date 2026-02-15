@@ -1,6 +1,7 @@
 package GUI;
 
 import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
 import UTILS.UiUtils;
 import javafx.animation.ParallelTransition;
 import javafx.application.Platform;
@@ -27,7 +28,7 @@ public class NavigatePermissionController {
     // Exit form
     private void setupEventHandlers() {
         closeBtn.setOnMouseClicked(e -> {
-            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn đăng xuất?", "Thông báo xác nhận"))
+            if (!UiUtils.gI().showConfirmAlert(AppMessages.LOGOUT_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM))
                 return;
             SessionManagerService.getInstance().logout();
             ParallelTransition animation = UiUtils.gI().createButtonAnimation(closeBtn);
@@ -70,21 +71,21 @@ public class NavigatePermissionController {
     }
 
     public void hideButtonWithoutPermission() {
-        boolean canSelling = SessionManagerService.getInstance().canSelling();
-        boolean canImport = SessionManagerService.getInstance().canImporting();
-        boolean canManage = SessionManagerService.getInstance().canManage();
+        // boolean canSelling = SessionManagerService.getInstance().canSelling();
+        // boolean canImport = SessionManagerService.getInstance().canImporting();
+        // boolean canManage = SessionManagerService.getInstance().canManage();
 
-        // Thiết lập trạng thái và độ mờ cho nút quyền bán hàng
-        pItemPermissionSelling.setDisable(!canSelling);
-        pItemPermissionSelling.setOpacity(canSelling ? 1.0 : 0.3);
+        // // Thiết lập trạng thái và độ mờ cho nút quyền bán hàng
+        // pItemPermissionSelling.setDisable(!canSelling);
+        // pItemPermissionSelling.setOpacity(canSelling ? 1.0 : 0.3);
 
-        // Thiết lập trạng thái và độ mờ cho nút quyền nhập hàng
-        pItemPermissionImporting.setDisable(!canImport);
-        pItemPermissionImporting.setOpacity(canImport ? 1.0 : 0.3);
+        // // Thiết lập trạng thái và độ mờ cho nút quyền nhập hàng
+        // pItemPermissionImporting.setDisable(!canImport);
+        // pItemPermissionImporting.setOpacity(canImport ? 1.0 : 0.3);
 
-        // Thiết lập trạng thái và độ mờ cho nút quyền quản lý
-        pItemPermissionAuth.setDisable(!canManage);
-        pItemPermissionAuth.setOpacity(canManage ? 1.0 : 0.3);
+        // // Thiết lập trạng thái và độ mờ cho nút quyền quản lý
+        // pItemPermissionAuth.setDisable(!canManage);
+        // pItemPermissionAuth.setOpacity(canManage ? 1.0 : 0.3);
     }
 
 }

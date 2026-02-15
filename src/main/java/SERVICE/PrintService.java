@@ -15,6 +15,7 @@ import java.util.ArrayList;
 
 public class PrintService {
     private static final PrintService INSTANCE = new PrintService();
+
     private PrintService() {
 
     }
@@ -25,25 +26,22 @@ public class PrintService {
 
     public void printInvoiceForm(int invoiceId) {
         InvoiceBUS invBus = InvoiceBUS.getInstance();
-        if (invBus.isLocalEmpty()) invBus.loadLocal();
-        InvoiceDTO invoice = invBus.getByIdLocal(invoiceId);
-        if (invoice == null) return;
+        InvoiceDTO invoice = invBus.getById(invoiceId);
+        if (invoice == null)
+            return;
 
         DetailInvoiceBUS dinvBus = DetailInvoiceBUS.getInstance();
-        if (dinvBus.isLocalEmpty()) dinvBus.loadLocal();
-        ArrayList<DetailInvoiceDTO> arrDetailInvoice = dinvBus.getAllDetailInvoiceByInvoiceIdLocal(invoiceId);
-        if (arrDetailInvoice.isEmpty()) return;
+        ArrayList<DetailInvoiceDTO> arrDetailInvoice = dinvBus.getAllDetailInvoiceByInvoiceId(invoiceId);
+        if (arrDetailInvoice.isEmpty())
+            return;
 
         ProductBUS proBus = ProductBUS.getInstance();
-        if (proBus.isLocalEmpty()) proBus.loadLocal();
 
         EmployeeBUS emBus = EmployeeBUS.getInstance();
-        if (emBus.isLocalEmpty()) emBus.loadLocal();
-        EmployeeDTO employee = emBus.getByIdLocal(invoice.getEmployeeId());
+        EmployeeDTO employee = emBus.getById(invoice.getEmployeeId());
 
         CustomerBUS cusBus = CustomerBUS.getInstance();
-        if (cusBus.isLocalEmpty()) cusBus.loadLocal();
-        CustomerDTO customer = cusBus.getByIdLocal(invoice.getCustomerId());
+        CustomerDTO customer = cusBus.getById(invoice.getCustomerId());
 
         String dest = "invoice.pdf";
         String fontPath = "src/main/resources/fonts/arial-unicode-ms.ttf"; // Đường dẫn tương đối
@@ -78,11 +76,11 @@ public class PrintService {
             // Thông tin hóa đơn
             PdfPTable infoTable = new PdfPTable(4);
             infoTable.setWidthPercentage(100);
-            infoTable.setWidths(new float[]{25, 25, 25, 25});
+            infoTable.setWidths(new float[] { 25, 25, 25, 25 });
 
             String[][] invoiceInfo = {
-                    {"Mã hóa đơn:", String.valueOf(invoiceId), "Người lập đơn:", employeeName},
-                    {"Ngày tạo:", invoiceDate, "Tên khách hàng:", customerName},
+                    { "Mã hóa đơn:", String.valueOf(invoiceId), "Người lập đơn:", employeeName },
+                    { "Ngày tạo:", invoiceDate, "Tên khách hàng:", customerName },
             };
 
             // Thêm dữ liệu bình thường
@@ -115,7 +113,7 @@ public class PrintService {
             int index = 1;
             PdfPTable table = new PdfPTable(5);
             table.setWidthPercentage(100);
-            String[] headers = {"STT", "TÊN SẢN PHẨM", "SỐ LƯỢNG", "ĐƠN GIÁ", "THÀNH TIỀN"};
+            String[] headers = { "STT", "TÊN SẢN PHẨM", "SỐ LƯỢNG", "ĐƠN GIÁ", "THÀNH TIỀN" };
             for (String header : headers) {
                 PdfPCell headerCell = new PdfPCell(new Phrase(header, boldFont));
                 headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -128,7 +126,7 @@ public class PrintService {
                 int quantity = detail.getQuantity(); // Số lượng sản phẩm
                 BigDecimal price = detail.getPrice(); // Giá của một sản phẩm
                 BigDecimal totalPrice = price.multiply(BigDecimal.valueOf(quantity)); // Tổng tiền của sản phẩm này
-                String productName = proBus.getByIdLocal(detail.getProductId()).getName();
+                String productName = proBus.getById(detail.getProductId()).getName();
 
                 // Tạo các ô của bảng
                 PdfPCell[] cells = {
@@ -155,7 +153,7 @@ public class PrintService {
             // Tổng kết hóa đơn căn phải
             PdfPTable summaryWrapper = new PdfPTable(2);
             summaryWrapper.setWidthPercentage(100);
-            summaryWrapper.setWidths(new float[]{50, 50}); // Cột đầu chiếm 50%, cột sau chứa bảng tổng kết
+            summaryWrapper.setWidths(new float[] { 50, 50 }); // Cột đầu chiếm 50%, cột sau chứa bảng tổng kết
 
             // Cột trống bên trái
             PdfPCell emptyCell = new PdfPCell(new Phrase(""));
@@ -165,12 +163,12 @@ public class PrintService {
             // Bảng tổng kết hóa đơn
             PdfPTable summaryTable = new PdfPTable(3);
             summaryTable.setWidthPercentage(100);
-            summaryTable.setWidths(new float[]{2f, 1f, 1f});
+            summaryTable.setWidths(new float[] { 2f, 1f, 1f });
             String[][] summaryData = {
-                    {"Tổng tiền:", ValidationUtils.getInstance().formatCurrency(invoice.getTotalPrice()), "đ"},
-                    {"Số tiền giảm:", ValidationUtils.getInstance().formatCurrency(invoice.getDiscountAmount()), "đ"},
-                    {"Thành tiền:", ValidationUtils.getInstance().formatCurrency(
-                            invoice.getTotalPrice().subtract(invoice.getDiscountAmount()).max(BigDecimal.ZERO)), "đ"}
+                    { "Tổng tiền:", ValidationUtils.getInstance().formatCurrency(invoice.getTotalPrice()), "đ" },
+                    { "Số tiền giảm:", ValidationUtils.getInstance().formatCurrency(invoice.getDiscountAmount()), "đ" },
+                    { "Thành tiền:", ValidationUtils.getInstance().formatCurrency(
+                            invoice.getTotalPrice().subtract(invoice.getDiscountAmount()).max(BigDecimal.ZERO)), "đ" }
             };
             for (String[] row : summaryData) {
                 PdfPCell labelCell = new PdfPCell(new Phrase(row[0], boldFont));

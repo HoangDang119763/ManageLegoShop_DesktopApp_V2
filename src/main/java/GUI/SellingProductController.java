@@ -107,12 +107,9 @@ public class SellingProductController {
 
     @FXML
     public void initialize() {
-        if (CategoryBUS.getInstance().isLocalEmpty())
-            CategoryBUS.getInstance().loadLocal();
-        if (ProductBUS.getInstance().isLocalEmpty())
-            ProductBUS.getInstance().loadLocal();
-        if (InvoiceBUS.getInstance().isLocalEmpty())
-            InvoiceBUS.getInstance().loadLocal();
+        // [STATELESS] No pre-load needed - CategoryBUS, ProductBUS, InvoiceBUS load
+        // on-demand
+        // Real-time sync via HikariCP connection pool
         arrTempDetailInvoice.clear();
         loadProductWrapper();
         changeLabelContent();
@@ -214,10 +211,10 @@ public class SellingProductController {
 
     private void changeLabelContent() {
         SessionManagerService ses = SessionManagerService.getInstance();
-        txtInvoiceId.setText(String.valueOf(InvoiceBUS.getInstance().getAllLocal().size()
+        txtInvoiceId.setText(String.valueOf(InvoiceBUS.getInstance().getAll().size()
                 + 1));
         txtEmployeeId.setText(String.valueOf(ses.employeeLoginId()));
-        txtEmployeeFullName.setText(EmployeeBUS.getInstance().getByIdLocal(ses.employeeLoginId()).getFullName());
+        txtEmployeeFullName.setText(EmployeeBUS.getInstance().getById(ses.employeeLoginId()).getFullName());
         txtCreateDate.setText(ValidationUtils.getInstance().formatDateTime(LocalDateTime.now()));
     }
 
@@ -272,7 +269,7 @@ public class SellingProductController {
                     col,
                     image,
                     product.getName(),
-                    cateB.getByIdLocal(product.getCategoryId()).getName(),
+                    cateB.getById(product.getCategoryId()).getName(),
                     product.getStockQuantity(),
                     product.getSellingPrice(),
                     product.getId());
@@ -443,7 +440,7 @@ public class SellingProductController {
         ObservableList<Node> listNode = gridPane.getChildren();
         for (Node node : listNode) {
             String productID = node.getId();
-            ProductDTO product = ProductBUS.getInstance().getByIdLocal(productID);
+            ProductDTO product = ProductBUS.getInstance().getById(productID);
             if (product == null)
                 continue;
 
@@ -542,7 +539,7 @@ public class SellingProductController {
         if (tbvDetailInvoiceProduct.isMouseTransparent())
             return;
 
-        ProductDTO product = ProductBUS.getInstance().getByIdLocal(productId);
+        ProductDTO product = ProductBUS.getInstance().getById(productId);
         if (product == null)
             return;
 
@@ -576,7 +573,7 @@ public class SellingProductController {
         cbCategoryFilter.getItems().add("Tất cả");
         categoryMap.put("Tất cả", -1);
 
-        for (CategoryDTO cate : cateBUS.getAllLocal()) {
+        for (CategoryDTO cate : cateBUS.getAll()) {
             cbCategoryFilter.getItems().add(cate.getName());
             categoryMap.put(cate.getName(), cate.getId());
         }

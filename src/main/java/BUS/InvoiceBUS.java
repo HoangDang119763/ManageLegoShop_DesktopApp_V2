@@ -4,7 +4,6 @@ import DAL.InvoiceDAL;
 import DTO.InvoiceDTO;
 import DTO.DetailInvoiceDTO;
 import ENUM.*;
-import SERVICE.AuthorizationService;
 import UTILS.ValidationUtils;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,27 +32,18 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
     public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || id == null || id <= 0)
             return false;
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 14))
-            return false;
-
         if (!InvoiceDAL.getInstance().delete(id)) {
             return false;
         }
-        arrLocal.removeIf(role -> Objects.equals(role.getId(), id));
         return true;
     }
 
     public boolean insert(InvoiceDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || obj == null)
             return false;
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 13)
-                || !isValidateInvoiceInput(obj))
-            return false;
-
         obj.setCreateDate(LocalDateTime.now());
         if (!InvoiceDAL.getInstance().insert(obj))
             return false;
-        arrLocal.add(new InvoiceDTO(obj));
         return true;
     }
 
@@ -84,60 +74,62 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
             BigDecimal startTotalPrice, BigDecimal endTotalPrice) {
         ArrayList<InvoiceDTO> filteredList = new ArrayList<>();
 
-        for (InvoiceDTO invoice : arrLocal) {
-            LocalDate invoiceDate = invoice.getCreateDate().toLocalDate();
+        // for (InvoiceDTO invoice : arrLocal) {
+        // LocalDate invoiceDate = invoice.getCreateDate().toLocalDate();
 
-            // --- Kiểm tra ngày bắt buộc ---
-            boolean matchesDate = startDate == null || !invoiceDate.isBefore(startDate);
-            if (endDate != null && invoiceDate.isAfter(endDate)) {
-                matchesDate = false;
-            }
-            if (!matchesDate) {
-                continue; // Ngày không hợp lệ thì bỏ qua
-            }
+        // // --- Kiểm tra ngày bắt buộc ---
+        // boolean matchesDate = startDate == null || !invoiceDate.isBefore(startDate);
+        // if (endDate != null && invoiceDate.isAfter(endDate)) {
+        // matchesDate = false;
+        // }
+        // if (!matchesDate) {
+        // continue; // Ngày không hợp lệ thì bỏ qua
+        // }
 
-            // --- Kiểm tra các điều kiện còn lại ---
-            boolean matchesAnyCondition = false;
+        // // --- Kiểm tra các điều kiện còn lại ---
+        // boolean matchesAnyCondition = false;
 
-            if (employeeId != null && !employeeId.isEmpty()) {
-                if (String.valueOf(invoice.getEmployeeId()).equalsIgnoreCase(employeeId)) {
-                    matchesAnyCondition = true;
-                }
-            }
+        // if (employeeId != null && !employeeId.isEmpty()) {
+        // if (String.valueOf(invoice.getEmployeeId()).equalsIgnoreCase(employeeId)) {
+        // matchesAnyCondition = true;
+        // }
+        // }
 
-            if (customerId != null && !customerId.isEmpty()) {
-                if (String.valueOf(invoice.getCustomerId()).equalsIgnoreCase(customerId)) {
-                    matchesAnyCondition = true;
-                }
-            }
+        // if (customerId != null && !customerId.isEmpty()) {
+        // if (String.valueOf(invoice.getCustomerId()).equalsIgnoreCase(customerId)) {
+        // matchesAnyCondition = true;
+        // }
+        // }
 
-            if (discountCode != null && !discountCode.isEmpty()) {
-                if (invoice.getDiscountCode() != null && invoice.getDiscountCode().equalsIgnoreCase(discountCode)) {
-                    matchesAnyCondition = true;
-                }
-            }
+        // if (discountCode != null && !discountCode.isEmpty()) {
+        // if (invoice.getDiscountCode() != null &&
+        // invoice.getDiscountCode().equalsIgnoreCase(discountCode)) {
+        // matchesAnyCondition = true;
+        // }
+        // }
 
-            if (startTotalPrice != null || endTotalPrice != null) {
-                BigDecimal totalPrice = invoice.getTotalPrice();
-                boolean matchPrice = startTotalPrice == null || totalPrice.compareTo(startTotalPrice) >= 0;
-                if (endTotalPrice != null && totalPrice.compareTo(endTotalPrice) > 0) {
-                    matchPrice = false;
-                }
-                if (matchPrice) {
-                    matchesAnyCondition = true;
-                }
-            }
+        // if (startTotalPrice != null || endTotalPrice != null) {
+        // BigDecimal totalPrice = invoice.getTotalPrice();
+        // boolean matchPrice = startTotalPrice == null ||
+        // totalPrice.compareTo(startTotalPrice) >= 0;
+        // if (endTotalPrice != null && totalPrice.compareTo(endTotalPrice) > 0) {
+        // matchPrice = false;
+        // }
+        // if (matchPrice) {
+        // matchesAnyCondition = true;
+        // }
+        // }
 
-            // Nếu không nhập gì cả, thì mặc định là "thỏa"
-            boolean hasAnyCondition = (employeeId != null && !employeeId.isEmpty()) ||
-                    (customerId != null && !customerId.isEmpty()) ||
-                    (discountCode != null && !discountCode.isEmpty()) ||
-                    (startTotalPrice != null) || (endTotalPrice != null);
+        // // Nếu không nhập gì cả, thì mặc định là "thỏa"
+        // boolean hasAnyCondition = (employeeId != null && !employeeId.isEmpty()) ||
+        // (customerId != null && !customerId.isEmpty()) ||
+        // (discountCode != null && !discountCode.isEmpty()) ||
+        // (startTotalPrice != null) || (endTotalPrice != null);
 
-            if (!hasAnyCondition || matchesAnyCondition) {
-                filteredList.add(new InvoiceDTO(invoice));
-            }
-        }
+        // if (!hasAnyCondition || matchesAnyCondition) {
+        // filteredList.add(new InvoiceDTO(invoice));
+        // }
+        // }
 
         return filteredList;
     }
@@ -147,11 +139,6 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
         if (discountCode == null || discountCode.isEmpty())
             return result;
 
-        for (InvoiceDTO invoice : arrLocal) {
-            if (Objects.equals(invoice.getDiscountCode(), discountCode)) {
-                result.add(new InvoiceDTO(invoice));
-            }
-        }
         return result;
     }
 
@@ -164,26 +151,22 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
     public boolean isProductInAnyInvoice(String productId) {
         DetailInvoiceBUS detailInvoiceBUS = DetailInvoiceBUS.getInstance();
 
-        // 1. Đảm bảo dữ liệu đã được load (Giữ nguyên logic của bạn)
-        if (this.isLocalEmpty())
-            this.loadLocal();
-        if (detailInvoiceBUS.isLocalEmpty())
-            detailInvoiceBUS.loadLocal();
-
         // 2. Sử dụng Stream để tìm kiếm nhanh và hiện đại
         // Kiểm tra xem có bất kỳ dòng chi tiết hóa đơn nào chứa mã sản phẩm này không
-        return detailInvoiceBUS.arrLocal.stream()
+        return detailInvoiceBUS.getAll().stream()
                 .anyMatch(detail -> detail.getProductId().equals(productId));
     }
 
     public boolean isCustomerInAnyInvoice(int customerId) {
-        if (this.isLocalEmpty())
-            this.loadLocal();
 
-        // Duyệt tìm bất kỳ hóa đơn nào có mã khách hàng này
-        // Sử dụng stream() để code ngắn gọn và hiện đại hơn
-        return this.arrLocal.stream()
+        return this.getAll().stream()
                 .anyMatch(invoice -> invoice.getCustomerId() == customerId);
+    }
+
+    @Override
+    public InvoiceDTO getById(Integer id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getById'");
     }
 
 }

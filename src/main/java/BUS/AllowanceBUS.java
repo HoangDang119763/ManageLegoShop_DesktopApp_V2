@@ -3,7 +3,6 @@ package BUS;
 import DTO.AllowanceDTO;
 import DAL.AllowanceDAL;
 import UTILS.ValidationUtils;
-import SERVICE.AuthorizationService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -70,17 +69,14 @@ public class AllowanceBUS extends BaseBUS<AllowanceDTO, Integer> {
         if (!isValidAllowanceInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (AllowanceDAL.getInstance().insert(obj)) {
-            if (arrLocal.isEmpty()) {
-                loadLocal();
-            } else {
-                arrLocal.add(new AllowanceDTO(obj));
-            }
-            return true;
-        }
+        // if (AllowanceDAL.getInstance().insert(obj)) {
+        // if (arrLocal.isEmpty()) {
+        // loadLocal();
+        // } else {
+        // arrLocal.add(new AllowanceDTO(obj));
+        // }
+        // return true;
+        // }
         return false;
     }
 
@@ -88,38 +84,12 @@ public class AllowanceBUS extends BaseBUS<AllowanceDTO, Integer> {
         if (!isValidAllowanceInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (AllowanceDAL.getInstance().update(obj)) {
-            for (AllowanceDTO allowance : arrLocal) {
-                if (allowance.getId() == obj.getId()) {
-                    allowance.setEmployeeId(obj.getEmployeeId());
-                    allowance.setSalaryPeriod(obj.getSalaryPeriod());
-                    allowance.setAttendanceBonus(obj.getAttendanceBonus());
-                    allowance.setAnnualLeaveDays(obj.getAnnualLeaveDays());
-                    allowance.setTransportationSupport(obj.getTransportationSupport());
-                    allowance.setAccommodationSupport(obj.getAccommodationSupport());
-                    allowance.setCreatedAt(obj.getCreatedAt());
-                    allowance.setUpdatedAt(obj.getUpdatedAt());
-                    break;
-                }
-            }
-            return true;
-        }
         return false;
     }
 
     public boolean delete(Integer id, int employeeRoleId, int employeeLoginId) {
         if (id == null || id <= 0) {
             return false;
-        }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (AllowanceDAL.getInstance().delete(id)) {
-            arrLocal.removeIf(allowance -> allowance.getId() == id);
-            return true;
         }
         return false;
     }

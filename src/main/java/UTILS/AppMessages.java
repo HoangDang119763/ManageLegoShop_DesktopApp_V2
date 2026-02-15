@@ -7,17 +7,6 @@ package UTILS;
  * Tất cả messages được tổ chức theo từng module/chức năng để dễ quản lý.
  */
 public class AppMessages {
-
-    // ==================== MODULE ĐĂNG NHẬP (LOGIN) ====================
-    /**
-     * Các thông báo liên quan đến quá trình đăng nhập tài khoản
-     */
-    public static final String LOGIN_SUCCESS = "Đăng nhập thành công!";
-    public static final String LOGIN_EMPTY_CREDENTIALS = "Vui lòng điền tài khoản và mật khẩu";
-    public static final String LOGIN_INVALID_CREDENTIALS = "Tài khoản hoặc mật khẩu không chính xác!";
-    public static final String LOGIN_ACCOUNT_LOCKED = "Tài khoản của bạn hiện đang bị khóa!";
-    public static final String LOGIN_EMPLOYEE_INVALID = "Thông tin nhân viên không hợp lệ!";
-
     // ==================== MODULE THÔNG TIN CÁ NHÂN NHÂN VIÊN (EMPLOYEE INFO)
     // ====================
     public static final String EMPLOYEE_NOT_FOUND = "Không tìm thấy thông tin nhân viên";
@@ -87,22 +76,38 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý nhà cung cấp
      */
-//    public static final String SUPPLIER_NAME_EMPTY = "Tên nhà cung cấp không được để trống.";
-//    public static final String SUPPLIER_NAME_INVALID = "Tên nhà cung cấp không hợp lệ (tối đa 100 ký tự).";
-//    public static final String SUPPLIER_PHONE_EMPTY = "Số điện thoại không được để trống.";
-//    public static final String SUPPLIER_PHONE_INVALID = "Số điện thoại không hợp lệ (Số 0 đứng đầu và 10 số).";
-//    public static final String SUPPLIER_ADDRESS_EMPTY = "Địa chỉ không được để trống.";
-//    public static final String SUPPLIER_ADDRESS_INVALID = "Địa chỉ không hợp lệ (tối đa 255 ký tự).";
-//    public static final String SUPPLIER_ADD_ERROR = "Có lỗi khi thêm nhà cung cấp. Vui lòng thử lại.";
-//    public static final String SUPPLIER_ADD_DUPLICATE = "Đã có nhà cung cấp trong cơ sở dữ liệu.";
-//    public static final String SUPPLIER_ADD_NO_PERMISSION = "Không có quyền thêm nhà cung cấp.";
-//    public static final String SUPPLIER_ADD_DB_ERROR = "Thêm nhà cung cấp vào CSDL thất bại.";
-//    public static final String SUPPLIER_ADD_INVALID_DATA = "Dữ liệu nhập không hợp lệ.";
-//    public static final String SUPPLIER_UPDATE_ERROR = "Có lỗi khi cập nhật thông tin nhà cung cấp. Vui lòng thử lại.";
-//    public static final String SUPPLIER_UPDATE_DUPLICATE = "Thông tin nhà cung cấp bị trùng lặp.";
-//    public static final String SUPPLIER_UPDATE_NO_PERMISSION = "Không có quyền cập nhật thông tin nhà cung cấp.";
-//    public static final String SUPPLIER_UPDATE_FAILED = "Không thể cập nhật thông tin nhà cung cấp. Vui lòng thử lại.";
-//    public static final String SUPPLIER_NOT_FOUND = "Nhà cung cấp không tồn tại hoặc đã bị xóa.";
+    // public static final String SUPPLIER_NAME_EMPTY = "Tên nhà cung cấp không được
+    // để trống.";
+    // public static final String SUPPLIER_NAME_INVALID = "Tên nhà cung cấp không
+    // hợp lệ (tối đa 100 ký tự).";
+    // public static final String SUPPLIER_PHONE_EMPTY = "Số điện thoại không được
+    // để trống.";
+    // public static final String SUPPLIER_PHONE_INVALID = "Số điện thoại không hợp
+    // lệ (Số 0 đứng đầu và 10 số).";
+    // public static final String SUPPLIER_ADDRESS_EMPTY = "Địa chỉ không được để
+    // trống.";
+    // public static final String SUPPLIER_ADDRESS_INVALID = "Địa chỉ không hợp lệ
+    // (tối đa 255 ký tự).";
+    // public static final String SUPPLIER_ADD_ERROR = "Có lỗi khi thêm nhà cung
+    // cấp. Vui lòng thử lại.";
+    // public static final String SUPPLIER_ADD_DUPLICATE = "Đã có nhà cung cấp trong
+    // cơ sở dữ liệu.";
+    // public static final String SUPPLIER_ADD_NO_PERMISSION = "Không có quyền thêm
+    // nhà cung cấp.";
+    // public static final String SUPPLIER_ADD_DB_ERROR = "Thêm nhà cung cấp vào
+    // CSDL thất bại.";
+    // public static final String SUPPLIER_ADD_INVALID_DATA = "Dữ liệu nhập không
+    // hợp lệ.";
+    // public static final String SUPPLIER_UPDATE_ERROR = "Có lỗi khi cập nhật thông
+    // tin nhà cung cấp. Vui lòng thử lại.";
+    // public static final String SUPPLIER_UPDATE_DUPLICATE = "Thông tin nhà cung
+    // cấp bị trùng lặp.";
+    // public static final String SUPPLIER_UPDATE_NO_PERMISSION = "Không có quyền
+    // cập nhật thông tin nhà cung cấp.";
+    // public static final String SUPPLIER_UPDATE_FAILED = "Không thể cập nhật thông
+    // tin nhà cung cấp. Vui lòng thử lại.";
+    // public static final String SUPPLIER_NOT_FOUND = "Nhà cung cấp không tồn tại
+    // hoặc đã bị xóa.";
     public static final String SUPPLIER_NO_SELECTION = "Vui lòng chọn nhà cung cấp.";
     public static final String SUPPLIER_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa nhà cung cấp này không?";
 
@@ -144,6 +149,13 @@ public class AppMessages {
     public static final String ACCOUNT_CANNOT_DELETE_SELF = "Không thể xóa tài khoản của chính mình";
     public static final String ACCOUNT_USERNAME_DUPLICATE = "Tài khoản đã tồn tại. Vui lòng chọn tên khác.";
     public static final String ACCOUNT_ADD_SUCCESS = "Thêm tài khoản thành công!";
+    public static final String ACCOUNT_NOT_FOUND = "Tài khoản không tồn tại.";
+    public static final String LOGIN_SUCCESS = "Đăng nhập thành công!";
+    public static final String LOGIN_EMPTY_CREDENTIALS = "Vui lòng điền tài khoản và mật khẩu";
+    public static final String LOGIN_INVALID_CREDENTIALS = "Tài khoản hoặc mật khẩu không chính xác!";
+    public static final String LOGIN_ACCOUNT_LOCKED = "Tài khoản của bạn hiện đang bị khóa!";
+    public static final String LOGIN_EMPLOYEE_INVALID = "Thông tin nhân viên không hợp lệ!";
+    public static final String LOGOUT_CONFIRM = "Bạn chắc muốn đăng xuất?";
     // Placeholder cho các messages về account
 
     // ==================== MODULE THỐNG KÊ (STATISTIC) ====================
@@ -171,4 +183,5 @@ public class AppMessages {
     public static final String NOT_FOUND = "Không tìm thấy dữ liệu yêu cầu";
     public static final String UNAUTHORIZED = "Bạn không có quyền để thực hiện thao tác này.";
     public static final String DATA_ALREADY_DELETED = "Dữ liệu này đã ở trạng thái Inactive (xóa hoặc ngừng hoạt động)";
+    public static final String FORCE_RELOGIN = "Phiên làm việc hết hạn hoặc quyền đã thay đổi. Vui lòng đăng nhập lại.";
 }

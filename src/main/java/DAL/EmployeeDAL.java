@@ -1,6 +1,8 @@
 package DAL;
 
 import DTO.EmployeeDTO;
+import DTO.EmployeeSessionDTO;
+
 import java.sql.*;
 
 public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
@@ -260,6 +262,59 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     /**
+     * Get employee by account ID - [STATELESS] Direct DB query, no cache
+     * 
+     * @param accountId Account ID to search for
+     * @return EmployeeDTO or null if not found
+     */
+    public EmployeeDTO getByAccountId(int accountId) {
+        String query = "SELECT * FROM employee WHERE account_id = ? LIMIT 1";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, accountId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToObject(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting employee by account ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public EmployeeSessionDTO getEmployeeSessionByAccountId(int accountId) {
+        String sql = "SELECT a.id as account_id, e.id as employee_id, a.username, " +
+                "e.first_name, e.last_name, r.id as role_id, r.name as role_name " +
+                "FROM account a " +
+                "JOIN employee e ON a.id = e.account_id " +
+                "JOIN role r ON e.role_id = r.id " +
+                "WHERE a.id = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, accountId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    EmployeeSessionDTO session = new EmployeeSessionDTO();
+                    session.setAccountId(rs.getInt("account_id"));
+                    session.setEmployeeId(rs.getInt("employee_id"));
+                    session.setUsername(rs.getString("username"));
+                    session.setFullName(rs.getString("first_name") + " " + rs.getString("last_name"));
+                    session.setRoleId(rs.getInt("role_id"));
+                    session.setRoleName(rs.getString("role_name"));
+
+                    return session;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * Cập nhật TAB 4: Tài khoản hệ thống
      * Update: accountId
      */
@@ -278,5 +333,26 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             System.err.println("Error updating system account: " + e.getMessage());
             return false;
         }
+    }
+
+    public int countByRoleId(int roleId) {
+        if (roleId <= 0) {
+            return 0; // Trả về 0 nếu roleId không hợp lệ
+        }
+
+        String query = "SELECT COUNT(*) FROM employee WHERE role_id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, roleId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1); // Lấy số lượng nhân viên
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting employees by role ID: " + e.getMessage());
+        }
+        return 0; // Trả về 0 nếu có lỗi xảy ra
     }
 }

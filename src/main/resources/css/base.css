@@ -571,3 +571,11 @@
 .close:hover .close-icon {
     -fx-fill: #fff;
 }
+
+.custom-progress-indicator {
+    -fx-progress-color: #3498db; /* Màu xanh đặc trưng */
+}
+
+.custom-progress-indicator .pindicator-angle-line {
+    -fx-stroke-width: 4px; /* Làm vòng xoay dày dặn hơn */
+}

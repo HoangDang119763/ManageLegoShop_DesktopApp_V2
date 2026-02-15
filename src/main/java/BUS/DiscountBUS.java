@@ -3,8 +3,6 @@ package BUS;
 import DAL.DiscountDAL;
 import DTO.DiscountDTO;
 import ENUM.ServiceAccessCode;
-import SERVICE.AuthorizationService;
-import UTILS.AvailableUtils;
 import UTILS.ValidationUtils;
 
 import java.time.LocalDate;
@@ -31,26 +29,9 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
         return obj.getCode();
     }
 
-    public DiscountDTO getByIdLocal(String code) {
-        if (code == null || code.isEmpty())
-            return null;
-        for (DiscountDTO dis : arrLocal) {
-            if (Objects.equals(dis.getCode(), code)) {
-                return new DiscountDTO(dis);
-            }
-        }
-        return null;
-    }
-
     public ArrayList<DiscountDTO> searchByCodeLocal(String keyword) {
         ArrayList<DiscountDTO> result = new ArrayList<>();
-        if (keyword == null || keyword.isEmpty())
-            return getAllLocal();
-        for (DiscountDTO dis : arrLocal) {
-            if (dis.getCode().toLowerCase().contains(keyword.toLowerCase())) {
-                result.add(new DiscountDTO(dis));
-            }
-        }
+
         return result;
     }
 
@@ -58,43 +39,43 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
             LocalDate endDate) {
         ArrayList<DiscountDTO> filteredList = new ArrayList<>();
 
-        for (DiscountDTO dis : arrLocal) {
-            boolean matchesDate = true;
-            boolean matchesOther = false;
+        // for (DiscountDTO dis : arrLocal) {
+        // boolean matchesDate = true;
+        // boolean matchesOther = false;
 
-            LocalDate discountStartDate = dis.getStartDate().toLocalDate();
-            LocalDate discountEndDate = dis.getEndDate().toLocalDate();
+        // LocalDate discountStartDate = dis.getStartDate().toLocalDate();
+        // LocalDate discountEndDate = dis.getEndDate().toLocalDate();
 
-            // Xử lý logic ngày
-            if (startDate != null && endDate != null) {
-                matchesDate = !discountEndDate.isAfter(endDate);
-            } else if (startDate != null) {
-                matchesDate = !discountStartDate.isBefore(startDate);
-            } else if (endDate != null) {
-                matchesDate = !discountEndDate.isAfter(endDate);
-            }
+        // // Xử lý logic ngày
+        // if (startDate != null && endDate != null) {
+        // matchesDate = !discountEndDate.isAfter(endDate);
+        // } else if (startDate != null) {
+        // matchesDate = !discountStartDate.isBefore(startDate);
+        // } else if (endDate != null) {
+        // matchesDate = !discountEndDate.isAfter(endDate);
+        // }
 
-            if (discountName != null && !discountName.isBlank()) {
-                if (dis.getName().toLowerCase().contains(discountName.toLowerCase())) {
-                    matchesOther = true;
-                }
-            }
+        // if (discountName != null && !discountName.isBlank()) {
+        // if (dis.getName().toLowerCase().contains(discountName.toLowerCase())) {
+        // matchesOther = true;
+        // }
+        // }
 
-            if (type != -1) {
-                if (dis.getType() == type) {
-                    matchesOther = true;
-                }
-            }
+        // if (type != -1) {
+        // if (dis.getType() == type) {
+        // matchesOther = true;
+        // }
+        // }
 
-            // Nếu không nhập gì => mặc định true
-            if ((discountName == null || discountName.isBlank()) && type == -1) {
-                matchesOther = true;
-            }
+        // // Nếu không nhập gì => mặc định true
+        // if ((discountName == null || discountName.isBlank()) && type == -1) {
+        // matchesOther = true;
+        // }
 
-            if (matchesDate && matchesOther) {
-                filteredList.add(new DiscountDTO(dis));
-            }
-        }
+        // if (matchesDate && matchesOther) {
+        // filteredList.add(new DiscountDTO(dis));
+        // }
+        // }
 
         return filteredList;
     }
@@ -102,10 +83,7 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
     public int insert(DiscountDTO obj, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
         if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE || obj == null)
             return 2;
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 20)
-                || !isValidateDiscountInput(obj)) {
-            return 3;
-        }
+
         ValidationUtils validate = ValidationUtils.getInstance();
         obj.setCode(obj.getCode().toUpperCase());
         obj.setName(validate.normalizeWhiteSpace(obj.getName()));
@@ -114,7 +92,6 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
 
         if (!DiscountDAL.getInstance().insert(obj))
             return 5;
-        arrLocal.add(new DiscountDTO(obj));
         return 1;
     }
 
@@ -124,19 +101,10 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
             return false;
         }
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 21)) {
-            return false;
-        }
-
-        if (!AvailableUtils.getInstance().isNotUsedDiscount(code)) {
-            return false;
-        }
-
         if (!DiscountDAL.getInstance().delete(code)) {
             return false;
         }
 
-        arrLocal.removeIf(dis -> dis.getCode().equals(code));
         return true;
     }
 
@@ -145,49 +113,20 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
             return 2;
         }
 
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employee_roleId, 22))
-            return 3;
-
         if (!isValidateDiscountInput(obj))
             return 4;
 
-        if (isDuplicateDiscount(obj))
-            return 1;
         ValidationUtils validate = ValidationUtils.getInstance();
         obj.setName(validate.normalizeWhiteSpace(obj.getName()));
         if (!DiscountDAL.getInstance().update(obj))
             return 6;
-
-        // Cập nhật arrLocal nếu database cập nhật thành công
-        for (int i = 0; i < arrLocal.size(); i++) {
-            if (Objects.equals(arrLocal.get(i).getCode(), obj.getCode())) {
-                arrLocal.set(i, new DiscountDTO(obj));
-                break;
-            }
-        }
         return 1;
     }
 
     private boolean isDuplicateDiscountCode(String code) {
         if (code == null)
             return false;
-        for (DiscountDTO dis : arrLocal) {
-            if (dis.getCode().equalsIgnoreCase(code)) {
-                return true;
-            }
-        }
         return false;
-    }
-
-    public boolean isDuplicateDiscount(DiscountDTO obj) {
-        DiscountDTO existingDis = getByIdLocal(obj.getCode());
-        ValidationUtils validate = ValidationUtils.getInstance();
-        // Kiểm tra xem tên, mô tả, và hệ số lương có trùng không
-        return existingDis != null &&
-                Objects.equals(existingDis.getName(), validate.normalizeWhiteSpace(obj.getName())) &&
-                Objects.equals(existingDis.getType(), obj.getType()) &&
-                Objects.equals(existingDis.getStartDate(), obj.getStartDate()) &&
-                Objects.equals(existingDis.getEndDate(), obj.getEndDate());
     }
 
     private boolean isValidateDiscountInput(DiscountDTO obj) {
@@ -217,14 +156,13 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
     public ArrayList<DiscountDTO> filterDiscountsActive() {
         ArrayList<DiscountDTO> filteredList = new ArrayList<>();
 
-        for (DiscountDTO dis : arrLocal) {
-            LocalDate discountEndDate = dis.getEndDate().toLocalDate();
-            LocalDate now = LocalDate.now();
-            if (!discountEndDate.isBefore(now)) {
-                filteredList.add(new DiscountDTO(dis));
-            }
-        }
         return filteredList;
+    }
+
+    @Override
+    public DiscountDTO getById(String id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getById'");
     }
 
 }

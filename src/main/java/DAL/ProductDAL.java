@@ -35,8 +35,10 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
 
     @Override
     protected String getInsertQuery() {
-        // Chỉ giữ lại: id, name, stock_quantity, selling_price, status_id, description, image_url, category_id
-        // Bỏ qua: import_price (set mặc định 0 ở BUS/DB), created_at, updated_at (DB tự sinh)
+        // Chỉ giữ lại: id, name, stock_quantity, selling_price, status_id, description,
+        // image_url, category_id
+        // Bỏ qua: import_price (set mặc định 0 ở BUS/DB), created_at, updated_at (DB tự
+        // sinh)
         return "(id, name, stock_quantity, selling_price, import_price, status_id, description, image_url, category_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
@@ -142,7 +144,7 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
     public boolean updateStatus(String id, int newStatusId) {
         String query = "UPDATE product SET status_id = ? WHERE id = ?";
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setInt(1, newStatusId);
             statement.setString(2, id);
@@ -152,5 +154,91 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
             System.err.println("Error updating product status: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * [STATELESS] Generate next product ID by querying database
+     * No local cache needed
+     * 
+     * @return next product ID (e.g., "SP00001")
+     */
+    public String getNextProductId() {
+        String query = "SELECT MAX(CAST(SUBSTRING(id, 3) AS UNSIGNED)) as max_id FROM product WHERE id LIKE 'SP%'";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    int maxId = rs.getInt("max_id");
+                    if (maxId == 0) {
+                        return "SP00001";
+                    }
+                    return String.format("SP%05d", maxId + 1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting next product ID: " + e.getMessage());
+        }
+        return "SP00001";
+    }
+
+    /**
+     * [STATELESS] Check if product name already exists (case-insensitive)
+     * No local cache needed
+     * 
+     * @param exceptId product ID to exclude (for update validation)
+     * @param name     product name to check
+     * @return true if name exists in DB, false otherwise
+     */
+    public boolean isProductNameExists(String exceptId, String name) {
+        if (name == null || name.isEmpty()) {
+            return false;
+        }
+
+        String query = "SELECT COUNT(*) as count FROM product WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))";
+        if (exceptId != null && !exceptId.isEmpty()) {
+            query += " AND id != ?";
+        }
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, name);
+            if (exceptId != null && !exceptId.isEmpty()) {
+                statement.setString(2, exceptId);
+            }
+
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("count") > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking product name exists: " + e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * [STATELESS] Check if category is used in any product
+     * No local cache needed
+     * 
+     * @param categoryId category ID to check
+     * @return true if category is used, false otherwise
+     */
+    public boolean isCategoryInUse(int categoryId) {
+        String query = "SELECT 1 FROM product WHERE category_id = ? LIMIT 1";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, categoryId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking category in use: " + e.getMessage());
+        }
+        return false;
     }
 }

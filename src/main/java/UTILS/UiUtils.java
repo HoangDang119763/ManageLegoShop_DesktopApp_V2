@@ -288,24 +288,45 @@ public class UiUtils {
 
     public void openStage(String fxmlFile, String title) {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(LoginController.class.getResource(fxmlFile));
-            Parent root = fxmlLoader.load(); // Gọi .load() để lấy root từ FXML
+            // Sử dụng getClass() để lấy resource tương đối từ root của project
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(fxmlFile));
+            Parent root = fxmlLoader.load();
 
             Stage stage = new Stage();
+            // Set fill là TRANSPARENT để hỗ trợ các giao diện bo góc/đổ bóng từ CSS
             Scene scene = new Scene(root);
+            scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
 
-            UiUtils.gI().makeWindowDraggable(root, stage);
+            makeWindowDraggable(root, stage);
             stage.initStyle(StageStyle.TRANSPARENT);
 
             stage.setTitle(title);
             stage.setScene(scene);
-
             stage.show();
             stage.requestFocus();
 
         } catch (IOException e) {
-            System.err.println("error");
             e.printStackTrace();
+        }
+    }
+
+    public Stage openStage1(String fxmlFile, String title) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(fxmlFile));
+            Parent root = fxmlLoader.load();
+            Stage stage = new Stage();
+            Scene scene = new Scene(root);
+            scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+
+            makeWindowDraggable(root, stage);
+            stage.initStyle(StageStyle.TRANSPARENT);
+            stage.setTitle(title);
+            stage.setScene(scene);
+            stage.show();
+            return stage; // Trả về stage để Controller gọi xong có thể dùng ngay
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

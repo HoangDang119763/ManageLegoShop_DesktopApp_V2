@@ -127,17 +127,6 @@ public class EmployeeInfoController {
         roleBUS = RoleBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
         sessionManagerService = SessionManagerService.getInstance();
-        // Load local data nếu cần
-        if (employeeBUS.isLocalEmpty())
-            employeeBUS.loadLocal();
-        if (accountBUS.isLocalEmpty())
-            accountBUS.loadLocal();
-        if (departmentBUS.isLocalEmpty())
-            departmentBUS.loadLocal();
-        if (roleBUS.isLocalEmpty())
-            roleBUS.loadLocal();
-        if (statusBUS.isLocalEmpty())
-            statusBUS.loadLocal();
 
         setupListeners();
         loadEmployeeInfo();
@@ -160,7 +149,7 @@ public class EmployeeInfoController {
      */
     private void loadEmployeeInfo() {
         EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
-        EmployeeDTO employee = employeeBUS.getByIdLocal(sessionManagerService.employeeLoginId());
+        EmployeeDTO employee = employeeBUS.getById(sessionManagerService.employeeLoginId());
 
         if (employee == null) {
             hidePersonalInfo();
@@ -201,7 +190,7 @@ public class EmployeeInfoController {
         }
 
         try {
-            EmployeeDTO employee = employeeBUS.getByIdLocal(sessionManagerService.employeeLoginId());
+            EmployeeDTO employee = employeeBUS.getById(sessionManagerService.employeeLoginId());
             ValidationUtils validationUtils = ValidationUtils.getInstance();
 
             // === PROFILE INFO SECTION ===
@@ -210,7 +199,7 @@ public class EmployeeInfoController {
 
             // Get department name
             if (employee != null && employee.getDepartmentId() != null) {
-                DepartmentDTO department = departmentBUS.getByIdLocal(employee.getDepartmentId());
+                DepartmentDTO department = departmentBUS.getById(employee.getDepartmentId());
                 lblDepartmentName.setText(department != null ? department.getName() : "");
             } else {
                 lblDepartmentName.setText("");
@@ -269,31 +258,34 @@ public class EmployeeInfoController {
      */
     private void handleUpdateInfo() {
         // Validate input trước
-        String validationError = validateUpdateInfoFields();
-        if (validationError != null) {
-            NotificationUtils.showErrorAlert(validationError, AppMessages.DIALOG_TITLE);
-            return;
-        }
+        // String validationError = validateUpdateInfoFields();
+        // if (validationError != null) {
+        // NotificationUtils.showErrorAlert(validationError, AppMessages.DIALOG_TITLE);
+        // return;
+        // }
 
-        EmployeeDTO employee = new EmployeeDTO(sessionManagerService.currEmployee());
+        // EmployeeDTO employee = new EmployeeDTO(sessionManagerService.currEmployee());
 
-        // Cập nhật các trường từ UI
-        employee.setFirstName(lblFirstName.getText().trim());
-        employee.setLastName(lblLastName.getText().trim());
-        employee.setDateOfBirth(dpDateOfBirth.getValue());
-        employee.setPhone(lblPhone.getText().trim());
-        employee.setEmail(lblEmail.getText().trim());
+        // // Cập nhật các trường từ UI
+        // employee.setFirstName(lblFirstName.getText().trim());
+        // employee.setLastName(lblLastName.getText().trim());
+        // employee.setDateOfBirth(dpDateOfBirth.getValue());
+        // employee.setPhone(lblPhone.getText().trim());
+        // employee.setEmail(lblEmail.getText().trim());
 
-        BUSResult updateResult = SecureExecutor
-                .executePublicBUSResult(() -> employeeBUS.updatePersonalInfoBySelf(employee));
+        // BUSResult updateResult = SecureExecutor
+        // .executePublicBUSResult(() ->
+        // employeeBUS.updatePersonalInfoBySelf(employee));
 
-        if (updateResult.isSuccess()) {
-            NotificationUtils.showInfoAlert(AppMessages.EMPLOYEE_PERSONAL_UPDATE_SUCCESS, AppMessages.DIALOG_TITLE);
-            sessionManagerService.updateCurrentEmployee();
-            loadEmployeeInfo(); // Refresh UI
-        } else {
-            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+        // if (updateResult.isSuccess()) {
+        // NotificationUtils.showInfoAlert(AppMessages.EMPLOYEE_PERSONAL_UPDATE_SUCCESS,
+        // AppMessages.DIALOG_TITLE);
+        // sessionManagerService.updateCurrentEmployee();
+        // loadEmployeeInfo(); // Refresh UI
+        // } else {
+        // NotificationUtils.showErrorAlert(updateResult.getMessage(),
+        // AppMessages.DIALOG_TITLE);
+        // }
     }
 
     /**
@@ -374,7 +366,7 @@ public class EmployeeInfoController {
             return; // Nếu validation thất bại, dừng lại
         }
 
-        AccountDTO account = new AccountDTO(accountBUS.getByIdLocal(sessionManagerService.employeeLoginId()));
+        AccountDTO account = new AccountDTO(accountBUS.getById(sessionManagerService.employeeLoginId()));
         account.setPassword(txtNewPassword.getText().trim());
         BUSResult updateResult = SecureExecutor
                 .executePublicBUSResult(

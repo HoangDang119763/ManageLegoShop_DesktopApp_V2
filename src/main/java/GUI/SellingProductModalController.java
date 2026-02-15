@@ -74,7 +74,7 @@ public class SellingProductModalController implements IModalController {
     private boolean isValidInput() {
         boolean isValid = true;
         String quantity = txtQuantity.getText().trim();
-        int stockQuantity = ProductBUS.getInstance().getByIdLocal(tempDetailInvoice.getProductId()).getStockQuantity();
+        int stockQuantity = ProductBUS.getInstance().getById(tempDetailInvoice.getProductId()).getStockQuantity();
 
         if (quantity.isEmpty()) {
             NotificationUtils.showErrorAlert(AppMessages.INVOICE_DETAIL_QUANTITY_EMPTY, AppMessages.DIALOG_TITLE);

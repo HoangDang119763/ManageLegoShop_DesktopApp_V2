@@ -1,144 +1,103 @@
 package SERVICE;
 
-import BUS.EmployeeBUS;
-import BUS.PermissionBUS;
-import BUS.RolePermissionBUS;
-import DTO.EmployeeDTO;
-import DTO.PermissionDTO;
-import DTO.RolePermissionDTO;
-import ENUM.PermissionKey;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.HashSet;
+import DTO.EmployeeSessionDTO;
+import ENUM.PermissionKey;
+import UTILS.AppMessages;
+import UTILS.NotificationUtils;
+import UTILS.UiUtils;
+import javafx.application.Platform;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public class SessionManagerService {
     private static SessionManagerService instance;
-    private int employeeId;
-    private int roleId;
-    private HashSet<Integer> allowedModules;
-    private HashSet<String> allowedPermissionKeys;
+    private EmployeeSessionDTO currentSession; // "Cái hộp" chứa tất cả
 
     private SessionManagerService() {
-        this.employeeId = -1;
-        this.roleId = -1;
-        allowedModules = new HashSet<>();
-        allowedPermissionKeys = new HashSet<>();
     }
 
     public static SessionManagerService getInstance() {
-        if (instance == null) {
+        if (instance == null)
             instance = new SessionManagerService();
-        }
         return instance;
     }
 
-    public void setLoggedInEmployee(EmployeeDTO employee) {
-        if (employee != null) {
-            this.employeeId = employee.getId();
-            this.roleId = employee.getRoleId();
-        } else {
-            this.employeeId = -1;
-            this.roleId = -1;
-        }
-        loadPermissions();
+    // Khi Login thành công, gọi hàm này để nạp "thẻ" vào máy
+    public void login(EmployeeSessionDTO session) {
+        this.currentSession = session;
     }
 
     public void logout() {
-        this.employeeId = -1;
-        this.roleId = -1;
-        allowedModules.clear();
-        allowedPermissionKeys.clear();
+        this.currentSession = null;
+    }
+
+    // --- CÁC HÀM CHECK QUYỀN BÂY GIỜ CỰC GỌN ---
+
+    public boolean hasPermission(PermissionKey permissionKey) {
+        if (currentSession == null || permissionKey == null)
+            return false;
+        // Check thẳng trong List Permission của DTO
+        return currentSession.getPermissions().contains(permissionKey.name());
     }
 
     public boolean hasModuleAccess(int moduleId) {
-        return allowedModules.contains(moduleId);
-    }
-
-    public boolean hasPermission(PermissionKey permissionKey) {
-        if (permissionKey == null) {
+        if (currentSession == null)
             return false;
-        }
-        return allowedPermissionKeys.contains(permissionKey.name());
-    }
-
-    public boolean hasPermission(String permissionKey) {
-        if (permissionKey == null || permissionKey.isEmpty()) {
-            return false;
-        }
-        return allowedPermissionKeys.contains(permissionKey);
-    }
-
-    private void loadPermissions() {
-        allowedModules.clear();
-        allowedPermissionKeys.clear();
-        if (employeeId <= 0)
-            return;
-
-        PermissionBUS permissionBUS = PermissionBUS.getInstance();
-        RolePermissionBUS rolePermissionBUS = RolePermissionBUS.getInstance();
-
-        if (permissionBUS.isLocalEmpty())
-            permissionBUS.loadLocal();
-        if (rolePermissionBUS.isLocalEmpty())
-            rolePermissionBUS.loadLocal();
-
-        for (RolePermissionDTO rp : rolePermissionBUS.getAllRolePermissionByRoleIdLocal(roleId)) {
-            if (rp.isStatus()) {
-                // Lấy permission để có được permission_key
-                PermissionDTO permission = permissionBUS.getByIdLocal(rp.getPermissionId());
-                if (permission != null) {
-                    // Lưu permission key
-                    if (permission.getPermissionKey() != null && !permission.getPermissionKey().isEmpty()) {
-                        allowedPermissionKeys.add(permission.getPermissionKey());
-                    }
-                    // Lưu moduleId
-                    allowedModules.add(permission.getModule_id());
-                }
-            }
-        }
-    }
-
-    public EmployeeDTO currEmployee() {
-        if (employeeId <= 0)
-            return null;
-        EmployeeDTO emp = EmployeeBUS.getInstance().getByIdLocal(employeeId);
-        return emp != null ? new EmployeeDTO(emp) : null;
-    }
-
-    public int numAllowedModules() {
-        return allowedModules.size();
+        // Check trong List ModuleId của DTO
+        return currentSession.getAllowedModuleIds().contains(moduleId);
     }
 
     public int employeeLoginId() {
-        return employeeId;
+        return currentSession != null ? currentSession.getEmployeeId() : -1;
     }
 
-    public int employeeRoleId() {
-        return roleId;
+    public String getLoggedName() {
+        return currentSession != null ? currentSession.getFullName() : "Guest";
     }
 
-    public boolean canManage() {
-        // Có quyền quản lý nếu có quyền gì đó ngoài bán hàng (module 5) và nhập hàng
-        // (module 6)
-        for (Integer moduleId : allowedModules) {
-            if (moduleId != 5 && moduleId != 6) {
-                return true;
+    public String getRoleName() {
+        return currentSession != null ? currentSession.getRoleName() : "No Role";
+    }
+
+    public void forceLogout() {
+        // Đảm bảo chạy trên UI Thread của JavaFX
+        Platform.runLater(() -> {
+            // 1. Xóa dữ liệu phiên
+            logout();
+
+            // 2. Dọn dẹp toàn bộ cửa sổ (Stage, Modal, Alert)
+            List<Window> windows = new ArrayList<>(Window.getWindows());
+            for (Window window : windows) {
+                if (window instanceof Stage stage) {
+                    stage.close();
+                }
             }
+
+            // 3. Mở lại màn hình Login (Dùng đúng style cũ của bạn trong App.java)
+            try {
+                // Sử dụng UiUtils của bạn để mở màn hình Login
+                // Giả sử bạn để LoginUI.fxml ở đúng đường dẫn
+                NotificationUtils.showInfoAlert(AppMessages.FORCE_RELOGIN, AppMessages.DIALOG_TITLE);
+                UiUtils.gI().openStage("/GUI/LoginUI.fxml", "Đăng nhập hệ thống");
+
+                System.out.println(">>> Force Logout: Đã dọn dẹp và quay về màn hình đăng nhập.");
+            } catch (Exception e) {
+                System.err.println("Lỗi khi quay về màn hình Login: " + e.getMessage());
+            }
+        });
+    }
+
+    // Giữ nguyên logic canManage nhưng dùng dữ liệu từ DTO
+    public boolean canManage() {
+        if (currentSession == null)
+            return false;
+        for (Integer mid : currentSession.getAllowedModuleIds()) {
+            if (mid != 5 && mid != 6)
+                return true;
         }
         return false;
     }
-
-    public boolean canSelling() {
-        return hasModuleAccess(5);
-    }
-
-    public boolean canImporting() {
-        return hasModuleAccess(6);
-    }
-
-    public void updateCurrentEmployee() {
-        if (employeeId <= 0)
-            return;
-        loadPermissions();
-    }
-
 }
