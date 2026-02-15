@@ -22,12 +22,6 @@ import java.util.Optional;
 
 public class NotificationUtils {
     public static void showErrorAlert(String message, String title) {
-
-        if (!Platform.isFxApplicationThread()) {
-            Platform.runLater(() -> showErrorAlert(message, title));
-            return;
-        }
-
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -36,16 +30,12 @@ public class NotificationUtils {
     }
 
     public static void showInfoAlert(String message, String title) {
-        if (!Platform.isFxApplicationThread()) {
-            Platform.runLater(() -> showInfoAlert(message, title));
-            return;
-        }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        alert.show(); // KHÔNG dùng showAndWait
+        alert.showAndWait();
     }
 
     public static void showToast(Stage owner, String message) {
@@ -74,9 +64,9 @@ public class NotificationUtils {
 
             // X = (Tọa độ X cửa sổ) + (Chiều rộng cửa sổ) - (Chiều rộng Toast) - (Khoảng lề
             // phải 20px)
-            double x = owner.getX() + owner.getWidth() - root.getWidth() - 10;
+            double x = owner.getX() + owner.getWidth() - root.getWidth() - 5;
             // Y = (Tọa độ Y cửa sổ) + (Khoảng lề trên 50px - né thanh tiêu đề)
-            double y = owner.getY() + 50;
+            double y = owner.getY() + 35;
 
             toastStage.setX(x);
             toastStage.setY(y);

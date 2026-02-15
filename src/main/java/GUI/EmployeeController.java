@@ -13,7 +13,6 @@ import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
-import PROVIDER.EmployeeViewProvider;
 import PROVIDER.EmployeeDetailFilterer;
 import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
@@ -186,20 +185,20 @@ public class EmployeeController implements IController {
 
     @Override
     public void applyFilters() {
-        EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
-        EmployeeDetailFilterer filterer = EmployeeDetailFilterer.getInstance();
-        int statusId = statusFilter == null ? -1 : statusFilter.getId();
-        int roleId = roleFilter == null ? -1 : roleFilter.getId();
-        // Step 1: Transform employee data using provider
-        ArrayList<EmployeeDetailDTO> tableData = provider.toTableDTOs(employeeBUS.getAll());
-
-        tblEmployee.setItems(FXCollections.observableArrayList(filterer.applyAllFilters(
-                tableData,
-                searchBy,
-                keyword,
-                roleId,
-                statusId)));
-        tblEmployee.getSelectionModel().clearSelection();
+//        EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
+//        EmployeeDetailFilterer filterer = EmployeeDetailFilterer.getInstance();
+//        int statusId = statusFilter == null ? -1 : statusFilter.getId();
+//        int roleId = roleFilter == null ? -1 : roleFilter.getId();
+//        // Step 1: Transform employee data using provider
+//        ArrayList<EmployeeDetailDTO> tableData = provider.toTableDTOs(employeeBUS.getAll());
+//
+//        tblEmployee.setItems(FXCollections.observableArrayList(filterer.applyAllFilters(
+//                tableData,
+//                searchBy,
+//                keyword,
+//                roleId,
+//                statusId)));
+//        tblEmployee.getSelectionModel().clearSelection();
     }
 
     @Override

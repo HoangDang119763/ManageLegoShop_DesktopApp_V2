@@ -1,3 +1,4 @@
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,12 @@ public class App extends Application {
         stage.setTitle("Đăng nhập");
         stage.setScene(scene);
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        TaskUtil.shutdown();
+        System.exit(0);
     }
 
     public static void main(String[] args) {

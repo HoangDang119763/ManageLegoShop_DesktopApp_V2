@@ -80,8 +80,8 @@ public class LoginController {
 
                 // 2. Xử lý khi thành công (Chạy trên UI Thread)
                 result -> {
+                    handleRememberMe(username, password);
                     loginBtn.getScene().getWindow().hide();
-
                     Stage navigateStage = UiUtils.gI().openStage1(
                             "/GUI/NavigatePermission.fxml",
                             "Danh sách chức năng");
@@ -89,9 +89,21 @@ public class LoginController {
                     if (navigateStage != null) {
                         NotificationUtils.showToast(
                                 navigateStage,
-                                AppMessages.LOGIN_SUCCESS + " - Chào "
+                                result.getMessage() + " - Chào "
                                         + SessionManagerService.getInstance().getLoggedName());
                     }
                 });
+    }
+
+    public void handleRememberMe(String username, String password) {
+        // Xử lý Remember Me
+        prefs.putBoolean("rememberMe", ckbRememberMe.isSelected());
+        if (ckbRememberMe.isSelected()) {
+            prefs.put("savedUsername", username);
+            prefs.put("savedPassword", password);
+        } else {
+            prefs.remove("savedUsername");
+            prefs.remove("savedPassword");
+        }
     }
 }

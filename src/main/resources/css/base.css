@@ -572,10 +572,22 @@
     -fx-fill: #fff;
 }
 
-.custom-progress-indicator {
-    -fx-progress-color: #3498db; /* Màu xanh đặc trưng */
+/* Tùy chỉnh màu sắc và độ dày cho Spinner */
+.custom-progress-indicator .indicator {
+    -fx-padding: 8px;
 }
 
-.custom-progress-indicator .pindicator-angle-line {
-    -fx-stroke-width: 4px; /* Làm vòng xoay dày dặn hơn */
+.custom-progress-indicator .progress {
+    -fx-background-color: #3498db; /* Màu xanh của bạn */
+}
+
+/* Làm cho vòng xoay trơn tru hơn */
+.custom-progress-indicator .spinner {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+/* Đảm bảo phần nền đen mờ không bị "răng cưa" ở góc */
+#loadingOverlay {
+    -fx-background-radius: 0;
 }

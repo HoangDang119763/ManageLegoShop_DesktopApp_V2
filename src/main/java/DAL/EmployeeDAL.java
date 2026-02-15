@@ -2,6 +2,7 @@ package DAL;
 
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
+import DTO.EmployeeDetailDTO;
 
 import java.sql.*;
 
@@ -354,5 +355,107 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             System.err.println("Error counting employees by role ID: " + e.getMessage());
         }
         return 0; // Trả về 0 nếu có lỗi xảy ra
+    }
+
+    /**
+     * Query EmployeeDetailDTO - JOIN tất cả bảng cần thiết 1 lần
+     * Thay thế cho EmployeeViewProvider (không cần gọi nhiều getById)
+     * 
+     * @param employeeId ID của employee
+     * @return EmployeeDetailDTO hoặc null nếu không tìm thấy
+     */
+    public EmployeeDetailDTO getDetailById(int employeeId) {
+        String sql = "SELECT " +
+                "e.*, " +
+                "r.id AS role_id_mapped, r.name AS role_name, " +
+                "s.base AS salary_base, s.coefficient AS salary_coefficient, " +
+                "st.id AS emp_status_id, st.description AS emp_status_desc, " +
+                "a.id AS account_id_mapped, a.username, a.status_id AS account_status_id, " +
+                "st_acc.description AS account_status_desc, " +
+                "d.name AS department_name, " +
+                "tax.id AS tax_id, tax.num_dependents " +
+                "FROM employee e " +
+                "LEFT JOIN role r ON e.role_id = r.id " +
+                "LEFT JOIN salary s ON r.salary_id = s.id " +
+                "LEFT JOIN status st ON e.status_id = st.id " +
+                "LEFT JOIN account a ON e.account_id = a.id " +
+                "LEFT JOIN status st_acc ON a.status_id = st_acc.id " +
+                "LEFT JOIN department d ON e.department_id = d.id " +
+                "LEFT JOIN tax ON tax.employee_id = e.id " +
+                "WHERE e.id = ? LIMIT 1";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, employeeId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToDetailDTO(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving employee detail: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Map ResultSet từ getDetailById() → EmployeeDetailDTO
+     */
+    private EmployeeDetailDTO mapResultSetToDetailDTO(ResultSet rs) throws SQLException {
+        return EmployeeDetailDTO.builder()
+                // Base info
+                .id(rs.getInt("id"))
+                .employeeId(rs.getInt("id"))
+                .firstName(rs.getString("first_name"))
+                .lastName(rs.getString("last_name"))
+                .gender(rs.getString("gender"))
+                .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
+                .phone(rs.getString("phone"))
+                .email(rs.getString("email"))
+                .healthInsCode(rs.getString("health_ins_code"))
+
+                // Department & Role
+                .departmentId(rs.getObject("department_id") != null ? rs.getInt("department_id") : null)
+                .departmentName(rs.getString("department_name"))
+                .roleId(rs.getInt("role_id"))
+                .roleName(rs.getString("role_name"))
+
+                // Account info
+                .accountId(rs.getObject("account_id_mapped") != null ? rs.getInt("account_id_mapped") : 0)
+                .username(rs.getString("username"))
+                .accountStatusId(rs.getObject("account_status_id") != null ? rs.getInt("account_status_id") : 0)
+                .accountStatus(rs.getString("account_status_desc"))
+
+                // Employee status
+                .statusId(rs.getInt("status_id"))
+                .statusDescription(rs.getString("emp_status_desc"))
+
+                // Salary
+                .salaryId(rs.getObject("salary_base") != null ? 1 : 0) // Dummy ID, actual from role.salary_id
+                .baseSalary(rs.getObject("salary_base") != null ? rs.getBigDecimal("salary_base") : null)
+                .salaryCoefficient(
+                        rs.getObject("salary_coefficient") != null ? rs.getBigDecimal("salary_coefficient") : null)
+
+                // Tax
+                .taxId(rs.getObject("tax_id") != null ? rs.getInt("tax_id") : 0)
+                .numDependents(rs.getObject("num_dependents") != null ? rs.getInt("num_dependents") : null)
+
+                // Insurance & Support flags
+                .isSocialInsurance(rs.getBoolean("is_social_insurance"))
+                .isUnemploymentInsurance(rs.getBoolean("is_unemployment_insurance"))
+                .isPersonalIncomeTax(rs.getBoolean("is_personal_income_tax"))
+                .isTransportationSupport(rs.getBoolean("is_transportation_support"))
+                .isAccommodationSupport(rs.getBoolean("is_accommodation_support"))
+
+                // Timestamps
+                .createdAt(
+                        rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
+                .updatedAt(
+                        rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
+
+                .build();
     }
 }

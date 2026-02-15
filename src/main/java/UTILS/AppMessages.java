@@ -184,4 +184,5 @@ public class AppMessages {
     public static final String UNAUTHORIZED = "Bạn không có quyền để thực hiện thao tác này.";
     public static final String DATA_ALREADY_DELETED = "Dữ liệu này đã ở trạng thái Inactive (xóa hoặc ngừng hoạt động)";
     public static final String FORCE_RELOGIN = "Phiên làm việc hết hạn hoặc quyền đã thay đổi. Vui lòng đăng nhập lại.";
+    public static final String REQUEST_RELOGIN =  "Vui lòng đăng nhập lại.";
 }

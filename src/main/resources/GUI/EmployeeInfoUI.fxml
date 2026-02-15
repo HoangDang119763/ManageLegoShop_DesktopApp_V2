@@ -202,7 +202,7 @@
                         <Tab text="Bảo mật tài khoản">
                             <content>
                                 <VBox alignment="TOP_CENTER">
-                                    <padding><Insets bottom="15.0" left="20.0" right="20.0" top="10.0" /></padding>
+                                    <padding><Insets bottom="16.0" left="20.0" right="20.0" top="10.0" /></padding>
                                     <children>
                                         <VBox alignment="TOP_CENTER" spacing="12.0" styleClass="white-bg, shadow" VBox.vgrow="ALWAYS">
                                             <padding><Insets bottom="15.0" left="15.0" right="30.0" top="15.0" /></padding>
@@ -214,9 +214,9 @@
                                                 <VBox maxWidth="400.0" spacing="12.0">
                                                     <children>
                                                         <Label styleClass="label-a" text="Tên tài khoản:" /><TextField fx:id="lblUsername" editable="false" prefHeight="35.0" styleClass="textfield-1, readonly" />
-                                                        <Label styleClass="label-a" text="Mật khẩu cũ:" /><PasswordField fx:id="txtOldPassword" prefHeight="35.0" styleClass="textfield-1" />
-                                                        <Label styleClass="label-a" text="Mật khẩu mới:" /><PasswordField fx:id="txtNewPassword" prefHeight="35.0" styleClass="textfield-1" />
-                                                        <Label styleClass="label-a" text="Xác nhận lại:" /><PasswordField fx:id="txtConfirmPassword" prefHeight="35.0" styleClass="textfield-1" />
+                                                        <Label styleClass="label-a" text="Mật khẩu cũ:" /><PasswordField fx:id="txtOldPassword" prefHeight="35.0" promptText="●●●●●●●●" styleClass="textfield-1" />
+                                                        <Label styleClass="label-a" text="Mật khẩu mới:" /><PasswordField fx:id="txtNewPassword" prefHeight="35.0" promptText="●●●●●●●●" styleClass="textfield-1" />
+                                                        <Label styleClass="label-a" text="Xác nhận lại:" /><PasswordField fx:id="txtConfirmPassword" prefHeight="35.0" promptText="●●●●●●●●" styleClass="textfield-1" />
                                                     </children>
                                                     <VBox.margin><Insets top="10.0" /></VBox.margin>
                                                 </VBox>
@@ -238,5 +238,7 @@
                 </TabPane>
             </center>
         </BorderPane>
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
     </children>
+
 </AnchorPane>

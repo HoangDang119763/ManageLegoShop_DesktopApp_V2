@@ -115,21 +115,20 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.LOGIN_SUCCESS);
     }
 
-    public BUSResult changePasswordBySelf(AccountDTO obj, String oldPassword) {
-        if (obj == null || obj.getId() <= 0 || oldPassword == null) {
+    public BUSResult changePasswordBySelf(String username, String oldPassword, String newPassword) {
+        if (username == null || oldPassword == null || newPassword == null) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
-
-        // Chọc DB lấy bản ghi hiện tại để verify mật khẩu cũ
-        AccountDTO existingAcc = getById(obj.getId());
+        AccountDAL accountDAL = AccountDAL.getInstance();
+        AccountDTO existingAcc = accountDAL.getByUsername(username);
         if (existingAcc == null
                 || !PasswordUtils.getInstance().verifyPassword(oldPassword, existingAcc.getPassword())) {
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.ACCOUNT_OLD_PASSWORD_WRONG);
         }
 
         // Hash mật khẩu mới và lưu
-        obj.setPassword(PasswordUtils.getInstance().hashPassword(obj.getPassword()));
-        if (!AccountDAL.getInstance().changePasswordBySelf(obj)) {
+        String hashedNewPassword = PasswordUtils.getInstance().hashPassword(newPassword);
+        if (!accountDAL.updatePasswordAndForceRelogin(username, hashedNewPassword)) {
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
 
