@@ -1,11 +1,10 @@
 package DAL;
-import DTO.RolePermissionDTO;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import DTO.RolePermissionDTO;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class RolePermissionDAL extends BaseDAL<RolePermissionDTO, Integer> {
     private static final RolePermissionDAL INSTANCE = new RolePermissionDAL();
@@ -20,86 +19,82 @@ public class RolePermissionDAL extends BaseDAL<RolePermissionDTO, Integer> {
 
     @Override
     protected RolePermissionDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
-        return new RolePermissionDTO (
+        return new RolePermissionDTO(
                 resultSet.getInt("role_id"),
-                resultSet.getInt("permission_id"),
-                resultSet.getBoolean("status")
-        );
+                resultSet.getInt("permission_id"));
     }
 
     @Override
     protected String getInsertQuery() {
-        return "(role_id, permission_id, status) VALUES (?, ?, ?)";
+        // Chỉ còn 2 cột ID
+        return "(role_id, permission_id) VALUES (?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, RolePermissionDTO obj) throws SQLException {
         statement.setInt(1, obj.getRoleId());
         statement.setInt(2, obj.getPermissionId());
-        statement.setBoolean(3, obj.isStatus());
     }
 
-    @Override
-    protected String getUpdateQuery() {
-        return "SET status = ? WHERE role_id = ? AND permission_id = ?";
-    }
-
-    @Override
-    protected void setUpdateParameters(PreparedStatement statement, RolePermissionDTO obj) throws SQLException {
-        statement.setBoolean(1, obj.isStatus());
-        statement.setInt(2, obj.getRoleId());
-        statement.setInt(3, obj.getPermissionId());
-    }
-
-    public boolean insertDefaultRolePermissionByRoleId(int roleId) {
-        final String query = "INSERT INTO role_permission (role_id, permission_id, status) SELECT ?, id, 0 FROM permission";
-        try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setInt(1, roleId);
-            return statement.executeUpdate() > 0;
+    /**
+     * Trong mô hình mới, ta không dùng UPDATE.
+     * Để tước quyền, ta dùng DELETE theo RoleID và PermissionID.
+     */
+    public boolean revokePermission(int roleId, int permissionId) {
+        String query = "DELETE FROM role_permission WHERE role_id = ? AND permission_id = ?";
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, roleId);
+            ps.setInt(2, permissionId);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error inserting default permissions: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
 
-    public boolean insertListRolePermission(int roleId, ArrayList<RolePermissionDTO> rolePermission) {
-        final String query = "INSERT INTO role_permission (role_id, permission_id, status) VALUES (?, ?, ?)";
-        try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
-            for (RolePermissionDTO permission : rolePermission) {
-                statement.setInt(1, roleId);
-                statement.setInt(2, permission.getPermissionId());
-                statement.setBoolean(3, permission.isStatus());
-
-                statement.addBatch();
+    public boolean exists(int roleId, int permissionId) {
+        String query = "SELECT 1 FROM role_permission WHERE role_id = ? AND permission_id = ?";
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, roleId);
+            ps.setInt(2, permissionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
             }
-
-            int[] results = statement.executeBatch();
-
-            for (int result : results) {
-                if (result <= 0) {
-                    connection.rollback();
-                    return false;
-                }
-            }
-
-            return true;
         } catch (SQLException e) {
-            System.err.println("Error insert list role permission: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean insertListRolePermission(int roleId, ArrayList<Integer> permissionIds) {
+        String query = "INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)";
+        try (Connection connection = connectionFactory.newConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (Integer pId : permissionIds) {
+                    statement.setInt(1, roleId);
+                    statement.setInt(2, pId);
+                    statement.addBatch();
+                }
+                statement.executeBatch();
+                connection.commit();
+                return true;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         }
     }
 
     public ArrayList<RolePermissionDTO> getAllRolePermissionByRoleId(int roleID) {
-        final String query = "SELECT * FROM role_permission WHERE role_id = ?";
+        String query = "SELECT * FROM role_permission WHERE role_id = ?";
         ArrayList<RolePermissionDTO> list = new ArrayList<>();
-
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
+                PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, roleID);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
@@ -107,9 +102,32 @@ public class RolePermissionDAL extends BaseDAL<RolePermissionDTO, Integer> {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error retrieving " + table + ": " + e.getMessage());
+            e.printStackTrace();
         }
         return list;
     }
 
+    public Set<Integer> getAllowedModuleIdsByRoleId(int roleId) {
+        Set<Integer> moduleIds = new HashSet<>();
+        // SQL: Lấy tất cả module_id duy nhất mà roleId này có quyền
+        String sql = "SELECT DISTINCT p.module_id " +
+                "FROM role_permission rp " +
+                "JOIN permission p ON rp.permission_id = p.id " +
+                "WHERE rp.role_id = ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, roleId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    moduleIds.add(rs.getInt("module_id"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy allowedModuleIds: " + e.getMessage());
+        }
+        return moduleIds;
+    }
 }

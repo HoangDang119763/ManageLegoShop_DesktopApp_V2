@@ -43,8 +43,8 @@ public class ImportProductModalController implements IModalController {
 
     @FXML
     public void initialize() {
-        if (ProductBUS.getInstance().getAllLocal().isEmpty())
-            ProductBUS.getInstance().loadLocal();
+        // [STATELESS] No pre-load needed - ProductBUS loads on-demand from HikariCP
+        // pool
         setupListeners();
     }
 

@@ -288,24 +288,45 @@ public class UiUtils {
 
     public void openStage(String fxmlFile, String title) {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(LoginController.class.getResource(fxmlFile));
-            Parent root = fxmlLoader.load(); // Gọi .load() để lấy root từ FXML
+            // Sử dụng getClass() để lấy resource tương đối từ root của project
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(fxmlFile));
+            Parent root = fxmlLoader.load();
 
             Stage stage = new Stage();
+            // Set fill là TRANSPARENT để hỗ trợ các giao diện bo góc/đổ bóng từ CSS
             Scene scene = new Scene(root);
+            scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
 
-            UiUtils.gI().makeWindowDraggable(root, stage);
+            makeWindowDraggable(root, stage);
             stage.initStyle(StageStyle.TRANSPARENT);
 
             stage.setTitle(title);
             stage.setScene(scene);
-
             stage.show();
             stage.requestFocus();
 
         } catch (IOException e) {
-            System.err.println("error");
             e.printStackTrace();
+        }
+    }
+
+    public Stage openStage1(String fxmlFile, String title) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(fxmlFile));
+            Parent root = fxmlLoader.load();
+            Stage stage = new Stage();
+            Scene scene = new Scene(root);
+            scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+
+            makeWindowDraggable(root, stage);
+            stage.initStyle(StageStyle.TRANSPARENT);
+            stage.setTitle(title);
+            stage.setScene(scene);
+            stage.show();
+            return stage; // Trả về stage để Controller gọi xong có thể dùng ngay
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -336,4 +357,68 @@ public class UiUtils {
         }
     }
 
+    public <T> void formatInactiveComboBox(
+            ComboBox<T> comboBox,
+            Function<T, String> nameExtractor,
+            Function<T, Integer> statusExtractor,
+            int inactiveStatusId) {
+        javafx.util.Callback<javafx.scene.control.ListView<T>, ListCell<T>> cellFactory = lv -> new ListCell<T>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    String name = nameExtractor.apply(item);
+                    int statusId = statusExtractor.apply(item);
+
+                    if (statusId == inactiveStatusId) {
+                        Label lblName = new Label(name);
+                        lblName.setStyle("-fx-text-fill: black;");
+
+                        Label lblStatus = new Label(" (Ngừng dùng/Vô hiệu)");
+                        lblStatus.setStyle("-fx-text-fill: #444444; -fx-font-style: italic; -fx-font-size: 0.9em;");
+
+                        HBox container = new HBox(lblName, lblStatus);
+                        container.setPadding(new javafx.geometry.Insets(5, 0, 5, 0));
+
+                        container.setSpacing(2);
+                        setGraphic(container);
+                        setText(null);
+                    } else {
+                        setText(name);
+                        setGraphic(null);
+                    }
+                }
+            }
+        };
+
+        comboBox.setCellFactory(cellFactory);
+        comboBox.setButtonCell(cellFactory.call(null));
+    }
+
+    public <T> void addSmartInactiveWarningListener(
+            ComboBox<T> comboBox,
+            Function<T, Integer> idExtractor, // Để lấy ID của đối tượng
+            Function<T, Integer> statusExtractor, // Để lấy StatusId
+            int inactiveStatusId,
+            int initialId, // ID ban đầu của sản phẩm (nếu thêm mới thì truyền -1)
+            String message) {
+        comboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                int currentId = idExtractor.apply(newVal);
+                int currentStatusId = statusExtractor.apply(newVal);
+
+                // CHỈ CẢNH BÁO KHI:
+                // 1. ID mới khác ID ban đầu (người dùng có sự thay đổi)
+                // 2. Trạng thái mới là Inactive
+                if (currentId != initialId && currentStatusId == inactiveStatusId) {
+                    comboBox.setStyle("-fx-border-color: #ff0000; -fx-border-width: 2px;"); // Màu cam cảnh báo
+                } else {
+                    comboBox.setStyle(null); // Reset về bình thường
+                }
+            }
+        });
+    }
 }

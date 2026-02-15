@@ -13,7 +13,7 @@ public class Status {
 
     // Enum cho Sản phẩm
     public enum Product {
-        ACTIVE, INACTIVE
+        ACTIVE, SUSPENDED, INACTIVE
     }
 
     // Enum cho Thể loại

@@ -31,34 +31,27 @@ public class EmploymentHistoryViewProvider {
         DepartmentBUS departmentBUS = DepartmentBUS.getInstance();
         RoleBUS roleBUS = RoleBUS.getInstance();
 
-        // Load data if needed
-        if (historyBUS.isLocalEmpty())
-            historyBUS.loadLocal();
-        if (departmentBUS.isLocalEmpty())
-            departmentBUS.loadLocal();
-        if (roleBUS.isLocalEmpty())
-            roleBUS.loadLocal();
-
         // Get job history for employee
-        ArrayList<EmploymentHistoryDTO> histories = historyBUS.getByEmployeeIdLocalDecrease(employeeId);
+        // ArrayList<EmploymentHistoryDTO> histories =
+        // historyBUS.getByEmployeeIdDecrease(employeeId);
         ArrayList<EmploymentHistoryDetailDTO> details = new ArrayList<>();
 
-        for (EmploymentHistoryDTO history : histories) {
-            DepartmentDTO dept = departmentBUS.getByIdLocal(history.getDepartmentId());
-            RoleDTO role = roleBUS.getByIdLocal(history.getRoleId());
+        // for (EmploymentHistoryDTO history : histories) {
+        // DepartmentDTO dept = departmentBUS.getById(history.getDepartmentId());
+        // RoleDTO role = roleBUS.getById(history.getRoleId());
 
-            details.add(new EmploymentHistoryDetailDTO(
-                    history.getId(),
-                    history.getEmployeeId(),
-                    history.getEffectiveDate(),
-                    history.getDepartmentId(),
-                    dept != null ? dept.getName() : "",
-                    history.getRoleId(),
-                    role != null ? role.getName() : "",
-                    history.getReason(),
-                    history.getCreatedAt(),
-                    history.getApproverId()));
-        }
+        // details.add(new EmploymentHistoryDetailDTO(
+        // history.getId(),
+        // history.getEmployeeId(),
+        // history.getEffectiveDate(),
+        // history.getDepartmentId(),
+        // dept != null ? dept.getName() : "",
+        // history.getRoleId(),
+        // role != null ? role.getName() : "",
+        // history.getReason(),
+        // history.getCreatedAt(),
+        // history.getApproverId()));
+        // }
 
         return details;
     }

@@ -3,7 +3,6 @@ package BUS;
 import DAL.DepartmentDAL;
 import DTO.DepartmentDTO;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class DepartmentBUS extends BaseBUS<DepartmentDTO, Integer> {
     private static final DepartmentBUS INSTANCE = new DepartmentBUS();
@@ -25,22 +24,12 @@ public class DepartmentBUS extends BaseBUS<DepartmentDTO, Integer> {
         return obj.getId();
     }
 
-    public ArrayList<DepartmentDTO> getAllLocal() {
-        ArrayList<DepartmentDTO> result = new ArrayList<>();
-        for (DepartmentDTO dept : arrLocal) {
-            result.add(new DepartmentDTO(dept));
+    @Override
+    public DepartmentDTO getById(Integer id) {
+        if (id == null || id <=0 ) {
+            return null;
         }
-        return result;
+        return DepartmentDAL.getInstance().getById(id);
     }
 
-    public DepartmentDTO getByNameLocal(String name) {
-        if (name == null || name.isEmpty())
-            return null;
-        for (DepartmentDTO dept : arrLocal) {
-            if (dept.getName() != null && dept.getName().equalsIgnoreCase(name)) {
-                return new DepartmentDTO(dept);
-            }
-        }
-        return null;
-    }
 }

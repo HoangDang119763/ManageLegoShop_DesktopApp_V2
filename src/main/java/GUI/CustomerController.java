@@ -68,8 +68,6 @@ public class CustomerController implements IController {
     @FXML
     public void initialize() {
         customerBUS = CustomerBUS.getInstance();
-        if (CustomerBUS.getInstance().isLocalEmpty())
-            CustomerBUS.getInstance().loadLocal();
         session = SessionManagerService.getInstance();
         tblCustomer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblCustomer.getSelectionModel().clearSelection());
@@ -89,7 +87,7 @@ public class CustomerController implements IController {
         StatusBUS statusBUS = StatusBUS.getInstance();
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus);
-        cbStatusFilter.getItems().addAll(statusBUS.getAllByTypeLocal(StatusType.CUSTOMER));
+        cbStatusFilter.getItems().addAll(statusBUS.getAllByType(StatusType.CUSTOMER));
         cbSearchBy.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
     }
@@ -104,7 +102,7 @@ public class CustomerController implements IController {
         tlb_col_dob.setCellValueFactory(cellData -> new SimpleStringProperty(
                 validationUtils.formatDateTime(cellData.getValue().getDateOfBirth())));
         tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(
-                StatusBUS.getInstance().getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
+                StatusBUS.getInstance().getById(cellData.getValue().getStatusId()).getDescription()));
         tlb_col_updatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
                 validationUtils.formatDateTimeWithHour(cellData.getValue().getUpdatedAt())));
         UiUtils.gI().addTooltipToColumn(tlb_col_fullName, 20);
@@ -169,7 +167,7 @@ public class CustomerController implements IController {
             return;
         }
 
-        BUSResult updateResult = SecureExecutor.runSafeBUSResult(PermissionKey.CUSTOMER_DELETE,
+        BUSResult updateResult = SecureExecutor.executeSafeBusResult(PermissionKey.CUSTOMER_DELETE,
                 () -> customerBUS.delete(selectedCustomer.getId()));
 
         if (updateResult.isSuccess()) {
@@ -205,7 +203,7 @@ public class CustomerController implements IController {
     public void applyFilters() {
         int statusId = statusFilter == null ? -1 : statusFilter.getId();
         tblCustomer.setItems(FXCollections.observableArrayList(
-                CustomerBUS.getInstance().filterCustomers(searchBy, keyword, statusId)));
+                CustomerBUS.getInstance().filterCustomers(keyword, statusId, 0, 100)));
         tblCustomer.getSelectionModel().clearSelection();
     }
 

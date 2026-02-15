@@ -3,8 +3,6 @@ package BUS;
 import DTO.DeductionDTO;
 import DAL.DeductionDAL;
 import UTILS.ValidationUtils;
-import SERVICE.AuthorizationService;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -70,17 +68,7 @@ public class DeductionBUS extends BaseBUS<DeductionDTO, Integer> {
         if (!isValidDeductionInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (DeductionDAL.getInstance().insert(obj)) {
-            if (arrLocal.isEmpty()) {
-                loadLocal();
-            } else {
-                arrLocal.add(new DeductionDTO(obj));
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -88,38 +76,12 @@ public class DeductionBUS extends BaseBUS<DeductionDTO, Integer> {
         if (!isValidDeductionInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (DeductionDAL.getInstance().update(obj)) {
-            for (DeductionDTO deduction : arrLocal) {
-                if (deduction.getId() == obj.getId()) {
-                    deduction.setEmployeeId(obj.getEmployeeId());
-                    deduction.setSalaryPeriod(obj.getSalaryPeriod());
-                    deduction.setHealthInsurance(obj.getHealthInsurance());
-                    deduction.setSocialInsurance(obj.getSocialInsurance());
-                    deduction.setUnemploymentInsurance(obj.getUnemploymentInsurance());
-                    deduction.setPersonalIncomeTax(obj.getPersonalIncomeTax());
-                    deduction.setCreatedAt(obj.getCreatedAt());
-                    deduction.setUpdatedAt(obj.getUpdatedAt());
-                    break;
-                }
-            }
-            return true;
-        }
         return false;
     }
 
     public boolean delete(Integer id, int employeeRoleId, int employeeLoginId) {
         if (id == null || id <= 0) {
             return false;
-        }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (DeductionDAL.getInstance().delete(id)) {
-            arrLocal.removeIf(deduction -> deduction.getId() == id);
-            return true;
         }
         return false;
     }

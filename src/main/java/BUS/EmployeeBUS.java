@@ -3,17 +3,16 @@ package BUS;
 
 import DAL.EmployeeDAL;
 import DTO.EmployeeDTO;
+import DTO.EmployeeSessionDTO;
 import DTO.BUSResult;
 import ENUM.*;
 import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
     private static final EmployeeBUS INSTANCE = new EmployeeBUS();
-    private final HashMap<Integer, EmployeeDTO> mapByAccountId = new HashMap<>();
 
     private EmployeeBUS() {
     }
@@ -32,42 +31,31 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         return obj.getId();
     }
 
-    // Không lấy employeeId = 1 (system employee)
-    @Override
-    public ArrayList<EmployeeDTO> getAllLocal() {
-        return arrLocal.stream()
-                .filter(emp -> emp.getId() != 1)
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    @Override
-    public void loadLocal() {
-        super.loadLocal();
-        mapByAccountId.clear();
-        for (EmployeeDTO emp : arrLocal) {
-            if (emp.getAccountId() != null && emp.getAccountId() > 0) {
-                mapByAccountId.put(emp.getAccountId(), emp);
-            }
-        }
-    }
-
     public EmployeeDTO getByAccountIdLocal(int id) {
         if (id <= 0)
             return null;
-        EmployeeDTO emp = mapByAccountId.get(id);
-        return emp != null ? new EmployeeDTO(emp) : null;
+        return EmployeeDAL.getInstance().getByAccountId(id);
     }
 
-    /**
-     * Xóa nhân viên
-     * ⚠️ Caller PHẢI kiểm tra quyền trước bằng AuthorizationService hoặc
-     * SessionManager
-     * 
-     * @param id              ID của nhân viên cần xóa
-     * @param employee_roleId Chức vụ của người thực hiện
-     * @param employeeLoginId ID của người đăng nhập thực hiện xóa
-     * @return BUSResult
-     */
+    public EmployeeDTO getByAccountId(int accountId) {
+        if (accountId <= 0)
+            return null;
+        return EmployeeDAL.getInstance().getByAccountId(accountId);
+    }
+
+    public EmployeeSessionDTO getEmployeeSessionByAccountId(int accountId) {
+        if (accountId <= 0)
+            return null;
+        return EmployeeDAL.getInstance().getEmployeeSessionByAccountId(accountId);
+    }
+
+    @Override
+    public EmployeeDTO getById(Integer id) {
+        if (id <= 0)
+            return null;
+        return EmployeeDAL.getInstance().getById(id);
+    }
+
     public BUSResult delete(Integer id, int employee_roleId, int employeeLoginId) {
         if (id == null || id <= 0)
             return new BUSResult(BUSOperationResult.INVALID_PARAMS);
@@ -81,19 +69,16 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (employee_roleId <= 0)
             return new BUSResult(BUSOperationResult.INVALID_PARAMS);
 
-        EmployeeDTO targetEmployee = getByIdLocal(id);
+        // [STATELESS] Use DAL to check existence
+        EmployeeDTO targetEmployee = getById(id);
         if (targetEmployee == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
         if (!EmployeeDAL.getInstance().delete(id))
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
 
-        for (EmployeeDTO employee : arrLocal) {
-            if (Objects.equals(employee.getId(), id)) {
-                // employee.setStatus(false);
-                break;
-            }
-        }
+        // [STATELESS] No cache update needed - data will refresh from DB on next
+        // getAll()
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_DELETE_SUCCESS);
     }
 
@@ -109,35 +94,15 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
      */
     public BUSResult insert(EmployeeDTO obj, int employee_roleId, int employeeLoginId) {
         if (obj == null || obj.getRoleId() <= 0 || employee_roleId <= 0 || !isValidEmployeeInput(obj)) {
-            return new BUSResult(BUSOperationResult.INVALID_DATA);
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
 
         if (!EmployeeDAL.getInstance().insert(obj)) {
-            return new BUSResult(BUSOperationResult.DB_ERROR);
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
-        arrLocal.add(new EmployeeDTO(obj));
-        return new BUSResult(BUSOperationResult.SUCCESS);
-    }
-
-    // Cập nhật cache local (arrLocal, mapLocal, mapByAccountId)
-    private void updateLocalCache(EmployeeDTO obj) {
-        EmployeeDTO newEmp = new EmployeeDTO(obj);
-
-        // Update primary map
-        mapLocal.put(obj.getId(), newEmp);
-
-        // Update secondary index
-        if (obj.getAccountId() != null) {
-            mapByAccountId.put(obj.getAccountId(), newEmp);
-        }
-
-        // Update arrLocal nếu cần giữ list
-        for (int i = 0; i < arrLocal.size(); i++) {
-            if (Objects.equals(arrLocal.get(i).getId(), obj.getId())) {
-                arrLocal.set(i, newEmp);
-                break;
-            }
-        }
+        // [STATELESS] No cache update needed - data will refresh from DB on next
+        // getAll()
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_ADD_SUCCESS);
     }
 
     private boolean isValidEmployeeInput(EmployeeDTO obj) {
@@ -145,9 +110,9 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return false;
         }
 
-        if (!RoleBUS.getInstance().isValidRole(obj.getRoleId())) {
-            return false;
-        }
+        // if (!RoleBUS.getInstance().isValidRole(obj.getRoleId())) {
+        // return false;
+        // }
 
         obj.setDateOfBirth(obj.getDateOfBirth() != null ? obj.getDateOfBirth() : null);
 
@@ -169,7 +134,8 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
         keyword = keyword.trim().toLowerCase();
 
-        for (EmployeeDTO emp : arrLocal) {
+        // [STATELESS] Use getAll() from DAL instead of arrLocal
+        for (EmployeeDTO emp : getAll()) {
             boolean matchesSearch = true;
             boolean matchesRole = (roleIdFilter == -1) || (emp.getRoleId() == roleIdFilter);
             boolean matchesStatus = (statusFilter == -1) || (emp.getStatusId() == statusFilter); // Sửa lỗi ở đây
@@ -200,7 +166,8 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return 0;
 
         int num = 0; // Khởi tạo biến đếm
-        for (EmployeeDTO e : arrLocal) {
+        // [STATELESS] Use getAll() from DAL instead of arrLocal
+        for (EmployeeDTO e : getAll()) {
             if (e.getRoleId() == roleId) {
                 num++;
             }
@@ -247,7 +214,8 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
 
-        EmployeeDTO existing = getByIdLocal(obj.getId());
+        // [STATELESS] Fetch fresh data from DB
+        EmployeeDTO existing = getById(obj.getId());
         if (existing != null &&
                 Objects.equals(existing.getFirstName(), validator.normalizeWhiteSpace(obj.getFirstName())) &&
                 Objects.equals(existing.getLastName(), validator.normalizeWhiteSpace(obj.getLastName())) &&
@@ -261,7 +229,6 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
 
-        updateLocalCache(obj);
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_PERSONAL_UPDATE_SUCCESS);
     }
 
@@ -313,7 +280,8 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.INVALID_DATA);
         }
 
-        EmployeeDTO existing = getByIdLocal(obj.getId());
+        // [STATELESS] Fetch fresh data from DB
+        EmployeeDTO existing = getById(obj.getId());
         if (existing != null &&
                 Objects.equals(existing.getFirstName(), validator.normalizeWhiteSpace(obj.getFirstName())) &&
                 Objects.equals(existing.getLastName(), validator.normalizeWhiteSpace(obj.getLastName())) &&
@@ -328,7 +296,6 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.DB_ERROR);
         }
 
-        updateLocalCache(obj);
         return new BUSResult(BUSOperationResult.SUCCESS);
     }
 
@@ -348,7 +315,8 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS);
         }
 
-        EmployeeDTO existing = getByIdLocal(obj.getId());
+        // [STATELESS] Fetch fresh data from DB
+        EmployeeDTO existing = getById(obj.getId());
         if (existing != null &&
                 Objects.equals(existing.getDepartmentId(), obj.getDepartmentId()) &&
                 existing.getStatusId() == obj.getStatusId()) {
@@ -359,7 +327,6 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.DB_ERROR);
         }
 
-        updateLocalCache(obj);
         return new BUSResult(BUSOperationResult.SUCCESS);
     }
 
@@ -379,11 +346,13 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS);
         }
 
-        if (obj.getRoleId() <= 0 || !RoleBUS.getInstance().isValidRole(obj.getRoleId())) {
-            return new BUSResult(BUSOperationResult.INVALID_DATA);
-        }
+        // if (obj.getRoleId() <= 0 ||
+        // !RoleBUS.getInstance().isValidRole(obj.getRoleId())) {
+        // return new BUSResult(BUSOperationResult.INVALID_DATA);
+        // }
 
-        EmployeeDTO existing = getByIdLocal(obj.getId());
+        // [STATELESS] Fetch fresh data from DB
+        EmployeeDTO existing = getById(obj.getId());
         if (existing != null &&
                 existing.getRoleId() == obj.getRoleId() &&
                 existing.isSocialInsurance() == obj.isSocialInsurance() &&
@@ -398,7 +367,6 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.DB_ERROR);
         }
 
-        updateLocalCache(obj);
         return new BUSResult(BUSOperationResult.SUCCESS);
     }
 
@@ -418,7 +386,8 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS);
         }
 
-        EmployeeDTO existing = getByIdLocal(obj.getId());
+        // [STATELESS] Fetch fresh data from DB
+        EmployeeDTO existing = getById(obj.getId());
         if (existing != null && Objects.equals(existing.getAccountId(), obj.getAccountId())) {
             return new BUSResult(BUSOperationResult.NO_CHANGES);
         }
@@ -427,12 +396,12 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.DB_ERROR);
         }
 
-        updateLocalCache(obj);
         return new BUSResult(BUSOperationResult.SUCCESS);
     }
 
     private boolean isDuplicateEmployee(EmployeeDTO obj) {
-        EmployeeDTO existingEm = getByIdLocal(obj.getId());
+        // [STATELESS] Use DAL call instead of local cache
+        EmployeeDTO existingEm = getById(obj.getId());
         ValidationUtils validate = ValidationUtils.getInstance();
         // Kiểm tra xem tên, mô tả, và hệ số lương có trùng không
         return existingEm != null &&
@@ -441,5 +410,9 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
                 Objects.equals(existingEm.getDateOfBirth(), obj.getDateOfBirth()) &&
                 Objects.equals(existingEm.getStatusId(), obj.getStatusId()) &&
                 Objects.equals(existingEm.getRoleId(), obj.getRoleId());
+    }
+
+    public int countByRoleId(int roleId) {
+        return EmployeeDAL.getInstance().countByRoleId(roleId);
     }
 }

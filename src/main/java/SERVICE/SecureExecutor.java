@@ -8,8 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Supplier;
 
+import BUS.AccountBUS;
+
 /**
- * SecureExecutor - Centralized permission checking
+ * SecureExecutor - Centralized permission checking + security flag validation
+ * 
+ * ✅ Phase 1: Permission check (role-based)
+ * ✅ Phase 2: Security flag check (require_relogin)
+ * ✅ Phase 3: Execute business logic
  */
 @Slf4j
 public class SecureExecutor {
@@ -87,17 +93,23 @@ public class SecureExecutor {
     // Dùng khi BUS trả BUSResult (code + message)
     // Đây là method CHUẨN cho update/insert/delete business logic
     /*
-     * BUSResult res = SecureExecutor.runSafeBUSResult(
+     * BUSResult res = SecureExecutor.executeSafeBusResult(
      * PermissionKey.EMPLOYEE_UPDATE,
      * () -> employeeBUS.update(emp)
      * );
      */
-    public static BUSResult runSafeBUSResult(
-            PermissionKey key,
-            Supplier<BUSResult> action) {
-
+    public static BUSResult executeSafeBusResult(PermissionKey key, Supplier<BUSResult> action) {
+        // 1. Check quyền trên RAM (Cực nhanh)
         if (!SessionManagerService.getInstance().hasPermission(key)) {
             return new BUSResult(BUSOperationResult.UNAUTHORIZED, AppMessages.UNAUTHORIZED);
+        }
+
+        // 2. Check hiệu lực trên DB (Chống Multi-user conflict)
+        if (isSessionInvalid()) {
+            log.warn("Session invalidated for user {}. Relogin required.",
+                    SessionManagerService.getInstance().employeeLoginId());
+            return new BUSResult(BUSOperationResult.REQUIRE_RELOGIN,
+                    AppMessages.FORCE_RELOGIN);
         }
 
         try {
@@ -109,7 +121,7 @@ public class SecureExecutor {
     }
 
     // ==========================
-    // 5️⃣ PUBLIC EXECUTE
+    // 6️⃣ PUBLIC EXECUTE
     // ==========================
     // Dùng cho các chức năng public hoặc personal (update profile, login, register)
     // Không check permission
@@ -134,5 +146,16 @@ public class SecureExecutor {
             log.error("Public action error", e);
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
+    }
+
+    private static boolean isSessionInvalid() {
+        SessionManagerService session = SessionManagerService.getInstance();
+        int empId = session.employeeLoginId();
+        if (empId <= 0)
+            return true;
+
+        // CHỌC DB: Chỉ lấy đúng 1 giá trị boolean, cực nhẹ
+        // Bạn cần hàm này trong AccountBUS hoặc EmployeeBUS
+        return AccountBUS.getInstance().isRequireRelogin(empId);
     }
 }

@@ -3,7 +3,6 @@ package BUS;
 import DTO.ReportDTO;
 import DAL.ReportDAL;
 import UTILS.ValidationUtils;
-import SERVICE.AuthorizationService;
 import java.util.ArrayList;
 
 public class ReportBUS extends BaseBUS<ReportDTO, Integer> {
@@ -67,17 +66,7 @@ public class ReportBUS extends BaseBUS<ReportDTO, Integer> {
         if (!isValidReportInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (ReportDAL.getInstance().insert(obj)) {
-            if (arrLocal.isEmpty()) {
-                loadLocal();
-            } else {
-                arrLocal.add(new ReportDTO(obj));
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -85,23 +74,7 @@ public class ReportBUS extends BaseBUS<ReportDTO, Integer> {
         if (!isValidReportInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (ReportDAL.getInstance().update(obj)) {
-            for (ReportDTO report : arrLocal) {
-                if (report.getId() == obj.getId()) {
-                    report.setTitle(obj.getTitle());
-                    report.setDescription(obj.getDescription());
-                    report.setCreatedAt(obj.getCreatedAt());
-                    report.setLevel(obj.getLevel());
-                    report.setCategory(obj.getCategory());
-                    report.setEmployeeId(obj.getEmployeeId());
-                    break;
-                }
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -109,13 +82,7 @@ public class ReportBUS extends BaseBUS<ReportDTO, Integer> {
         if (id == null || id <= 0) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (ReportDAL.getInstance().delete(id)) {
-            arrLocal.removeIf(report -> report.getId() == id);
-            return true;
-        }
+
         return false;
     }
 

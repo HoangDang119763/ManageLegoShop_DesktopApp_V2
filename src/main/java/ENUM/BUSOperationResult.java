@@ -15,6 +15,9 @@ package ENUM;
  * Controller/SecureExecutor)
  * - NOT_FOUND (6): Record không tìm thấy
  * - CONFLICT (7): Dữ liệu xung đột (duplicate, foreign key, etc)
+ * - REQUIRE_RELOGIN (8): 🔥 NEW - Dữ liệu người dùng thay đổi, buộc đăng nhập
+ * lại
+ * - FAIL (9): Các trường hợp fail khác
  */
 public enum BUSOperationResult {
     // Success cases
@@ -27,6 +30,7 @@ public enum BUSOperationResult {
     UNAUTHORIZED,
     NOT_FOUND,
     CONFLICT,
+    REQUIRE_RELOGIN,
     FAIL;
 
     /**

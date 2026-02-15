@@ -1,9 +1,12 @@
 package GUI;
 
-import DTO.AccountDTO;
-import SERVICE.LoginService;
+import BUS.AccountBUS;
+import BUS.ModuleBUS;
+import BUS.StatusBUS;
+import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -11,6 +14,8 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import java.util.prefs.Preferences;
 
@@ -28,11 +33,16 @@ public class LoginController {
     private TextField txtUsername;
     @FXML
     private CheckBox ckbRememberMe;
+    @FXML
+    StackPane loadingOverlay;
     private Preferences prefs;
 
     @FXML
     public void initialize() {
         prefs = Preferences.userNodeForPackage(LoginController.class);
+        // Tải 2 dữ liệu cứng
+        StatusBUS.getInstance().loadCache();
+        ModuleBUS.getInstance().loadCache();
 
         // Kiểm tra xem rememberMe có được bật không
         boolean rememberMe = prefs.getBoolean("rememberMe", false);
@@ -63,31 +73,25 @@ public class LoginController {
             return;
         }
 
-        AccountDTO account = new AccountDTO(-1, username, password, -1);
-        int loginResult = LoginService.getInstance().checkLogin(account);
-        if (loginResult > 0) { // Đăng nhập thành công (ID > 0)
-            NotificationUtils.showInfoAlert(AppMessages.LOGIN_SUCCESS, AppMessages.DIALOG_TITLE);
+        TaskUtil.executePublic(
+                loadingOverlay,
+                // 1. Chỉ truyền logic BUS thuần túy
+                () -> AccountBUS.getInstance().authenticate(username, password),
 
-            // Xử lý Remember Me
-            prefs.putBoolean("rememberMe", ckbRememberMe.isSelected());
-            if (ckbRememberMe.isSelected()) {
-                prefs.put("savedUsername", username);
-                prefs.put("savedPassword", password);
-            } else {
-                prefs.remove("savedUsername");
-                prefs.remove("savedPassword");
-            }
+                // 2. Xử lý khi thành công (Chạy trên UI Thread)
+                result -> {
+                    loginBtn.getScene().getWindow().hide();
 
-            // Chuyển màn hình
-            loginBtn.getScene().getWindow().hide();
-            UiUtils.gI().openStage("/GUI/NavigatePermission.fxml", "Danh sách chức năng");
+                    Stage navigateStage = UiUtils.gI().openStage1(
+                            "/GUI/NavigatePermission.fxml",
+                            "Danh sách chức năng");
 
-        } else if (loginResult == -2) {
-            NotificationUtils.showErrorAlert(AppMessages.LOGIN_ACCOUNT_LOCKED, AppMessages.DIALOG_TITLE);
-        } else if (loginResult == -3) {
-            NotificationUtils.showErrorAlert(AppMessages.LOGIN_EMPLOYEE_INVALID, AppMessages.DIALOG_TITLE);
-        } else {
-            NotificationUtils.showErrorAlert(AppMessages.LOGIN_INVALID_CREDENTIALS, AppMessages.DIALOG_TITLE);
-        }
+                    if (navigateStage != null) {
+                        NotificationUtils.showToast(
+                                navigateStage,
+                                AppMessages.LOGIN_SUCCESS + " - Chào "
+                                        + SessionManagerService.getInstance().getLoggedName());
+                    }
+                });
     }
 }

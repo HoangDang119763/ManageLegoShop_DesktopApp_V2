@@ -66,12 +66,10 @@ public class SupplierController implements IController {
     @FXML
     public void initialize() {
         supplierBUS = SupplierBUS.getInstance();
-        if (supplierBUS.isLocalEmpty())
-            supplierBUS.loadLocal();
+        // [STATELESS] No pre-load needed - SupplierBUS loads on-demand
 
         statusBUS = StatusBUS.getInstance();
-        if (statusBUS.isLocalEmpty())
-            statusBUS.loadLocal();
+        // [STATELESS] Data loads on-demand via HikariCP
 
         tblSupplier.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblSupplier.getSelectionModel().clearSelection());
@@ -90,7 +88,7 @@ public class SupplierController implements IController {
         cbSearchBy.getItems().addAll("Mã nhà cung cấp", "Tên nhà cung cấp");
         cbSearchBy.getSelectionModel().selectFirst();
 
-        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.SUPPLIER);
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByType(StatusType.SUPPLIER);
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus);
         cbStatusFilter.getItems().addAll(statusList);
@@ -106,7 +104,7 @@ public class SupplierController implements IController {
         tlb_col_address.setCellValueFactory(new PropertyValueFactory<>("address"));
 
         tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(
-                statusBUS.getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
+                statusBUS.getById(cellData.getValue().getStatusId()).getDescription()));
 
         UiUtils.gI().addTooltipToColumn(tlb_col_name, 20);
         UiUtils.gI().addTooltipToColumn(tlb_col_email, 20);

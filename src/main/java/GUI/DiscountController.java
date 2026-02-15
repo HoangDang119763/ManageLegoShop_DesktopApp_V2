@@ -9,7 +9,6 @@ import ENUM.PermissionKey;
 import INTERFACE.IController;
 import SERVICE.DiscountService;
 import SERVICE.SessionManagerService;
-import UTILS.AvailableUtils;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
@@ -56,10 +55,6 @@ public class DiscountController implements IController {
 
     @FXML
     public void initialize() {
-        if (DiscountBUS.getInstance().isLocalEmpty())
-            DiscountBUS.getInstance().loadLocal();
-        if (DetailDiscountBUS.getInstance().isLocalEmpty())
-            DetailDiscountBUS.getInstance().loadLocal();
         tblDiscount.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblDetailDiscount.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblDiscount.getSelectionModel().clearSelection());
@@ -85,7 +80,7 @@ public class DiscountController implements IController {
         tlb_col_endDate.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatDateTime(cellData.getValue().getEndDate())));
         UiUtils.gI().addTooltipToColumn(tlb_col_name, 10);
-        tblDiscount.setItems(FXCollections.observableArrayList(DiscountBUS.getInstance().getAllLocal()));
+        tblDiscount.setItems(FXCollections.observableArrayList(DiscountBUS.getInstance().getAll()));
     }
 
     public void loadSubTable(String discountCode) {
@@ -111,8 +106,8 @@ public class DiscountController implements IController {
             }
         });
         UiUtils.gI().addTooltipToColumn(tlb_col_discountAmount, 10);
-        tblDetailDiscount.setItems(FXCollections.observableArrayList(
-                DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountIdLocal(discountCode)));
+        // tblDetailDiscount.setItems(FXCollections.observableArrayList(
+        // DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountIdLocal(discountCode)));
         tblDetailDiscount.getSelectionModel().clearSelection();
     }
 
@@ -162,7 +157,7 @@ public class DiscountController implements IController {
         clearSubTable();
         if (keyword.isEmpty()) {
             // Nߦ+u keyword r�+�ng, lߦ�y tߦ�t cߦ� h+�a -��n
-            tblDiscount.setItems(FXCollections.observableArrayList(disBUS.getAllLocal()));
+            tblDiscount.setItems(FXCollections.observableArrayList(disBUS.getAll()));
         } else {
             tblDiscount.setItems(FXCollections.observableArrayList(disBUS.searchByCodeLocal(keyword)));
 
@@ -228,34 +223,43 @@ public class DiscountController implements IController {
             NotificationUtils.showErrorAlert("Vui lòng chọn khuyến mãi.", "Thông báo");
             return;
         }
-        if (!AvailableUtils.getInstance().isNotUsedDiscount(selectedDiscount.getCode())) {
-            NotificationUtils.showErrorAlert("Khuyến mãi đã được sử dụng, không thể xóa.", "Thông báo");
-            return;
-        }
+        // if
+        // (!AvailableUtils.getInstance().isNotUsedDiscount(selectedDiscount.getCode()))
+        // {
+        // NotificationUtils.showErrorAlert("Khuyến mãi đã được sử dụng, không thể
+        // xóa.", "Thông báo");
+        // return;
+        // }
         if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa khuyến mãi này?", "Thông báo xác nhận"))
             return;
 
-        int deleteResult = DiscountService.getInstance().deleteDiscountWithDetailDiscounts(selectedDiscount.getCode(),
-                SessionManagerService.getInstance().employeeRoleId(),
-                SessionManagerService.getInstance().employeeLoginId());
+        // int deleteResult =
+        // DiscountService.getInstance().deleteDiscountWithDetailDiscounts(selectedDiscount.getCode(),
+        // SessionManagerService.getInstance().employeeRoleId(),
+        // SessionManagerService.getInstance().employeeLoginId());
 
-        switch (deleteResult) {
-            case 1 -> {
-                NotificationUtils.showInfoAlert("Xóa khuyến mãi thành công.", "Thông báo");
-                resetFilters();
-            }
-            case 2 ->
-                NotificationUtils.showErrorAlert("Có lỗi khi xóa khuyến mãi. Vui lòng thử lại.", "Thông báo");
-            case 3 ->
-                NotificationUtils.showErrorAlert("Bạn không có quyền \"Xóa khuyến mãi\" để thực hiện thao tác này.",
-                        "Thông báo");
-            case 4 ->
-                NotificationUtils.showErrorAlert("Khuyến mãi đã được sử dụng, không thể xóa.", "Thông báo");
-            case 5 ->
-                NotificationUtils.showErrorAlert("Xóa khuyến mãi thất bại. Vui lòng thử lại sau.", "Thông báo");
-            default ->
-                NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
-        }
+        // switch (deleteResult) {
+        // case 1 -> {
+        // NotificationUtils.showInfoAlert("Xóa khuyến mãi thành công.", "Thông báo");
+        // resetFilters();
+        // }
+        // case 2 ->
+        // NotificationUtils.showErrorAlert("Có lỗi khi xóa khuyến mãi. Vui lòng thử
+        // lại.", "Thông báo");
+        // case 3 ->
+        // NotificationUtils.showErrorAlert("Bạn không có quyền \"Xóa khuyến mãi\" để
+        // thực hiện thao tác này.",
+        // "Thông báo");
+        // case 4 ->
+        // NotificationUtils.showErrorAlert("Khuyến mãi đã được sử dụng, không thể
+        // xóa.", "Thông báo");
+        // case 5 ->
+        // NotificationUtils.showErrorAlert("Xóa khuyến mãi thất bại. Vui lòng thử lại
+        // sau.", "Thông báo");
+        // default ->
+        // NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.",
+        // "Thông báo");
+        // }
     }
 
     @Override

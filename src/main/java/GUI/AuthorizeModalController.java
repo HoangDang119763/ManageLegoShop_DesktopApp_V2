@@ -26,7 +26,7 @@ public class AuthorizeModalController {
     @FXML
     private GridPane permissionGridPane;
     @FXML
-    private Button saveBtn,closeBtn;
+    private Button saveBtn, closeBtn;
     @FXML
     private Label roleName;
     private RoleDTO role;
@@ -51,7 +51,8 @@ public class AuthorizeModalController {
     private void loadRoleData() {
         if (role != null) {
             roleName.setText(role.getName());
-        } else handleClose();
+        } else
+            handleClose();
     }
 
     private void setupListeners() {
@@ -66,24 +67,22 @@ public class AuthorizeModalController {
     }
 
     private void loadRolePermissions() {
-        if (role == null) return;
+        if (role == null)
+            return;
         roleName.setText(role.getName());
         RolePermissionBUS rolePermissionBus = RolePermissionBUS.getInstance();
-        if (rolePermissionBus.isLocalEmpty()) rolePermissionBus.loadLocal();
 
-        // Lấy danh sách quyền của role (bao gồm cả quyền có status = 0 và status = 1)
-        allRolePermissionByRoleId = rolePermissionBus.getAllRolePermissionByRoleIdLocal(role.getId());
+        // Lấy danh sách quyền của role trực tiếp từ DB
+        allRolePermissionByRoleId = rolePermissionBus.getAllByRoleId(role.getId());
     }
 
     private void addCheckboxesToGrid() {
         ModuleBUS moduleBus = ModuleBUS.getInstance();
         PermissionBUS permissionBus = PermissionBUS.getInstance();
 
-        if (moduleBus.getAllLocal().isEmpty()) moduleBus.loadLocal();
-        if (permissionBus.getAllLocal().isEmpty()) permissionBus.loadLocal();
-
-        ArrayList<ModuleDTO> arrModule = moduleBus.getAllLocal();
-        ArrayList<PermissionDTO> arrPermission = permissionBus.getAllLocal();
+        // Gọi BUS trực tiếp, không dùng cache local
+        ArrayList<ModuleDTO> arrModule = moduleBus.getAll();
+        ArrayList<PermissionDTO> arrPermission = permissionBus.getAll();
 
         permissionGridPane.getChildren().clear(); // Xóa nội dung cũ để load lại
 
@@ -109,18 +108,14 @@ public class AuthorizeModalController {
                 if (permission.getModule_id() == module.getId()) {
                     CheckBox checkBox = new CheckBox(permission.getName());
                     checkBox.setUserData(permission.getId());
-                    // Duyệt qua danh sách rolePermissions để kiểm tra xem quyền này có trong phân quyền của role không
+                    // Duyệt qua danh sách rolePermissions để kiểm tra xem quyền này có trong phân
+                    // quyền của role không
 
                     for (RolePermissionDTO rp : allRolePermissionByRoleId) {
 
                         if (rp.getPermissionId() == permission.getId()) {
-                            // Nếu status = 1 thì đánh dấu checkbox là chọn
-                            checkBox.setSelected(rp.isStatus());
-
-                            // Nếu quyền có status = 0, đánh dấu moduleBtn là false
-                            if (!rp.isStatus()) {
-                                allPermissionsActive = false;
-                            }
+                            // Nếu bản ghi tồn tại, quyền đã được cấp cho role
+                            checkBox.setSelected(true);
                             break;
                         }
                     }
@@ -128,15 +123,11 @@ public class AuthorizeModalController {
                     checkBox.getStyleClass().add("check-box-m");
                     checkBox.setOnAction(e -> {
                         boolean isSelected = checkBox.isSelected();
-
-                        // Cập nhật trạng thái cho permission tương ứng
                         int permissionId = (int) checkBox.getUserData();
-                        for (RolePermissionDTO rp : allRolePermissionByRoleId) {
-                            if (rp.getPermissionId() == permissionId) {
-                                rp.setStatus(isSelected);
-                                break;
-                            }
-                        }
+
+                        // Toggle permission: chọn = thêm, không chọn = xóa
+                        RolePermissionBUS rpBus = RolePermissionBUS.getInstance();
+                        rpBus.togglePermission(role.getId(), permissionId, isSelected);
 
                         // Cập nhật trạng thái cho module checkbox
                         updateModuleCheckboxState(moduleBox, permissionsBox);
@@ -150,20 +141,17 @@ public class AuthorizeModalController {
 
             // Thêm sự kiện thay đổi trạng thái của module checkbox
             checkModuleBox.setOnAction(e -> {
-                // Nếu module checkbox được tích, tất cả các permission checkbox con sẽ được tích
+                // Nếu module checkbox được tích, tất cả các permission checkbox con sẽ được
+                // tích
                 boolean isSelected = checkModuleBox.isSelected();
                 for (int i = 0; i < permissionsBox.getChildren().size(); i++) {
                     CheckBox permissionCheckBox = (CheckBox) permissionsBox.getChildren().get(i);
                     permissionCheckBox.setSelected(isSelected);
 
-                    // Cập nhật trạng thái cho mỗi permission
+                    // Toggle permission cho mỗi permission
                     int permissionId = (int) permissionCheckBox.getUserData();
-                    for (RolePermissionDTO rp : allRolePermissionByRoleId) {
-                        if (rp.getPermissionId() == permissionId) {
-                            rp.setStatus(isSelected); // Cập nhật trạng thái permission
-                            break;
-                        }
-                    }
+                    RolePermissionBUS rpBus = RolePermissionBUS.getInstance();
+                    rpBus.togglePermission(role.getId(), permissionId, isSelected);
                 }
             });
 
@@ -176,7 +164,6 @@ public class AuthorizeModalController {
             }
         }
     }
-
 
     private void updateModuleCheckboxState(VBox moduleBox, VBox permissionsBox) {
         CheckBox checkModuleBox = (CheckBox) moduleBox.getChildren().get(0);
@@ -200,33 +187,22 @@ public class AuthorizeModalController {
     }
 
     private void handleAuthorize() {
-        RolePermissionBUS rpBus = RolePermissionBUS.getInstance();
-        boolean result = true;
-
-        for (RolePermissionDTO rp : allRolePermissionByRoleId) {
-            int updateResult = rpBus.update(rp,
-                    SessionManagerService.getInstance().employeeRoleId(),
-                    SessionManagerService.getInstance().employeeLoginId());
-
-            if (updateResult != 1) {
-                result = handleUpdateError(updateResult);
-                break;
-            }
-        }
-
-        if (result) {
-            isSaved = true;
-            handleClose();
-        }
+        isSaved = true;
+        handleClose();
     }
 
     private boolean handleUpdateError(int updateResult) {
         switch (updateResult) {
-            case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi cập nhật phân quyền. Vui lòng thử lại.", "Thông báo");
-            case 3 -> NotificationUtils.showErrorAlert("Bạn không thể cập nhật phân quyền của chính mình.", "Thông báo");
-            case 4 -> NotificationUtils.showErrorAlert("Bạn không thể cập nhật phân quyền của chức vụ ngang quyền.", "Thông báo");
-            case 5 -> NotificationUtils.showErrorAlert("Bạn không có quyền \"Sửa phân quyền\" để thực hiện thao tác này.", "Thông báo");
-            case 6 -> NotificationUtils.showErrorAlert("Cập nhật phân quyền thất bại. Vui lòng thử lại sau.", "Thông báo");
+            case 2 ->
+                NotificationUtils.showErrorAlert("Có lỗi khi cập nhật phân quyền. Vui lòng thử lại.", "Thông báo");
+            case 3 ->
+                NotificationUtils.showErrorAlert("Bạn không thể cập nhật phân quyền của chính mình.", "Thông báo");
+            case 4 -> NotificationUtils.showErrorAlert("Bạn không thể cập nhật phân quyền của chức vụ ngang quyền.",
+                    "Thông báo");
+            case 5 -> NotificationUtils
+                    .showErrorAlert("Bạn không có quyền \"Sửa phân quyền\" để thực hiện thao tác này.", "Thông báo");
+            case 6 ->
+                NotificationUtils.showErrorAlert("Cập nhật phân quyền thất bại. Vui lòng thử lại sau.", "Thông báo");
             default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
         }
         return false;
@@ -234,8 +210,8 @@ public class AuthorizeModalController {
 
     private void handleClose() {
         if (closeBtn.getScene() != null && closeBtn.getScene().getWindow() != null) {
-        Stage stage = (Stage) closeBtn.getScene().getWindow();
-        stage.close();
+            Stage stage = (Stage) closeBtn.getScene().getWindow();
+            stage.close();
         }
     }
 }

@@ -18,16 +18,12 @@ public class DiscountService {
         DiscountBUS disBus = DiscountBUS.getInstance();
         DetailDiscountBUS ddipBus = DetailDiscountBUS.getInstance();
 
-        if (disBus.isLocalEmpty())
-            disBus.loadLocal();
         int resultr = disBus.insert(discount, employee_roleId,
                 ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, employeeLoginId);
         if (resultr != 1) {
             return resultr;
         }
 
-        if (ddipBus.isLocalEmpty())
-            ddipBus.loadLocal();
         // Không quan trọng invoiceId của từng thằng trong list. vì sẽ set lại dưới
         // database
         if (!ddipBus.createDetailDiscountByDiscountCode(discount.getCode(), employee_roleId, list,
@@ -45,17 +41,12 @@ public class DiscountService {
         DiscountBUS disBus = DiscountBUS.getInstance();
         DetailDiscountBUS ddipBus = DetailDiscountBUS.getInstance();
 
-        if (ddipBus.isLocalEmpty())
-            ddipBus.loadLocal();
-        ArrayList<DetailDiscountDTO> tempList = ddipBus.getAllDetailDiscountByDiscountIdLocal(discountCode);
+        ArrayList<DetailDiscountDTO> tempList = ddipBus.getAllDetailDiscountByDiscountId(discountCode);
 
         int resultrp = ddipBus.delete(discountCode, employee_roleId,
                 ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, employeeLoginId);
         if (resultrp != 1)
             return resultrp;
-
-        if (disBus.isLocalEmpty())
-            disBus.loadLocal();
 
         // Xóa role sau
         if (!disBus.delete(discountCode, employee_roleId, ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE,

@@ -58,9 +58,6 @@ public class CategoryController implements IController {
     @FXML
     public void initialize() {
         categoryBUS = CategoryBUS.getInstance();
-        if (categoryBUS.isLocalEmpty()) {
-            categoryBUS.loadLocal();
-        }
         session = SessionManagerService.getInstance();
 
         tblCategory.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
@@ -81,7 +78,7 @@ public class CategoryController implements IController {
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
         tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(
-                StatusBUS.getInstance().getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
+                StatusBUS.getInstance().getById(cellData.getValue().getStatusId()).getDescription()));
     }
 
     private void loadComboBox() {
@@ -90,7 +87,7 @@ public class CategoryController implements IController {
         StatusBUS statusBUS = StatusBUS.getInstance();
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus);
-        cbStatusFilter.getItems().addAll(statusBUS.getAllByTypeLocal(StatusType.CATEGORY));
+        cbStatusFilter.getItems().addAll(statusBUS.getAllByType(StatusType.CATEGORY));
 
         cbSearchBy.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
@@ -156,7 +153,7 @@ public class CategoryController implements IController {
         }
 
         // Thực thi xóa qua SecureExecutor để đồng bộ logic với BUSResult
-        BUSResult deleteResult = SecureExecutor.runSafeBUSResult(
+        BUSResult deleteResult = SecureExecutor.executeSafeBusResult(
                 PermissionKey.CATEGORY_DELETE,
                 () -> categoryBUS.delete(selectedCategory.getId()));
 
@@ -189,8 +186,8 @@ public class CategoryController implements IController {
     @Override
     public void applyFilters() {
         int statusId = (statusFilter == null) ? -1 : statusFilter.getId();
-        tblCategory.setItems(FXCollections.observableArrayList(
-                categoryBUS.filterCategories(searchBy, keyword, statusId)));
+        // tblCategory.setItems(FXCollections.observableArrayList(
+        // categoryBUS.filterCategories(searchBy, keyword, statusId)));
         tblCategory.getSelectionModel().clearSelection();
     }
 

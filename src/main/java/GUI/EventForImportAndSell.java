@@ -97,19 +97,13 @@ public class EventForImportAndSell {
         return row;
     }
 
-    // get local products
-    public ArrayList<ProductDTO> listLocalProducts() {
-        ArrayList<ProductDTO> list = ProductBUS.getInstance().getAllLocal();
-        if (list.isEmpty()) {
-            ProductBUS.getInstance().getAll();
-            ProductBUS.getInstance().loadLocal();
-            list = ProductBUS.getInstance().getAllLocal();
-        }
-        return list;
+    // get products from database
+    public ArrayList<ProductDTO> listProducts() {
+        return ProductBUS.getInstance().getAll();
     }
 
     public void hiddenProduct(String name, GridPane gridPane) {
-        ArrayList<ProductDTO> list = ProductBUS.getInstance().getAllLocal();
+        ArrayList<ProductDTO> list = ProductBUS.getInstance().getAll();
         ArrayList<ProductDTO> temp = new ArrayList<>();
         for (ProductDTO product : list) {
             if (product.getName().toLowerCase().contains(name.toLowerCase().trim()))
@@ -143,7 +137,7 @@ public class EventForImportAndSell {
     }
 
     public void addProductToTable(TableView<List<String>> tableView, String productId) {
-        ProductDTO product = ProductBUS.getInstance().getByIdLocal(productId);
+        ProductDTO product = ProductBUS.getInstance().getById(productId);
         if (product == null)
             return;
 

@@ -2,7 +2,6 @@ package BUS;
 
 import DTO.TaxDTO;
 import DAL.TaxDAL;
-import SERVICE.AuthorizationService;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -27,18 +26,9 @@ public class TaxBUS extends BaseBUS<TaxDTO, Integer> {
         return obj.getId();
     }
 
-    @Override
-    public void loadLocal() {
-        super.loadLocal();
-        mapByEmployeeId.clear();
-        for (TaxDTO tax : arrLocal) {
-            if (tax.getEmployeeId() > 0) {
-                mapByEmployeeId.put(tax.getEmployeeId(), tax);
-            }
-        }
-    }
-
     public TaxDTO getById(Integer id) {
+        if (id == null || id <= 0)
+            return null;
         return TaxDAL.getInstance().getById(id);
     }
 
@@ -52,17 +42,7 @@ public class TaxBUS extends BaseBUS<TaxDTO, Integer> {
         if (!isValidTaxInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (TaxDAL.getInstance().insert(obj)) {
-            if (arrLocal.isEmpty()) {
-                loadLocal();
-            } else {
-                arrLocal.add(new TaxDTO(obj));
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -70,19 +50,7 @@ public class TaxBUS extends BaseBUS<TaxDTO, Integer> {
         if (!isValidTaxInput(obj)) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (TaxDAL.getInstance().update(obj)) {
-            for (TaxDTO tax : arrLocal) {
-                if (tax.getId() == obj.getId()) {
-                    tax.setEmployeeId(obj.getEmployeeId());
-                    tax.setNumDependents(obj.getNumDependents());
-                    break;
-                }
-            }
-            return true;
-        }
+
         return false;
     }
 
@@ -90,13 +58,7 @@ public class TaxBUS extends BaseBUS<TaxDTO, Integer> {
         if (id == null || id <= 0) {
             return false;
         }
-        if (!AuthorizationService.getInstance().hasPermission(employeeLoginId, employeeRoleId, 1)) {
-            return false;
-        }
-        if (TaxDAL.getInstance().delete(id)) {
-            arrLocal.removeIf(tax -> tax.getId() == id);
-            return true;
-        }
+
         return false;
     }
 

@@ -39,25 +39,8 @@ public class EmployeeViewProvider {
      * Load tất cả data từ BUS (sử dụng mapLocal đã có sẵn trong BaseBUS)
      */
     private void loadAllData() {
-        RoleBUS roleBUS = RoleBUS.getInstance();
-        SalaryBUS salaryBUS = SalaryBUS.getInstance();
-        StatusBUS statusBUS = StatusBUS.getInstance();
-        AccountBUS accountBUS = AccountBUS.getInstance();
-        DepartmentBUS departmentBUS = DepartmentBUS.getInstance();
-        TaxBUS taxBUS = TaxBUS.getInstance();
-
-        if (roleBUS.isLocalEmpty())
-            roleBUS.loadLocal();
-        if (salaryBUS.isLocalEmpty())
-            salaryBUS.loadLocal();
-        if (statusBUS.isLocalEmpty())
-            statusBUS.loadLocal();
-        if (accountBUS.isLocalEmpty())
-            accountBUS.loadLocal();
-        if (departmentBUS.isLocalEmpty())
-            departmentBUS.loadLocal();
-        if (taxBUS.isLocalEmpty())
-            taxBUS.loadLocal();
+        // Data loads on-demand from DB via BUS.getById() calls
+        // No need to pre-load All anymore with stateless architecture
     }
 
     /**
@@ -75,7 +58,7 @@ public class EmployeeViewProvider {
      * Get single employee detail
      */
     public EmployeeDetailDTO getDetailById(int employeeId) {
-        EmployeeDTO emp = EmployeeBUS.getInstance().getByIdLocal(employeeId);
+        EmployeeDTO emp = EmployeeBUS.getInstance().getById(employeeId);
         if (emp == null)
             return null;
 
@@ -84,7 +67,8 @@ public class EmployeeViewProvider {
     }
 
     /**
-     * Transform core method - sử dụng getByIdLocal từ BaseBUS (map lookup O(1))
+     * Transform core method - no need to pre-load, will call DB on-demand for each
+     * getById()
      */
     private EmployeeDetailDTO transform(EmployeeDTO emp) {
         RoleBUS roleBUS = RoleBUS.getInstance();
@@ -94,15 +78,15 @@ public class EmployeeViewProvider {
         DepartmentBUS departmentBUS = DepartmentBUS.getInstance();
         TaxBUS taxBUS = TaxBUS.getInstance();
 
-        RoleDTO role = roleBUS.getByIdLocal(emp.getRoleId());
-        SalaryDTO salary = role != null ? salaryBUS.getByIdLocal(role.getSalaryId()) : null;
-        StatusDTO empStatus = statusBUS.getByIdLocal(emp.getStatusId());
-        AccountDTO account = accountBUS.getByIdLocal(emp.getAccountId());
-        DepartmentDTO department = emp.getDepartmentId() != null ? departmentBUS.getByIdLocal(emp.getDepartmentId())
+        RoleDTO role = roleBUS.getById(emp.getRoleId());
+        SalaryDTO salary = role != null ? salaryBUS.getById(role.getSalaryId()) : null;
+        StatusDTO empStatus = statusBUS.getById(emp.getStatusId());
+        AccountDTO account = accountBUS.getById(emp.getAccountId());
+        DepartmentDTO department = emp.getDepartmentId() != null ? departmentBUS.getById(emp.getDepartmentId())
                 : null;
-        TaxDTO tax = taxBUS.getByIdLocal(emp.getId());
+        TaxDTO tax = taxBUS.getById(emp.getId());
 
-        StatusDTO accStatus = account != null ? statusBUS.getByIdLocal(account.getStatusId()) : null;
+        StatusDTO accStatus = account != null ? statusBUS.getById(account.getStatusId()) : null;
 
         return EmployeeDetailDTO.builder()
                 // BaseInformation fields

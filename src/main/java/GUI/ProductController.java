@@ -88,14 +88,11 @@ public class ProductController implements IController {
     @FXML
     public void initialize() {
         productBUS = ProductBUS.getInstance();
-        if (productBUS.isLocalEmpty())
-            productBUS.loadLocal();
+        // [STATELESS] No need to pre-load cache - will load on-demand from DB
         categoryBUS = CategoryBUS.getInstance();
-        if (categoryBUS.isLocalEmpty())
-            categoryBUS.loadLocal();
+        // [STATELESS] Data loads on-demand via HikariCP
         statusBUS = StatusBUS.getInstance();
-        if (statusBUS.isLocalEmpty())
-            statusBUS.loadLocal();
+        // [STATELESS] Real-time sync enabled
 
         tblProduct.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblProduct.getSelectionModel().clearSelection());
@@ -113,14 +110,14 @@ public class ProductController implements IController {
     private void loadComboBox() {
         cbSearchBy.getItems().addAll("Mã sản phẩm", "Tên sản phẩm");
 
-        ArrayList<StatusDTO> statusList = statusBUS.getAllByTypeLocal(StatusType.PRODUCT);
+        ArrayList<StatusDTO> statusList = statusBUS.getAllByType(StatusType.PRODUCT);
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus);
         cbStatusFilter.getItems().addAll(statusList);
 
         CategoryDTO allCategory = new CategoryDTO(-1, "Tất cả thể loại");
         cbCategoryFilter.getItems().add(allCategory);
-        cbCategoryFilter.getItems().addAll(categoryBUS.getAllLocal());
+        cbCategoryFilter.getItems().addAll(categoryBUS.getAll());
 
         cbSearchBy.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
@@ -165,12 +162,12 @@ public class ProductController implements IController {
         tlb_col_description.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getDescription() == null ? "" : cellData.getValue().getDescription()));
         tlb_col_categoryName.setCellValueFactory(cellData -> new SimpleStringProperty(
-                categoryBUS.getByIdLocal(cellData.getValue().getCategoryId()).getName()));
+                categoryBUS.getById(cellData.getValue().getCategoryId()).getName()));
         tlb_col_sellingPrice.setCellValueFactory(cellData -> new SimpleStringProperty(
                 ValidationUtils.getInstance().formatCurrency(cellData.getValue().getSellingPrice())));
         tlb_col_stockQuantity.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
         tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(statusBUS
-                .getByIdLocal(cellData.getValue().getStatusId()).getDescription()));
+                .getById(cellData.getValue().getStatusId()).getDescription()));
         UiUtils.gI().addTooltipToColumn(tlb_col_name, 15);
         UiUtils.gI().addTooltipToColumn(tlb_col_description, 15);
         UiUtils.gI().addTooltipToColumn(tlb_col_categoryName, 15);
@@ -255,7 +252,7 @@ public class ProductController implements IController {
             return;
         }
 
-        BUSResult updateResult = SecureExecutor.runSafeBUSResult(PermissionKey.PRODUCT_DELETE,
+        BUSResult updateResult = SecureExecutor.executeSafeBusResult(PermissionKey.PRODUCT_DELETE,
                 () -> productBUS.delete(selectedProduct.getId()));
 
         if (updateResult.isSuccess()) {

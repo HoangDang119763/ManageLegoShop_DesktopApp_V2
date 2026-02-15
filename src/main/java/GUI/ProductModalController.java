@@ -8,10 +8,10 @@ import DTO.CategoryDTO;
 import DTO.ProductDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
+import ENUM.Status;
 import ENUM.StatusType;
 import SERVICE.ImageService;
 import SERVICE.SecureExecutor;
-import SERVICE.SessionManagerService;
 import INTERFACE.IModalController;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
@@ -23,6 +23,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -56,6 +57,8 @@ public class ProductModalController implements IModalController {
     private Button choseImg, resetImgBtn;
     @FXML
     private ImageView imageView;
+    @FXML
+    private VBox metaData;
     private String imageUrl = null;
     @FXML
     private HBox functionBtns, subCategoryBox, functionImg;
@@ -80,22 +83,42 @@ public class ProductModalController implements IModalController {
         statusBUS = StatusBUS.getInstance();
         categoryBUS = CategoryBUS.getInstance();
 
-        loadComboBox();
         setupListeners();
     }
 
     // =====================
     // 2️⃣ UI SETUP (ComboBox & Listeners)
     // =====================
-    private void loadComboBox() {
-        ArrayList<StatusDTO> statusOptions = statusBUS.getAllByTypeLocal(StatusType.PRODUCT);
+    private void setupComboBoxData() {
+        // 1. Tải dữ liệu vào Items
+        ArrayList<StatusDTO> statusOptions = statusBUS.getAllByType(StatusType.PRODUCT);
         cbSelectStatus.setItems(FXCollections.observableArrayList(statusOptions));
 
-        ArrayList<CategoryDTO> categoryOptions = categoryBUS.getAllLocal();
+        ArrayList<CategoryDTO> categoryOptions = categoryBUS.getAll();
         cbSelectCategory.setItems(FXCollections.observableArrayList(categoryOptions));
 
-        cbSelectStatus.getSelectionModel().selectFirst();
-        cbSelectCategory.getSelectionModel().selectFirst();
+        // 2. Định dạng hiển thị (Chữ xám, in nghiêng cho Inactive)
+        int inactiveCateId = statusBUS
+                .getByTypeAndStatusName(StatusType.CATEGORY, Status.Category.INACTIVE).getId();
+
+        UiUtils.gI().formatInactiveComboBox(
+                cbSelectCategory,
+                CategoryDTO::getName,
+                CategoryDTO::getStatusId,
+                inactiveCateId);
+    }
+
+    private void attachCategoryWarning(int initialCateId) {
+        int inactiveCateId = statusBUS
+                .getByTypeAndStatusName(StatusType.CATEGORY, Status.Category.INACTIVE).getId();
+
+        UiUtils.gI().addSmartInactiveWarningListener(
+                cbSelectCategory,
+                CategoryDTO::getId,
+                CategoryDTO::getStatusId,
+                inactiveCateId,
+                initialCateId, // Truyền giá trị mốc vào đây
+                AppMessages.CATEGORY_DELETED_WARNING);
     }
 
     public void setupListeners() {
@@ -124,11 +147,18 @@ public class ProductModalController implements IModalController {
         if (typeModal == 0) {
             modalName.setText("Thêm sản phẩm");
             txtProductId.setText(productBUS.autoId());
+            UiUtils.gI().setReadOnlyItem(txtSellingPrice);
+            UiUtils.gI().setVisibleItem(metaData);
+            // CHẠY LOGIC CHO ADD
+            prepareCategorySelection(-1); // Truyền -1 để không có giá trị nào được chọn lúc đầu
+            cbSelectStatus.getSelectionModel().selectFirst();
+            cbSelectCategory.getSelectionModel().selectFirst();
         } else if (typeModal == 1) {
             if (product == null) {
                 handleClose();
             }
             modalName.setText("Sửa sản phẩm");
+
         } else if (typeModal == 2) {
             if (product == null) {
                 handleClose();
@@ -140,45 +170,44 @@ public class ProductModalController implements IModalController {
     public void setProduct(ProductDTO product) {
         this.product = product;
         txtProductName.setText(product.getName());
-
-        CategoryDTO selectedCategory = categoryBUS.getByIdLocal(product.getCategoryId());
-        if (selectedCategory != null) {
-            cbSelectCategory.getItems().stream()
-                    .filter(item -> item != null && item.getId() == selectedCategory.getId())
-                    .findFirst()
-                    .ifPresent(item -> cbSelectCategory.getSelectionModel().select(item));
-        }
         txtProductId.setText(product.getId());
-
-        StatusDTO statusToSelect = statusBUS.getByIdLocal(product.getStatusId());
-        if (statusToSelect != null) {
-            cbSelectStatus.getItems().stream()
-                    .filter(item -> item != null && item.getId() == statusToSelect.getId())
-                    .findFirst()
-                    .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
-        }
-
         txtDescription.setText(product.getDescription() == null ? "" : product.getDescription());
         txtSellingPrice.setText(product.getSellingPrice().toString());
         txtImportPrice.setText(product.getImportPrice().toString());
         txtStockQuantity.setText(String.valueOf(product.getStockQuantity()));
         txtCreatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(product.getCreatedAt()));
         txtUpdatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(product.getUpdatedAt()));
-
-        // Only admin can edit selling price
-        if (SessionManagerService.getInstance().employeeRoleId() == 1) {
-            txtSellingPrice.setMouseTransparent(false);
-            txtSellingPrice.setFocusTraversable(true);
-            txtSellingPrice.setStyle("-fx-background-color: linear-gradient(to bottom, #efefef, #eeeeee)");
-        }
-
         this.imageUrl = product.getImageUrl();
         loadProductImage();
 
-        // Setup read-only mode if viewing details
+        // Gắn listener với ID thật của sản phẩm đang sửa
+        prepareCategorySelection(product.getCategoryId());
+        // Select Category
+        CategoryDTO selectedCategory = categoryBUS.getById(product.getCategoryId());
+        if (selectedCategory != null) {
+            cbSelectCategory.getItems().stream()
+                    .filter(item -> item != null && item.getId() == selectedCategory.getId())
+                    .findFirst()
+                    .ifPresent(item -> cbSelectCategory.getSelectionModel().select(item));
+        }
+
+        // Select Status
+        StatusDTO statusToSelect = statusBUS.getById(product.getStatusId());
+        if (statusToSelect != null) {
+            cbSelectStatus.getItems().stream()
+                    .filter(item -> item != null && item.getId() == statusToSelect.getId())
+                    .findFirst()
+                    .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
+        }
         if (typeModal == 2) {
             setupReadOnlyMode();
         }
+
+    }
+
+    private void prepareCategorySelection(int initialId) {
+        setupComboBoxData();
+        attachCategoryWarning(initialId);
     }
 
     private void setupReadOnlyMode() {
@@ -284,8 +313,25 @@ public class ProductModalController implements IModalController {
                 controller -> controller.setTypeModal(0),
                 "Thêm thể loại");
         if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert(AppMessages.OPERATION_SUCCESS, AppMessages.DIALOG_TITLE);
-            loadComboBox();
+            // 1. Lưu lại Category hiện đang được chọn (tránh bị reset sau khi load lại)
+            CategoryDTO currentSelection = cbSelectCategory.getValue();
+            StatusDTO currentStatusSelection = cbSelectStatus.getValue();
+            // 2. Load lại dữ liệu mới nhất từ BUS vào ComboBox
+            setupComboBoxData();
+
+            // 3. Khôi phục lại lựa chọn cũ
+            if (currentSelection != null) {
+                cbSelectCategory.getItems().stream()
+                        .filter(item -> item.getId() == currentSelection.getId())
+                        .findFirst()
+                        .ifPresent(item -> cbSelectCategory.getSelectionModel().select(item));
+            }
+            if (currentStatusSelection != null) {
+                cbSelectStatus.getItems().stream()
+                        .filter(item -> item.getId() == currentStatusSelection.getId())
+                        .findFirst()
+                        .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
+            }
         }
     }
 
@@ -374,7 +420,7 @@ public class ProductModalController implements IModalController {
                 newImgUrl, // Có thể là null
                 cbSelectCategory.getValue().getId());
 
-        BUSResult insertResult = SecureExecutor.runSafeBUSResult(
+        BUSResult insertResult = SecureExecutor.executeSafeBusResult(
                 PermissionKey.PRODUCT_INSERT,
                 () -> productBUS.insert(temp));
 
@@ -415,7 +461,7 @@ public class ProductModalController implements IModalController {
                 finalImgUrl,
                 cbSelectCategory.getValue().getId());
 
-        BUSResult updateResult = SecureExecutor.runSafeBUSResult(
+        BUSResult updateResult = SecureExecutor.executeSafeBusResult(
                 PermissionKey.PRODUCT_UPDATE,
                 () -> productBUS.update(temp));
 

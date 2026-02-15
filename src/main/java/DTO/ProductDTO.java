@@ -48,7 +48,8 @@ public class ProductDTO {
     }
 
     public ProductDTO(String id, String name, int stockQuantity, BigDecimal sellingPrice, BigDecimal importPrice,
-                      int statusId, String description, String imageUrl, int categoryId, LocalDateTime updatedAt, LocalDateTime createdAt ) {
+            int statusId, String description, String imageUrl, int categoryId, LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.stockQuantity = stockQuantity;

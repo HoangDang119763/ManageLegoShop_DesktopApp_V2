@@ -19,15 +19,11 @@ public class InvoiceService {
         InvoiceBUS invBus = InvoiceBUS.getInstance();
         DetailInvoiceBUS dinvBus = DetailInvoiceBUS.getInstance();
 
-        if (invBus.isLocalEmpty())
-            invBus.loadLocal();
         if (!invBus.insert(invoice, employee_roleId, ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE,
                 eployeeLoginId)) {
             return false;
         }
 
-        if (dinvBus.isLocalEmpty())
-            dinvBus.loadLocal();
         // Không quan trọng invoiceId của từng thằng trong list. vì sẽ set lại dưới
         // database
         if (!dinvBus.createDetailInvoiceByInvoiceId(invoice.getId(), employee_roleId, list,

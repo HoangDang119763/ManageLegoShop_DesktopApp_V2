@@ -77,7 +77,7 @@ public class CustomerModalController implements IModalController {
     }
 
     private void loadComboBox() {
-        ArrayList<StatusDTO> statusOptions = statusBus.getAllByTypeLocal(StatusType.CUSTOMER);
+        ArrayList<StatusDTO> statusOptions = statusBus.getAllByType(StatusType.CUSTOMER);
         ObservableList<StatusDTO> options = FXCollections.observableArrayList(statusOptions);
         cbSelectStatus.setItems(options);
         cbSelectStatus.getSelectionModel().selectFirst();
@@ -89,8 +89,7 @@ public class CustomerModalController implements IModalController {
         typeModal = type;
         if (typeModal == 0) {
             modalName.setText("Thêm khách hàng");
-            txtCustomerId.setText(customerBus.nextId());
-            UiUtils.gI().setVisibleItem(updatedAt);
+            // txtCustomerId.setText(customerBus.nextId());
         } else {
             if (customer == null)
                 handleClose();
@@ -113,7 +112,7 @@ public class CustomerModalController implements IModalController {
 
             txtPhone.setText(customer.getPhone());
             txtAddress.setText(customer.getAddress());
-            StatusDTO statusToSelect = statusBus.getByIdLocal(customer.getStatusId());
+            StatusDTO statusToSelect = statusBus.getById(customer.getStatusId());
             if (statusToSelect != null) {
                 cbSelectStatus.getItems().stream()
                         .filter(item -> item != null && item.getId() == statusToSelect.getId())
@@ -121,6 +120,9 @@ public class CustomerModalController implements IModalController {
                         .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
             }
         }
+        if (typeModal == 0)
+            UiUtils.gI().setVisibleItem(updatedAt);
+
     }
 
     private boolean isValidInput() {
@@ -222,7 +224,7 @@ public class CustomerModalController implements IModalController {
                 cbSelectStatus.getValue().getId());
 
         // 3. Thực thi an toàn qua SecureExecutor
-        BUSResult insertResult = SecureExecutor.runSafeBUSResult(
+        BUSResult insertResult = SecureExecutor.executeSafeBusResult(
                 PermissionKey.CUSTOMER_INSERT,
                 () -> customerBus.insert(temp));
 
@@ -263,7 +265,7 @@ public class CustomerModalController implements IModalController {
                 cbSelectStatus.getValue().getId());
 
         // 4. Thực thi qua lớp bảo mật SecureExecutor
-        BUSResult updateResult = SecureExecutor.runSafeBUSResult(
+        BUSResult updateResult = SecureExecutor.executeSafeBusResult(
                 PermissionKey.CUSTOMER_UPDATE,
                 () -> customerBus.update(temp));
 

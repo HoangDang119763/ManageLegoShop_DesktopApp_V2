@@ -75,7 +75,7 @@ public class CategoryModalController implements IModalController {
     }
 
     private void loadComboBox() {
-        ArrayList<StatusDTO> statusOptions = statusBus.getAllByTypeLocal(StatusType.CATEGORY);
+        ArrayList<StatusDTO> statusOptions = statusBus.getAllByType(StatusType.CATEGORY);
         cbSelectStatus.setItems(FXCollections.observableArrayList(statusOptions));
         cbSelectStatus.getSelectionModel().selectFirst();
     }
@@ -89,7 +89,7 @@ public class CategoryModalController implements IModalController {
 
         if (typeModal == 0) {
             modalName.setText("Thêm thể loại mới");
-            txtCategoryId.setText(categoryBus.nextId());
+            // txtCategoryId.setText(categoryBus.nextId());
             UiUtils.gI().setVisibleItem(containerMetadata);
         } else {
             if (category == null)
@@ -105,7 +105,7 @@ public class CategoryModalController implements IModalController {
             txtCategoryName.setText(category.getName());
 
             // Chọn Status tương ứng
-            StatusDTO statusToSelect = statusBus.getByIdLocal(category.getStatusId());
+            StatusDTO statusToSelect = statusBus.getById(category.getStatusId());
             if (statusToSelect != null) {
                 cbSelectStatus.getItems().stream()
                         .filter(item -> item.getId() == statusToSelect.getId())
@@ -159,7 +159,7 @@ public class CategoryModalController implements IModalController {
         CategoryDTO temp = new CategoryDTO(-1, name, statusId);
 
         // Gọi qua SecureExecutor và BUSResult (Bỏ Switch-Case số cũ)
-        BUSResult result = SecureExecutor.runSafeBUSResult(
+        BUSResult result = SecureExecutor.executeSafeBusResult(
                 PermissionKey.CATEGORY_INSERT,
                 () -> categoryBus.insert(temp));
 
@@ -176,7 +176,7 @@ public class CategoryModalController implements IModalController {
         // Giữ nguyên ID cũ để Update
         CategoryDTO temp = new CategoryDTO(category.getId(), name, statusId);
 
-        BUSResult result = SecureExecutor.runSafeBUSResult(
+        BUSResult result = SecureExecutor.executeSafeBusResult(
                 PermissionKey.CATEGORY_UPDATE,
                 () -> categoryBus.update(temp));
 
