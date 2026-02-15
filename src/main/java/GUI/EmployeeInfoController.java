@@ -12,13 +12,16 @@ import DTO.DepartmentDTO;
 import DTO.EmployeeDetailDTO;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
+import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
-import PROVIDER.EmployeeViewProvider;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
@@ -103,9 +106,8 @@ public class EmployeeInfoController {
     private Button btnClear; // Nút xóa form
     @FXML
     private VBox vboxPersonalInfo; // Container thông tin cá nhân
-
-    // ==================== CACHED DATA ====================
-    private EmployeeDetailDTO cachedEmployeeDetail; // Cache employee detail để tránh load lại
+    @FXML
+    private StackPane loadingOverlay;
 
     // ==================== BUS INSTANCES ====================
     // Gán một lần trong initialize() để tránh gọi getInstance() nhiều lần
@@ -148,7 +150,6 @@ public class EmployeeInfoController {
      * Sử dụng cache để tránh load lại nhiều lần
      */
     private void loadEmployeeInfo() {
-        EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
         EmployeeDTO employee = employeeBUS.getById(sessionManagerService.employeeLoginId());
 
         if (employee == null) {
@@ -163,14 +164,7 @@ public class EmployeeInfoController {
             return;
         }
 
-        cachedEmployeeDetail = provider.getDetailById(employee.getId());
-
-        if (cachedEmployeeDetail != null) {
-            displayEmployeeInfo();
-        } else {
-            NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_DETAIL_LOAD_ERROR,
-                    AppMessages.DIALOG_TITLE);
-        }
+        displayEmployeeInfo();
     }
 
     /**
@@ -185,17 +179,12 @@ public class EmployeeInfoController {
      * Hiển thị thông tin nhân viên từ cached data lên UI
      */
     private void displayEmployeeInfo() {
-        if (cachedEmployeeDetail == null) {
-            return;
-        }
-
-        try {
-            EmployeeDTO employee = employeeBUS.getById(sessionManagerService.employeeLoginId());
-            ValidationUtils validationUtils = ValidationUtils.getInstance();
-
+        EmployeeDetailDTO employee = employeeBUS.getDetailById(sessionManagerService.employeeLoginId());
+        ValidationUtils validationUtils = ValidationUtils.getInstance();
+        if (employee != null) {
             // === PROFILE INFO SECTION ===
-            lblEmployeeId.setText(String.valueOf(cachedEmployeeDetail.getEmployeeId()));
-            lblGender.setText(cachedEmployeeDetail.getGender() != null ? cachedEmployeeDetail.getGender() : "");
+            lblEmployeeId.setText(String.valueOf(employee.getEmployeeId()));
+            lblGender.setText(employee.getGender() != null ? employee.getGender() : "");
 
             // Get department name
             if (employee != null && employee.getDepartmentId() != null) {
@@ -205,48 +194,46 @@ public class EmployeeInfoController {
                 lblDepartmentName.setText("");
             }
 
-            lblRoleName.setText(cachedEmployeeDetail.getRoleName() != null ? cachedEmployeeDetail.getRoleName() : "");
+            lblRoleName.setText(employee.getRoleName() != null ? employee.getRoleName() : "");
             lblStatus.setText(
-                    cachedEmployeeDetail.getStatusDescription() != null ? cachedEmployeeDetail.getStatusDescription()
+                    employee.getStatusDescription() != null ? employee.getStatusDescription()
                             : "");
 
             // === CONTACT INFO SECTION ===
             lblFirstName
-                    .setText(cachedEmployeeDetail.getFirstName() != null ? cachedEmployeeDetail.getFirstName() : "");
-            lblLastName.setText(cachedEmployeeDetail.getLastName() != null ? cachedEmployeeDetail.getLastName() : "");
+                    .setText(employee.getFirstName() != null ? employee.getFirstName() : "");
+            lblLastName.setText(employee.getLastName() != null ? employee.getLastName() : "");
             dpDateOfBirth.setValue(employee != null ? employee.getDateOfBirth() : LocalDate.now());
-            lblPhone.setText(cachedEmployeeDetail.getPhone() != null ? cachedEmployeeDetail.getPhone() : "");
-            lblEmail.setText(cachedEmployeeDetail.getEmail() != null ? cachedEmployeeDetail.getEmail() : "");
+            lblPhone.setText(employee.getPhone() != null ? employee.getPhone() : "");
+            lblEmail.setText(employee.getEmail() != null ? employee.getEmail() : "");
             lblHealthInsCode.setText(
                     employee != null && employee.getHealthInsCode() != null ? employee.getHealthInsCode() : "");
 
             // === Salary + Tax SECTION ===
-            lblBaseSalary.setText(cachedEmployeeDetail.getBaseSalary() != null
-                    ? validationUtils.formatCurrency(cachedEmployeeDetail.getBaseSalary())
+            lblBaseSalary.setText(employee.getBaseSalary() != null
+                    ? validationUtils.formatCurrency(employee.getBaseSalary())
                     : "");
-            lblSalaryCoefficient.setText(cachedEmployeeDetail.getSalaryCoefficient() != null
-                    ? String.valueOf(cachedEmployeeDetail.getSalaryCoefficient())
+            lblSalaryCoefficient.setText(employee.getSalaryCoefficient() != null
+                    ? String.valueOf(employee.getSalaryCoefficient())
                     : "");
-            lblNumDependents.setText(cachedEmployeeDetail.getNumDependents() != null
-                    ? String.valueOf(cachedEmployeeDetail.getNumDependents())
+            lblNumDependents.setText(employee.getNumDependents() != null
+                    ? String.valueOf(employee.getNumDependents())
                     : "");
-
             // === BENEFITS SECTION ===
-            if (employee != null) {
-                cbHealthIns.setSelected(employee.isHealthInsurance());
-                cbSocialIns.setSelected(employee.isSocialInsurance());
-                cbUnemploymentIns.setSelected(employee.isUnemploymentInsurance());
-                cbIncomeTax.setSelected(employee.isPersonalIncomeTax());
-                cbTransportSupport.setSelected(employee.isTransportationSupport());
-                cbAccommSupport.setSelected(employee.isAccommodationSupport());
+            cbHealthIns.setSelected(employee.isHealthInsurance());
+            cbSocialIns.setSelected(employee.isSocialInsurance());
+            cbUnemploymentIns.setSelected(employee.isUnemploymentInsurance());
+            cbIncomeTax.setSelected(employee.isPersonalIncomeTax());
+            cbTransportSupport.setSelected(employee.isTransportationSupport());
+            cbAccommSupport.setSelected(employee.isAccommodationSupport());
 
-                lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getCreatedAt()));
-                lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getUpdatedAt()));
-            }
+            lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getCreatedAt()));
+            lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getUpdatedAt()));
             // === Account ===
-            lblUsername.setText(cachedEmployeeDetail.getUsername() != null ? cachedEmployeeDetail.getUsername() : "");
-        } catch (Exception e) {
-            log.error("Error displaying employee info", e);
+            lblUsername.setText(employee.getUsername() != null ? employee.getUsername() : "");
+        } else {
+            NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_DETAIL_LOAD_ERROR,
+                    AppMessages.DIALOG_TITLE);
         }
     }
 
@@ -258,42 +245,38 @@ public class EmployeeInfoController {
      */
     private void handleUpdateInfo() {
         // Validate input trước
-        // String validationError = validateUpdateInfoFields();
-        // if (validationError != null) {
-        // NotificationUtils.showErrorAlert(validationError, AppMessages.DIALOG_TITLE);
-        // return;
-        // }
+        String validationError = validateUpdateInfoFields();
+        if (validationError != null) {
+            NotificationUtils.showErrorAlert(validationError, AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-        // EmployeeDTO employee = new EmployeeDTO(sessionManagerService.currEmployee());
+        EmployeeDTO employee = new EmployeeDTO();
 
-        // // Cập nhật các trường từ UI
-        // employee.setFirstName(lblFirstName.getText().trim());
-        // employee.setLastName(lblLastName.getText().trim());
-        // employee.setDateOfBirth(dpDateOfBirth.getValue());
-        // employee.setPhone(lblPhone.getText().trim());
-        // employee.setEmail(lblEmail.getText().trim());
+        // Cập nhật các trường từ UI
+        employee.setId(sessionManagerService.employeeLoginId());
+        employee.setFirstName(lblFirstName.getText().trim());
+        employee.setLastName(lblLastName.getText().trim());
+        employee.setDateOfBirth(dpDateOfBirth.getValue());
+        employee.setPhone(lblPhone.getText().trim());
+        employee.setEmail(lblEmail.getText().trim());
 
-        // BUSResult updateResult = SecureExecutor
-        // .executePublicBUSResult(() ->
-        // employeeBUS.updatePersonalInfoBySelf(employee));
+        TaskUtil.executePublic(
+                loadingOverlay,
+                // 1. Chỉ truyền logic BUS thuần túy
+                () -> EmployeeBUS.getInstance().updatePersonalInfoBySelf(employee),
 
-        // if (updateResult.isSuccess()) {
-        // NotificationUtils.showInfoAlert(AppMessages.EMPLOYEE_PERSONAL_UPDATE_SUCCESS,
-        // AppMessages.DIALOG_TITLE);
-        // sessionManagerService.updateCurrentEmployee();
-        // loadEmployeeInfo(); // Refresh UI
-        // } else {
-        // NotificationUtils.showErrorAlert(updateResult.getMessage(),
-        // AppMessages.DIALOG_TITLE);
-        // }
+                // 2. Xử lý khi thành công (Chạy trên UI Thread)
+                result -> {
+                    loadEmployeeInfo();
+                    Stage stage = (Stage) btnUpdateInfo.getScene().getWindow();
+                    NotificationUtils.showToast(
+                            stage,
+                            result.getMessage());
+
+                });
     }
 
-    /**
-     * Validate các field của form cập nhật thông tin
-     * Kiểm tra validation cho: Họ đệm, Tên, Ngày sinh, Điện thoại, Email, Giới tính
-     * 
-     * @return null nếu hợp lệ, message cụ thể nếu lỗi
-     */
     private String validateUpdateInfoFields() {
         ValidationUtils validator = ValidationUtils.getInstance();
 
@@ -356,29 +339,25 @@ public class EmployeeInfoController {
 
     // ==================== 🔐 PASSWORD CHANGE HANDLERS ====================
 
-    /**
-     * Xử lý thay đổi mật khẩu
-     * Kiểm tra dữ liệu đầu vào, validate, rồi cập nhật mật khẩu
-     */
     private void handleChangePassword() {
         // ===== BƯỚC 1: KIỂM TRA DỮ LIỆU ĐẦU VÀO =====
         if (!validatePasswordInput()) {
             return; // Nếu validation thất bại, dừng lại
         }
 
-        AccountDTO account = new AccountDTO(accountBUS.getById(sessionManagerService.employeeLoginId()));
-        account.setPassword(txtNewPassword.getText().trim());
-        BUSResult updateResult = SecureExecutor
-                .executePublicBUSResult(
-                        () -> accountBUS.changePasswordBySelf(account, txtOldPassword.getText().trim()));
+        String username = lblUsername.getText();
+        String oldPassword = txtOldPassword.getText().trim();
+        String newPassword = txtNewPassword.getText().trim();
+        TaskUtil.executePublic(
+                loadingOverlay,
+                // 1. Chỉ truyền logic BUS thuần túy
+                () -> accountBUS.changePasswordBySelf(username, oldPassword, newPassword),
 
-        if (updateResult.isSuccess()) {
-            NotificationUtils.showInfoAlert(AppMessages.ACCOUNT_PASSWORD_CHANGE_SUCCESS,
-                    AppMessages.DIALOG_TITLE);
-            handleClear(); // Xóa form sau khi đổi thành công
-        } else {
-            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+                // 2. Xử lý khi thành công (Chạy trên UI Thread)
+                result -> {
+
+                    SessionManagerService.getInstance().forceLogout(result.getMessage());
+                });
     }
 
     /**

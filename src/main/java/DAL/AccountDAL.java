@@ -60,18 +60,19 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
         return "(username, password, last_login, status_id) VALUES (?, ?, ?, ?)";
     }
 
-    public boolean changePasswordBySelf(AccountDTO obj) {
-        String query = "UPDATE account SET username = ?, password = ? WHERE id = ? LIMIT 1";
+    public boolean updatePasswordAndForceRelogin(String username, String hashedNewPassword) {
+        // Gộp chung vào 1 query để đảm bảo đồng bộ 100%
+        String query = "UPDATE account SET password = ?, require_relogin = 1 WHERE username = ? LIMIT 1";
+
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
 
-            statement.setString(1, obj.getUsername());
-            statement.setString(2, obj.getPassword());
-            statement.setInt(3, obj.getId());
+            statement.setString(1, hashedNewPassword);
+            statement.setString(2, username);
 
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error updating account (self): " + e.getMessage());
+            System.err.println("Lỗi cập nhật mật khẩu và cờ relogin: " + e.getMessage());
             return false;
         }
     }

@@ -62,13 +62,20 @@ public class SessionManagerService {
         return currentSession != null ? currentSession.getRoleName() : "No Role";
     }
 
-    public void forceLogout() {
-        // Đảm bảo chạy trên UI Thread của JavaFX
+    public void forceLogout(String customMessage) {
         Platform.runLater(() -> {
-            // 1. Xóa dữ liệu phiên
+            // 1. Xóa dữ liệu phiên trước
             logout();
 
-            // 2. Dọn dẹp toàn bộ cửa sổ (Stage, Modal, Alert)
+            // 2. Xác định tin nhắn hiển thị
+            String finalMsg = (customMessage != null && !customMessage.isEmpty())
+                    ? customMessage + " - " + AppMessages.REQUEST_RELOGIN
+                    : AppMessages.REQUEST_RELOGIN;
+
+            // 3. Hiện Alert - Nó sẽ "treo" ở đây cho đến khi User bấm OK
+            NotificationUtils.showInfoAlert(finalMsg, AppMessages.DIALOG_TITLE);
+
+            // 4. Dọn dẹp toàn bộ cửa sổ cũ
             List<Window> windows = new ArrayList<>(Window.getWindows());
             for (Window window : windows) {
                 if (window instanceof Stage stage) {
@@ -76,18 +83,20 @@ public class SessionManagerService {
                 }
             }
 
-            // 3. Mở lại màn hình Login (Dùng đúng style cũ của bạn trong App.java)
+            // 5. Mở màn hình Login
             try {
-                // Sử dụng UiUtils của bạn để mở màn hình Login
-                // Giả sử bạn để LoginUI.fxml ở đúng đường dẫn
-                NotificationUtils.showInfoAlert(AppMessages.FORCE_RELOGIN, AppMessages.DIALOG_TITLE);
                 UiUtils.gI().openStage("/GUI/LoginUI.fxml", "Đăng nhập hệ thống");
-
-                System.out.println(">>> Force Logout: Đã dọn dẹp và quay về màn hình đăng nhập.");
+                System.out.println(">>> Force Logout thành công.");
             } catch (Exception e) {
-                System.err.println("Lỗi khi quay về màn hình Login: " + e.getMessage());
+                System.out.println("Lỗi khi quay về màn hình Login: " + e.getMessage());
             }
         });
+    }
+
+    // Overload để dùng cho các trường hợp logout ép buộc thông thường (không có tin
+    // nhắn riêng)
+    public void forceLogout() {
+        forceLogout(null);
     }
 
     // Giữ nguyên logic canManage nhưng dùng dữ liệu từ DTO

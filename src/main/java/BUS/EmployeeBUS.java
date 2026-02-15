@@ -4,6 +4,7 @@ package BUS;
 import DAL.EmployeeDAL;
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
+import DTO.EmployeeDetailDTO;
 import DTO.BUSResult;
 import ENUM.*;
 import UTILS.AppMessages;
@@ -414,5 +415,18 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
     public int countByRoleId(int roleId) {
         return EmployeeDAL.getInstance().countByRoleId(roleId);
+    }
+
+    /**
+     * Get EmployeeDetailDTO - tất cả thông tin cần thiết với 1 query
+     * Thay thế cho EmployeeViewProvider
+     * 
+     * @param employeeId ID của employee
+     * @return EmployeeDetailDTO hoặc null nếu không tìm thấy
+     */
+    public EmployeeDetailDTO getDetailById(int employeeId) {
+        if (employeeId <= 0)
+            return null;
+        return EmployeeDAL.getInstance().getDetailById(employeeId);
     }
 }
