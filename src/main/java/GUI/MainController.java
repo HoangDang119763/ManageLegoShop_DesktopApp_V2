@@ -1,10 +1,8 @@
 package GUI;
 
-import BUS.*;
-import DTO.EmployeeDTO;
 import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
 import UTILS.UiUtils;
-import javafx.animation.*;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -12,14 +10,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.*;
 
 @Slf4j
@@ -32,89 +28,13 @@ public class MainController {
     private Label employeeLoginFullName, employeeRoleName;
     @FXML
     private VBox groupBtn;
-    static boolean isLoaded = false;
+
     private Button selectedButton = null;
-    private static final MainController INSTANCE = new MainController();
 
-    public MainController() {
-    }
-
-    public static MainController getInstance() {
-        return INSTANCE;
-    }
-
-    @FXML
-    public void initialize() {
-        setupEventHandlers();
-        loadAllLocalData();
-        loadSessionData();
-        loadAllowedModules();
-    }
-
-    public void loadSessionData() {
-        EmployeeDTO currEmployee = SessionManagerService.getInstance().currEmployee();
-        employeeLoginFullName.setText(currEmployee.getFirstName() + " " + currEmployee.getLastName());
-        employeeRoleName.setText(RoleBUS.getInstance().getByIdLocal(currEmployee.getRoleId()).getName());
-    }
-
-    public void setupEventHandlers() {
-        logoutBtn.setOnMouseClicked(e -> {
-            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn thoát?", "Thông báo xác nhận"))
-                return;
-            // SessionManagerService.getInstance().logout();
-            ParallelTransition animation = UiUtils.gI().createButtonAnimation(logoutBtn);
-            animation.setOnFinished(event -> logout());
-            animation.play();
-        });
-
-        closeBtn.setOnMouseClicked(e -> close());
-        minimizeBtn.setOnMouseClicked(this::minimize);
-    }
-
-    public void loadAllLocalData() {
-        if (!isLoaded) {
-            EmployeeBUS.getInstance().loadLocal();
-            RoleBUS.getInstance().loadLocal();
-            RolePermissionBUS.getInstance().loadLocal();
-            ModuleBUS.getInstance().loadLocal();
-            PermissionBUS.getInstance().loadLocal();
-            StatusBUS.getInstance().loadLocal();
-            AccountBUS.getInstance().loadLocal();
-            isLoaded = true;
-        }
-    }
-
-    public void minimize(MouseEvent event) {
-        ((Stage) ((Node) event.getSource()).getScene().getWindow()).setIconified(true);
-    }
-
-    public void close() {
-        System.exit(0);
-    }
-
-    public void logout() {
-        UiUtils.gI().openStage("/GUI/NavigatePermission.fxml", "Danh sách chức năng");
-        handleClose();
-    }
-
-    public void loadFXML(String fxmlFile) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
-            Pane newContent = loader.load();
-            mainContent.getChildren().setAll(newContent);
-        } catch (IOException e) {
-            log.error("Lỗi tải FXML: " + fxmlFile, e);
-        }
-    }
-
-    // Đóng gói Metadata của Module
-    private record ModuleMetadata(int id, String name, String icon) {
-    }
-
-    // Mapping Module ID → FXML Path
+    // Mapping Module ID → FXML Path (Đã cập nhật theo logic mới)
     private static final Map<Integer, String> MODULE_FXML_MAP = Map.ofEntries(
-            Map.entry(0, "/GUI/EmployeeInfoUI.fxml"),
-            Map.entry(1, "/GUI/EmployeeUI.fxml"),
+            Map.entry(0, "/GUI/EmployeeInfoUI.fxml"), // Thông tin cá nhân (luôn có)
+            Map.entry(1, "/GUI/EmployeeUI.fxml"), // Quản lý NV & TK
             Map.entry(2, "/GUI/CustomerUI.fxml"),
             Map.entry(3, "/GUI/ProductUI.fxml"),
             Map.entry(4, "/GUI/SupplierUI.fxml"),
@@ -123,86 +43,112 @@ public class MainController {
             Map.entry(7, "/GUI/CategoryUI.fxml"),
             Map.entry(8, "/GUI/DiscountUI.fxml"),
             Map.entry(9, "/GUI/RoleUI.fxml"),
-            Map.entry(10, "/GUI/AccountUI.fxml"),
-            Map.entry(11, "/GUI/StatisticUI.fxml"));
+            Map.entry(10, "/GUI/StatisticUI.fxml"));
+
+    @FXML
+    public void initialize() {
+        setupEventHandlers();
+        loadSessionData();
+        loadAllowedModules();
+    }
+
+    public void loadSessionData() {
+        // [TỐI ƯU] Lấy trực tiếp từ Session, không chọc DB
+        SessionManagerService session = SessionManagerService.getInstance();
+        if (session != null) {
+            employeeLoginFullName.setText(session.getLoggedName());
+            employeeRoleName.setText(session.getRoleName());
+        }
+    }
+
+    public void setupEventHandlers() {
+        logoutBtn.setOnMouseClicked(e -> {
+            if (UiUtils.gI().showConfirmAlert(AppMessages.LOGOUT_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM)) {
+                // Sử dụng forceLogout để dọn dẹp sạch sẽ toàn bộ App
+                SessionManagerService.getInstance().forceLogout();
+            }
+        });
+
+        closeBtn.setOnMouseClicked(e -> System.exit(0));
+        minimizeBtn.setOnMouseClicked(e -> ((Stage) ((Node) e.getSource()).getScene().getWindow()).setIconified(true));
+    }
+
+    record ModuleMetadata(int id, String name, String icon) {
+    }
 
     private void loadAllowedModules() {
-        // 1. Khởi tạo danh sách Module có thứ tự (ID, Name, Icon)
-        List<ModuleMetadata> allModules = Arrays.asList(
-                new ModuleMetadata(0, "Thông tin", "employee_info.png"),
-                new ModuleMetadata(3, "Sản phẩm", "product.png"),
-                new ModuleMetadata(1, "Nhân viên", "employee.png"),
-                new ModuleMetadata(2, "Khách hàng", "customer.png"),
-                new ModuleMetadata(4, "Nhà cung cấp", "supplier.png"),
-                new ModuleMetadata(7, "Thể loại", "category.png"),
-                new ModuleMetadata(8, "Khuyến mãi", "discount.png"),
-                new ModuleMetadata(5, "Hóa đơn", "invoice.png"),
-                new ModuleMetadata(6, "Phiếu nhập", "import.png"),
-                new ModuleMetadata(9, "Chức vụ", "role.png"),
-                new ModuleMetadata(10, "Tài khoản", "account.png"),
-                new ModuleMetadata(11, "Thống kê", "statistical.png"));
-
         groupBtn.getChildren().clear();
         List<Button> buttons = new ArrayList<>();
-        SessionManagerService session = SessionManagerService.getInstance();
+        SessionManagerService sessionService = SessionManagerService.getInstance();
 
-        // 2. Duyệt qua danh sách đã đóng gói
+        // 1. Định nghĩa TẤT CẢ Module có trong hệ thống Lego của bạn
+        List<ModuleMetadata> allModules = Arrays.asList(
+                new ModuleMetadata(0, "Cá nhân", "employee_info.png"), // ID 0: Luôn cho phép
+                new ModuleMetadata(5, "Bán hàng", "invoice.png"), // ID 5: Module quan trọng nhất
+                new ModuleMetadata(6, "Nhập hàng", "import.png"), // ID 6
+                new ModuleMetadata(3, "Sản phẩm", "product.png"), // ID 3
+                new ModuleMetadata(7, "Thể loại", "category.png"), // ID 7
+                new ModuleMetadata(2, "Khách hàng", "customer.png"), // ID 2
+                new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
+                new ModuleMetadata(4, "Nhà cung cấp", "supplier.png"), // ID 4
+                new ModuleMetadata(8, "Khuyến mãi", "discount.png"), // ID 8
+                new ModuleMetadata(9, "Phòng ban & Quyền", "role.png"), // ID 9
+                new ModuleMetadata(10, "Thống kê", "statistical.png") // ID 10
+        );
+
+        // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : allModules) {
-            // Module 0 (Thông tin nhân viên) luôn được phép truy cập
-            if (meta.id() == 0 || session.hasModuleAccess(meta.id())) {
-                Button btn = createModuleButton(
-                        meta.name(),
-                        meta.icon(),
-                        () -> handleModuleClick(meta.id(), meta.name()));
+            // Module 0 luôn hiện, các module khác phải có ID trong allowedModules của DTO
+            if (meta.id() == 0 || sessionService.hasModuleAccess(meta.id())) {
+                Button btn = createModuleButton(meta.name(), meta.icon(), () -> {
+                    handleModuleClick(meta.id(), meta.name());
+                });
+
+                // Gắn ID vào UserData để handleModuleClick biết là module nào
+                btn.setUserData(meta.id());
                 buttons.add(btn);
             }
         }
 
+        // 3. Đưa các nút đã lọc vào Menu bên trái
         groupBtn.getChildren().addAll(buttons);
 
+        // 4. Mặc định mở module đầu tiên khi vừa vào App
         if (!buttons.isEmpty()) {
             buttons.getFirst().fire();
         }
     }
 
     private Button createModuleButton(String text, String iconPath, Runnable action) {
+        // 1. Khởi tạo Button với khoảng trống để text không dính vào icon
         Button btn = new Button("   " + text);
         btn.setPrefSize(194, 40);
-        btn.getStyleClass().add("nav-btn");
+        btn.getStyleClass().add("nav-btn"); // Class trong main.css của bạn
 
-        // Kiểm tra CSS trước khi thêm
-        URL cssUrl = getClass().getResource("/css/main.css");
-        if (cssUrl != null) {
-            btn.getStylesheets().add(cssUrl.toExternalForm());
-        } else {
-            System.err.println("⚠ Lỗi: Không tìm thấy file CSS '/css/main.css'");
-        }
-
-        // Kiểm tra và tải icon
+        // 2. Tải Icon từ thư mục resources
         String imagePath = "/images/icon/" + iconPath;
-        InputStream imageStream = getClass().getResourceAsStream(imagePath);
-        Image image;
-
-        if (imageStream != null) {
-            image = new Image(imageStream);
-        } else {
-            System.err.println("⚠ Lỗi: Không tìm thấy ảnh " + imagePath + ", thử dùng ảnh mặc định.");
-            InputStream defaultStream = getClass().getResourceAsStream("/images/icon/default.png");
-            if (defaultStream != null) {
-                image = new Image(defaultStream);
+        try {
+            InputStream is = getClass().getResourceAsStream(imagePath);
+            if (is != null) {
+                Image image = new Image(is);
+                ImageView iconView = new ImageView(image);
+                iconView.setFitWidth(22); // Kích thước chuẩn cho Sidebar
+                iconView.setFitHeight(22);
+                btn.setGraphic(iconView);
             } else {
-                System.err.println("⚠ Lỗi nghiêm trọng: Không tìm thấy ảnh mặc định!");
-                image = new Image("https://via.placeholder.com/25"); // Sử dụng ảnh tạm thời từ Internet
+                log.warn("Không tìm thấy icon tại: {}", imagePath);
+                // Có thể set một icon mặc định ở đây nếu muốn
             }
+        } catch (Exception e) {
+            log.error("Lỗi khi nạp ảnh icon: " + iconPath, e);
         }
 
-        ImageView icon = new ImageView(image);
-        icon.setFitWidth(25);
-        icon.setFitHeight(25);
-        btn.setGraphic(icon);
-
+        // 3. Thiết lập sự kiện Click
         btn.setOnAction(event -> {
+            // Chạy hiệu ứng bấm nút từ UiUtils của bạn cho "xịn"
             UiUtils.gI().applyButtonAnimation(btn);
+
+            // Thực thi hành động (thường là load FXML)
             action.run();
         });
 
@@ -210,12 +156,14 @@ public class MainController {
     }
 
     private void handleModuleClick(int moduleId, String moduleName) {
+        // Cập nhật trạng thái Active cho Button
         if (selectedButton != null) {
             selectedButton.getStyleClass().remove("nav-btn-active");
         }
 
+        // Tìm button vừa click để highlight
         for (Node node : groupBtn.getChildren()) {
-            if (node instanceof Button btn && btn.getText().trim().equals(moduleName.trim())) {
+            if (node instanceof Button btn && (int) btn.getUserData() == moduleId) {
                 btn.getStyleClass().add("nav-btn-active");
                 selectedButton = btn;
                 break;
@@ -228,11 +176,20 @@ public class MainController {
         }
     }
 
-    private void handleClose() {
-        if (closeBtn.getScene() != null && closeBtn.getScene().getWindow() != null) {
-            Stage stage = (Stage) closeBtn.getScene().getWindow();
-            stage.close();
+    public void loadFXML(String fxmlFile) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
+            Pane newContent = loader.load();
+
+            // Anchor để nội dung con dãn đều theo mainContent
+            AnchorPane.setTopAnchor(newContent, 0.0);
+            AnchorPane.setBottomAnchor(newContent, 0.0);
+            AnchorPane.setLeftAnchor(newContent, 0.0);
+            AnchorPane.setRightAnchor(newContent, 0.0);
+
+            mainContent.getChildren().setAll(newContent);
+        } catch (IOException e) {
+            log.error("Lỗi tải giao diện: " + fxmlFile, e);
         }
     }
-
 }
