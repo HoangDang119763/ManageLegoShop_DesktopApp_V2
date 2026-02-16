@@ -98,25 +98,37 @@ public class CategoryModalController implements IModalController {
         }
     }
 
-    public void setCategory(CategoryDTO category) {
-        this.category = category;
-        if (category != null) {
-            txtCategoryId.setText(String.valueOf(category.getId()));
-            txtCategoryName.setText(category.getName());
-
-            // Chọn Status tương ứng
-            StatusDTO statusToSelect = statusBus.getById(category.getStatusId());
-            if (statusToSelect != null) {
-                cbSelectStatus.getItems().stream()
-                        .filter(item -> item.getId() == statusToSelect.getId())
-                        .findFirst()
-                        .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
-            }
-
-            // Hiển thị thời gian (đã format)
-            txtCreatedAt.setText(validator.formatDateTimeWithHour(category.getCreatedAt()));
-            txtUpdatedAt.setText(validator.formatDateTimeWithHour(category.getUpdatedAt()));
+    public void setCategory(int categoryId) {
+        // Fetch full CategoryDTO from BUS bằng ID
+        if (categoryId <= 0) {
+            handleClose();
+            return;
         }
+
+        this.category = categoryBus.getById(categoryId);
+
+        if (this.category == null) {
+            NotificationUtils.showErrorAlert("Không tìm thấy thể loại.", AppMessages.DIALOG_TITLE);
+            handleClose();
+            return;
+        }
+
+        // Fill form fields
+        txtCategoryId.setText(String.valueOf(category.getId()));
+        txtCategoryName.setText(category.getName());
+
+        // Chọn Status tương ứng
+        StatusDTO statusToSelect = statusBus.getById(category.getStatusId());
+        if (statusToSelect != null) {
+            cbSelectStatus.getItems().stream()
+                    .filter(item -> item.getId() == statusToSelect.getId())
+                    .findFirst()
+                    .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
+        }
+
+        // Hiển thị thời gian (đã format)
+        txtCreatedAt.setText(validator.formatDateTimeWithHour(category.getCreatedAt()));
+        txtUpdatedAt.setText(validator.formatDateTimeWithHour(category.getUpdatedAt()));
     }
 
     private boolean isValidInput() {

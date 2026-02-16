@@ -1,8 +1,13 @@
 package DAL;
 
+import DTO.PagedResponse;
 import DTO.ProductDTO;
+import DTO.ProductDisplayDTO;
+
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ProductDAL extends BaseDAL<ProductDTO, String> {
     public static final ProductDAL INSTANCE = new ProductDAL();
@@ -240,5 +245,151 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
             System.err.println("Error checking category in use: " + e.getMessage());
         }
         return false;
+    }
+
+    public PagedResponse<ProductDTO> filterProductsPaged(
+            String keyword, int categoryId, int statusId,
+            BigDecimal startPrice, BigDecimal endPrice,
+            boolean inStockOnly, int pageIndex, int pageSize) {
+
+        List<ProductDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // Sử dụng SQL động để lọc đa điều kiện
+        // ? = -1 hoặc ? = '' là mẹo để bỏ qua filter nếu người dùng chọn "Tất cả"
+        String sql = "SELECT *, COUNT(*) OVER() as total_count FROM product " +
+                "WHERE (? = '' OR (id LIKE ? OR name LIKE ?)) " +
+                "AND (? = -1 OR category_id = ?) " +
+                "AND (? = -1 OR status_id = ?) " +
+                "AND (? IS NULL OR selling_price >= ?) " +
+                "AND (? IS NULL OR selling_price <= ?) " +
+                "AND (? = 0 OR stock_quantity > 0) " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKey = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+            ps.setString(1, keyword == null ? "" : keyword.trim());
+            ps.setString(2, searchKey);
+            ps.setString(3, searchKey);
+
+            ps.setInt(4, categoryId);
+            ps.setInt(5, categoryId);
+
+            ps.setInt(6, statusId);
+            ps.setInt(7, statusId);
+
+            ps.setBigDecimal(8, startPrice);
+            ps.setBigDecimal(9, startPrice);
+
+            ps.setBigDecimal(10, endPrice);
+            ps.setBigDecimal(11, endPrice);
+
+            ps.setInt(12, inStockOnly ? 1 : 0);
+
+            ps.setInt(13, offset);
+            ps.setInt(14, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+                    items.add(mapResultSetToObject(rs)); // Tận dụng hàm map sẵn có của Hoàng
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi lọc sản phẩm phân trang: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * [OPTIMIZED] Filter products with category name & status description (JOIN)
+     * Tránh gọi BUS lẻ lẻ từng dòng
+     */
+    public PagedResponse<ProductDisplayDTO> filterProductsPagedDisplay(
+            String keyword, int categoryId, int statusId,
+            BigDecimal startPrice, BigDecimal endPrice,
+            boolean inStockOnly, int pageIndex, int pageSize) {
+
+        List<ProductDisplayDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // JOIN với category và status tables để lấy name và description
+        String sql = "SELECT " +
+                "p.*, " +
+                "c.name as category_name, " +
+                "s.description as status_description, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM product p " +
+                "LEFT JOIN category c ON p.category_id = c.id " +
+                "LEFT JOIN status s ON p.status_id = s.id " +
+                "WHERE (? = '' OR (p.id LIKE ? OR p.name LIKE ?)) " +
+                "AND (? = -1 OR p.category_id = ?) " +
+                "AND (? = -1 OR p.status_id = ?) " +
+                "AND (? IS NULL OR p.selling_price >= ?) " +
+                "AND (? IS NULL OR p.selling_price <= ?) " +
+                "AND (? = 0 OR p.stock_quantity > 0) " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKey = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+            ps.setString(1, keyword == null ? "" : keyword.trim());
+            ps.setString(2, searchKey);
+            ps.setString(3, searchKey);
+
+            ps.setInt(4, categoryId);
+            ps.setInt(5, categoryId);
+
+            ps.setInt(6, statusId);
+            ps.setInt(7, statusId);
+
+            ps.setBigDecimal(8, startPrice);
+            ps.setBigDecimal(9, startPrice);
+
+            ps.setBigDecimal(10, endPrice);
+            ps.setBigDecimal(11, endPrice);
+
+            ps.setInt(12, inStockOnly ? 1 : 0);
+
+            ps.setInt(13, offset);
+            ps.setInt(14, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+                    items.add(mapResultSetToProductDisplay(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi lọc sản phẩm chi tiết phân trang: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * Map ResultSet sang ProductDisplayDTO (với category name và status description)
+     */
+    private ProductDisplayDTO mapResultSetToProductDisplay(ResultSet rs) throws SQLException {
+        return new ProductDisplayDTO(
+                rs.getString("id"),
+                rs.getString("name"),
+                rs.getString("description"),
+                rs.getString("image_url"),
+                rs.getInt("category_id"),
+                rs.getString("category_name"), // JOIN từ category table
+                rs.getInt("stock_quantity"),
+                rs.getBigDecimal("selling_price"),
+                rs.getInt("status_id"),
+                rs.getString("status_description"), // JOIN từ status table
+                rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null,
+                rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null
+        );
     }
 }

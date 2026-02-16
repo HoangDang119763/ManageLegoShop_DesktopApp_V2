@@ -1,7 +1,12 @@
 package DAL;
 
 import DTO.EmploymentHistoryDTO;
+import DTO.EmploymentHistoryDetailBasicDTO;
+import DTO.PagedResponse;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer> {
     public static final EmploymentHistoryDAL INSTANCE = new EmploymentHistoryDAL();
@@ -74,4 +79,98 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
         statement.setInt(8, obj.getId());
     }
 
+    public PagedResponse<EmploymentHistoryDTO> getPagedByEmployeeId(int employeeId, int pageIndex, int pageSize) {
+        List<EmploymentHistoryDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // Sử dụng SQL Window Function để lấy total_count trong cùng 1 query
+        String sql = "SELECT *, COUNT(*) OVER() as total_count " +
+                "FROM employment_history " +
+                "WHERE employee_id = ? " +
+                "ORDER BY effective_date DESC " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+            ps.setInt(2, offset);
+            ps.setInt(3, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    // Lấy total_count từ dòng đầu tiên (mọi dòng đều có giá trị này giống nhau)
+                    if (totalItems == 0) {
+                        totalItems = rs.getInt("total_count");
+                    }
+                    // Tận dụng hàm mapResultSetToObject bạn đã viết sẵn
+                    items.add(mapResultSetToObject(rs));
+                }
+            }
+        } catch (SQLException e) {
+            // Log lỗi bằng Slf4j bạn đã dùng ở Controller (nếu DAL chưa có thì thêm @Slf4j)
+            System.err.println("Lỗi phân trang lịch sử nhân viên: " + e.getMessage());
+        }
+
+        // Trả về "hộp" PagedResponse đã chứa đầy đủ mảnh ghép
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * Lấy chi tiết lịch sử công tác với tên phòng ban và chức vụ (JOIN)
+     * Kết quả gồm: departmentId, departmentName, roleId, roleName, effectiveDate,
+     * createdAt
+     */
+    public PagedResponse<EmploymentHistoryDetailBasicDTO> getDetailsByEmployeeIdPaged(int employeeId, int pageIndex,
+            int pageSize) {
+        List<EmploymentHistoryDetailBasicDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        String sql = "SELECT " +
+                "eh.department_id, " +
+                "d.name as department_name, " +
+                "eh.role_id, " +
+                "r.name as role_name, " +
+                "eh.effective_date, " +
+                "eh.created_at, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM employment_history eh " +
+                "LEFT JOIN department d ON eh.department_id = d.id " +
+                "LEFT JOIN role r ON eh.role_id = r.id " +
+                "WHERE eh.employee_id = ? " +
+                "ORDER BY eh.effective_date DESC " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+            ps.setInt(2, offset);
+            ps.setInt(3, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0) {
+                        totalItems = rs.getInt("total_count");
+                    }
+
+                    EmploymentHistoryDetailBasicDTO dto = new EmploymentHistoryDetailBasicDTO(
+                            rs.getInt("department_id"),
+                            rs.getString("department_name"),
+                            rs.getInt("role_id"),
+                            rs.getString("role_name"),
+                            rs.getDate("effective_date") != null ? rs.getDate("effective_date").toLocalDate() : null,
+                            rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime()
+                                    : null);
+                    items.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy lịch sử công tác chi tiết: " + e.getMessage());
+        }
+
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
 }

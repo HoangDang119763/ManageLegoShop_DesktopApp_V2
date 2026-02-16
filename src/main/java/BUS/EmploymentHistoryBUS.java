@@ -1,7 +1,13 @@
 package BUS;
 
 import DAL.EmploymentHistoryDAL;
+import DTO.BUSResult;
 import DTO.EmploymentHistoryDTO;
+import DTO.EmploymentHistoryDetailBasicDTO;
+import DTO.PagedResponse;
+import ENUM.BUSOperationResult;
+import UTILS.AppMessages;
+
 import java.util.ArrayList;
 
 public class EmploymentHistoryBUS extends BaseBUS<EmploymentHistoryDTO, Integer> {
@@ -45,7 +51,47 @@ public class EmploymentHistoryBUS extends BaseBUS<EmploymentHistoryDTO, Integer>
 
     @Override
     public EmploymentHistoryDTO getById(Integer id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (id == null || id <= 0)
+            return null;
+        return EmploymentHistoryDAL.getInstance().getById(id);
+    }
+
+    // Giả xử lấy employee id = 2, page 0, page size default (20) , pageIndex = 0
+    public BUSResult getPagedByEmployeeId(int employeeId, int pageIndex, int pageSize) {
+        // 1. Xác định PageSize chuẩn trước khi làm bất cứ việc gì
+        int finalPageSize = pageSize <= 0 ? DEFAULT_PAGE_SIZE : pageSize;
+
+        // 2. Validate tham số
+        if (employeeId <= 0 || pageIndex < 0) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS,
+                    new PagedResponse<>(new ArrayList<>(), 0, pageIndex, finalPageSize));
+        }
+
+        // 3. Gọi DAL với finalPageSize để an toàn tuyệt đối cho câu SQL LIMIT
+        PagedResponse<EmploymentHistoryDTO> pagedData = EmploymentHistoryDAL.getInstance()
+                .getPagedByEmployeeId(employeeId, pageIndex, finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
+    }
+
+    /**
+     * Lấy chi tiết lịch sử công tác của nhân viên (với tên phòng ban, chức vụ)
+     * Có phân trang và cấu trúc dữ liệu EmploymentHistoryDetailBasicDTO
+     */
+    public BUSResult getDetailsByEmployeeIdPaged(int employeeId, int pageIndex, int pageSize) {
+        // 1. Xác định PageSize chuẩn trước khi làm bất cứ việc gì
+        int finalPageSize = pageSize <= 0 ? DEFAULT_PAGE_SIZE : pageSize;
+
+        // 2. Validate tham số
+        if (employeeId <= 0 || pageIndex < 0) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS,
+                    new PagedResponse<>(new ArrayList<>(), 0, pageIndex, finalPageSize));
+        }
+
+        // 3. Gọi DAL để lấy dữ liệu chi tiết với JOIN
+        PagedResponse<EmploymentHistoryDetailBasicDTO> pagedData = EmploymentHistoryDAL.getInstance()
+                .getDetailsByEmployeeIdPaged(employeeId, pageIndex, finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 }

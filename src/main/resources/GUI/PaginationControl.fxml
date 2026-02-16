@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<HBox alignment="CENTER_RIGHT" minWidth="50.0" prefHeight="50.0" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.PaginationController">
+    <children>
+        <Pagination fx:id="pagination" maxPageIndicatorCount="5" minWidth="245.0" pageCount="5">
+         <HBox.margin>
+            <Insets />
+         </HBox.margin>
+         <padding>
+            <Insets top="5.0" />
+         </padding>
+      </Pagination>
+      <Line endX="100.0" startX="100.0" startY="-40.0" stroke="#eeeeee" strokeWidth="2.0" />
+        <HBox alignment="CENTER" minWidth="140.0" spacing="5.0">
+            <children>
+                <Label minWidth="90.0" styleClass="label-a" text="Đến trang:">
+               <font>
+                  <Font size="16.0" />
+               </font>
+               <HBox.margin>
+                  <Insets top="4.0" />
+               </HBox.margin>
+            </Label>
+                <TextField fx:id="txtJumpPage" alignment="CENTER" minWidth="50.0" prefWidth="50.0" styleClass="txtJumpPage">
+               <HBox.margin>
+                  <Insets top="4.0" />
+               </HBox.margin>
+            </TextField>
+            </children>
+            <HBox.margin><Insets left="10.0" /></HBox.margin>
+        </HBox>
+    </children>
+</HBox>

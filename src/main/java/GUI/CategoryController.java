@@ -3,7 +3,8 @@ package GUI;
 import BUS.CategoryBUS;
 import BUS.StatusBUS;
 import DTO.BUSResult;
-import DTO.CategoryDTO;
+import DTO.CategoryDisplayDTO;
+import DTO.PagedResponse;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
@@ -13,25 +14,26 @@ import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 
 public class CategoryController implements IController {
     @FXML
-    private TableView<CategoryDTO> tblCategory;
+    private TableView<CategoryDisplayDTO> tblCategory;
     @FXML
-    private TableColumn<CategoryDTO, Integer> tlb_col_id;
+    private TableColumn<CategoryDisplayDTO, Integer> tlb_col_id;
     @FXML
-    private TableColumn<CategoryDTO, String> tlb_col_name;
+    private TableColumn<CategoryDisplayDTO, String> tlb_col_name;
     @FXML
-    private TableColumn<CategoryDTO, String> tlb_col_status;
+    private TableColumn<CategoryDisplayDTO, String> tlb_col_status;
     @FXML
     private HBox functionBtns;
     @FXML
@@ -44,13 +46,18 @@ public class CategoryController implements IController {
     private ComboBox<String> cbSearchBy;
     @FXML
     private AnchorPane mainContent;
+    @FXML
+    private PaginationController paginationController;
+    @FXML
+    private StackPane loadingOverlay;
 
     private String searchBy = "Mã thể loại";
     private String keyword = "";
     private StatusDTO statusFilter = null;
-    private CategoryDTO selectedCategory;
+    private CategoryDisplayDTO selectedCategory;
     private CategoryBUS categoryBUS;
     private SessionManagerService session;
+    private final int PAGE_SIZE = 15;
 
     // =====================
     // 1️⃣ LIFECYCLE & INITIALIZATION
@@ -66,6 +73,7 @@ public class CategoryController implements IController {
         hideButtonWithoutPermission();
         loadComboBox();
         loadTable();
+        setupPagination();
         setupListeners();
         applyFilters();
     }
@@ -77,8 +85,39 @@ public class CategoryController implements IController {
     public void loadTable() {
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
-        tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(
-                StatusBUS.getInstance().getById(cellData.getValue().getStatusId()).getDescription()));
+        tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
+    }
+
+    private void setupPagination() {
+        paginationController.init(0, PAGE_SIZE, pageIndex -> {
+            loadPageData(pageIndex);
+        });
+    }
+
+    private void loadPageData(int pageIndex) {
+        // 1. Thu thập tham số lọc từ UI
+        String keyword = txtSearch.getText().trim();
+        int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
+
+        // 2. Chạy tác vụ ngầm với TaskUtil (Stateless - Luôn lấy data mới nhất từ DB)
+        TaskUtil.executePublic(loadingOverlay,
+                () -> categoryBUS.filterCategoriesPagedForManageDisplay(keyword, statusId, pageIndex, PAGE_SIZE),
+                result -> {
+                    // 3. Sử dụng hàm "ma thuật" getPagedData() để lấy PagedResponse mà không bị báo
+                    // vàng
+                    PagedResponse<CategoryDisplayDTO> res = result.getPagedData();
+
+                    // 4. Cập nhật dữ liệu vào bảng
+                    tblCategory.setItems(FXCollections.observableArrayList(res.getItems()));
+
+                    // 5. Đồng bộ hóa bộ phân trang dựa trên kết quả thực tế từ DB
+                    // Công thức Math.ceil giúp tính tổng trang chính xác nhất
+                    int totalPages = (int) Math.ceil((double) res.getTotalItems() / PAGE_SIZE);
+                    paginationController.setPageCount(totalPages > 0 ? totalPages : 1);
+
+                    // 6. Dọn dẹp trạng thái chọn dòng để tránh nhầm lẫn dữ liệu cũ/mới
+                    tblCategory.getSelectionModel().clearSelection();
+                });
     }
 
     private void loadComboBox() {
@@ -134,7 +173,7 @@ public class CategoryController implements IController {
                 "/GUI/CategoryModal.fxml", CategoryModalController.class)
                 .setTitle("Sửa thể loại")
                 .modeEdit()
-                .configure(c -> c.setCategory(selectedCategory))
+                .configure(c -> c.setCategory(selectedCategory.getId()))
                 .open();
 
         if (modalController != null && modalController.isSaved()) {
@@ -185,10 +224,11 @@ public class CategoryController implements IController {
 
     @Override
     public void applyFilters() {
-        int statusId = (statusFilter == null) ? -1 : statusFilter.getId();
-        // tblCategory.setItems(FXCollections.observableArrayList(
-        // categoryBUS.filterCategories(searchBy, keyword, statusId)));
-        tblCategory.getSelectionModel().clearSelection();
+        if (paginationController.getCurrentPage() == 0) {
+            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
+        } else {
+            paginationController.setCurrentPage(0);
+        }
     }
 
     @Override

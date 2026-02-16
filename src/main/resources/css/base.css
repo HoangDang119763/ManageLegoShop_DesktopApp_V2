@@ -591,3 +591,59 @@
 #loadingOverlay {
     -fx-background-radius: 0;
 }
+
+/* Container chính của Pagination */
+.pagination {
+    -fx-page-information-visible: false; /* Ẩn dòng chữ "Page x of y" để UI gọn hơn */
+}
+
+/* Các nút số trang */
+
+
+/* Hiệu ứng khi Hover qua các nút số */
+.pagination .pagination-control .control-box .number-button:hover {
+    -fx-background-color: #e0f2f1; /* Màu xanh nhạt khi rê chuột qua */
+}
+
+.pagination .pagination-control .control-box .number-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1f7d84;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-min-width: 35px;
+    -fx-min-height  : 25px;
+    -fx-font-size: 14px;
+    -fx-padding: 2px;
+}
+
+.pagination .pagination-control .control-box .number-button:selected {
+    -fx-background-color: #1f7d84;
+    -fx-text-fill: white;
+    -fx-background-radius: 5px;
+}
+
+/* Các nút mũi tên (Trái/Phải/Đầu/Cuối) */
+.pagination .pagination-control .control-box .left-arrow-button,
+.pagination .pagination-control .control-box .right-arrow-button {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+/* Màu sắc của hình mũi tên bên trong nút */
+.pagination .pagination-control .control-box .left-arrow,
+.pagination .pagination-control .control-box .right-arrow {
+    -fx-background-color: #1f7d84;
+    -fx-font-size: 14px;
+}
+
+/* Hiệu ứng khi nút bị Disable (ví dụ ở trang 1 thì nút Left bị mờ) */
+.pagination .pagination-control .control-box .left-arrow-button:disabled,
+.pagination .pagination-control .control-box .right-arrow-button:disabled {
+    -fx-opacity: 0.3;
+}
+
+.txtJumpPage {
+    -fx-background-radius: 5;
+    -fx-border-color: #1f7d84;
+}

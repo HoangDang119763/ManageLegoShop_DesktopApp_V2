@@ -13,6 +13,7 @@ import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
@@ -23,36 +24,34 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class ProductController implements IController {
     @FXML
-    private TableView<ProductDTO> tblProduct;
+    private TableView<ProductDisplayDTO> tblProduct;
     @FXML
-    private TableColumn<ProductDTO, String> tlb_col_id;
+    private TableColumn<ProductDisplayDTO, String> tlb_col_id;
     @FXML
-    private TableColumn<ProductDTO, String> tlb_col_name;
+    private TableColumn<ProductDisplayDTO, String> tlb_col_name;
     @FXML
-    private TableColumn<ProductDTO, ImageView> tlb_col_imageUrl;
+    private TableColumn<ProductDisplayDTO, ImageView> tlb_col_imageUrl;
     @FXML
-    private TableColumn<ProductDTO, String> tlb_col_description;
+    private TableColumn<ProductDisplayDTO, String> tlb_col_description;
     @FXML
-    private TableColumn<ProductDTO, String> tlb_col_categoryName;
+    private TableColumn<ProductDisplayDTO, String> tlb_col_categoryName;
     @FXML
-    private TableColumn<ProductDTO, Integer> tlb_col_stockQuantity;
+    private TableColumn<ProductDisplayDTO, Integer> tlb_col_stockQuantity;
     @FXML
-    private TableColumn<ProductDTO, String> tlb_col_sellingPrice;
+    private TableColumn<ProductDisplayDTO, String> tlb_col_sellingPrice;
     @FXML
-    private TableColumn<ProductDTO, String> tlb_col_status;
+    private TableColumn<ProductDisplayDTO, String> tlb_col_status;
     @FXML
     private Button addBtn, editBtn, deleteBtn, refreshBtn, btnImportExcel;
     @FXML
@@ -64,16 +63,17 @@ public class ProductController implements IController {
     @FXML
     private ComboBox<StatusDTO> cbStatusFilter;
     @FXML
-    private ComboBox<String> cbSearchBy;
-    @FXML
     private ComboBox<CategoryDTO> cbCategoryFilter;
-    private String searchBy = "Mã sản phẩm";
+    @FXML
+    private PaginationController paginationController;
+
+    private final int PAGE_SIZE = 15;
     private String keyword = "";
     private CategoryDTO categoryFilter = null;
     private StatusDTO statusFilter = null;
     private BigDecimal startPrice = null;
     private BigDecimal endPrice = null;
-    private ProductDTO selectedProduct;
+    private ProductDisplayDTO selectedProduct;
 
     // BUS instances - initialized once
     private ProductBUS productBUS;
@@ -81,6 +81,8 @@ public class ProductController implements IController {
     private StatusBUS statusBUS;
     @FXML
     private AnchorPane mainContent;
+    @FXML
+    private StackPane loadingOverlay;
 
     // =====================
     // 1️⃣ LIFECYCLE & INITIALIZATION
@@ -88,11 +90,8 @@ public class ProductController implements IController {
     @FXML
     public void initialize() {
         productBUS = ProductBUS.getInstance();
-        // [STATELESS] No need to pre-load cache - will load on-demand from DB
         categoryBUS = CategoryBUS.getInstance();
-        // [STATELESS] Data loads on-demand via HikariCP
         statusBUS = StatusBUS.getInstance();
-        // [STATELESS] Real-time sync enabled
 
         tblProduct.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblProduct.getSelectionModel().clearSelection());
@@ -101,6 +100,7 @@ public class ProductController implements IController {
         loadComboBox();
         loadTable();
         setupListeners();
+        setupPagination();
         applyFilters();
     }
 
@@ -108,8 +108,6 @@ public class ProductController implements IController {
     // 2️⃣ UI SETUP (LOAD & CONFIG)
     // =====================
     private void loadComboBox() {
-        cbSearchBy.getItems().addAll("Mã sản phẩm", "Tên sản phẩm");
-
         ArrayList<StatusDTO> statusList = statusBUS.getAllByType(StatusType.PRODUCT);
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbStatusFilter.getItems().add(allStatus);
@@ -119,7 +117,6 @@ public class ProductController implements IController {
         cbCategoryFilter.getItems().add(allCategory);
         cbCategoryFilter.getItems().addAll(categoryBUS.getAll());
 
-        cbSearchBy.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
         cbCategoryFilter.getSelectionModel().selectFirst();
     }
@@ -129,53 +126,64 @@ public class ProductController implements IController {
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
         tlb_col_imageUrl.setCellValueFactory(cellData -> {
-            String imageUrl = cellData.getValue().getImageUrl();
-            File imageFile = null;
-            Image image = null;
-
-            if (imageUrl != null && !imageUrl.isEmpty()) {
-                imageFile = new File(imageUrl);
-            }
-
-            if (imageFile != null && imageFile.exists()) {
-                try {
-                    image = new Image(imageFile.toURI().toString(), 200, 200, true, true);
-                } catch (Exception e) {
-                }
-            } else {
-                URL defaultImageUrl = getClass().getResource("/images/default/default.png");
-                if (defaultImageUrl != null) {
-                    image = new Image(defaultImageUrl.toExternalForm());
-                }
-            }
-
-            if (image != null) {
-                ImageView imageView = new ImageView(image);
-                imageView.setFitWidth(70);
-                imageView.setFitHeight(70);
-                return new SimpleObjectProperty<>(imageView);
-            } else {
-                return new SimpleObjectProperty<>(null);
-            }
+            String url = cellData.getValue().getImageUrl();
+            return new SimpleObjectProperty<>(UiUtils.gI().createImageView(url, 70, 70));
         });
 
         tlb_col_description.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getDescription() == null ? "" : cellData.getValue().getDescription()));
+
+        // Không cần gọi BUS - categoryName đã có từ JOIN
         tlb_col_categoryName.setCellValueFactory(cellData -> new SimpleStringProperty(
-                categoryBUS.getById(cellData.getValue().getCategoryId()).getName()));
+                cellData.getValue().getCategoryName() != null ? cellData.getValue().getCategoryName() : ""));
+
         tlb_col_sellingPrice.setCellValueFactory(cellData -> new SimpleStringProperty(
                 ValidationUtils.getInstance().formatCurrency(cellData.getValue().getSellingPrice())));
         tlb_col_stockQuantity.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
-        tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(statusBUS
-                .getById(cellData.getValue().getStatusId()).getDescription()));
+
+        // Không cần gọi BUS - statusDescription đã có từ JOIN
+        tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getStatusDescription() != null ? cellData.getValue().getStatusDescription() : ""));
+
         UiUtils.gI().addTooltipToColumn(tlb_col_name, 15);
         UiUtils.gI().addTooltipToColumn(tlb_col_description, 15);
         UiUtils.gI().addTooltipToColumn(tlb_col_categoryName, 15);
     }
 
+    private void setupPagination() {
+        // Thiết lập callback: Khi trang đổi -> gọi hàm load dữ liệu
+        paginationController.init(0, PAGE_SIZE, pageIndex -> {
+            loadPageData(pageIndex);
+        });
+    }
+
+    private void loadPageData(int pageIndex) {
+        String keyword = txtSearch.getText().trim();
+        int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
+        int categoryId = (cbCategoryFilter.getValue() == null) ? -1 : cbCategoryFilter.getValue().getId();
+
+        // Sử dụng method DISPLAY version - JOIN category & status, không cần gọi BUS lẻ
+        TaskUtil.executePublic(loadingOverlay,
+                () -> productBUS.filterProductsPagedForManageDisplay(keyword, categoryId, statusId, startPrice,
+                        endPrice,
+                        pageIndex,
+                        PAGE_SIZE),
+                result -> {
+                    // Lấy dữ liệu ProductDisplayDTO đã được JOIN
+                    PagedResponse<ProductDisplayDTO> res = result.getPagedData();
+
+                    tblProduct.setItems(FXCollections.observableArrayList(res.getItems()));
+
+                    // Cập nhật tổng số trang dựa trên COUNT(*) từ DB
+                    int totalPages = (int) Math.ceil((double) res.getTotalItems() / PAGE_SIZE);
+                    paginationController.setPageCount(totalPages > 0 ? totalPages : 1);
+
+                    tblProduct.getSelectionModel().clearSelection();
+                });
+    }
+
     @Override
     public void setupListeners() {
-        cbSearchBy.setOnAction(event -> handleSearchByChange());
         cbCategoryFilter.setOnAction(event -> handleCategoryFilterChange());
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
         txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
@@ -223,7 +231,7 @@ public class ProductController implements IController {
                 ProductModalController.class)
                 .setTitle("Sửa sản phẩm")
                 .modeEdit()
-                .configure(c -> c.setProduct(selectedProduct))
+                .configure(c -> c.setProduct(selectedProduct.getId()))
                 .open();
         if (modalController != null && modalController.isSaved()) {
             resetFilters();
@@ -238,7 +246,7 @@ public class ProductController implements IController {
         new ModalBuilder<ProductModalController>("/GUI/ProductModal.fxml", ProductModalController.class)
                 .setTitle("Xem chi tiết sản phẩm")
                 .modeDetail()
-                .configure(c -> c.setProduct(selectedProduct))
+                .configure(c -> c.setProduct(selectedProduct.getId()))
                 .open();
     }
 
@@ -279,11 +287,6 @@ public class ProductController implements IController {
         }
     }
 
-    private void handleSearchByChange() {
-        searchBy = cbSearchBy.getValue();
-        applyFilters();
-    }
-
     private void handleKeywordChange() {
         keyword = txtSearch.getText().trim();
         applyFilters();
@@ -304,24 +307,21 @@ public class ProductController implements IController {
     // =====================
     @Override
     public void applyFilters() {
-        int statusId = statusFilter == null ? -1 : statusFilter.getId();
-        int categoryId = categoryFilter == null ? -1 : categoryFilter.getId();
-        tblProduct.setItems(FXCollections.observableArrayList(
-                ProductBUS.getInstance().filterProducts(searchBy, keyword, categoryId,
-                        statusId, startPrice, endPrice)));
-        tblProduct.getSelectionModel().clearSelection();
+        if (paginationController.getCurrentPage() == 0) {
+            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
+        } else {
+            paginationController.setCurrentPage(0);
+        }
     }
 
     @Override
     public void resetFilters() {
-        cbSearchBy.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
         cbCategoryFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
         txtStartPrice.clear();
         txtEndPrice.clear();
 
-        searchBy = "Mã sản phẩm";
         keyword = "";
         categoryFilter = null;
         statusFilter = null;

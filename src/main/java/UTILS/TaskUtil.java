@@ -32,7 +32,7 @@ public class TaskUtil {
         return t;
     });
 
-    private static final long MIN_LOADING_TIME_MS = 300; // 0.5 giây
+    private static final long MIN_LOADING_TIME_MS = 0; // 0.5 giây
 
     private static void hideLoadingWithDelay(StackPane overlay, long startTimeMs, Runnable callback) {
         long elapsedMs = System.currentTimeMillis() - startTimeMs;

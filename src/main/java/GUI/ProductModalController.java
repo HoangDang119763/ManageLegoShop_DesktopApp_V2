@@ -69,7 +69,7 @@ public class ProductModalController implements IModalController {
     @Getter
     private boolean isSaved;
     private int typeModal;
-    private ProductDTO product;
+    private ProductDTO product; // Full product data from BUS
     private ProductBUS productBUS;
     private StatusBUS statusBUS;
     private CategoryBUS categoryBUS;
@@ -154,21 +154,26 @@ public class ProductModalController implements IModalController {
             cbSelectStatus.getSelectionModel().selectFirst();
             cbSelectCategory.getSelectionModel().selectFirst();
         } else if (typeModal == 1) {
-            if (product == null) {
-                handleClose();
-            }
             modalName.setText("Sửa sản phẩm");
 
         } else if (typeModal == 2) {
-            if (product == null) {
-                handleClose();
-            }
             modalName.setText("Xem chi tiết sản phẩm");
         }
     }
 
-    public void setProduct(ProductDTO product) {
-        this.product = product;
+    /**
+     * Set product by ID - tự động lấy full data từ BUS
+     * 
+     * @param productId ID sản phẩm cần load
+     */
+    public void setProduct(String productId) {
+        // Lấy full product data từ BUS
+        this.product = productBUS.getById(productId);
+        if (this.product == null) {
+            handleClose();
+            return;
+        }
+        // Điền dữ liệu vào form
         txtProductName.setText(product.getName());
         txtProductId.setText(product.getId());
         txtDescription.setText(product.getDescription() == null ? "" : product.getDescription());
@@ -202,7 +207,6 @@ public class ProductModalController implements IModalController {
         if (typeModal == 2) {
             setupReadOnlyMode();
         }
-
     }
 
     private void prepareCategorySelection(int initialId) {

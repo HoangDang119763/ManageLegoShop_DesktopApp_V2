@@ -2,9 +2,13 @@ package DAL;
 
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
+import DTO.EmploymentHistoryDTO;
+import DTO.PagedResponse;
 import DTO.EmployeeDetailDTO;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     public static final EmployeeDAL INSTANCE = new EmployeeDAL();
