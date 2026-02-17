@@ -76,8 +76,9 @@ public class CusForSellingModalController {
         UiUtils.gI().addTooltipToColumn(tlb_col_phone, 10);
         UiUtils.gI().addTooltipToColumn(tlb_col_address, 10);
 
-        tblCustomer
-                .setItems(FXCollections.observableArrayList(CustomerBUS.getInstance().filterCustomers("", 1, 0, 100)));
+        // tblCustomer
+        // .setItems(FXCollections.observableArrayList(CustomerBUS.getInstance().filterCustomers("",
+        // 1, 0, 100)));
         tblCustomer.getSelectionModel().clearSelection();
     }
 

@@ -5,15 +5,15 @@ import java.util.ArrayList;
 
 import BUS.CustomerBUS;
 import BUS.StatusBUS;
-import DTO.BUSResult;
 import DTO.CustomerDTO;
+import DTO.CustomerDisplayDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IModalController;
-import SERVICE.SecureExecutor;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.collections.FXCollections;
@@ -25,6 +25,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.Getter;
 
@@ -52,12 +53,16 @@ public class CustomerModalController implements IModalController {
     public HBox updatedAt;
     @FXML
     public ComboBox<StatusDTO> cbSelectStatus;
+    @FXML
+    public StackPane loadingOverlay;
 
     // State variables
     @Getter
     private boolean isSaved;
+    @Getter
+    private String resultMessage; // Lưu message để trả về stage cha
     private int typeModal; // 0: Add, 1: Edit
-    private CustomerDTO customer;
+    private CustomerDisplayDTO customer;
     private StatusBUS statusBus;
     private CustomerBUS customerBus;
     private ValidationUtils validator;
@@ -97,31 +102,31 @@ public class CustomerModalController implements IModalController {
         }
     }
 
-    public void setCustomer(CustomerDTO customer) {
-        this.customer = customer;
-        if (customer != null) {
-            txtCustomerId.setText(String.valueOf(customer.getId()));
-            txtFirstName.setText(customer.getFirstName());
-            txtLastName.setText(customer.getLastName());
+    public void setCustomer(int customerId) {
+        // this.customer = customerBus.getById(customerId);
+        // if (customer != null) {
+        // txtCustomerId.setText(String.valueOf(customer.getId()));
+        // txtFirstName.setText(customer.getFirstName());
+        // txtLastName.setText(customer.getLastName());
 
-            if (customer.getDateOfBirth() != null) {
-                dateOfBirth.setValue(customer.getDateOfBirth());
-            } else {
-                dateOfBirth.setValue(null);
-            }
+        // if (customer.getDateOfBirth() != null) {
+        // dateOfBirth.setValue(customer.getDateOfBirth());
+        // } else {
+        // dateOfBirth.setValue(null);
+        // }
 
-            txtPhone.setText(customer.getPhone());
-            txtAddress.setText(customer.getAddress());
-            StatusDTO statusToSelect = statusBus.getById(customer.getStatusId());
-            if (statusToSelect != null) {
-                cbSelectStatus.getItems().stream()
-                        .filter(item -> item != null && item.getId() == statusToSelect.getId())
-                        .findFirst()
-                        .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
-            }
-        }
-        if (typeModal == 0)
-            UiUtils.gI().setVisibleItem(updatedAt);
+        // txtPhone.setText(customer.getPhone());
+        // txtAddress.setText(customer.getAddress());
+        // StatusDTO statusToSelect = statusBus.getById(customer.getStatusId());
+        // if (statusToSelect != null) {
+        // cbSelectStatus.getItems().stream()
+        // .filter(item -> item != null && item.getId() == statusToSelect.getId())
+        // .findFirst()
+        // .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
+        // }
+        // }
+        // if (typeModal == 0)
+        // UiUtils.gI().setVisibleItem(updatedAt);
 
     }
 
@@ -202,18 +207,14 @@ public class CustomerModalController implements IModalController {
 
     private void insertCustomer() {
         if (!isValidInput())
-            return; // Early return giúp code đỡ bị lồng nhiều khối if
+            return;
 
-        // 1. Thu thập dữ liệu và xử lý nhanh
         String fName = txtFirstName.getText().trim();
         String lName = txtLastName.getText().trim();
         String phone = txtPhone.getText().trim();
-
-        // Rút gọn logic xử lý address: trim và chuyển rỗng thành null
         String addressRaw = txtAddress.getText();
         String address = (addressRaw == null || addressRaw.trim().isEmpty()) ? null : addressRaw.trim();
 
-        // 2. Tạo đối tượng Temp (ID -1 là chuẩn cho insert)
         CustomerDTO temp = new CustomerDTO(
                 -1,
                 fName,
@@ -223,61 +224,49 @@ public class CustomerModalController implements IModalController {
                 dateOfBirth.getValue(),
                 cbSelectStatus.getValue().getId());
 
-        // 3. Thực thi an toàn qua SecureExecutor
-        BUSResult insertResult = SecureExecutor.executeSafeBusResult(
-                PermissionKey.CUSTOMER_INSERT,
-                () -> customerBus.insert(temp));
-
-        // 4. Xử lý phản hồi từ BUS
-        if (insertResult.isSuccess()) {
-            NotificationUtils.showInfoAlert(insertResult.getMessage(), AppMessages.DIALOG_TITLE);
-            isSaved = true;
-            handleClose();
-        } else {
-            // BUS sẽ trả về lỗi nếu "isExistCustomer" (trùng 5 trường) trả về true
-            NotificationUtils.showErrorAlert(insertResult.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.CUSTOMER_INSERT,
+                () -> customerBus.insert(temp),
+                result -> {
+                    if (result.isSuccess()) {
+                        isSaved = true;
+                        resultMessage = result.getMessage();
+                        handleClose();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void updateCustomer() {
-        // 1. Early Return giúp code thoáng hơn
         if (!isValidInput())
             return;
 
-        // 2. Thu thập và làm sạch dữ liệu (UI Clean-up)
         String fName = txtFirstName.getText().trim();
         String lName = txtLastName.getText().trim();
         String phone = txtPhone.getText().trim();
-
-        // Xử lý địa chỉ an toàn: Tránh NPE và đồng bộ logic null với BUS
         String addressRaw = txtAddress.getText();
         String address = (addressRaw == null || addressRaw.trim().isEmpty()) ? null : addressRaw.trim();
 
-        // 3. Khởi tạo DTO với dữ liệu đã làm sạch
-        // Sử dụng customer.getId() để đảm bảo Update đúng đối tượng cũ
         CustomerDTO temp = new CustomerDTO(
                 customer.getId(),
                 fName,
                 lName,
                 phone,
                 address,
-                dateOfBirth.getValue(), // Tối giản: getValue() trả về null nếu không chọn
+                dateOfBirth.getValue(),
                 cbSelectStatus.getValue().getId());
 
-        // 4. Thực thi qua lớp bảo mật SecureExecutor
-        BUSResult updateResult = SecureExecutor.executeSafeBusResult(
-                PermissionKey.CUSTOMER_UPDATE,
-                () -> customerBus.update(temp));
-
-        // 5. Phản hồi người dùng dựa trên kết quả từ BUS
-        if (updateResult.isSuccess()) {
-            NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-            isSaved = true;
-            handleClose();
-        } else {
-            // Hiển thị lỗi cụ thể (ví dụ: Trùng 5 trường với khách khác - CONFLICT)
-            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.CUSTOMER_UPDATE,
+                () -> customerBus.update(temp),
+                result -> {
+                    if (result.isSuccess()) {
+                        isSaved = true;
+                        resultMessage = result.getMessage();
+                        handleClose();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void handleClose() {

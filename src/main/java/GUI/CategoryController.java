@@ -24,6 +24,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 public class CategoryController implements IController {
     @FXML
@@ -159,6 +160,8 @@ public class CategoryController implements IController {
                 .open();
 
         if (modalController != null && modalController.isSaved()) {
+            Stage currentStage = (Stage) addBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
             applyFilters();
         }
     }
@@ -177,6 +180,8 @@ public class CategoryController implements IController {
                 .open();
 
         if (modalController != null && modalController.isSaved()) {
+            Stage currentStage = (Stage) editBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
             applyFilters();
         }
     }

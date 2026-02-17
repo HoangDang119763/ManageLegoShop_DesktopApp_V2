@@ -461,7 +461,6 @@ public class UiUtils {
         ImageView imageView = new ImageView(image);
         imageView.setFitWidth(width);
         imageView.setFitHeight(height);
-        imageView.setPreserveRatio(true); // Giữ đúng tỉ lệ ảnh Lego, không bị méo
 
         return imageView;
     }

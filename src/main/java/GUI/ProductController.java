@@ -67,7 +67,7 @@ public class ProductController implements IController {
     @FXML
     private PaginationController paginationController;
 
-    private final int PAGE_SIZE = 15;
+    private final int PAGE_SIZE = 10;
     private String keyword = "";
     private CategoryDTO categoryFilter = null;
     private StatusDTO statusFilter = null;
@@ -163,7 +163,7 @@ public class ProductController implements IController {
         int categoryId = (cbCategoryFilter.getValue() == null) ? -1 : cbCategoryFilter.getValue().getId();
 
         // Sử dụng method DISPLAY version - JOIN category & status, không cần gọi BUS lẻ
-        TaskUtil.executePublic(loadingOverlay,
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.PRODUCT_LIST_VIEW,
                 () -> productBUS.filterProductsPagedForManageDisplay(keyword, categoryId, statusId, startPrice,
                         endPrice,
                         pageIndex,
@@ -218,6 +218,8 @@ public class ProductController implements IController {
                 .modeAdd()
                 .open();
         if (modalController != null && modalController.isSaved()) {
+            Stage currentStage = (Stage) addBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
             resetFilters();
         }
     }
@@ -234,6 +236,8 @@ public class ProductController implements IController {
                 .configure(c -> c.setProduct(selectedProduct.getId()))
                 .open();
         if (modalController != null && modalController.isSaved()) {
+            Stage currentStage = (Stage) editBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
             resetFilters();
         }
     }
@@ -264,7 +268,8 @@ public class ProductController implements IController {
                 () -> productBUS.delete(selectedProduct.getId()));
 
         if (updateResult.isSuccess()) {
-            NotificationUtils.showInfoAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
+            Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, updateResult.getMessage());
             resetFilters();
         } else {
             NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);

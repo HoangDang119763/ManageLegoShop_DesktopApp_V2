@@ -29,9 +29,14 @@
                         <FontAwesomeIcon fill="#58c9c9" glyphName="SEARCH" layoutX="175.0" layoutY="35.0" size="1.8em" AnchorPane.leftAnchor="175.0" AnchorPane.topAnchor="15.0" />
                         <Line endX="85.0" layoutX="115.0" layoutY="45.0" startX="-100.0" stroke="#58c9c9" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="45.0" />
 
-                        <Button fx:id="advanceSearchBtn" layoutX="1010.0" layoutY="12.0" mnemonicParsing="false" prefHeight="34.0" prefWidth="40.0" styleClass="action-btn" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="12.0">
+                        <Button fx:id="advanceSearchBtn" layoutX="1010.0" layoutY="12.0" mnemonicParsing="false" prefHeight="38.4" prefWidth="40.0" styleClass="action-btn" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                             <graphic><FontAwesomeIcon glyphName="FILTER" size="1.2em" styleClass="action-icon" /></graphic>
                         </Button>
+                              <Button fx:id="exportPdf" layoutX="879.0" layoutY="10.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="121.0" styleClass="action-btn" text="XUẤT PDF" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="10.0">
+                                  <graphic>
+                        <FontAwesomeIcon fill="WHITE" glyphName="FILE_TEXT" size="1.2em" />
+                     </graphic>
+                              </Button>
                     </children>
                <BorderPane.margin>
                   <Insets bottom="-5.0" />
@@ -72,13 +77,8 @@
                                 <AnchorPane prefHeight="65.0">
                                     <children>
                                         <Line endX="627.0" stroke="#58c9c9" strokeWidth="1.5" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="0.0" />
-                                        <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" prefHeight="50.0" spacing="12.0" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
-                                            <children>
-                                                <Button fx:id="exportPdf" mnemonicParsing="false" prefHeight="38.0" prefWidth="121.0" styleClass="action-btn" text="XUẤT PDF">
-                                                    <graphic><FontAwesomeIcon fill="WHITE" glyphName="FILE_TEXT" size="1.2em" /></graphic>
-                                                </Button>
-                                            </children>
-                                        </HBox>
+                                        <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" prefHeight="50.0" spacing="12.0" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />
+                                <fx:include fx:id="pagination" source="PaginationControl.fxml" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="5.0" />
                                     </children>
                                 </AnchorPane>
                             </children>
@@ -173,5 +173,6 @@
                 </HBox>
             </center>
         </BorderPane>
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
     </children>
 </AnchorPane>

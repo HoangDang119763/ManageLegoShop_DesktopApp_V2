@@ -309,7 +309,7 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
      * [OPTIMIZED] Filter products with category name & status description (JOIN)
      * Tránh gọi BUS lẻ lẻ từng dòng
      */
-    public PagedResponse<ProductDisplayDTO> filterProductsPagedDisplay(
+    public PagedResponse<ProductDisplayDTO> filterProductsPagedForManageDisplay(
             String keyword, int categoryId, int statusId,
             BigDecimal startPrice, BigDecimal endPrice,
             boolean inStockOnly, int pageIndex, int pageSize) {
@@ -336,7 +336,7 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
                 "LIMIT ?, ?";
 
         try (Connection conn = connectionFactory.newConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             String searchKey = "%" + (keyword == null ? "" : keyword.trim()) + "%";
             ps.setString(1, keyword == null ? "" : keyword.trim());
@@ -374,7 +374,8 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
     }
 
     /**
-     * Map ResultSet sang ProductDisplayDTO (với category name và status description)
+     * Map ResultSet sang ProductDisplayDTO (với category name và status
+     * description)
      */
     private ProductDisplayDTO mapResultSetToProductDisplay(ResultSet rs) throws SQLException {
         return new ProductDisplayDTO(
@@ -389,7 +390,6 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
                 rs.getInt("status_id"),
                 rs.getString("status_description"), // JOIN từ status table
                 rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null,
-                rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null
-        );
+                rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
     }
 }

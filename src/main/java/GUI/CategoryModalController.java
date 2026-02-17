@@ -2,15 +2,14 @@ package GUI;
 
 import BUS.CategoryBUS;
 import BUS.StatusBUS;
-import DTO.BUSResult;
 import DTO.CategoryDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IModalController;
-import SERVICE.SecureExecutor;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.collections.FXCollections;
@@ -20,6 +19,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -49,10 +49,14 @@ public class CategoryModalController implements IModalController {
     public Button saveBtn;
     @FXML
     public ComboBox<StatusDTO> cbSelectStatus;
+    @FXML
+    public StackPane loadingOverlay;
 
     // State variables
     @Getter
     private boolean isSaved;
+    @Getter
+    private String resultMessage; // Lưu message để trả về stage cha
     private int typeModal; // 0: Add, 1: Edit
     private CategoryDTO category;
     private CategoryBUS categoryBus;
@@ -170,12 +174,17 @@ public class CategoryModalController implements IModalController {
 
         CategoryDTO temp = new CategoryDTO(-1, name, statusId);
 
-        // Gọi qua SecureExecutor và BUSResult (Bỏ Switch-Case số cũ)
-        BUSResult result = SecureExecutor.executeSafeBusResult(
-                PermissionKey.CATEGORY_INSERT,
-                () -> categoryBus.insert(temp));
-
-        processResult(result);
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.CATEGORY_INSERT,
+                () -> categoryBus.insert(temp),
+                result -> {
+                    if (result.isSuccess()) {
+                        isSaved = true;
+                        resultMessage = result.getMessage();
+                        handleClose();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void updateCategory() {
@@ -188,22 +197,17 @@ public class CategoryModalController implements IModalController {
         // Giữ nguyên ID cũ để Update
         CategoryDTO temp = new CategoryDTO(category.getId(), name, statusId);
 
-        BUSResult result = SecureExecutor.executeSafeBusResult(
-                PermissionKey.CATEGORY_UPDATE,
-                () -> categoryBus.update(temp));
-
-        processResult(result);
-    }
-
-    // Hàm dùng chung để xử lý kết quả trả về từ BUSResult
-    private void processResult(BUSResult result) {
-        if (result.isSuccess()) {
-            NotificationUtils.showInfoAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
-            this.isSaved = true;
-            handleClose();
-        } else {
-            NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.CATEGORY_UPDATE,
+                () -> categoryBus.update(temp),
+                result -> {
+                    if (result.isSuccess()) {
+                        isSaved = true;
+                        resultMessage = result.getMessage();
+                        handleClose();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void handleClose() {

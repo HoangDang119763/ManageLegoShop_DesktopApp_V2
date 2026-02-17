@@ -10,6 +10,7 @@ import INTERFACE.IController;
 import SERVICE.DiscountService;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
@@ -19,6 +20,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,8 +53,14 @@ public class DiscountController implements IController {
     private Button addBtn, editBtn, deleteBtn, refreshBtn, advanceSearchBtn;
     @FXML
     private TextField txtSearch;
+    @FXML
+    private PaginationController paginationController;
+    @FXML
+    private StackPane loadingOverlay;
+
     private String keyword = "";
     private DiscountDTO selectedDiscount;
+    private static final int PAGE_SIZE = 10;
 
     @FXML
     public void initialize() {
@@ -65,6 +74,7 @@ public class DiscountController implements IController {
         setupListeners();
 
         loadTable();
+        setupPagination();
         // applyFilters();
     }
 
@@ -146,6 +156,22 @@ public class DiscountController implements IController {
         tblDetailDiscount.getSelectionModel().clearSelection();
     }
 
+    private void setupPagination() {
+        paginationController.init(0, PAGE_SIZE, pageIndex -> {
+            loadPageData(pageIndex);
+        });
+    }
+
+    private void loadPageData(int pageIndex) {
+        // TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_LIST_VIEW,
+        // () -> DiscountBUS.getInstance().getAll(),
+        // result -> {
+        // tblDiscount.setItems(FXCollections.observableArrayList(result));
+        // paginationController.setPageCount(1);
+        // tblDiscount.getSelectionModel().clearSelection();
+        // });
+    }
+
     private void handleKeywordChange() {
         keyword = txtSearch.getText().trim();
         applyFilters();
@@ -190,7 +216,8 @@ public class DiscountController implements IController {
                 controller -> controller.setTypeModal(0),
                 "Thêm khuyến mãi");
         if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Thêm khuyến mãi thành công.", "Thông báo");
+            Stage currentStage = (Stage) addBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
             resetFilters();
         }
     }
@@ -213,7 +240,8 @@ public class DiscountController implements IController {
                 },
                 "Sửa khuyến mãi");
         if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Sửa khuyến mãi thành công.", "Thông báo");
+            Stage currentStage = (Stage) editBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
             resetFilters();
         }
     }

@@ -1,14 +1,18 @@
 package BUS;
 
 import DAL.CustomerDAL;
+import DAL.ProductDAL;
 import DAL.SupplierDAL;
+import DTO.BUSResult;
 import DTO.CategoryDTO;
 import DTO.CustomerDTO;
 import DTO.SupplierDTO;
+import DTO.SupplierDisplayDTO;
+import ENUM.BUSOperationResult;
+import DTO.PagedResponse;
 import UTILS.ValidationUtils;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
     private static final SupplierBUS INSTANCE = new SupplierBUS();
@@ -28,43 +32,6 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
     @Override
     protected Integer getKey(SupplierDTO obj) {
         return obj.getId();
-    }
-
-    public ArrayList<SupplierDTO> filterSuppliers(String searchBy, String keyword, int statusFilter) {
-        ArrayList<SupplierDTO> filteredList = new ArrayList<>();
-
-        // if (keyword == null)
-        // keyword = "";
-        // if (searchBy == null)
-        // searchBy = "";
-
-        // keyword = keyword.trim().toLowerCase();
-
-        // for (SupplierDTO sup : arrLocal) {
-        // // Check keyword match
-        // boolean matchesSearch = true;
-        // String name = sup.getName() != null ? sup.getName().toLowerCase() : "";
-        // String id = String.valueOf(sup.getId());
-
-        // if (!keyword.isEmpty()) {
-        // matchesSearch = switch (searchBy) {
-        // case "Mã nhà cung cấp" -> id.contains(keyword);
-        // case "Tên nhà cung cấp" -> name.contains(keyword);
-        // default -> false;
-        // };
-        // }
-
-        // // Check status match (-1 = all, 1 = active, 0 = inactive)
-        // boolean matchesStatus = (statusFilter == -1) || sup.getStatusId() ==
-        // statusFilter;
-
-        // // Add if matches all conditions
-        // if (matchesSearch && matchesStatus) {
-        // filteredList.add(sup);
-        // }
-        // }
-
-        return filteredList;
     }
 
     public ArrayList<SupplierDTO> searchSupplierByPhone(String phone) {
@@ -193,6 +160,30 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
         // }
         // }
         return false;
+    }
+
+    /**
+     * Filter suppliers with pagination for manage display
+     * 
+     * @param keyword   Search keyword (by supplier ID or name)
+     * @param statusId  Status filter (-1 to skip filtering)
+     * @param pageIndex Page index (0-based)
+     * @param pageSize  Page size
+     * @return PagedResponse with SupplierDisplayDTO items
+     */
+    public BUSResult filterSuppliersPagedForManageDisplay(
+            String keyword, int statusId, int pageIndex, int pageSize) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalStatusId = (statusId <= 0) ? -1 : statusId;
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+
+        // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
+        PagedResponse<SupplierDisplayDTO> pagedData = SupplierDAL.getInstance()
+                .filterSuppliersPagedForManageDisplay(cleanKeyword, finalStatusId, finalPageIndex,
+                        finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
     @Override

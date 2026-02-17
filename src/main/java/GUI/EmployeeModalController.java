@@ -22,6 +22,7 @@ import PROVIDER.EmploymentHistoryViewProvider;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.beans.property.SimpleStringProperty;
@@ -29,6 +30,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.Getter;
 
@@ -138,9 +140,13 @@ public class EmployeeModalController implements IModalController {
     private Label lblUpdatedAt;
     @FXML
     private Button closeBtn;
+    @FXML
+    private StackPane loadingOverlay;
 
     @Getter
     private boolean isSaved = false;
+    @Getter
+    private String resultMessage = "";
     private int typeModal; // 0=Add, 1=Edit, 2=View
     private EmployeeDTO employee;
     private RoleBUS roleBUS;
@@ -152,6 +158,7 @@ public class EmployeeModalController implements IModalController {
     private EmploymentHistoryBUS employmentHistoryBUS;
     private ValidationUtils validationUtils;
     private AccountBUS accountBUS;
+    private EmployeeDetailDTO empDetail;
 
     @FXML
     public void initialize() {
@@ -279,9 +286,10 @@ public class EmployeeModalController implements IModalController {
         }
     }
 
-    public void setEmployee(EmployeeDetailDTO empDetail) {
+    public void setEmployee(int id) {
         // Display employee data from EmployeeDetailDTO
         // tab1 Personal Info
+        empDetail = employeeBUS.getDetailById(id);
         txtEmployeeId.setText(String.valueOf(empDetail.getEmployeeId()));
         txtFirstName.setText(empDetail.getFirstName() != null ? empDetail.getFirstName() : "");
         txtLastName.setText(empDetail.getLastName() != null ? empDetail.getLastName() : "");
@@ -448,34 +456,37 @@ public class EmployeeModalController implements IModalController {
         employee.setTransportationSupport(cbTransportSupport.isSelected());
         employee.setAccommodationSupport(cbAccommodationSupport.isSelected());
 
-        // Save to database
-        int result;
+        // Save to database with loading overlay
         if (typeModal == 0) {
             // Insert new employee
-            // result = employeeBUS.insert(employee, session.employeeRoleId(),
-            // session.employeeLoginId());
-            // if (result == 1) {
-            // NotificationUtils.showInfoAlert("Thêm nhân viên thành công",
-            // AppMessages.DIALOG_TITLE);
+            // TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_INSERT, () -> {
+            // var result = employeeBUS.insert(employee);
+            // return result;
+            // }, result -> {
+            // if (result.isSuccess()) {
+            // resultMessage = result.getMessage();
             // isSaved = true;
             // handleClose();
             // } else {
-            // NotificationUtils.showErrorAlert("Thêm nhân viên thất bại",
+            // NotificationUtils.showErrorAlert(result.getMessage(),
             // AppMessages.DIALOG_TITLE);
             // }
+            // });
         } else if (typeModal == 1) {
-            // Update existing employee
-            // result = employeeBUS.update(employee, session.employeeRoleId(),
-            // session.employeeLoginId());
-            // if (result == 1) {
-            // NotificationUtils.showInfoAlert("Cập nhật nhân viên thành công",
-            // AppMessages.DIALOG_TITLE);
+            // // Update existing employee
+            // TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_UPDATE, () -> {
+            // var result = employeeBUS.update(employee);
+            // return result;
+            // }, result -> {
+            // if (result.isSuccess()) {
+            // resultMessage = result.getMessage();
             // isSaved = true;
             // handleClose();
             // } else {
-            // NotificationUtils.showErrorAlert("Cập nhật nhân viên thất bại",
+            // NotificationUtils.showErrorAlert(result.getMessage(),
             // AppMessages.DIALOG_TITLE);
             // }
+            // });
         }
     }
 

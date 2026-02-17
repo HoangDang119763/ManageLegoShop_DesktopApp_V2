@@ -2,14 +2,19 @@
 package BUS;
 
 import DAL.EmployeeDAL;
+import DAL.ProductDAL;
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
+import DTO.PagedResponse;
+import DTO.ProductDisplayDTO;
 import DTO.EmployeeDetailDTO;
+import DTO.EmployeeDisplayDTO;
 import DTO.BUSResult;
 import ENUM.*;
 import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
@@ -160,6 +165,22 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         }
 
         return filteredList;
+    }
+
+    public BUSResult filterEmployeesPagedForManageDisplay(String keyword, int roleIdFilter, int statusFilter,
+            int pageIndex, int pageSize) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalRoleId = (roleIdFilter <= 0) ? -1 : roleIdFilter;
+        int finalStatusId = (statusFilter <= 0) ? -1 : statusFilter;
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+
+        // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
+        PagedResponse<EmployeeDisplayDTO> pagedData = EmployeeDAL.getInstance()
+                .filterEmployeesPagedForManageDisplay(cleanKeyword, finalRoleId, finalStatusId, finalPageIndex,
+                        finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
     public int numEmployeeHasRoleId(int roleId) {

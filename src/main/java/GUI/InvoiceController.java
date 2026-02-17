@@ -3,9 +3,11 @@ package GUI;
 import BUS.*;
 import DTO.DetailInvoiceDTO;
 import DTO.InvoiceDTO;
+import ENUM.PermissionKey;
 import INTERFACE.IController;
 import SERVICE.PrintService;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
@@ -15,6 +17,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 public class InvoiceController implements IController {
     @FXML
@@ -72,11 +76,17 @@ public class InvoiceController implements IController {
     private Button advanceSearchBtn, refreshBtn;
     @FXML
     private TextField txtSearch;
+    @FXML
+    private PaginationController paginationController;
+    @FXML
+    private StackPane loadingOverlay;
+
     private String keyword = "";
     private InvoiceDTO selectedInvoice;
     private InvoiceBUS invoiceBUS;
     private DetailInvoiceBUS detailInvoiceBUS;
     private StatusBUS statusBUS;
+    private static final int PAGE_SIZE = 10;
 
     @FXML
     public void initialize() {
@@ -94,6 +104,7 @@ public class InvoiceController implements IController {
         setupListeners();
 
         loadTable();
+        setupPagination();
     }
 
     @Override
@@ -179,6 +190,22 @@ public class InvoiceController implements IController {
     private void handleKeywordChange() {
         keyword = txtSearch.getText().trim();
         applyFilters();
+    }
+
+    private void setupPagination() {
+        paginationController.init(0, PAGE_SIZE, pageIndex -> {
+            loadPageData(pageIndex);
+        });
+    }
+
+    private void loadPageData(int pageIndex) {
+        // TaskUtil.executeSecure(loadingOverlay, PermissionKey.INVOICE_LIST_VIEW,
+        // () -> invoiceBUS.getAll(),
+        // result -> {
+        // tblInvoice.setItems(FXCollections.observableArrayList(result));
+        // paginationController.setPageCount(1);
+        // tblInvoice.getSelectionModel().clearSelection();
+        // });
     }
 
     @Override

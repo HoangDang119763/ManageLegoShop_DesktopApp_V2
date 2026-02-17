@@ -3,9 +3,9 @@ package BUS;
 import DAL.CustomerDAL;
 import DTO.BUSResult;
 import DTO.CustomerDTO;
-import ENUM.BUSOperationResult;
-import ENUM.Status;
-import ENUM.StatusType;
+import DTO.CustomerDisplayDTO;
+import DTO.PagedResponse;
+import ENUM.*;
 import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
@@ -203,25 +203,23 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
                 currentId);
     }
 
-    // searchbar (call DB)
-    public ArrayList<CustomerDTO> filterCustomers(String keyword, int status, Integer page, Integer pageSize) {
-        // 1. Xử lý keyword: Tránh null, trim khoảng trắng, đưa về chữ thường
-        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
-
-        // 2. Xử lý phân trang:
-        // Nếu UI truyền null hoặc số âm, dùng mặc định từ BaseBUS
-        int finalPage = (page == null || page <= 0) ? 1 : page;
-        int finalPageSize = (pageSize == null || pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
-
-        // 3. Gọi DAL thực thi (Hoàn toàn Stateless)
-        return CustomerDAL.getInstance().filterCustomers(cleanKeyword, status, finalPage, finalPageSize);
-    }
-
     public ArrayList<CustomerDTO> searchCustomerByPhone(String phone) {
         // Trả về danh sách rỗng thay vì null để UI không bị NullPointerException
         if (phone == null || phone.trim().isEmpty()) {
             return new ArrayList<>();
         }
         return CustomerDAL.getInstance().searchByPhone(phone.trim());
+    }
+
+    public BUSResult filterCustomersPagedForManageDisplay(
+            String keyword, int statusId, int pageIndex, int pageSize) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalStatusId = (statusId <= 0) ? -1 : statusId;
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+        PagedResponse<CustomerDisplayDTO> pagedData = CustomerDAL.getInstance()
+                .filterCustomersPagedForManageDisplay(cleanKeyword, finalStatusId, finalPageIndex, finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 }

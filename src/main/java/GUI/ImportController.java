@@ -6,8 +6,10 @@ import BUS.ImportBUS;
 import BUS.StatusBUS;
 import DTO.DetailImportDTO;
 import DTO.ImportDTO;
+import ENUM.PermissionKey;
 import INTERFACE.IController;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
@@ -17,6 +19,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 public class ImportController implements IController {
     @FXML
@@ -72,11 +76,17 @@ public class ImportController implements IController {
     private Button advanceSearchBtn;
     @FXML
     private TextField txtSearch;
+    @FXML
+    private PaginationController paginationController;
+    @FXML
+    private StackPane loadingOverlay;
+
     private String keyword = "";
     private ImportDTO selectedImport;
     private StatusBUS statusBUS;
     private ImportBUS importBUS;
     private DetailImportBUS detailImportBUS;
+    private static final int PAGE_SIZE = 10;
 
     @FXML
     public void initialize() {
@@ -92,6 +102,7 @@ public class ImportController implements IController {
         setupListeners();
 
         loadTable();
+        setupPagination();
     }
 
     @Override
@@ -150,6 +161,28 @@ public class ImportController implements IController {
             resetFilters();
             NotificationUtils.showInfoAlert("Làm mới thành công.", "Thông báo");
         });
+        addImportBtn.setOnAction(event -> handleAddImportBtn());
+    }
+
+    private void setupPagination() {
+        paginationController.init(0, PAGE_SIZE, pageIndex -> {
+            loadPageData(pageIndex);
+        });
+    }
+
+    private void loadPageData(int pageIndex) {
+        // TaskUtil.executeSecure(loadingOverlay, PermissionKey.IMPORT_LIST_VIEW,
+        // () -> importBUS.getAll(),
+        // result -> {
+        // tblImport.setItems(FXCollections.observableArrayList(result));
+        // paginationController.setPageCount(1);
+        // tblImport.getSelectionModel().clearSelection();
+        // });
+    }
+
+    private void handleAddImportBtn() {
+        // Will be implemented similar to EmployeeController
+        // Shows modal for adding new import
     }
 
     private void clearSubTable() {

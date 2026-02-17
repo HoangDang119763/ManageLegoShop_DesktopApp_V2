@@ -2,9 +2,9 @@ package DAL;
 
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
-import DTO.EmploymentHistoryDTO;
 import DTO.PagedResponse;
 import DTO.EmployeeDetailDTO;
+import DTO.EmployeeDisplayDTO;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -461,5 +461,86 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                         rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
 
                 .build();
+    }
+
+    public PagedResponse<EmployeeDisplayDTO> filterEmployeesPagedForManageDisplay(
+            String keyword, int roleId, int statusId, int pageIndex, int pageSize) {
+
+        List<EmployeeDisplayDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, e.role_id, e.status_id, e.account_id, " +
+                "r.name AS roleName, " +
+                "s.description AS statusDescription, " +
+                "sal.base AS salary, " +
+                "sal.coefficient AS efficientSalary, " +
+                "acc.username, " +
+                "COUNT(*) OVER() AS total_count " +
+                "FROM employee e " +
+                "LEFT JOIN role r ON e.role_id = r.id " +
+                "LEFT JOIN status s ON e.status_id = s.id " +
+                "LEFT JOIN salary sal ON r.salary_id = sal.id " +
+                "LEFT JOIN account acc ON e.account_id = acc.id " +
+                "WHERE e.id != 1 " + // Loại trừ admin mặc định có ID = 1
+                "AND (? = '' OR (CAST(e.id AS CHAR) LIKE ? OR e.first_name LIKE ? OR e.last_name LIKE ?)) " +
+                "AND (? = -1 OR e.role_id = ?) " +
+                "AND (? = -1 OR e.status_id = ?) " +
+                "ORDER BY e.id DESC LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKey = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+
+            // Gán tham số cho Tìm kiếm (OR)
+            ps.setString(1, keyword == null ? "" : keyword.trim());
+            ps.setString(2, searchKey); // Like ID
+            ps.setString(3, searchKey); // Like First Name
+            ps.setString(4, searchKey); // Like Last Name
+
+            // Gán tham số cho Filter Role
+            ps.setInt(5, roleId);
+            ps.setInt(6, roleId);
+
+            // Gán tham số cho Filter Status
+            ps.setInt(7, statusId);
+            ps.setInt(8, statusId);
+
+            // Phân trang
+            ps.setInt(9, offset);
+            ps.setInt(10, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+                    items.add(mapResultSetToDisplayObject(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lọc nhân viên: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * Map ResultSet to EmployeeDisplayDTO for manage display
+     * 
+     * @param rs ResultSet from filterEmployeesPagedForManageDisplay
+     * @return EmployeeDisplayDTO
+     */
+    private EmployeeDisplayDTO mapResultSetToDisplayObject(ResultSet rs) throws SQLException {
+        return new EmployeeDisplayDTO(
+                rs.getInt("id"),
+                rs.getString("first_name") + " " + rs.getString("last_name"),
+                rs.getString("gender"),
+                rs.getInt("role_id"),
+                rs.getString("roleName"),
+                rs.getObject("salary") != null ? rs.getBigDecimal("salary") : null,
+                rs.getObject("efficientSalary") != null ? rs.getBigDecimal("efficientSalary") : null,
+                rs.getString("username"),
+                rs.getInt("status_id"),
+                rs.getString("statusDescription"));
     }
 }

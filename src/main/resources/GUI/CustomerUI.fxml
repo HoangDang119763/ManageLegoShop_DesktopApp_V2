@@ -27,7 +27,6 @@
                                 
                                 <HBox alignment="CENTER_LEFT" layoutX="210.0" layoutY="3.0" prefHeight="46.0" spacing="10.0" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="3.0">
                                     <children>
-                                        <ComboBox fx:id="cbSearchBy" prefHeight="26.0" prefWidth="140.0" stylesheets="@../css/base.css" />
                                         <ComboBox fx:id="cbStatusFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
                                     </children>
                                 </HBox>
@@ -71,7 +70,7 @@
                <children>
                   <AnchorPane prefHeight="50.0" prefWidth="880.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="0.0">
+                        <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0">
                            <children>
                               <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Thêm">
                                  <graphic>
@@ -119,11 +118,13 @@
                               </Button>
                            </children>
                         </HBox>
+                        <fx:include fx:id="pagination" source="PaginationControl.fxml" AnchorPane.leftAnchor="310.0" />
                      </children>
                   </AnchorPane>
                </children>
             </AnchorPane>
          </bottom>
         </BorderPane>
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
     </children>
 </AnchorPane>

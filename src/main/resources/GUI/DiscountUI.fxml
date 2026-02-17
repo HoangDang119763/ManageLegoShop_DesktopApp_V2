@@ -192,5 +192,7 @@
             </HBox>
          </center>
       </BorderPane>
+      <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+      <fx:include fx:id="pagination" source="PaginationControl.fxml" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="310.0" />
    </children>
 </AnchorPane>

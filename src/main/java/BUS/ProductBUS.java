@@ -372,7 +372,8 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
 
         // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
         PagedResponse<ProductDisplayDTO> pagedData = ProductDAL.getInstance()
-                .filterProductsPagedDisplay(cleanKeyword, categoryId, finalStatusId, finalStartPrice, finalEndPrice,
+                .filterProductsPagedForManageDisplay(cleanKeyword, categoryId, finalStatusId, finalStartPrice,
+                        finalEndPrice,
                         inStockOnly, finalPageIndex,
                         finalPageSize);
 
