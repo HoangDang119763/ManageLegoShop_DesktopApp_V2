@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import BUS.CustomerBUS;
 import BUS.StatusBUS;
 import DTO.CustomerDTO;
-import DTO.CustomerDisplayDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
@@ -32,29 +31,31 @@ import lombok.Getter;
 public class CustomerModalController implements IModalController {
     // FXML Controls
     @FXML
-    public Label modalName;
+    private Label modalName;
     @FXML
-    public TextField txtCustomerId;
+    private TextField txtCustomerId;
     @FXML
-    public TextField txtFirstName;
+    private TextField txtFirstName;
     @FXML
-    public TextField txtLastName;
+    private TextField txtLastName;
     @FXML
-    public DatePicker dateOfBirth;
+    private DatePicker dateOfBirth;
     @FXML
-    public TextField txtPhone;
+    private TextField txtPhone;
     @FXML
-    public TextField txtAddress;
+    private TextField txtAddress;
     @FXML
-    public Button closeBtn;
+    private TextField txtUpdatedAt;
     @FXML
-    public Button saveBtn;
+    private Button closeBtn;
     @FXML
-    public HBox updatedAt;
+    private Button saveBtn;
     @FXML
-    public ComboBox<StatusDTO> cbSelectStatus;
+    private HBox updatedAt;
     @FXML
-    public StackPane loadingOverlay;
+    private ComboBox<StatusDTO> cbSelectStatus;
+    @FXML
+    private StackPane loadingOverlay;
 
     // State variables
     @Getter
@@ -62,9 +63,9 @@ public class CustomerModalController implements IModalController {
     @Getter
     private String resultMessage; // Lưu message để trả về stage cha
     private int typeModal; // 0: Add, 1: Edit
-    private CustomerDisplayDTO customer;
     private StatusBUS statusBus;
     private CustomerBUS customerBus;
+    private CustomerDTO customer; // Biến này sẽ lưu thông tin khách hàng đang được sửa (nếu có)
     private ValidationUtils validator;
 
     @FXML
@@ -94,39 +95,47 @@ public class CustomerModalController implements IModalController {
         typeModal = type;
         if (typeModal == 0) {
             modalName.setText("Thêm khách hàng");
-            // txtCustomerId.setText(customerBus.nextId());
+            UiUtils.gI().setVisibleItem(updatedAt);
+            txtCustomerId.setText(String.valueOf(customerBus.nextId()));
         } else {
-            if (customer == null)
-                handleClose();
             modalName.setText("Sửa khách hàng");
         }
     }
 
     public void setCustomer(int customerId) {
-        // this.customer = customerBus.getById(customerId);
-        // if (customer != null) {
-        // txtCustomerId.setText(String.valueOf(customer.getId()));
-        // txtFirstName.setText(customer.getFirstName());
-        // txtLastName.setText(customer.getLastName());
+        if (customerId <= 0) {
+            handleClose();
+            return;
+        }
 
-        // if (customer.getDateOfBirth() != null) {
-        // dateOfBirth.setValue(customer.getDateOfBirth());
-        // } else {
-        // dateOfBirth.setValue(null);
-        // }
+        this.customer = customerBus.getById(customerId);
+        if (this.customer == null) {
+            NotificationUtils.showErrorAlert(AppMessages.NOT_FOUND, AppMessages.DIALOG_TITLE);
+            handleClose();
+            return;
+        }
+        txtCustomerId.setText(String.valueOf(customer.getId()));
+        txtFirstName.setText(customer.getFirstName());
+        txtLastName.setText(customer.getLastName());
 
-        // txtPhone.setText(customer.getPhone());
-        // txtAddress.setText(customer.getAddress());
-        // StatusDTO statusToSelect = statusBus.getById(customer.getStatusId());
-        // if (statusToSelect != null) {
-        // cbSelectStatus.getItems().stream()
-        // .filter(item -> item != null && item.getId() == statusToSelect.getId())
-        // .findFirst()
-        // .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
-        // }
-        // }
-        // if (typeModal == 0)
-        // UiUtils.gI().setVisibleItem(updatedAt);
+        if (customer.getDateOfBirth() != null) {
+            dateOfBirth.setValue(customer.getDateOfBirth());
+        } else {
+            dateOfBirth.setValue(null);
+        }
+
+        txtPhone.setText(customer.getPhone());
+        txtAddress.setText(customer.getAddress());
+        StatusDTO statusToSelect = statusBus.getById(customer.getStatusId());
+        if (statusToSelect != null) {
+            cbSelectStatus.getItems().stream()
+                    .filter(item -> item != null && item.getId() == statusToSelect.getId())
+                    .findFirst()
+                    .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
+        }
+        txtUpdatedAt.setText(customer.getUpdatedAt() != null
+                ? ValidationUtils.getInstance().formatDateTimeWithHour(customer.getUpdatedAt())
+                : "Chưa cập nhật");
 
     }
 

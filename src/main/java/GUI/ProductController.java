@@ -153,17 +153,17 @@ public class ProductController implements IController {
     private void setupPagination() {
         // Thiết lập callback: Khi trang đổi -> gọi hàm load dữ liệu
         paginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadPageData(pageIndex);
+            loadPageData(pageIndex, true);
         });
     }
 
-    private void loadPageData(int pageIndex) {
+    private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
         int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
         int categoryId = (cbCategoryFilter.getValue() == null) ? -1 : cbCategoryFilter.getValue().getId();
-
+        StackPane overlay = showOverlay ? loadingOverlay : null;
         // Sử dụng method DISPLAY version - JOIN category & status, không cần gọi BUS lẻ
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.PRODUCT_LIST_VIEW,
+        TaskUtil.executeSecure(overlay, PermissionKey.PRODUCT_LIST_VIEW,
                 () -> productBUS.filterProductsPagedForManageDisplay(keyword, categoryId, statusId, startPrice,
                         endPrice,
                         pageIndex,
@@ -192,7 +192,8 @@ public class ProductController implements IController {
 
         refreshBtn.setOnAction(event -> {
             resetFilters();
-            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+            Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, AppMessages.GENERAL_REFRESH_SUCCESS);
         });
 
         addBtn.setOnAction(e -> handleAdd());
@@ -220,7 +221,7 @@ public class ProductController implements IController {
         if (modalController != null && modalController.isSaved()) {
             Stage currentStage = (Stage) addBtn.getScene().getWindow();
             NotificationUtils.showToast(currentStage, modalController.getResultMessage());
-            resetFilters();
+            loadPageData(paginationController.getCurrentPage(), false);
         }
     }
 
@@ -238,7 +239,7 @@ public class ProductController implements IController {
         if (modalController != null && modalController.isSaved()) {
             Stage currentStage = (Stage) editBtn.getScene().getWindow();
             NotificationUtils.showToast(currentStage, modalController.getResultMessage());
-            resetFilters();
+            loadPageData(paginationController.getCurrentPage(), false);
         }
     }
 
@@ -264,16 +265,13 @@ public class ProductController implements IController {
             return;
         }
 
-        BUSResult updateResult = SecureExecutor.executeSafeBusResult(PermissionKey.PRODUCT_DELETE,
-                () -> productBUS.delete(selectedProduct.getId()));
-
-        if (updateResult.isSuccess()) {
-            Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
-            NotificationUtils.showToast(currentStage, updateResult.getMessage());
-            resetFilters();
-        } else {
-            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.PRODUCT_DELETE,
+                () -> productBUS.delete(selectedProduct.getId()),
+                result -> {
+                    Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
+                    NotificationUtils.showToast(currentStage, result.getMessage());
+                    loadPageData(0, false);
+                });
     }
 
     // =====================
@@ -313,7 +311,7 @@ public class ProductController implements IController {
     @Override
     public void applyFilters() {
         if (paginationController.getCurrentPage() == 0) {
-            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
+            loadPageData(0, true); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
         } else {
             paginationController.setCurrentPage(0);
         }

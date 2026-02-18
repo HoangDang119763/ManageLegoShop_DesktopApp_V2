@@ -110,6 +110,7 @@ public class InvoiceController implements IController {
 
         loadTable();
         setupPagination();
+        applyFilters();
     }
 
     @Override
@@ -125,8 +126,6 @@ public class InvoiceController implements IController {
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
         tblInvoice.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         UiUtils.gI().addTooltipToColumn(tlb_col_createDate, 10);
-        // Tải trang đầu tiên
-        loadPageData(0);
     }
 
     public void loadSubTable(int invoiceId) {
@@ -176,7 +175,8 @@ public class InvoiceController implements IController {
         UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
-            NotificationUtils.showInfoAlert("Làm mới thành công", "Thông báo");
+            Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, "Làm mới thành công");
         });
         exportPdf.setOnAction(e -> handleExportPDF());
         advanceSearchBtn.setOnAction(e -> handleAdvanceSearch());
@@ -201,13 +201,14 @@ public class InvoiceController implements IController {
 
     private void setupPagination() {
         paginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadPageData(pageIndex);
+            loadPageData(pageIndex, true);
         });
     }
 
-    private void loadPageData(int pageIndex) {
+    private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.INVOICE_LIST_VIEW,
+        StackPane overlay = showOverlay ? loadingOverlay : null;
+        TaskUtil.executeSecure(overlay, PermissionKey.INVOICE_LIST_VIEW,
                 () -> invoiceBUS.filterInvoicesPagedForManage(keyword, pageIndex, PAGE_SIZE),
                 result -> {
                     // Lấy dữ liệu InvoiceDisplayDTO đã được JOIN
@@ -227,7 +228,7 @@ public class InvoiceController implements IController {
     public void applyFilters() {
         clearSubTable();
         if (paginationController.getCurrentPage() == 0) {
-            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
+            loadPageData(0, true); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
         } else {
             paginationController.setCurrentPage(0);
         }

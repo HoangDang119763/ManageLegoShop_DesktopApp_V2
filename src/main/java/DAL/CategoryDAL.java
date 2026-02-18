@@ -44,35 +44,27 @@ public class CategoryDAL extends BaseDAL<CategoryDTO, Integer> {
     @Override
     protected String getInsertQuery() {
         // Thêm created_at và updated_at vào danh sách cột
-        return "(name, status_id, created_at, updated_at) VALUES (?, ?, ?, ?)";
+        return "(name, status_id) VALUES (?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, CategoryDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setInt(2, obj.getStatusId());
-
-        // Nạp thời gian từ Java truyền xuống
-        statement.setTimestamp(3, obj.getCreatedAt() != null ? java.sql.Timestamp.valueOf(obj.getCreatedAt()) : null);
-        statement.setTimestamp(4, obj.getUpdatedAt() != null ? java.sql.Timestamp.valueOf(obj.getUpdatedAt()) : null);
     }
 
     @Override
     protected String getUpdateQuery() {
         // Thêm updated_at vào câu lệnh SET
-        return "SET name = ?, status_id = ?, updated_at = ? WHERE id = ?";
+        return "SET name = ?, status_id = ? WHERE id = ?";
     }
 
     @Override
     protected void setUpdateParameters(PreparedStatement statement, CategoryDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setInt(2, obj.getStatusId());
-
-        // Tham số thứ 3 là thời gian cập nhật
-        statement.setTimestamp(3, obj.getUpdatedAt() != null ? java.sql.Timestamp.valueOf(obj.getUpdatedAt()) : null);
-
         // Tham số cuối là ID để WHERE
-        statement.setInt(4, obj.getId());
+        statement.setInt(3, obj.getId());
     }
 
     public boolean updateStatus(int id, int newStatusId) {

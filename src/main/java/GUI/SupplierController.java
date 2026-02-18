@@ -2,23 +2,19 @@ package GUI;
 
 import BUS.StatusBUS;
 import BUS.SupplierBUS;
-import DTO.BUSResult;
 import DTO.SupplierDisplayDTO;
-import DTO.SupplierDTO;
 import DTO.StatusDTO;
 import DTO.PagedResponse;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.ExcelService;
-import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
 import UTILS.UiUtils;
-import UTILS.ValidationUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -27,6 +23,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 import java.util.ArrayList;
 
@@ -99,7 +96,6 @@ public class SupplierController implements IController {
 
     @Override
     public void loadTable() {
-        ValidationUtils validationUtils = ValidationUtils.getInstance();
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_name.setCellValueFactory(new PropertyValueFactory<>("name"));
         tlb_col_phone.setCellValueFactory(new PropertyValueFactory<>("phone"));
@@ -118,16 +114,16 @@ public class SupplierController implements IController {
     private void setupPagination() {
         // Thiết lập callback: Khi trang đổi -> gọi hàm load dữ liệu
         paginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadPageData(pageIndex);
+            loadPageData(pageIndex, true);
         });
     }
 
-    private void loadPageData(int pageIndex) {
+    private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
         int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
-
+        StackPane overlay = showOverlay ? loadingOverlay : null;
         // Sử dụng method DISPLAY version - JOIN status, không cần gọi BUS lẻ
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.SUPPLIER_LIST_VIEW,
+        TaskUtil.executeSecure(overlay, PermissionKey.SUPPLIER_LIST_VIEW,
                 () -> supplierBUS.filterSuppliersPagedForManageDisplay(keyword, statusId, pageIndex, PAGE_SIZE),
                 result -> {
                     // Lấy dữ liệu SupplierDisplayDTO đã được JOIN
@@ -149,39 +145,69 @@ public class SupplierController implements IController {
         UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
-            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+            Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, AppMessages.GENERAL_REFRESH_SUCCESS);
         });
 
         addBtn.setOnAction(e -> handleAdd());
         editBtn.setOnAction(e -> handleEdit());
         deleteBtn.setOnAction(e -> handleDelete());
-        tblSupplier.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2)
-                handleDetail();
-        });
     }
 
     // =====================
     // 3️⃣ CRUD HANDLERS (Add/Edit/Detail/Delete)
     // =====================
     private void handleAdd() {
-        // TODO: Implement supplier add functionality
-        NotificationUtils.showInfoAlert("Coming soon", AppMessages.DIALOG_TITLE);
+        SupplierModalController modalController = new ModalBuilder<SupplierModalController>(
+                "/GUI/SupplierModal.fxml", SupplierModalController.class)
+                .setTitle("Thêm nhà cung cấp")
+                .modeAdd()
+                .open();
+
+        if (modalController != null && modalController.isSaved()) {
+            Stage currentStage = (Stage) addBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
+            loadPageData(paginationController.getCurrentPage(), false);
+        }
     }
 
     private void handleEdit() {
-        // TODO: Implement supplier edit functionality
-        NotificationUtils.showInfoAlert("Coming soon", AppMessages.DIALOG_TITLE);
-    }
+        if (isNotSelectedSupplier()) {
+            NotificationUtils.showErrorAlert(AppMessages.SUPPLIER_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-    private void handleDetail() {
-        // TODO: Implement supplier detail view
-        NotificationUtils.showInfoAlert("Coming soon", AppMessages.DIALOG_TITLE);
+        SupplierModalController modalController = new ModalBuilder<SupplierModalController>(
+                "/GUI/SupplierModal.fxml", SupplierModalController.class)
+                .setTitle("Sửa nhà cung cấp")
+                .modeEdit()
+                .configure(c -> c.setSupplier(selectedSupplier.getId()))
+                .open();
+
+        if (modalController != null && modalController.isSaved()) {
+            Stage currentStage = (Stage) editBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
+            loadPageData(paginationController.getCurrentPage(), false);
+        }
     }
 
     private void handleDelete() {
-        // TODO: Implement supplier delete functionality
-        NotificationUtils.showInfoAlert("Coming soon", AppMessages.DIALOG_TITLE);
+        if (isNotSelectedSupplier()) {
+            NotificationUtils.showErrorAlert(AppMessages.SUPPLIER_NO_SELECTION, AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        if (!UiUtils.gI().showConfirmAlert(AppMessages.SUPPLIER_DELETE_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM)) {
+            return;
+        }
+
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.SUPPLIER_DELETE,
+                () -> supplierBUS.delete(selectedSupplier.getId()),
+                result -> {
+                    Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
+                    NotificationUtils.showToast(currentStage, result.getMessage());
+                    loadPageData(0, false);
+                });
     }
 
     // =====================
@@ -201,7 +227,7 @@ public class SupplierController implements IController {
     @Override
     public void applyFilters() {
         if (paginationController.getCurrentPage() == 0) {
-            loadPageData(0); // Nếu hiện tại đang ở trang 0 rồi thì phải gọi thủ công
+            loadPageData(0, true); // Nếu hiện tại đang ở trang 0 rồi thì phải gọi thủ công
         } else {
             paginationController.setCurrentPage(0);
         }

@@ -151,7 +151,8 @@ public class EmployeeController implements IController {
 
         refreshBtn.setOnAction(event -> {
             resetFilters();
-            NotificationUtils.showInfoAlert("Làm mới thành công", AppMessages.DIALOG_TITLE);
+            Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, "Làm mới thành công");
         });
 
         detailBtn.setOnAction(event -> handleDetailView());
@@ -185,7 +186,7 @@ public class EmployeeController implements IController {
     @Override
     public void applyFilters() {
         if (paginationController != null && paginationController.getCurrentPage() == 0) {
-            loadPageData(0);
+            loadPageData(0, true);
         } else if (paginationController != null) {
             paginationController.setCurrentPage(0);
         }
@@ -205,15 +206,16 @@ public class EmployeeController implements IController {
 
     private void setupPagination() {
         paginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadPageData(pageIndex);
+            loadPageData(pageIndex, true);
         });
     }
 
-    private void loadPageData(int pageIndex) {
+    private void loadPageData(int pageIndex, boolean showOverlay) {
         int statusId = statusFilter == null ? -1 : statusFilter.getId();
         int roleId = roleFilter == null ? -1 : roleFilter.getId();
 
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_LIST_VIEW,
+        StackPane overlay = showOverlay ? loadingOverlay : null;
+        TaskUtil.executeSecure(overlay, PermissionKey.EMPLOYEE_LIST_VIEW,
                 () -> employeeBUS.filterEmployeesPagedForManageDisplay(keyword, roleId, statusId, pageIndex,
                         PAGE_SIZE),
                 result -> {

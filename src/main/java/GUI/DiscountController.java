@@ -75,7 +75,7 @@ public class DiscountController implements IController {
 
         loadTable();
         setupPagination();
-        // applyFilters();
+        applyFilters();
     }
 
     @Override
@@ -91,9 +91,6 @@ public class DiscountController implements IController {
                 cellData -> formatCell(validationUtils.formatDateTime(cellData.getValue().getEndDate())));
         UiUtils.gI().addTooltipToColumn(tlb_col_name, 10);
         tblDiscount.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-
-        // Tải trang đầu tiên
-        loadPageData(0);
     }
 
     public void loadSubTable(String discountCode) {
@@ -163,13 +160,14 @@ public class DiscountController implements IController {
 
     private void setupPagination() {
         paginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadPageData(pageIndex);
+            loadPageData(pageIndex, true);
         });
     }
 
-    private void loadPageData(int pageIndex) {
+    private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.PROMOTION_LIST_VIEW,
+        StackPane overlay = showOverlay ? loadingOverlay : null;
+        TaskUtil.executeSecure(overlay, PermissionKey.PROMOTION_LIST_VIEW,
                 () -> DiscountBUS.getInstance().filterDiscountsPagedForManage(keyword, pageIndex, PAGE_SIZE),
                 result -> {
                     // Lấy dữ liệu DiscountDTO
@@ -194,7 +192,7 @@ public class DiscountController implements IController {
     public void applyFilters() {
         clearSubTable();
         if (paginationController.getCurrentPage() == 0) {
-            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
+            loadPageData(0, true); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
         } else {
             paginationController.setCurrentPage(0);
         }

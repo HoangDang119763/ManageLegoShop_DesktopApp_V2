@@ -24,8 +24,7 @@ import javafx.util.Duration;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -34,7 +33,7 @@ public class UiUtils {
 
     private double xOffset = 0;
     private double yOffset = 0;
-    private static final Map<TextField, Timeline> debounceMap = new HashMap<>();
+    private static final WeakHashMap<TextField, Timeline> debounceMap = new WeakHashMap<>();
 
     private UiUtils() {
 

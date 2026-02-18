@@ -91,17 +91,17 @@ public class CategoryController implements IController {
 
     private void setupPagination() {
         paginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadPageData(pageIndex);
+            loadPageData(pageIndex, true);
         });
     }
 
-    private void loadPageData(int pageIndex) {
+    private void loadPageData(int pageIndex, boolean showOverlay) {
         // 1. Thu thập tham số lọc từ UI
         String keyword = txtSearch.getText().trim();
         int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
-
+        StackPane overlay = showOverlay ? loadingOverlay : null;
         // 2. Chạy tác vụ ngầm với TaskUtil (Stateless - Luôn lấy data mới nhất từ DB)
-        TaskUtil.executePublic(loadingOverlay,
+        TaskUtil.executeSecure(overlay, PermissionKey.CATEGORY_LIST_VIEW,
                 () -> categoryBUS.filterCategoriesPagedForManageDisplay(keyword, statusId, pageIndex, PAGE_SIZE),
                 result -> {
                     // 3. Sử dụng hàm "ma thuật" getPagedData() để lấy PagedResponse mà không bị báo
@@ -141,7 +141,8 @@ public class CategoryController implements IController {
 
         refreshBtn.setOnAction(event -> {
             resetFilters();
-            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+            Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, AppMessages.GENERAL_REFRESH_SUCCESS);
         });
 
         addBtn.setOnAction(event -> handleAddBtn());
@@ -162,7 +163,7 @@ public class CategoryController implements IController {
         if (modalController != null && modalController.isSaved()) {
             Stage currentStage = (Stage) addBtn.getScene().getWindow();
             NotificationUtils.showToast(currentStage, modalController.getResultMessage());
-            applyFilters();
+            loadPageData(paginationController.getCurrentPage(), false);
         }
     }
 
@@ -182,7 +183,7 @@ public class CategoryController implements IController {
         if (modalController != null && modalController.isSaved()) {
             Stage currentStage = (Stage) editBtn.getScene().getWindow();
             NotificationUtils.showToast(currentStage, modalController.getResultMessage());
-            applyFilters();
+            loadPageData(paginationController.getCurrentPage(), false);
         }
     }
 
@@ -196,17 +197,13 @@ public class CategoryController implements IController {
             return;
         }
 
-        // Thực thi xóa qua SecureExecutor để đồng bộ logic với BUSResult
-        BUSResult deleteResult = SecureExecutor.executeSafeBusResult(
-                PermissionKey.CATEGORY_DELETE,
-                () -> categoryBUS.delete(selectedCategory.getId()));
-
-        if (deleteResult.isSuccess()) {
-            NotificationUtils.showInfoAlert(deleteResult.getMessage(), AppMessages.DIALOG_TITLE);
-            applyFilters();
-        } else {
-            NotificationUtils.showErrorAlert(deleteResult.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.CATEGORY_DELETE,
+                () -> CategoryBUS.getInstance().delete(selectedCategory.getId()),
+                result -> {
+                    Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
+                    NotificationUtils.showToast(currentStage, result.getMessage());
+                    loadPageData(0, false);
+                });
     }
 
     // =====================
@@ -230,7 +227,7 @@ public class CategoryController implements IController {
     @Override
     public void applyFilters() {
         if (paginationController.getCurrentPage() == 0) {
-            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
+            loadPageData(0, true); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
         } else {
             paginationController.setCurrentPage(0);
         }

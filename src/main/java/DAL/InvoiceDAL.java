@@ -177,4 +177,39 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
                 rs.getString("status_description"));
     }
 
+    public boolean existsByCustomerId(int customerId) {
+        // Sử dụng SELECT 1 và EXISTS để tối ưu tốc độ tối đa
+        String sql = "SELECT 1 FROM invoice WHERE customer_id = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, customerId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Trả về true nếu có ít nhất 1 dòng
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking invoice existence: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean existsByEmployeeId(int employeeId) {
+        // Sử dụng SELECT 1 và EXISTS để tối ưu tốc độ tối đa
+        String sql = "SELECT 1 FROM invoice WHERE employee_id = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Trả về true nếu có ít nhất 1 dòng
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking invoice existence: " + e.getMessage());
+            return false;
+        }
+    }
 }

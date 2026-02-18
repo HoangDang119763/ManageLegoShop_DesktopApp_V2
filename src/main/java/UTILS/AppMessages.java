@@ -79,41 +79,12 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý nhà cung cấp
      */
-    // public static final String SUPPLIER_NAME_EMPTY = "Tên nhà cung cấp không được
-    // để trống.";
-    // public static final String SUPPLIER_NAME_INVALID = "Tên nhà cung cấp không
-    // hợp lệ (tối đa 100 ký tự).";
-    // public static final String SUPPLIER_PHONE_EMPTY = "Số điện thoại không được
-    // để trống.";
-    // public static final String SUPPLIER_PHONE_INVALID = "Số điện thoại không hợp
-    // lệ (Số 0 đứng đầu và 10 số).";
-    // public static final String SUPPLIER_ADDRESS_EMPTY = "Địa chỉ không được để
-    // trống.";
-    // public static final String SUPPLIER_ADDRESS_INVALID = "Địa chỉ không hợp lệ
-    // (tối đa 255 ký tự).";
-    // public static final String SUPPLIER_ADD_ERROR = "Có lỗi khi thêm nhà cung
-    // cấp. Vui lòng thử lại.";
-    // public static final String SUPPLIER_ADD_DUPLICATE = "Đã có nhà cung cấp trong
-    // cơ sở dữ liệu.";
-    // public static final String SUPPLIER_ADD_NO_PERMISSION = "Không có quyền thêm
-    // nhà cung cấp.";
-    // public static final String SUPPLIER_ADD_DB_ERROR = "Thêm nhà cung cấp vào
-    // CSDL thất bại.";
-    // public static final String SUPPLIER_ADD_INVALID_DATA = "Dữ liệu nhập không
-    // hợp lệ.";
-    // public static final String SUPPLIER_UPDATE_ERROR = "Có lỗi khi cập nhật thông
-    // tin nhà cung cấp. Vui lòng thử lại.";
-    // public static final String SUPPLIER_UPDATE_DUPLICATE = "Thông tin nhà cung
-    // cấp bị trùng lặp.";
-    // public static final String SUPPLIER_UPDATE_NO_PERMISSION = "Không có quyền
-    // cập nhật thông tin nhà cung cấp.";
-    // public static final String SUPPLIER_UPDATE_FAILED = "Không thể cập nhật thông
-    // tin nhà cung cấp. Vui lòng thử lại.";
-    // public static final String SUPPLIER_NOT_FOUND = "Nhà cung cấp không tồn tại
-    // hoặc đã bị xóa.";
     public static final String SUPPLIER_NO_SELECTION = "Vui lòng chọn nhà cung cấp.";
     public static final String SUPPLIER_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa nhà cung cấp này không?";
-
+    public static final String SUPPLIER_ADD_SUCCESS = "Thêm nhà cung cấp thành công";
+    public static final String SUPPLIER_ADD_DUPLICATE = "Đã có nhà cung cấp trong cơ sở dữ liệu";
+    public static final String SUPPLIER_UPDATE_DUPLICATE = "Đã có nhà cung cấp trong cơ sở dữ liệu";
+    public static final String SUPPLIER_UPDATE_SUCCESS = "Sửa nhà cung cấp thành công";
     // ==================== MODULE LOẠI SẢN PHẨM (CATEGORY) ====================
     /**
      * Các thông báo liên quan đến quản lý danh mục/loại sản phẩm
