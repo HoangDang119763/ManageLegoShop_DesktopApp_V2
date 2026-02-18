@@ -1,11 +1,14 @@
 
 package GUI;
 
+import java.math.BigDecimal;
+
 import BUS.DetailImportBUS;
 import BUS.ImportBUS;
 import BUS.StatusBUS;
 import DTO.DetailImportDTO;
-import DTO.ImportDTO;
+import DTO.ImportDisplayDTO;
+import DTO.PagedResponse;
 import ENUM.PermissionKey;
 import INTERFACE.IController;
 import UTILS.NotificationUtils;
@@ -20,23 +23,22 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
 
 public class ImportController implements IController {
     @FXML
-    private TableView<ImportDTO> tblImport;
+    private TableView<ImportDisplayDTO> tblImport;
     @FXML
-    private TableColumn<ImportDTO, Integer> tlb_col_id;
+    private TableColumn<ImportDisplayDTO, Integer> tlb_col_id;
     @FXML
-    private TableColumn<ImportDTO, String> tlb_col_createDate;
+    private TableColumn<ImportDisplayDTO, String> tlb_col_createDate;
     @FXML
-    private TableColumn<ImportDTO, Integer> tlb_col_employeeId;
+    private TableColumn<ImportDisplayDTO, Integer> tlb_col_employeeId;
     @FXML
-    private TableColumn<ImportDTO, Integer> tlb_col_supplierId;
+    private TableColumn<ImportDisplayDTO, Integer> tlb_col_supplierId;
     @FXML
-    private TableColumn<ImportDTO, String> tlb_col_totalPrice;
+    private TableColumn<ImportDisplayDTO, String> tlb_col_totalPrice;
     @FXML
-    private TableColumn<ImportDTO, String> tlb_col_status;
+    private TableColumn<ImportDisplayDTO, String> tlb_col_status;
     @FXML
     private TableView<DetailImportDTO> tblDetailImport;
     @FXML
@@ -47,6 +49,10 @@ public class ImportController implements IController {
     private TableColumn<DetailImportDTO, String> tlb_col_price;
     @FXML
     private TableColumn<DetailImportDTO, String> tlb_col_totalPriceP;
+    @FXML
+    private TableColumn<DetailImportDTO, String> tlb_col_push_status;
+    @FXML
+    private TableColumn<DetailImportDTO, String> tlb_col_profit_percent;
     @FXML
     private TextField id;
 
@@ -82,7 +88,7 @@ public class ImportController implements IController {
     private StackPane loadingOverlay;
 
     private String keyword = "";
-    private ImportDTO selectedImport;
+    private ImportDisplayDTO selectedImport;
     private StatusBUS statusBUS;
     private ImportBUS importBUS;
     private DetailImportBUS detailImportBUS;
@@ -115,10 +121,12 @@ public class ImportController implements IController {
         tlb_col_supplierId.setCellValueFactory(new PropertyValueFactory<>("supplierId"));
         tlb_col_totalPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
-        tlb_col_status.setCellValueFactory(cellData -> new SimpleStringProperty(statusBUS
-                .getById(cellData.getValue().getStatusId()).getDescription()));
+        tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
         UiUtils.gI().addTooltipToColumn(tlb_col_createDate, 10);
-        tblImport.setItems(FXCollections.observableArrayList(ImportBUS.getInstance().getAll()));
+        tblImport.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+
+        // Tải trang đầu tiên
+        loadPageData(0);
     }
 
     public void loadSubTable(int importId) {
@@ -130,15 +138,23 @@ public class ImportController implements IController {
         this.employeeId.setText(String.valueOf(selectedImport.getEmployeeId()));
         this.supplierId.setText(String.valueOf(selectedImport.getSupplierId()));
         this.totalPrice.setText(validationUtils.formatCurrency(selectedImport.getTotalPrice()));
-        this.status.setText(statusBUS.getById(selectedImport.getStatusId()).getDescription());
+        // Dùng statusDescription từ DisplayDTO thay vì gọi BUS
+        this.status.setText(selectedImport.getStatusDescription());
         tlb_col_productId.setCellValueFactory(new PropertyValueFactory<>("productId"));
         tlb_col_quantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         tlb_col_price.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getPrice())));
         tlb_col_totalPriceP.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
-        // tblDetailImport.setItems(FXCollections
-        // .observableArrayList(detailImportBUS.getAllDetailImportByImportIdLocal(importId)));
+        tlb_col_push_status.setCellValueFactory(cellData -> formatCell(
+                cellData.getValue().isPushed() ? "Đã đẩy" : "Chưa đẩy"));
+        tlb_col_profit_percent.setCellValueFactory(cellData -> formatCell(
+                validationUtils.formatPercent(
+                        cellData.getValue().getProfitPercent() != null ? cellData.getValue().getProfitPercent()
+                                : BigDecimal.ZERO)));
+        tblDetailImport.setItems(FXCollections
+                .observableArrayList(detailImportBUS.getAllDetailImportByImportId(importId)));
+
         tblDetailImport.getSelectionModel().clearSelection();
     }
 
@@ -156,7 +172,7 @@ public class ImportController implements IController {
                 tblDetailImport.getItems().clear();
             }
         });
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
             NotificationUtils.showInfoAlert("Làm mới thành công.", "Thông báo");
@@ -171,13 +187,21 @@ public class ImportController implements IController {
     }
 
     private void loadPageData(int pageIndex) {
-        // TaskUtil.executeSecure(loadingOverlay, PermissionKey.IMPORT_LIST_VIEW,
-        // () -> importBUS.getAll(),
-        // result -> {
-        // tblImport.setItems(FXCollections.observableArrayList(result));
-        // paginationController.setPageCount(1);
-        // tblImport.getSelectionModel().clearSelection();
-        // });
+        String keyword = txtSearch.getText().trim();
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.IMPORT_LIST_VIEW,
+                () -> importBUS.filterImportsPagedForManage(keyword, pageIndex, PAGE_SIZE),
+                result -> {
+                    // Lấy dữ liệu ImportDisplayDTO đã được JOIN
+                    PagedResponse<ImportDisplayDTO> res = result.getPagedData();
+
+                    if (res != null) {
+                        tblImport.setItems(FXCollections.observableArrayList(res.getItems()));
+                        int totalItems = res.getTotalItems();
+                        int pageCount = (int) Math.ceil((double) totalItems / PAGE_SIZE);
+                        paginationController.setPageCount(pageCount > 0 ? pageCount : 1);
+                    }
+                    tblImport.getSelectionModel().clearSelection();
+                });
     }
 
     private void handleAddImportBtn() {
@@ -202,22 +226,12 @@ public class ImportController implements IController {
 
     @Override
     public void applyFilters() {
-        ImportBUS importBUS = ImportBUS.getInstance();
         clearSubTable();
-        if (keyword.isEmpty()) {
-            // Nߦ+u keyword r�+�ng, lߦ�y tߦ�t cߦ� h+�a -��n
-            tblImport.setItems(FXCollections.observableArrayList(importBUS.getAll()));
+        if (paginationController.getCurrentPage() == 0) {
+            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
         } else {
-            try {
-                int id = Integer.parseInt(keyword);
-                tblImport.setItems(FXCollections.observableArrayList(
-                        importBUS.getById(id)));
-            } catch (NumberFormatException e) {
-                // X�+� l++ tr���+�ng h�+�p kh+�ng phߦ�i s�+�
-                tblImport.setItems(FXCollections.observableArrayList());
-            }
+            paginationController.setCurrentPage(0);
         }
-        tblImport.getSelectionModel().clearSelection();
     }
 
     @Override

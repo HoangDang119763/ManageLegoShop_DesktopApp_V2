@@ -13,7 +13,10 @@ public class AppMessages {
     public static final String EMPLOYEE_DETAIL_LOAD_ERROR = "Không thể tải thông tin chi tiết nhân viên";
     public static final String EMPLOYEE_PERSONAL_UPDATE_SUCCESS = "Cập nhật thông tin cá nhân thành công!";
     public static final String EMPLOYEE_PERSONAL_UPDATE_ERROR = "Có lỗi khi cập nhật thông tin cá nhân. Vui lòng thử lại.";
-
+    public static final String EMPLOYEE_PERSONAL_INFO_LOAD_SUCCESS = "Tải thông tin hồ sơ nhân viên thành công.";
+    public static final String EMPLOYEE_ACCOUNT_INFO_LOAD_SUCCESS = "Tải thông tin tài khoản hệ thống thành công.";
+    public static final String EMPLOYEE_JOB_INFO_LOAD_SUCCESS = "Tải thông tin lương và công tác thành công.";
+    public static final String EMPLOYEE_PAYROLL_INFO_LOAD_SUCCESS = "Tải thông tin quyền lợi và bảo hiểm thành công.";
     // ==================== MODULE BÁN HÀNG - CHI TIẾT HÓA ĐƠN ====================
     /**
      * Các thông báo liên quan đến quá trình bán hàng và quản lý hóa đơn
@@ -125,6 +128,13 @@ public class AppMessages {
     public static final String CATEGORY_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa thể loại này không?";
     public static final String CATEGORY_NO_SELECTION = "Vui lòng chọn thể loại.";
     public static final String CATEGORY_DELETED_WARNING = "Thể loại này đã ngưng dùng, không nên chọn cho sản phẩm";
+
+    // ==================== MODULE PHÒNG BAN (DEPARTMENT) ====================
+    /**
+     * Các thông báo liên quan đến quản lý phòng ban
+     */
+    public static final String DEPARTMENT_DELETED_WARNING = "Phòng ban này đã ngưng dùng, không nên chọn cho nhân viên";
+
     // ==================== MODULE CHIẾT KHẤU (DISCOUNT) ====================
     /**
      * Các thông báo liên quan đến quản lý chiết khấu và khuyến mãi
@@ -184,5 +194,5 @@ public class AppMessages {
     public static final String UNAUTHORIZED = "Bạn không có quyền để thực hiện thao tác này.";
     public static final String DATA_ALREADY_DELETED = "Dữ liệu này đã ở trạng thái Inactive (xóa hoặc ngừng hoạt động)";
     public static final String FORCE_RELOGIN = "Phiên làm việc hết hạn hoặc quyền đã thay đổi. Vui lòng đăng nhập lại.";
-    public static final String REQUEST_RELOGIN =  "Vui lòng đăng nhập lại.";
+    public static final String REQUEST_RELOGIN = "Vui lòng đăng nhập lại.";
 }

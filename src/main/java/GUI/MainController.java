@@ -84,15 +84,15 @@ public class MainController {
         // 1. Định nghĩa TẤT CẢ Module có trong hệ thống Lego của bạn
         List<ModuleMetadata> allModules = Arrays.asList(
                 new ModuleMetadata(0, "Cá nhân", "employee_info.png"), // ID 0: Luôn cho phép
-                new ModuleMetadata(5, "Bán hàng", "invoice.png"), // ID 5: Module quan trọng nhất
-                new ModuleMetadata(6, "Nhập hàng", "import.png"), // ID 6
+                new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
+                new ModuleMetadata(2, "Khách hàng", "customer.png"), // ID 2
                 new ModuleMetadata(3, "Sản phẩm", "product.png"), // ID 3
                 new ModuleMetadata(7, "Thể loại", "category.png"), // ID 7
-                new ModuleMetadata(2, "Khách hàng", "customer.png"), // ID 2
-                new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
                 new ModuleMetadata(4, "Nhà cung cấp", "supplier.png"), // ID 4
                 new ModuleMetadata(8, "Khuyến mãi", "discount.png"), // ID 8
-                new ModuleMetadata(9, "Phòng ban & Quyền", "role.png"), // ID 9
+                new ModuleMetadata(5, "Bán hàng", "invoice.png"), // ID 5: Module quan trọng nhất
+                new ModuleMetadata(6, "Nhập hàng", "import.png"), // ID 6
+                new ModuleMetadata(9, "Cơ cấu", "role.png"), // ID 9
                 new ModuleMetadata(10, "Thống kê", "statistical.png") // ID 10
         );
 

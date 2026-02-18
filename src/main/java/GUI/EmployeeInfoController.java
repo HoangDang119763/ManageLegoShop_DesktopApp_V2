@@ -7,8 +7,12 @@ import BUS.DepartmentBUS;
 import BUS.RoleBUS;
 import BUS.StatusBUS;
 import DTO.EmployeeDTO;
-import DTO.DepartmentDTO;
-import DTO.EmployeeDetailDTO;
+import DTO.EmployeePersonalInfoDTO;
+import DTO.EmployeeAccountInfoDTO;
+import DTO.EmployeeJobInfoDTO;
+import DTO.EmployeePayrollInfoDTO;
+import DTO.EmployeePersonalInfoBundle;
+import DTO.EmployeeJobHistoryBundle;
 import DTO.EmploymentHistoryDetailBasicDTO;
 import DTO.PagedResponse;
 import UTILS.AppMessages;
@@ -24,8 +28,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LocalDate;
-
 /**
  * Controller quản lý màn hình thông tin nhân viên (Employee Info)
  * Chức năng:
@@ -38,6 +40,12 @@ public class EmployeeInfoController {
     // ==================== TAB PANE ====================
     @FXML
     private TabPane tabPaneInfo; // Tab pane chính
+    @FXML
+    private Tab tabPersonalInfo; // Tab Hồ sơ nhân viên
+    @FXML
+    private Tab tabJobHistory; // Tab Lương & Công tác
+    @FXML
+    private Tab tabAccountSecurity; // Tab Bảo mật tài khoản
 
     // ==================== PHẦN HIỂN THỊ THÔNG TIN (Left Panel)
     // ====================
@@ -111,6 +119,8 @@ public class EmployeeInfoController {
     @FXML
     private VBox vboxPersonalInfo; // Container thông tin cá nhân
     @FXML
+    private Label lblLastLogin;
+    @FXML
     private StackPane loadingOverlay;
 
     // ==================== LƯƠNG & CÔNG TÁC TAB (Salary & Work History)
@@ -135,7 +145,7 @@ public class EmployeeInfoController {
     private RoleBUS roleBUS;
     private StatusBUS statusBUS;
     public SessionManagerService sessionManagerService;
-    public EmployeeDetailDTO CurrEmployeeDetail; // Cache
+
     private static final int PAGE_SIZE = 10; // Kích thước trang cho lịch sử công tác
     // ==================== 📍 LIFECYCLE & INITIALIZATION ====================
 
@@ -148,17 +158,106 @@ public class EmployeeInfoController {
         roleBUS = RoleBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
         sessionManagerService = SessionManagerService.getInstance();
-        CurrEmployeeDetail = employeeBUS.getDetailById(sessionManagerService.employeeLoginId());
-
-        if (CurrEmployeeDetail == null) {
-            NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_DETAIL_LOAD_ERROR, AppMessages.DIALOG_TITLE);
-            return;
-        }
 
         setupListeners();
-        loadEmployeeInfo();
-        setupTableColumns();
-        setupHistoryPagination();
+        setupTabLoadingListeners();
+
+        // Load data cho tab 1 (Hồ sơ nhân viên) ngay lập tức
+        loadTabPersonalInfo();
+    }
+
+    /**
+     * Thiết lập listener cho tab selection để lazy load dữ liệu
+     * Mỗi tab chỉ tải dữ liệu khi người dùng click vào tab
+     */
+    private void setupTabLoadingListeners() {
+        tabPaneInfo.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            if (newTab == null)
+                return;
+
+            // Tab 1: Hồ sơ nhân viên (Personal Info)
+            if (newTab == tabPersonalInfo) {
+                loadTabPersonalInfo();
+            }
+
+            // Tab 2: Lương & Công tác (Job History)
+            else if (newTab == tabJobHistory) {
+                loadTabJobSalaryInfo();
+            }
+
+            // Tab 3: Bảo mật tài khoản (Account Security)
+            else if (newTab == tabAccountSecurity) {
+                loadTabAccountSecurity();
+            }
+        });
+    }
+
+    /**
+     * Load dữ liệu cho Tab 1: Hồ sơ nhân viên (Async)
+     */
+    private void loadTabPersonalInfo() {
+        int empId = sessionManagerService.employeeLoginId();
+
+        TaskUtil.executePublic(
+                loadingOverlay,
+                () -> employeeBUS.getPersonalInfoComplete(empId),
+                bundleResult -> {
+                    EmployeePersonalInfoBundle bundle = bundleResult.getData();
+                    EmployeePersonalInfoDTO personalInfo = bundle.getPersonalInfo();
+                    EmployeeJobInfoDTO jobInfo = bundle.getJobInfo();
+                    EmployeePayrollInfoDTO payrollInfo = bundle.getPayrollInfo();
+
+                    // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
+                    if (jobInfo.getRoleId() != null && jobInfo.getRoleId() == 1) {
+                        hidePersonalInfo();
+                        return;
+                    }
+                    displayPersonalInfo(personalInfo, jobInfo, payrollInfo);
+                });
+    }
+
+    /**
+     * Load dữ liệu cho Tab 2: Thông tin lương & công tác (Async)
+     * Luôn lấy dữ liệu mới từ DB để đảm bảo dữ liệu không bị cũ
+     */
+    private void loadTabJobSalaryInfo() {
+        int empId = sessionManagerService.employeeLoginId();
+
+        TaskUtil.executePublic(
+                loadingOverlay,
+                () -> employeeBUS.getJobAndPayrollInfo(empId),
+                bundleResult -> {
+                    EmployeeJobHistoryBundle bundle = bundleResult.getData();
+                    EmployeeJobInfoDTO jobInfo = bundle.getJobInfo();
+                    EmployeePayrollInfoDTO payrollInfo = bundle.getPayrollInfo();
+
+                    setupTableColumns();
+                    displayJobAndSalaryInfo(jobInfo, payrollInfo);
+                });
+    }
+
+    /**
+     * Overload: Load dữ liệu lịch sử công tác với phân trang (Async)
+     * Gọi từ pagination callback khi người dùng chuyển trang
+     */
+    private void loadTabJobHistory(int pageIndex) {
+        loadHistoryData(pageIndex);
+    }
+
+    /**
+     * Load dữ liệu cho Tab 3: Bảo mật tài khoản (Async)
+     * Luôn lấy dữ liệu mới từ DB để đảm bảo dữ liệu không bị cũ
+     */
+    private void loadTabAccountSecurity() {
+        int empId = sessionManagerService.employeeLoginId();
+
+        TaskUtil.executePublic(
+                loadingOverlay,
+                () -> employeeBUS.getAccountInfo(empId),
+                accountInfoResult -> {
+                    EmployeeAccountInfoDTO accountInfo = accountInfoResult.getData();
+                    displayAccountSecurityInfo(accountInfo);
+                });
     }
 
     // ==================== 🎨 UI SETUP & DATA LOADING ====================
@@ -196,20 +295,7 @@ public class EmployeeInfoController {
         btnChangePassword.setOnAction(e -> handleChangePassword());
         btnClear.setOnAction(e -> handleClear());
         btnUpdateInfo.setOnAction(e -> handleUpdateInfo());
-    }
-
-    /**
-     * Tải thông tin nhân viên từ session và hiển thị
-     * Sử dụng cache để tránh load lại nhiều lần
-     */
-    private void loadEmployeeInfo() {
-        // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
-        if (CurrEmployeeDetail.getRoleId() != -1 && CurrEmployeeDetail.getRoleId() == 1) {
-            hidePersonalInfo();
-            return;
-        }
-
-        displayEmployeeInfo();
+        setupHistoryPagination();
     }
 
     /**
@@ -220,68 +306,76 @@ public class EmployeeInfoController {
         vboxPersonalInfo.setManaged(false);
     }
 
-    /**
-     * Hiển thị thông tin nhân viên từ cached data lên UI
-     */
-    private void displayEmployeeInfo() {
-        ValidationUtils validationUtils = ValidationUtils.getInstance();
-        if (CurrEmployeeDetail != null) {
-            // === PROFILE INFO SECTION ===
-            lblEmployeeId.setText(String.valueOf(CurrEmployeeDetail.getEmployeeId()));
-            lblGender.setText(CurrEmployeeDetail.getGender() != null ? CurrEmployeeDetail.getGender() : "");
+    // Tab 1: Hiển thị thông tin nhân viên
+    private void displayPersonalInfo(EmployeePersonalInfoDTO personalInfo, EmployeeJobInfoDTO jobInfo,
+            EmployeePayrollInfoDTO payrollInfo) {
+        if (personalInfo == null)
+            return;
 
-            // Get department name
-            if (CurrEmployeeDetail != null && CurrEmployeeDetail.getDepartmentId() != null) {
-                DepartmentDTO department = departmentBUS.getById(CurrEmployeeDetail.getDepartmentId());
-                lblDepartmentName.setText(department != null ? department.getName() : "");
-            } else {
-                lblDepartmentName.setText("");
-            }
+        // Profile Info
+        lblEmployeeId.setText(String.valueOf(personalInfo.getEmployeeId()));
+        lblGender.setText(personalInfo.getGender() != null ? personalInfo.getGender() : "");
+        lblDepartmentName.setText(jobInfo != null ? jobInfo.getDepartmentName() : "");
+        lblRoleName.setText(jobInfo.getRoleName() != null ? jobInfo.getRoleName() : "");
+        lblStatus.setText(jobInfo.getStatusDescription() != null ? jobInfo.getStatusDescription() : "");
+        lblHealthInsCode.setText(payrollInfo != null ? payrollInfo.getHealthInsCode() : "");
 
-            lblRoleName.setText(CurrEmployeeDetail.getRoleName() != null ? CurrEmployeeDetail.getRoleName() : "");
-            lblStatus.setText(
-                    CurrEmployeeDetail.getStatusDescription() != null ? CurrEmployeeDetail.getStatusDescription()
-                            : "");
+        // Contact Info
+        lblFirstName.setText(personalInfo.getFirstName() != null ? personalInfo.getFirstName() : "");
+        lblLastName.setText(personalInfo.getLastName() != null ? personalInfo.getLastName() : "");
+        dpDateOfBirth.setValue(
+                personalInfo.getDateOfBirth() != null ? personalInfo.getDateOfBirth() : null);
+        lblPhone.setText(personalInfo.getPhone() != null ? personalInfo.getPhone() : "");
+        lblEmail.setText(personalInfo.getEmail() != null ? personalInfo.getEmail() : "");
 
-            // === CONTACT INFO SECTION ===
-            lblFirstName
-                    .setText(CurrEmployeeDetail.getFirstName() != null ? CurrEmployeeDetail.getFirstName() : "");
-            lblLastName.setText(CurrEmployeeDetail.getLastName() != null ? CurrEmployeeDetail.getLastName() : "");
-            dpDateOfBirth.setValue(CurrEmployeeDetail != null ? CurrEmployeeDetail.getDateOfBirth() : LocalDate.now());
-            lblPhone.setText(CurrEmployeeDetail.getPhone() != null ? CurrEmployeeDetail.getPhone() : "");
-            lblEmail.setText(CurrEmployeeDetail.getEmail() != null ? CurrEmployeeDetail.getEmail() : "");
-            lblHealthInsCode.setText(
-                    CurrEmployeeDetail != null && CurrEmployeeDetail.getHealthInsCode() != null
-                            ? CurrEmployeeDetail.getHealthInsCode()
-                            : "");
-
-            // === Salary + Tax SECTION ===
-            lblBaseSalary.setText(CurrEmployeeDetail.getBaseSalary() != null
-                    ? validationUtils.formatCurrency(CurrEmployeeDetail.getBaseSalary())
-                    : "");
-            lblSalaryCoefficient.setText(CurrEmployeeDetail.getSalaryCoefficient() != null
-                    ? String.valueOf(CurrEmployeeDetail.getSalaryCoefficient())
-                    : "");
-            lblNumDependents.setText(CurrEmployeeDetail.getNumDependents() != null
-                    ? String.valueOf(CurrEmployeeDetail.getNumDependents())
-                    : "");
-            // === BENEFITS SECTION ===
-            cbHealthIns.setSelected(CurrEmployeeDetail.isHealthInsurance());
-            cbSocialIns.setSelected(CurrEmployeeDetail.isSocialInsurance());
-            cbUnemploymentIns.setSelected(CurrEmployeeDetail.isUnemploymentInsurance());
-            cbIncomeTax.setSelected(CurrEmployeeDetail.isPersonalIncomeTax());
-            cbTransportSupport.setSelected(CurrEmployeeDetail.isTransportationSupport());
-            cbAccommSupport.setSelected(CurrEmployeeDetail.isAccommodationSupport());
-
-            lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(CurrEmployeeDetail.getCreatedAt()));
-            lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(CurrEmployeeDetail.getUpdatedAt()));
-            // === Account ===
-            lblUsername.setText(CurrEmployeeDetail.getUsername() != null ? CurrEmployeeDetail.getUsername() : "");
-            loadHistoryData(0);
-        } else {
-            NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_DETAIL_LOAD_ERROR,
-                    AppMessages.DIALOG_TITLE);
+        // Benefits (CheckBoxes)
+        if (payrollInfo != null) {
+            cbHealthIns.setSelected(payrollInfo.isHealthInsurance());
+            cbSocialIns.setSelected(payrollInfo.isSocialInsurance());
+            cbUnemploymentIns.setSelected(payrollInfo.isUnemploymentInsurance());
+            cbIncomeTax.setSelected(payrollInfo.isPersonalIncomeTax());
+            cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
+            cbAccommSupport.setSelected(payrollInfo.isAccommodationSupport());
         }
+
+        // Metadata
+        lblCreatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(personalInfo.getCreatedAt()));
+        lblUpdatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(personalInfo.getUpdatedAt()));
+    }
+
+    private void displayJobAndSalaryInfo(EmployeeJobInfoDTO jobInfo, EmployeePayrollInfoDTO payrollInfo) {
+        if (jobInfo == null)
+            return;
+
+        ValidationUtils vu = ValidationUtils.getInstance();
+
+        // Salary Info
+        lblBaseSalary.setText(jobInfo.getBaseSalary() != null
+                ? vu.formatCurrency(jobInfo.getBaseSalary())
+                : "");
+
+        lblSalaryCoefficient.setText(jobInfo.getSalaryCoefficient() != null
+                ? String.valueOf(jobInfo.getSalaryCoefficient())
+                : "");
+
+        lblNumDependents.setText(payrollInfo != null && payrollInfo.getNumDependents() != null
+                ? String.valueOf(payrollInfo.getNumDependents())
+                : "0");
+
+        // Load table lịch sử (Hàm bạn đã viết sẵn)
+        loadHistoryData(0);
+    }
+
+    private void displayAccountSecurityInfo(EmployeeAccountInfoDTO accountInfo) {
+        if (accountInfo == null) {
+            lblUsername.setText("");
+            return;
+        }
+
+        lblUsername.setText(accountInfo.getUsername() != null ? accountInfo.getUsername() : "");
+
+        // Nếu DTO Account có trường lastLogin, hiển thị tại đây
+        lblLastLogin.setText(ValidationUtils.getInstance().formatDateTimeWithHour(accountInfo.getLastLogin()));
     }
 
     // ==================== 👤 EMPLOYEE INFO HANDLERS ====================
@@ -315,7 +409,8 @@ public class EmployeeInfoController {
 
                 // 2. Xử lý khi thành công (Chạy trên UI Thread)
                 result -> {
-                    loadEmployeeInfo();
+                    // Reload Tab 1 data after update
+                    loadTabPersonalInfo();
                     Stage stage = (Stage) btnUpdateInfo.getScene().getWindow();
                     NotificationUtils.showToast(
                             stage,
@@ -499,8 +594,10 @@ public class EmployeeInfoController {
      */
     private void setupHistoryPagination() {
         // Init với pageSize = 10
+        // Gọi overloaded method loadTabJobHistory(pageIndex) khi người dùng chuyển
+        // trang
         historyPaginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadHistoryData(pageIndex);
+            loadTabJobHistory(pageIndex);
         });
     }
 

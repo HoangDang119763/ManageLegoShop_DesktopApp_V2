@@ -137,7 +137,7 @@ public class CategoryController implements IController {
     public void setupListeners() {
         cbSearchBy.setOnAction(event -> handleSearchByChange());
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
 
         refreshBtn.setOnAction(event -> {
             resetFilters();

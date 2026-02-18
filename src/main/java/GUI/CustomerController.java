@@ -6,7 +6,6 @@ import BUS.CustomerBUS;
 import BUS.StatusBUS;
 import DTO.BUSResult;
 import DTO.CustomerDisplayDTO;
-import DTO.CustomerDTO;
 import DTO.PagedResponse;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
@@ -31,9 +30,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.util.ArrayList;
 
 public class CustomerController implements IController {
     @FXML
@@ -158,7 +154,7 @@ public class CustomerController implements IController {
     @Override
     public void setupListeners() {
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
 
         refreshBtn.setOnAction(event -> {
             resetFilters();

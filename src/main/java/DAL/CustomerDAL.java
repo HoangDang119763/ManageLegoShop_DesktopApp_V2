@@ -172,46 +172,58 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
         int totalItems = 0;
         int offset = pageIndex * pageSize;
 
-        // JOIN với status table để lấy description
+        // Sử dụng CONCAT để hỗ trợ tìm kiếm Full Name (Họ + Tên)
         String sql = "SELECT " +
                 "c.id, c.first_name, c.last_name, c.phone, c.address, c.date_of_birth, " +
                 "c.status_id, s.description as status_description, c.updated_at, " +
                 "COUNT(*) OVER() as total_count " +
                 "FROM customer c " +
                 "LEFT JOIN status s ON c.status_id = s.id " +
-                "WHERE (? = '' OR (CAST(c.id AS CHAR) LIKE ? OR c.first_name LIKE ? OR c.last_name LIKE ?)) " +
+                "WHERE (? = '' OR (" +
+                "    CAST(c.id AS CHAR) LIKE ? " +
+                "    OR LOWER(c.first_name) LIKE ? " +
+                "    OR LOWER(c.last_name) LIKE ? " +
+                "    OR LOWER(CONCAT(c.first_name, ' ', c.last_name)) LIKE ?" +
+                ")) " +
                 "AND (? = -1 OR c.status_id = ?) " +
-                "ORDER BY c.id DESC LIMIT ?, ?";
+                "LIMIT ?, ?";
 
         try (Connection conn = connectionFactory.newConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            String searchKey = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+            // Chuẩn hóa từ khóa
+            String cleanKeyword = (keyword == null) ? "" : keyword.trim();
+            String searchKey = "%" + cleanKeyword.toLowerCase() + "%";
 
-            // Gán tham số cho Tìm kiếm (OR)
-            ps.setString(1, keyword == null ? "" : keyword.trim());
-            ps.setString(2, searchKey); // Like ID
-            ps.setString(3, searchKey); // Like First Name
-            ps.setString(4, searchKey); // Like Last Name
+            int idx = 1;
+
+            // Gán tham số cho phần Tìm kiếm (Dùng cleanKeyword cho vế ? = '')
+            ps.setString(idx++, cleanKeyword);
+            ps.setString(idx++, searchKey); // Like ID
+            ps.setString(idx++, searchKey); // Like First Name
+            ps.setString(idx++, searchKey); // Like Last Name
+            ps.setString(idx++, searchKey); // Like Full Name (CONCAT)
 
             // Gán tham số cho Filter Status
-            ps.setInt(5, statusId);
-            ps.setInt(6, statusId);
+            ps.setInt(idx++, statusId);
+            ps.setInt(idx++, statusId);
 
-            // Phân trang
-            ps.setInt(7, offset);
-            ps.setInt(8, pageSize);
+            // Tham số cho phân trang
+            ps.setInt(idx++, offset);
+            ps.setInt(idx++, pageSize);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    if (totalItems == 0)
+                    if (totalItems == 0) {
                         totalItems = rs.getInt("total_count");
+                    }
                     items.add(mapResultSetToDisplayObject(rs));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error filtering customers: " + e.getMessage());
         }
+
         return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
     }
 

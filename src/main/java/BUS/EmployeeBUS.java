@@ -2,13 +2,17 @@
 package BUS;
 
 import DAL.EmployeeDAL;
-import DAL.ProductDAL;
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
 import DTO.PagedResponse;
-import DTO.ProductDisplayDTO;
 import DTO.EmployeeDetailDTO;
 import DTO.EmployeeDisplayDTO;
+import DTO.EmployeePersonalInfoDTO;
+import DTO.EmployeeAccountInfoDTO;
+import DTO.EmployeeJobInfoDTO;
+import DTO.EmployeePayrollInfoDTO;
+import DTO.EmployeePersonalInfoBundle;
+import DTO.EmployeeJobHistoryBundle;
 import DTO.BUSResult;
 import ENUM.*;
 import UTILS.AppMessages;
@@ -392,13 +396,6 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         return new BUSResult(BUSOperationResult.SUCCESS);
     }
 
-    /**
-     * Cập nhật TAB 4: Tài khoản hệ thống
-     * Update: accountId
-     * ⚠️ Caller PHẢI kiểm tra quyền: chỉ role 1 mới được phép
-     * 
-     * @return BUSResult
-     */
     public BUSResult updateSystemAccount(EmployeeDTO obj, int employee_roleId, int employeeLoginId) {
         if (obj == null || obj.getId() <= 0 || employee_roleId <= 0) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS);
@@ -421,8 +418,118 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         return new BUSResult(BUSOperationResult.SUCCESS);
     }
 
+    // ==================== 4 NEW GETTER METHODS (per tab) ====================
+    public BUSResult getPersonalInfo(int employeeId) {
+        if (employeeId <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        EmployeePersonalInfoDTO data = EmployeeDAL.getInstance().getPersonalInfo(employeeId);
+
+        if (data == null) {
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+        }
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_PERSONAL_INFO_LOAD_SUCCESS, data);
+    }
+
+    public BUSResult getAccountInfo(int employeeId) {
+        if (employeeId <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        EmployeeAccountInfoDTO data = EmployeeDAL.getInstance().getAccountInfo(employeeId);
+
+        if (data == null) {
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+        }
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_ACCOUNT_INFO_LOAD_SUCCESS, data);
+    }
+
+    public BUSResult getJobInfo(int employeeId) {
+        if (employeeId <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        EmployeeJobInfoDTO data = EmployeeDAL.getInstance().getJobInfo(employeeId);
+
+        if (data == null) {
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+        }
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_JOB_INFO_LOAD_SUCCESS, data);
+    }
+
+    public BUSResult getPayrollInfo(int employeeId) {
+        if (employeeId <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        EmployeePayrollInfoDTO data = EmployeeDAL.getInstance().getPayrollInfo(employeeId);
+
+        if (data == null) {
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+        }
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_PAYROLL_INFO_LOAD_SUCCESS, data);
+    }
+
+    // ==================== BUNDLE METHODS (Composite Data) ====================
+
+    /**
+     * Lấy toàn bộ dữ liệu cho Tab 1: Hồ sơ nhân viên
+     * Bundle: PersonalInfo + JobInfo + PayrollInfo (3 DTOs)
+     * Giảm số lần gọi BUS từ 3 xuống 1
+     * 
+     * @param employeeId ID của employee
+     * @return BUSResult chứa EmployeePersonalInfoBundle hoặc error
+     */
+    public BUSResult getPersonalInfoComplete(int employeeId) {
+        if (employeeId <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+
+        try {
+            EmployeePersonalInfoDTO personalInfo = EmployeeDAL.getInstance().getPersonalInfo(employeeId);
+            EmployeeJobInfoDTO jobInfo = EmployeeDAL.getInstance().getJobInfo(employeeId);
+            EmployeePayrollInfoDTO payrollInfo = EmployeeDAL.getInstance().getPayrollInfo(employeeId);
+
+            if (personalInfo == null || jobInfo == null || payrollInfo == null) {
+                return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+            }
+
+            EmployeePersonalInfoBundle bundle = EmployeePersonalInfoBundle.builder()
+                    .personalInfo(personalInfo)
+                    .jobInfo(jobInfo)
+                    .payrollInfo(payrollInfo)
+                    .build();
+
+            return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_PERSONAL_INFO_LOAD_SUCCESS, bundle);
+        } catch (Exception e) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+    }
+
+    /**
+     * Lấy dữ liệu cho Tab 2: Lương & Công tác
+     * Bundle: JobInfo + PayrollInfo (2 DTOs)
+     * Giảm số lần gọi BUS từ 2 xuống 1
+     * 
+     * @param employeeId ID của employee
+     * @return BUSResult chứa EmployeeJobHistoryBundle hoặc error
+     */
+    public BUSResult getJobAndPayrollInfo(int employeeId) {
+        if (employeeId <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+
+        try {
+            EmployeeJobInfoDTO jobInfo = EmployeeDAL.getInstance().getJobInfo(employeeId);
+            EmployeePayrollInfoDTO payrollInfo = EmployeeDAL.getInstance().getPayrollInfo(employeeId);
+
+            if (jobInfo == null || payrollInfo == null) {
+                return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+            }
+
+            EmployeeJobHistoryBundle bundle = EmployeeJobHistoryBundle.builder()
+                    .jobInfo(jobInfo)
+                    .payrollInfo(payrollInfo)
+                    .build();
+
+            return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_JOB_INFO_LOAD_SUCCESS, bundle);
+        } catch (Exception e) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+    }
+
     private boolean isDuplicateEmployee(EmployeeDTO obj) {
-        // [STATELESS] Use DAL call instead of local cache
         EmployeeDTO existingEm = getById(obj.getId());
         ValidationUtils validate = ValidationUtils.getInstance();
         // Kiểm tra xem tên, mô tả, và hệ số lương có trùng không

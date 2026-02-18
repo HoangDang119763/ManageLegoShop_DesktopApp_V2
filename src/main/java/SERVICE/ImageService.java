@@ -1,8 +1,5 @@
 package SERVICE;
 
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.image.Image;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -13,7 +10,10 @@ import java.nio.file.StandardCopyOption;
 
 public class ImageService {
     private static final ImageService INSTANCE = new ImageService();
-    private ImageService() {};
+
+    private ImageService() {
+    };
+
     public static ImageService gI() {
         return INSTANCE;
     }
@@ -24,7 +24,7 @@ public class ImageService {
         }
 
         if (imageUrl.startsWith("file:/")) {
-            imageUrl = imageUrl.substring(6);  // Xóa tiền tố file:/ nếu có
+            imageUrl = imageUrl.substring(6); // Xóa tiền tố file:/ nếu có
         }
 
         // Kiểm tra sự tồn tại của tệp
@@ -95,8 +95,5 @@ public class ImageService {
 
         return "images/product/" + fileName;
     }
-
-
-
 
 }

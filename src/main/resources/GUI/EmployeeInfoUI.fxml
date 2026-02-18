@@ -30,7 +30,7 @@
             <center>
                 <TabPane fx:id="tabPaneInfo" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
                     <tabs>
-                        <Tab text="Hồ sơ nhân viên">
+                        <Tab fx:id="tabPersonalInfo" text="Hồ sơ nhân viên">
                             <content>
                                 <VBox alignment="TOP_CENTER">
                                     <padding><Insets bottom="15.0" left="20.0" right="20.0" top="10.0" /></padding>
@@ -148,7 +148,7 @@
                             </content>
                         </Tab>
 
-                        <Tab text="Lương &amp; Công tác">
+                        <Tab fx:id="tabJobHistory" text="Lương &amp; Công tác">
                             <content>
                                 <VBox alignment="TOP_CENTER">
                                     <padding><Insets bottom="15.0" left="20.0" right="20.0" top="10.0" /></padding>
@@ -223,7 +223,7 @@
                             </content>
                         </Tab>
 
-                        <Tab text="Bảo mật tài khoản">
+                        <Tab fx:id="tabAccountSecurity" text="Bảo mật tài khoản">
                             <content>
                                 <VBox alignment="TOP_CENTER">
                                     <padding><Insets bottom="16.0" left="20.0" right="20.0" top="10.0" /></padding>
@@ -244,7 +244,19 @@
                                                     </children>
                                                     <VBox.margin><Insets top="10.0" /></VBox.margin>
                                                 </VBox>
-                                                <Region maxHeight="10.0" prefHeight="10.0" VBox.vgrow="ALWAYS" />
+                                    <VBox alignment="CENTER_RIGHT" maxWidth="400.0" minWidth="400.0" prefHeight="42.0" prefWidth="400.0" spacing="5.0">
+                                       <children>
+                                          <Label text="Đăng nhập cuối lúc:" textFill="#7f8c8d" />
+                                          <Label fx:id="lblLastLogin" text="--/--/---- --:--:--" textFill="#2c3e50">
+                                             <font>
+                                                <Font name="System Bold" size="13.0" />
+                                             </font>
+                                          </Label>
+                                       </children>
+                                       <VBox.margin>
+                                          <Insets />
+                                       </VBox.margin>
+                                    </VBox>
                                                 <HBox alignment="CENTER" spacing="50.0">
                                                     <children>
                                                         <Button fx:id="btnClear" prefHeight="40.0" prefWidth="150.0" styleClass="action-btn" text="LÀM MỚI" />

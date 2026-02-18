@@ -146,8 +146,7 @@ public class SupplierController implements IController {
     @Override
     public void setupListeners() {
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
-
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
             NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);

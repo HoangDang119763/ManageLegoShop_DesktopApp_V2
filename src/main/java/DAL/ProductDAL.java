@@ -327,7 +327,7 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
                 "FROM product p " +
                 "LEFT JOIN category c ON p.category_id = c.id " +
                 "LEFT JOIN status s ON p.status_id = s.id " +
-                "WHERE (? = '' OR (p.id LIKE ? OR p.name LIKE ?)) " +
+                "WHERE (? = '' OR (CAST(p.id AS CHAR) LIKE ? OR LOWER(p.name) LIKE ?)) " +
                 "AND (? = -1 OR p.category_id = ?) " +
                 "AND (? = -1 OR p.status_id = ?) " +
                 "AND (? IS NULL OR p.selling_price >= ?) " +
@@ -338,7 +338,7 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
         try (Connection conn = connectionFactory.newConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            String searchKey = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+            String searchKey = "%" + (keyword == null ? "" : keyword.trim().toLowerCase()) + "%";
             ps.setString(1, keyword == null ? "" : keyword.trim());
             ps.setString(2, searchKey);
             ps.setString(3, searchKey);

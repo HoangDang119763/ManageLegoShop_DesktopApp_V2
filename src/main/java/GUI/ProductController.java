@@ -67,7 +67,7 @@ public class ProductController implements IController {
     @FXML
     private PaginationController paginationController;
 
-    private final int PAGE_SIZE = 10;
+    private final int PAGE_SIZE = 6;
     private String keyword = "";
     private CategoryDTO categoryFilter = null;
     private StatusDTO statusFilter = null;
@@ -186,7 +186,7 @@ public class ProductController implements IController {
     public void setupListeners() {
         cbCategoryFilter.setOnAction(event -> handleCategoryFilterChange());
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
         txtStartPrice.textProperty().addListener((observable, oldValue, newValue) -> handlePriceChange());
         txtEndPrice.textProperty().addListener((observable, oldValue, newValue) -> handlePriceChange());
 

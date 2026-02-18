@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class EmploymentHistoryDetailDTO {
-    private int id;
     private int employeeId;
     private LocalDate effectiveDate;
 
@@ -28,4 +27,5 @@ public class EmploymentHistoryDetailDTO {
     private String reason;
     private LocalDateTime createdAt;
     private int approverId;
+    private String approverName;
 }

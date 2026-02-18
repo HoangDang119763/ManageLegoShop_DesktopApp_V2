@@ -32,11 +32,20 @@
                         <Button fx:id="advanceSearchBtn" layoutX="1010.0" layoutY="12.0" mnemonicParsing="false" prefHeight="38.4" prefWidth="40.0" styleClass="action-btn" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                             <graphic><FontAwesomeIcon glyphName="FILTER" size="1.2em" styleClass="action-icon" /></graphic>
                         </Button>
-                              <Button fx:id="exportPdf" layoutX="890.0" layoutY="9.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="121.0" styleClass="action-btn" text="XUẤT PDF" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="10.0">
-                                  <graphic>
-                        <FontAwesomeIcon fill="WHITE" glyphName="FILE_TEXT" size="1.2em" />
-                     </graphic>
-                              </Button>
+                            <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="603.0" layoutY="2.0" prefHeight="50.0" spacing="12.0" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="4.0">
+                                <children>
+                                    <Button fx:id="addImportBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="139.0" styleClass="action-btn" text="NHẬP HÀNG">
+                                        <graphic>
+                              <FontAwesomeIcon fill="WHITE" glyphName="TRUCK" size="1.2em" />
+                           </graphic>
+                                    </Button>
+                                    <Button fx:id="exportPdf" mnemonicParsing="false" prefHeight="38.0" prefWidth="121.0" styleClass="action-btn" text="XUẤT PDF">
+                                        <graphic>
+                              <FontAwesomeIcon fill="WHITE" glyphName="FILE_TEXT" size="1.2em" />
+                           </graphic>
+                                    </Button>
+                                </children>
+                            </HBox>
                     </children>
                <BorderPane.margin>
                   <Insets bottom="-5.0" />
@@ -59,10 +68,9 @@
                                                 <TableColumn fx:id="tlb_col_createDate" prefWidth="100.0" text="Ngày tạo" />
                                                 <TableColumn fx:id="tlb_col_employeeId" prefWidth="80.0" text="Mã NV" />
                                                 <TableColumn fx:id="tlb_col_supplierId" prefWidth="80.0" text="Mã NCC" />
-                                                <TableColumn fx:id="tlb_col_totalPrice" prefWidth="120.0" text="Tổng tiền" />
-                                                <TableColumn fx:id="tlb_col_status" prefWidth="100.0" text="Trạng thái" />
+                                                <TableColumn fx:id="tlb_col_totalPrice" prefWidth="151.99993896484375" text="Tổng tiền" />
+                                                <TableColumn fx:id="tlb_col_status" prefWidth="136.00003051757812" text="Trạng thái" />
                                             </columns>
-                                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
                                         </TableView>
                                     </children>
                                     <styleClass><String fx:value="white-bg" /><String fx:value="shadow" /></styleClass>
@@ -72,15 +80,6 @@
                                 <AnchorPane prefHeight="65.0">
                                     <children>
                                         <Line endX="627.0" stroke="#58c9c9" strokeWidth="1.5" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="0.0" />
-                                        <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" prefHeight="50.0" spacing="12.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="5.0">
-                                            <children>
-                                                <Button fx:id="addImportBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="139.0" styleClass="action-btn" text="NHẬP HÀNG">
-                                                    <graphic>
-                                          <FontAwesomeIcon fill="WHITE" glyphName="TRUCK" size="1.2em" />
-                                       </graphic>
-                                                </Button>
-                                            </children>
-                                        </HBox>
                                 <fx:include fx:id="pagination" source="PaginationControl.fxml" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="5.0" />
                                     </children>
                                 </AnchorPane>

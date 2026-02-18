@@ -5,9 +5,9 @@ import BUS.DetailDiscountBUS;
 import BUS.DiscountBUS;
 import DTO.DetailDiscountDTO;
 import DTO.DiscountDTO;
+import DTO.PagedResponse;
 import ENUM.PermissionKey;
 import INTERFACE.IController;
-import SERVICE.DiscountService;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
@@ -90,7 +90,10 @@ public class DiscountController implements IController {
         tlb_col_endDate.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatDateTime(cellData.getValue().getEndDate())));
         UiUtils.gI().addTooltipToColumn(tlb_col_name, 10);
-        tblDiscount.setItems(FXCollections.observableArrayList(DiscountBUS.getInstance().getAll()));
+        tblDiscount.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+
+        // Tải trang đầu tiên
+        loadPageData(0);
     }
 
     public void loadSubTable(String discountCode) {
@@ -103,21 +106,23 @@ public class DiscountController implements IController {
         this.startDate.setText(validationUtils.formatDateTime(selectedDiscount.getStartDate()));
         this.endDate.setText(validationUtils.formatDateTime(selectedDiscount.getEndDate()));
 
+        // Setup detail table columns
         tlb_col_totalPriceInvoice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPriceInvoice())));
         tlb_col_discountAmount.setCellValueFactory(cellData -> {
             BigDecimal discountValue = cellData.getValue().getDiscountAmount();
             if (!isNotSelectedDiscount() && selectedDiscount.getType() == 0) {
-                // Type 0: Giߦ�m theo phߦ�n tr-�m (%)
+                // Type 0: Giảm theo phần trăm (%)
                 return formatCell(validationUtils.formatCurrency(discountValue) + " %");
             } else {
-                // Type 1: Giߦ�m tr�+�c tiߦ+p bߦ�ng s�+� ti�+�n
+                // Type 1: Giảm trực tiếp bằng số tiền
                 return formatCell(validationUtils.formatCurrency(discountValue));
             }
         });
         UiUtils.gI().addTooltipToColumn(tlb_col_discountAmount, 10);
-        // tblDetailDiscount.setItems(FXCollections.observableArrayList(
-        // DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountIdLocal(discountCode)));
+        tblDetailDiscount.setItems(FXCollections
+                .observableArrayList(DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountId(discountCode)));
+
         tblDetailDiscount.getSelectionModel().clearSelection();
     }
 
@@ -135,7 +140,7 @@ public class DiscountController implements IController {
                 tblDetailDiscount.getItems().clear();
             }
         });
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
             NotificationUtils.showInfoAlert("Làm mới thành công.", "Thông báo");
@@ -163,13 +168,21 @@ public class DiscountController implements IController {
     }
 
     private void loadPageData(int pageIndex) {
-        // TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_LIST_VIEW,
-        // () -> DiscountBUS.getInstance().getAll(),
-        // result -> {
-        // tblDiscount.setItems(FXCollections.observableArrayList(result));
-        // paginationController.setPageCount(1);
-        // tblDiscount.getSelectionModel().clearSelection();
-        // });
+        String keyword = txtSearch.getText().trim();
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.PROMOTION_LIST_VIEW,
+                () -> DiscountBUS.getInstance().filterDiscountsPagedForManage(keyword, pageIndex, PAGE_SIZE),
+                result -> {
+                    // Lấy dữ liệu DiscountDTO
+                    PagedResponse<DiscountDTO> res = result.getPagedData();
+
+                    if (res != null) {
+                        tblDiscount.setItems(FXCollections.observableArrayList(res.getItems()));
+                        int totalItems = res.getTotalItems();
+                        int pageCount = (int) Math.ceil((double) totalItems / PAGE_SIZE);
+                        paginationController.setPageCount(pageCount > 0 ? pageCount : 1);
+                    }
+                    tblDiscount.getSelectionModel().clearSelection();
+                });
     }
 
     private void handleKeywordChange() {
@@ -179,16 +192,12 @@ public class DiscountController implements IController {
 
     @Override
     public void applyFilters() {
-        DiscountBUS disBUS = DiscountBUS.getInstance();
         clearSubTable();
-        if (keyword.isEmpty()) {
-            // Nߦ+u keyword r�+�ng, lߦ�y tߦ�t cߦ� h+�a -��n
-            tblDiscount.setItems(FXCollections.observableArrayList(disBUS.getAll()));
+        if (paginationController.getCurrentPage() == 0) {
+            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
         } else {
-            tblDiscount.setItems(FXCollections.observableArrayList(disBUS.searchByCodeLocal(keyword)));
-
+            paginationController.setCurrentPage(0);
         }
-        tblDiscount.getSelectionModel().clearSelection();
     }
 
     @Override

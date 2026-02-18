@@ -85,8 +85,9 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
     // ============================================================
 
     public BUSResult authenticate(String username, String password) {
+        AccountDAL accountDAL = AccountDAL.getInstance();
         // 1. Lấy dữ liệu tươi từ DB
-        AccountDTO acc = AccountDAL.getInstance().getByUsername(username);
+        AccountDTO acc = accountDAL.getByUsername(username);
         if (acc == null)
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.ACCOUNT_NOT_FOUND);
 
@@ -101,7 +102,8 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.LOGIN_INVALID_CREDENTIALS);
 
         // 4. RESET FLAG require_relogin sau khi đăng nhập thành công
-        AccountDAL.getInstance().setRequireRelogin(acc.getId(), false);
+        accountDAL.setRequireRelogin(acc.getId(), false);
+        accountDAL.updateLastLogin(acc.getId());
         // 5. Set session
         EmployeeSessionDTO session = EmployeeBUS.getInstance().getEmployeeSessionByAccountId(acc.getId());
         // Sau khi có session, tải permission và moduleIds vào session luôn để sau này

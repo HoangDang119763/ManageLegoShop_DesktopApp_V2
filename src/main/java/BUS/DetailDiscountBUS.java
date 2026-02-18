@@ -82,8 +82,9 @@ public class DetailDiscountBUS extends BaseBUS<DetailDiscountDTO, String> {
 
     @Override
     public DetailDiscountDTO getById(String id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (id == null || id.isEmpty())
+            return null;
+        return DetailDiscountDAL.getInstance().getById(id);
     }
 
 }

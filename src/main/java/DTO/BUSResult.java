@@ -64,4 +64,13 @@ public class BUSResult {
         }
         return new PagedResponse<>(new java.util.ArrayList<>(), 0, 0, 0);
     }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getData() {
+        try {
+            return (T) this.data;
+        } catch (ClassCastException e) {
+            return null;
+        }
+    }
 }

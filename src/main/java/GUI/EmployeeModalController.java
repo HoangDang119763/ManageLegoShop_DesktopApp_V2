@@ -7,18 +7,22 @@ import BUS.EmploymentHistoryBUS;
 import BUS.RoleBUS;
 import BUS.SalaryBUS;
 import BUS.StatusBUS;
-import DTO.AccountDTO;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDTO;
-import DTO.EmployeeDetailDTO;
+import DTO.EmployeePersonalInfoDTO;
 import DTO.EmploymentHistoryDetailDTO;
+import DTO.EmployeeAccountInfoDTO;
+import DTO.EmployeeJobInfoDTO;
+import DTO.EmployeePayrollInfoDTO;
+import DTO.PagedResponse;
 import DTO.RoleDTO;
 import DTO.SalaryDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
+import ENUM.Gender;
+import ENUM.Status;
 import INTERFACE.IModalController;
-import PROVIDER.EmploymentHistoryViewProvider;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
@@ -109,7 +113,11 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colRole;
     @FXML
-    private TableColumn<EmploymentHistoryDetailDTO, String> colCreatedAt;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colReason;
+    @FXML
+    private TableColumn<EmploymentHistoryDetailDTO, String> colApprover;
+    @FXML
+    private TableColumn<EmploymentHistoryDetailDTO, String> colReason1;
     @FXML
     private Button saveJobBtn;
 
@@ -142,6 +150,9 @@ public class EmployeeModalController implements IModalController {
     private Button closeBtn;
     @FXML
     private StackPane loadingOverlay;
+    @FXML
+    private PaginationController historyPaginationController;
+    private static final int PAGE_SIZE = 10;
 
     @Getter
     private boolean isSaved = false;
@@ -149,6 +160,7 @@ public class EmployeeModalController implements IModalController {
     private String resultMessage = "";
     private int typeModal; // 0=Add, 1=Edit, 2=View
     private EmployeeDTO employee;
+    private int currentEmployeeId; // Store employee ID for lazy loading
     private RoleBUS roleBUS;
     private SalaryBUS salaryBUS;
     private StatusBUS statusBUS;
@@ -158,7 +170,16 @@ public class EmployeeModalController implements IModalController {
     private EmploymentHistoryBUS employmentHistoryBUS;
     private ValidationUtils validationUtils;
     private AccountBUS accountBUS;
-    private EmployeeDetailDTO empDetail;
+    // Permission flags per tab
+    private boolean canViewPersonal;
+    private boolean canUpdatePersonal;
+    private boolean canViewAccount;
+    private boolean canUpdateAccount;
+    private boolean canResetPassword;
+    private boolean canViewJob;
+    private boolean canUpdateJob;
+    private boolean canViewPayroll;
+    private boolean canUpdatePayroll;
 
     @FXML
     public void initialize() {
@@ -174,41 +195,128 @@ public class EmployeeModalController implements IModalController {
         accountBUS = AccountBUS.getInstance();
         // Load initial data
         loadGenderComboBox();
-        loadDepartmentComboBox();
+        setupDepartmentComboBox();
         loadRoleComboBox();
         loadStatusComboBox();
         loadAccountStatusComboBox();
+        setupPermissions();
         hideTabWithoutPermission();
         // Setup listeners
         setupListeners();
+        setupHistoryPagination();
+        setupTabLoadingListeners();
     }
 
-    public void hideTabWithoutPermission() {
-        SessionManagerService session = SessionManagerService.getInstance();
+    /**
+     * Setup permission flags for each tab
+     */
+    private void setupPermissions() {
+        canViewPersonal = session.hasPermission(PermissionKey.EMPLOYEE_PERSONAL_VIEW);
+        canUpdatePersonal = session.hasPermission(PermissionKey.EMPLOYEE_PERSONAL_UPDATE);
+        canViewAccount = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_VIEW);
+        canUpdateAccount = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS);
+        canResetPassword = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD);
+        canViewJob = session.hasPermission(PermissionKey.EMPLOYEE_JOB_VIEW);
+        canUpdateJob = session.hasPermission(PermissionKey.EMPLOYEE_JOB_UPDATE);
+        canViewPayroll = session.hasPermission(PermissionKey.EMPLOYEE_PAYROLLINFO_VIEW);
+        canUpdatePayroll = session.hasPermission(PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE);
+    }
 
-        boolean canViewPersonal = session.hasPermission(PermissionKey.EMPLOYEE_PERSONAL_VIEW);
-        boolean canUpdatePersonal = session.hasPermission(PermissionKey.EMPLOYEE_PERSONAL_UPDATE);
-        boolean canViewJob = session.hasPermission(PermissionKey.EMPLOYEE_JOB_VIEW);
-        boolean canUpdateJob = session.hasPermission(PermissionKey.EMPLOYEE_JOB_UPDATE);
-        boolean canViewPayrollInfo = session.hasPermission(PermissionKey.EMPLOYEE_PAYROLLINFO_VIEW);
-        boolean canUpdatePayrollInfo = session.hasPermission(PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE);
-        boolean canviewAccount = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_VIEW);
-        boolean canResetAccountPassword = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD);
-        boolean canUpdateAccountStatus = session.hasPermission(PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS);
-        boolean canDelete = session.hasPermission(PermissionKey.EMPLOYEE_DELETE);
-        boolean canViewDetail = canViewPersonal || canViewJob || canViewPayrollInfo || canviewAccount;
+    /**
+     * Thiết lập listener cho tab selection để lazy load dữ liệu
+     * Mỗi tab chỉ tải dữ liệu khi người dùng click vào tab
+     */
+    private void setupTabLoadingListeners() {
+        tabPaneEmployee.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            if (newTab == null || currentEmployeeId <= 0)
+                return;
 
-        // Có 4 tab edit riêng biệt
+            // Tab 1: Thông tin cá nhân (Personal Info)
+            if (newTab == tabPersonal) {
+                loadTabPersonal();
+            }
 
+            // Tab 2: Tài khoản hệ thống (Account System)
+            else if (newTab == tabAccount) {
+                loadTabAccount();
+            }
+
+            // Tab 3: Đơn vị công tác (Job/Work Unit)
+            else if (newTab == tabJob) {
+                loadTabJob();
+            }
+
+            // Tab 4: Bảo hiểm & Phúc lợi (Payroll & Benefits)
+            else if (newTab == tabPayroll) {
+                loadTabPayroll();
+            }
+        });
+    }
+
+    /**
+     * Ẩn các tab mà user không có quyền xem
+     */
+    private void hideTabWithoutPermission() {
+        // Tab 1: Personal Info
+        if (!canViewPersonal) {
+            tabPaneEmployee.getTabs().remove(tabPersonal);
+        }
+
+        // Tab 2: Account System
+        if (!canViewAccount) {
+            tabPaneEmployee.getTabs().remove(tabAccount);
+        }
+
+        // Tab 3: Job/Work Unit
+        if (!canViewJob) {
+            tabPaneEmployee.getTabs().remove(tabJob);
+        }
+
+        // Tab 4: Payroll & Benefits
+        if (!canViewPayroll) {
+            tabPaneEmployee.getTabs().remove(tabPayroll);
+        }
     }
 
     private void loadGenderComboBox() {
-        cbGender.getItems().addAll("Nam", "Nữ", "Khác");
+        for (Gender gender : Gender.values()) {
+            cbGender.getItems().add(gender.getDisplayName());
+        }
         cbGender.getSelectionModel().selectFirst();
     }
 
-    private void loadDepartmentComboBox() {
-        cbDepartment.getItems().addAll(departmentBUS.getAll());
+    /**
+     * Setup Department ComboBox với formatting cho inactive items
+     */
+    private void setupDepartmentComboBox() {
+        ArrayList<DepartmentDTO> departmentOptions = departmentBUS.getAll();
+        cbDepartment.setItems(FXCollections.observableArrayList(departmentOptions));
+
+        // Format inactive departments (màu xám, in nghiêng)
+        int inactiveDeptId = statusBUS
+                .getByTypeAndStatusName(StatusType.DEPARTMENT, Status.Department.INACTIVE).getId();
+
+        UiUtils.gI().formatInactiveComboBox(
+                cbDepartment,
+                DepartmentDTO::getName,
+                DepartmentDTO::getStatusId,
+                inactiveDeptId);
+    }
+
+    /**
+     * Attach warning listener cho Department khi chọn inactive item
+     */
+    private void attachDepartmentWarning(int initialDeptId) {
+        int inactiveDeptId = statusBUS
+                .getByTypeAndStatusName(StatusType.DEPARTMENT, Status.Department.INACTIVE).getId();
+
+        UiUtils.gI().addSmartInactiveWarningListener(
+                cbDepartment,
+                DepartmentDTO::getId,
+                DepartmentDTO::getStatusId,
+                inactiveDeptId,
+                initialDeptId,
+                AppMessages.DEPARTMENT_DELETED_WARNING);
     }
 
     private void loadRoleComboBox() {
@@ -248,20 +356,24 @@ public class EmployeeModalController implements IModalController {
     private void setupJobHistoryTable() {
 
         colEffectiveDate.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatDateTime(cellData.getValue().getCreatedAt()) != null
-                        ? validationUtils.formatDateTime(cellData.getValue().getCreatedAt())
+                cellData.getValue().getEffectiveDate() != null
+                        ? validationUtils.formatDateTime(cellData.getValue().getEffectiveDate())
                         : ""));
 
         colDepartment.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getDepartmentName()));
+                cellData.getValue().getDepartmentName() != null ? cellData.getValue().getDepartmentName() : ""));
 
         colRole.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getRoleName()));
+                cellData.getValue().getRoleName() != null ? cellData.getValue().getRoleName() : ""));
 
-        colCreatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt()) != null
-                        ? validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())
-                        : ""));
+        colReason.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getReason() != null ? cellData.getValue().getReason() : ""));
+
+        colApprover.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getApproverName() != null ? cellData.getValue().getApproverName() : ""));
+
+        colReason1.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getReason() != null ? cellData.getValue().getReason() : ""));
     }
 
     private void setupListeners() {
@@ -286,91 +398,226 @@ public class EmployeeModalController implements IModalController {
         }
     }
 
-    public void setEmployee(int id) {
-        // Display employee data from EmployeeDetailDTO
-        // tab1 Personal Info
-        empDetail = employeeBUS.getDetailById(id);
-        txtEmployeeId.setText(String.valueOf(empDetail.getEmployeeId()));
-        txtFirstName.setText(empDetail.getFirstName() != null ? empDetail.getFirstName() : "");
-        txtLastName.setText(empDetail.getLastName() != null ? empDetail.getLastName() : "");
-        dpDateOfBirth.setValue(empDetail.getDateOfBirth());
-        cbGender.getSelectionModel().select(empDetail.getGender() != null ? empDetail.getGender() : "");
-        txtPhone.setText(empDetail.getPhone() != null ? empDetail.getPhone() : "");
-        txtEmail.setText(empDetail.getEmail() != null ? empDetail.getEmail() : "");
-        // tab2 Account Info
-        txtUsername.setText(empDetail.getUsername() != null ? empDetail.getUsername() : "");
-        if (empDetail.getAccountStatusId() > 0) {
-            StatusDTO accountStatus = statusBUS.getById(empDetail.getAccountStatusId());
+    /**
+     * Set employee ID and load initial tab (Tab 1: Personal)
+     */
+    public void setData(int empId) {
+        currentEmployeeId = empId;
+        // Có quyền nào thì load tab đó đầu tiên, ưu tiên Tab 1 > Tab 2 > Tab 3 > Tab 4
+        if (canViewPersonal)
+            loadTabPersonal();
+        else if (canViewAccount)
+            loadTabAccount();
+        else if (canViewJob)
+            loadTabJob();
+        else if (canViewPayroll)
+            loadTabPayroll();
+    }
+
+    /**
+     * Load dữ liệu cho Tab 1: Thông tin cá nhân (Async)
+     */
+    private void loadTabPersonal() {
+        if (!canViewPersonal) {
+            return;
+        }
+
+        TaskUtil.executePublic(
+                loadingOverlay,
+                () -> employeeBUS.getPersonalInfo(currentEmployeeId),
+                result -> {
+                    EmployeePersonalInfoDTO personalInfo = result.getData();
+                    displayPersonalInfo(personalInfo);
+                });
+    }
+
+    /**
+     * Load dữ liệu cho Tab 2: Tài khoản hệ thống (Async)
+     */
+    private void loadTabAccount() {
+        if (!canViewAccount) {
+            return;
+        }
+
+        TaskUtil.executePublic(
+                loadingOverlay,
+                () -> employeeBUS.getAccountInfo(currentEmployeeId),
+                result -> {
+                    EmployeeAccountInfoDTO accountInfo = result.getData();
+                    displayAccountInfo(accountInfo);
+                });
+    }
+
+    /**
+     * Load dữ liệu cho Tab 3: Đơn vị công tác (Async)
+     */
+    private void loadTabJob() {
+        if (!canViewJob) {
+            return;
+        }
+
+        TaskUtil.executePublic(
+                loadingOverlay,
+                () -> employeeBUS.getJobInfo(currentEmployeeId),
+                result -> {
+                    EmployeeJobInfoDTO jobInfo = result.getData();
+                    displayJobInfo(jobInfo);
+                });
+    }
+
+    /**
+     * Load dữ liệu cho Tab 4: Bảo hiểm & Phúc lợi (Async)
+     */
+    private void loadTabPayroll() {
+        if (!canViewPayroll) {
+            return;
+        }
+
+        TaskUtil.executePublic(
+                loadingOverlay,
+                () -> employeeBUS.getPayrollInfo(currentEmployeeId),
+                result -> {
+                    EmployeePayrollInfoDTO payrollInfo = result.getData();
+                    displayPayrollInfo(payrollInfo);
+                });
+    }
+
+    /**
+     * Display personal info on Tab 1
+     */
+    private void displayPersonalInfo(EmployeePersonalInfoDTO personalInfo) {
+        if (personalInfo == null)
+            return;
+
+        txtEmployeeId.setText(String.valueOf(personalInfo.getEmployeeId()));
+        txtFirstName.setText(personalInfo.getFirstName() != null ? personalInfo.getFirstName() : "");
+        txtLastName.setText(personalInfo.getLastName() != null ? personalInfo.getLastName() : "");
+        dpDateOfBirth.setValue(personalInfo.getDateOfBirth() != null ? personalInfo.getDateOfBirth() : null);
+        cbGender.getSelectionModel().select(personalInfo.getGender() != null ? personalInfo.getGender() : "");
+        txtPhone.setText(personalInfo.getPhone() != null ? personalInfo.getPhone() : "");
+        txtEmail.setText(personalInfo.getEmail() != null ? personalInfo.getEmail() : "");
+
+        if (!canUpdatePersonal) {
+            txtFirstName.setEditable(false);
+            txtLastName.setEditable(false);
+            dpDateOfBirth.setDisable(true);
+            cbGender.setDisable(true);
+            txtPhone.setEditable(false);
+            txtEmail.setEditable(false);
+            savePersonalBtn.setDisable(true);
+        }
+    }
+
+    /**
+     * Display account info on Tab 2
+     */
+    private void displayAccountInfo(EmployeeAccountInfoDTO accountInfo) {
+        if (accountInfo == null)
+            return;
+
+        txtUsername.setText(accountInfo.getUsername() != null ? accountInfo.getUsername() : "");
+        lblLastLogin.setText(accountInfo.getLastLogin() != null
+                ? validationUtils.formatDateTimeWithHour(accountInfo.getLastLogin())
+                : "Chưa có lần đăng nhập");
+
+        // Set account status
+        if (accountInfo.getAccountStatusId() != null && accountInfo.getAccountStatusId() > 0) {
+            StatusDTO accountStatus = statusBUS.getById(accountInfo.getAccountStatusId());
             if (accountStatus != null) {
-                cbAccountStatus.getItems().stream()
-                        .filter(item -> item != null && item.getId() == accountStatus.getId())
-                        .findFirst()
-                        .ifPresent(item -> cbAccountStatus.getSelectionModel().select(item));
+                cbAccountStatus.getSelectionModel().select(accountStatus);
             }
         }
-        AccountDTO account = accountBUS.getById(empDetail.getAccountId());
-        if (account != null) {
-            lblLastLogin.setText(
-                    account.getLastLogin() != null ? validationUtils.formatDateTimeWithHour(account.getLastLogin())
-                            : "Chưa có lần đăng nhập");
-        } else {
-            lblLastLogin.setText("Chưa có lần đăng nhập");
+
+        if (!canUpdateAccount && !canResetPassword) {
+            cbAccountStatus.setDisable(true);
+            btnResetPassword.setDisable(true);
+            saveAccountBtn.setDisable(true);
+        } else if (!canResetPassword) {
+            btnResetPassword.setDisable(true);
         }
-        // tab3 Job Info
-        if (empDetail.getDepartmentId() != null)
+    }
 
-        {
-            DepartmentDTO dept = departmentBUS.getById(empDetail.getDepartmentId());
-            cbDepartment.getSelectionModel().select(dept);
+    /**
+     * Display job info on Tab 3
+     */
+    private void displayJobInfo(EmployeeJobInfoDTO jobInfo) {
+        if (jobInfo == null)
+            return;
+
+        // Set department and attach warning listener
+        int initialDeptId = jobInfo.getDepartmentId() != null ? jobInfo.getDepartmentId() : -1;
+        attachDepartmentWarning(initialDeptId);
+
+        if (jobInfo.getDepartmentId() != null) {
+            DepartmentDTO dept = departmentBUS.getById(jobInfo.getDepartmentId());
+            if (dept != null) {
+                cbDepartment.getSelectionModel().select(dept);
+            }
         }
 
-        // Set Role (this will trigger auto-update of salary)
-        RoleDTO role = roleBUS.getById(empDetail.getRoleId());
-        if (role != null) {
-            cbRole.getSelectionModel().select(role);
-            handleRoleSelectChange(); // Trigger salary update
+        // Set role and trigger salary update
+        if (jobInfo.getRoleId() != null) {
+            RoleDTO role = roleBUS.getById(jobInfo.getRoleId());
+            if (role != null) {
+                cbRole.getSelectionModel().select(role);
+                handleRoleSelectChange();
+            }
         }
 
-        // Load Job History with department and role names
-        ArrayList<EmploymentHistoryDetailDTO> jobHistory = EmploymentHistoryViewProvider.getInstance()
-                .getJobHistoryByEmployeeIdDecrease(empDetail.getEmployeeId());
+        // Set status
+        if (jobInfo.getStatusId() != null) {
+            StatusDTO status = statusBUS.getById(jobInfo.getStatusId());
+            if (status != null) {
+                cbStatus.getSelectionModel().select(status);
+            }
+        }
 
+        // Display base salary and coefficient
+        txtBaseSalary.setText(jobInfo.getBaseSalary() != null ? jobInfo.getBaseSalary().toString() : "0");
+        txtCoefficient
+                .setText(jobInfo.getSalaryCoefficient() != null ? jobInfo.getSalaryCoefficient().toString() : "0");
+
+        // Setup job history table and load separately
         setupJobHistoryTable();
-        if (jobHistory != null)
-            tblJobHistory.setItems(FXCollections.observableArrayList(jobHistory));
+        loadEmploymentHistory(0);
 
-        // Set Status
-        StatusDTO status = statusBUS.getById(empDetail.getStatusId());
-        if (status != null) {
-            cbStatus.getItems().stream()
-                    .filter(item -> item != null && item.getId() == status.getId())
-                    .findFirst()
-                    .ifPresent(item -> cbStatus.getSelectionModel().select(item));
+        if (!canUpdateJob) {
+            cbDepartment.setDisable(true);
+            cbRole.setDisable(true);
+            cbStatus.setDisable(true);
+            saveJobBtn.setDisable(true);
         }
+    }
 
-        // Tab4 Payroll & Benefits
-        cbSocialIns.setSelected(empDetail.isSocialInsurance());
-        cbHealthIns.setSelected(empDetail.isHealthInsurance());
-        cbUnemploymentIns.setSelected(empDetail.isUnemploymentInsurance());
-        cbPersonalTax.setSelected(empDetail.isPersonalIncomeTax());
-        cbTransportSupport.setSelected(empDetail.isTransportationSupport());
-        cbAccommodationSupport.setSelected(empDetail.isAccommodationSupport());
+    /**
+     * Display payroll info on Tab 4
+     */
+    private void displayPayrollInfo(EmployeePayrollInfoDTO payrollInfo) {
+        if (payrollInfo == null)
+            return;
 
-        txtNumDependents.setText(empDetail.getNumDependents() != null ? empDetail.getNumDependents().toString() : "0");
-        txtHealthInsCode.setText(empDetail.getHealthInsCode() != null ? empDetail.getHealthInsCode() : "");
+        txtNumDependents
+                .setText(payrollInfo.getNumDependents() != null ? payrollInfo.getNumDependents().toString() : "0");
+        txtHealthInsCode.setText(payrollInfo.getHealthInsCode() != null ? payrollInfo.getHealthInsCode() : "");
 
-        // Display metadata
-        if (empDetail.getCreatedAt() != null) {
-            lblCreatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(empDetail.getCreatedAt()));
+        cbHealthIns.setSelected(payrollInfo.isHealthInsurance());
+        cbSocialIns.setSelected(payrollInfo.isSocialInsurance());
+        cbUnemploymentIns.setSelected(payrollInfo.isUnemploymentInsurance());
+        cbPersonalTax.setSelected(payrollInfo.isPersonalIncomeTax());
+        cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
+        cbAccommodationSupport.setSelected(payrollInfo.isAccommodationSupport());
+
+        if (!canUpdatePayroll) {
+            txtNumDependents.setEditable(false);
+            txtHealthInsCode.setEditable(false);
+            cbHealthIns.setDisable(true);
+            cbSocialIns.setDisable(true);
+            cbUnemploymentIns.setDisable(true);
+            cbPersonalTax.setDisable(true);
+            cbTransportSupport.setDisable(true);
+            cbAccommodationSupport.setDisable(true);
+            savePayrollBtn.setDisable(true);
         }
-        if (empDetail.getUpdatedAt() != null) {
-            lblUpdatedAt.setText(ValidationUtils.getInstance().formatDateTimeWithHour(empDetail.getUpdatedAt()));
-        }
-
-        UiUtils.gI().addTooltipToComboBoxValue(cbAccountStatus, 25, as -> as.getDescription());
-        UiUtils.gI().addTooltipToComboBoxValue(cbDepartment, 15, d -> d.getName());
-        UiUtils.gI().addTooltipToComboBoxValue(cbRole, 15, r -> r.getName());
-        UiUtils.gI().addTooltipToComboBoxValue(cbStatus, 15, s -> s.getDescription());
     }
 
     private void setReadOnly() {
@@ -403,7 +650,38 @@ public class EmployeeModalController implements IModalController {
         UiUtils.gI().setReadOnlyItem(btnResetPassword);
     }
 
-    // ...existing code...
+    private void setupHistoryPagination() {
+        // Init với pageSize = 10
+        // Gọi overloaded method loadTabJobHistory(pageIndex) khi người dùng chuyển
+        // trang
+        historyPaginationController.init(0, PAGE_SIZE, pageIndex -> {
+            loadEmploymentHistory(pageIndex);
+        });
+    }
+
+    /**
+     * Load employment history for the job history table
+     */
+    private void loadEmploymentHistory(int pageIndex) {
+        if (currentEmployeeId <= 0)
+            return;
+
+        TaskUtil.executePublic(loadingOverlay,
+                () -> EmploymentHistoryBUS.getInstance().getDetailsFullByEmployeeIdPaged(currentEmployeeId, pageIndex,
+                        PAGE_SIZE),
+                result -> {
+                    PagedResponse<EmploymentHistoryDetailDTO> res = result.getPagedData();
+
+                    // Đổ data vào TableView
+                    tblJobHistory.setItems(javafx.collections.FXCollections.observableArrayList(res.getItems()));
+
+                    // Cập nhật Pagination
+                    int totalItems = res.getTotalItems();
+                    int pageCount = (int) Math.ceil((double) totalItems / PAGE_SIZE);
+                    historyPaginationController.setPageCount(pageCount > 0 ? pageCount : 1);
+                });
+
+    }
 
     private void handleSave() {
         // Validation

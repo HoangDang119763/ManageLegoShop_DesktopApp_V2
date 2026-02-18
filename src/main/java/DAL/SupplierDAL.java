@@ -101,7 +101,7 @@ public class SupplierDAL extends BaseDAL<SupplierDTO, Integer> {
                 "OR s.email LIKE ?" + // Tìm theo Email
                 ")) " +
                 "AND (? = -1 OR s.status_id = ?) " +
-                "ORDER BY s.id DESC LIMIT ?, ?";
+                "LIMIT ?, ?";
 
         try (Connection conn = connectionFactory.newConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {

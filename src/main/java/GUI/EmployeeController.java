@@ -16,7 +16,6 @@ import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
-import PROVIDER.EmployeeDetailFilterer;
 import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
@@ -148,7 +147,7 @@ public class EmployeeController implements IController {
     public void setupListeners() {
         cbRoleFilter.setOnAction(event -> handleRoleFilterChange());
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
 
         refreshBtn.setOnAction(event -> {
             resetFilters();
@@ -346,30 +345,34 @@ public class EmployeeController implements IController {
             return;
         }
 
-        EmployeeModalController modalController = new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
-                EmployeeModalController.class)
-                .setTitle("Sửa nhân viên")
-                .modeEdit()
-                .configure(c -> c.setEmployee(selectedEmployeeTable.getEmployeeId()))
-                .open();
+        // EmployeeModalController modalController = new
+        // ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
+        // EmployeeModalController.class)
+        // .setTitle("Sửa nhân viên")
+        // .modeEdit()
+        // .configure(c -> c.setEmployee(selectedEmployeeTable.getEmployeeId()))
+        // .open();
 
-        if (modalController != null && modalController.isSaved()) {
-            Stage currentStage = (Stage) editBtn.getScene().getWindow();
-            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
-            resetFilters();
-        }
+        // if (modalController != null && modalController.isSaved()) {
+        // Stage currentStage = (Stage) editBtn.getScene().getWindow();
+        // NotificationUtils.showToast(currentStage,
+        // modalController.getResultMessage());
+        // resetFilters();
+        // }
     }
 
     private void handleDetailView() {
         if (isNotSelectedEmployee()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên", AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên",
+                    AppMessages.DIALOG_TITLE);
             return;
         }
 
-        new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml", EmployeeModalController.class)
+        new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
+                EmployeeModalController.class)
                 .setTitle("Xem thông tin nhân viên")
                 .modeDetail()
-                .configure(c -> c.setEmployee(selectedEmployeeTable.getEmployeeId()))
+                .configure(c -> c.setData(selectedEmployeeTable.getEmployeeId()))
                 .open();
 
     }
