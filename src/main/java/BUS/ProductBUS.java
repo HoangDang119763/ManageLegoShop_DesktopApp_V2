@@ -173,8 +173,6 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         if (!success)
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
 
-        // [STATELESS] No cache update needed - data will refresh from DB on next
-        // getAll()
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.PRODUCT_DELETE_SUCCESS);
     }
 

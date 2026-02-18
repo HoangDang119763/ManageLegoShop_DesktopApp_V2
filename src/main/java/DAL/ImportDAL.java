@@ -117,4 +117,40 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
         return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
     }
 
+    public boolean existsBySupplierId(int supplierId) {
+        // Sử dụng SELECT 1 và EXISTS để tối ưu tốc độ tối đa
+        String sql = "SELECT 1 FROM import WHERE supplier_id = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, supplierId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Trả về true nếu có ít nhất 1 dòng
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking import existence: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean existsByEmployeeId(int employeeId) {
+        // Sử dụng SELECT 1 và EXISTS để tối ưu tốc độ tối đa
+        String sql = "SELECT 1 FROM import WHERE employee_id = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Trả về true nếu có ít nhất 1 dòng
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking import existence: " + e.getMessage());
+            return false;
+        }
+    }
+
 }

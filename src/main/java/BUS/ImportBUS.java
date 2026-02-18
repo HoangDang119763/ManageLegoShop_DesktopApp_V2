@@ -76,6 +76,18 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
         return ImportDAL.getInstance().getById(id);
     }
 
+    public boolean isSupplierInAnyImport(int supplierId) {
+        if (supplierId <= 0)
+            return false;
+        return ImportDAL.getInstance().existsBySupplierId(supplierId);
+    }
+
+    public boolean isEmployeeInAnyImport(int employeeId) {
+        if (employeeId <= 0)
+            return false;
+        return ImportDAL.getInstance().existsByEmployeeId(employeeId);
+    }
+
     /**
      * [OPTIMIZED] Filter imports with pagination for manage display
      */

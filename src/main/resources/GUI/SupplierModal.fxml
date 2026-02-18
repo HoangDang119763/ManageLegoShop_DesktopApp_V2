@@ -68,13 +68,13 @@
                                 </VBox>
                                 <VBox spacing="4.0" GridPane.columnSpan="2" GridPane.rowIndex="1">
                                     <children>
-                                        <Label styleClass="label-s" text="Tên công ty" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <Label styleClass="label-s" text="Tên công ty*" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
                                         <TextField fx:id="txtCompanyName" prefHeight="32.0" promptText="Nhập tên đầy đủ của nhà cung cấp" styleClass="textfield-1" />
                                     </children>
                                 </VBox>
                                 <VBox spacing="4.0" GridPane.rowIndex="2">
                                     <children>
-                                        <Label styleClass="label-s" text="Số điện thoại" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <Label styleClass="label-s" text="Số điện thoại*" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
                                         <TextField fx:id="txtPhone" prefHeight="32.0" promptText="Số liên hệ" styleClass="textfield-1" />
                                     </children>
                                 </VBox>
@@ -86,7 +86,7 @@
                                 </VBox>
                                 <VBox spacing="4.0" GridPane.columnSpan="2" GridPane.rowIndex="3">
                                     <children>
-                                        <Label styleClass="label-s" text="Địa chỉ" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                        <Label styleClass="label-s" text="Địa chỉ*" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
                                         <TextField fx:id="txtAddress" prefHeight="32.0" promptText="Nhập địa chỉ trụ sở" styleClass="textfield-1" />
                                     </children>
                                 </VBox>
@@ -119,5 +119,7 @@
                 </AnchorPane>
             </bottom>
         </BorderPane>
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+
     </children>
 </AnchorPane>

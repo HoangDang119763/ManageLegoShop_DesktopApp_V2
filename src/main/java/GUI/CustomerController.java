@@ -2,6 +2,7 @@ package GUI;
 
 import java.util.ArrayList;
 
+import BUS.CategoryBUS;
 import BUS.CustomerBUS;
 import BUS.StatusBUS;
 import DTO.BUSResult;
@@ -121,21 +122,23 @@ public class CustomerController implements IController {
 
         UiUtils.gI().addTooltipToColumn(tlb_col_fullName, 20);
         UiUtils.gI().addTooltipToColumn(tlb_col_address, 30);
+        // UiUtils.gI().addTooltipToColumn(tlb_col_status, 20);
     }
 
     private void setupPagination() {
         // Thiết lập callback: Khi trang đổi -> gọi hàm load dữ liệu
         paginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadPageData(pageIndex);
+            loadPageData(pageIndex, true);
         });
     }
 
-    private void loadPageData(int pageIndex) {
+    private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
         int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
 
         // Sử dụng method DISPLAY version - JOIN status, không cần gọi BUS lẻ
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.CUSTOMER_LIST_VIEW,
+        StackPane overlay = showOverlay ? loadingOverlay : null;
+        TaskUtil.executeSecure(overlay, PermissionKey.CUSTOMER_LIST_VIEW,
                 () -> customerBUS.filterCustomersPagedForManageDisplay(keyword, statusId, pageIndex, PAGE_SIZE),
                 result -> {
                     // Lấy dữ liệu CustomerDisplayDTO đã được JOIN
@@ -158,7 +161,8 @@ public class CustomerController implements IController {
 
         refreshBtn.setOnAction(event -> {
             resetFilters();
-            NotificationUtils.showInfoAlert(AppMessages.GENERAL_REFRESH_SUCCESS, AppMessages.DIALOG_TITLE);
+            Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, AppMessages.GENERAL_REFRESH_SUCCESS);
         });
 
         addBtn.setOnAction(e -> handleAdd());
@@ -186,7 +190,7 @@ public class CustomerController implements IController {
         if (modalController != null && modalController.isSaved()) {
             Stage currentStage = (Stage) addBtn.getScene().getWindow();
             NotificationUtils.showToast(currentStage, modalController.getResultMessage());
-            resetFilters();
+            loadPageData(paginationController.getCurrentPage(), false);
         }
     }
 
@@ -201,12 +205,12 @@ public class CustomerController implements IController {
                 .modeEdit()
                 .configure(c -> c.setCustomer(selectedCustomer.getId()))
                 .open();
-        // if (modalController != null && modalController.isSaved()) {
-        // Stage currentStage = (Stage) editBtn.getScene().getWindow();
-        // NotificationUtils.showToast(currentStage,
-        // modalController.getResultMessage());
-        // resetFilters();
-        // }
+        if (modalController != null && modalController.isSaved()) {
+            Stage currentStage = (Stage) editBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage,
+                    modalController.getResultMessage());
+            loadPageData(paginationController.getCurrentPage(), false);
+        }
     }
 
     private void handleDetail() {
@@ -231,16 +235,13 @@ public class CustomerController implements IController {
             return;
         }
 
-        BUSResult updateResult = SecureExecutor.executeSafeBusResult(PermissionKey.CUSTOMER_DELETE,
-                () -> customerBUS.delete(selectedCustomer.getId()));
-
-        if (updateResult.isSuccess()) {
-            Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
-            NotificationUtils.showToast(currentStage, updateResult.getMessage());
-            resetFilters();
-        } else {
-            NotificationUtils.showErrorAlert(updateResult.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.CUSTOMER_DELETE,
+                () -> customerBUS.delete(selectedCustomer.getId()),
+                result -> {
+                    Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
+                    NotificationUtils.showToast(currentStage, result.getMessage());
+                    loadPageData(0, false);
+                });
     }
 
     // =====================
@@ -262,7 +263,7 @@ public class CustomerController implements IController {
     @Override
     public void applyFilters() {
         if (paginationController.getCurrentPage() == 0) {
-            loadPageData(0); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
+            loadPageData(0, true); // Trường hợp đang ở trang 0 rồi thì phải gọi thủ công
         } else {
             paginationController.setCurrentPage(0);
         }

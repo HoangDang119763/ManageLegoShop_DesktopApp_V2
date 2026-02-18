@@ -149,4 +149,30 @@ public abstract class BaseDAL<T, K> implements IDAL<T, K> {
             throw new IllegalArgumentException("Unsupported ID type: " + id.getClass().getSimpleName());
         }
     }
+
+    public int getLastIdEver() {
+        // 1. Dùng ? thay vì nối chuỗi để an toàn tuyệt đối
+        String sql = "SELECT AUTO_INCREMENT " +
+                "FROM information_schema.tables " +
+                "WHERE table_name = ? " +
+                "AND table_schema = (SELECT DATABASE())";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, table); // Truyền tên bảng vào tham số
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int nextId = rs.getInt("AUTO_INCREMENT");
+                    // Nếu nextId = 1 nghĩa là bảng chưa từng có dữ liệu
+                    return (nextId > 1) ? nextId - 1 : 0;
+                }
+            }
+        } catch (SQLException e) {
+            // Nên log lỗi bằng Logger (như bạn đã dùng @Slf4j ở chỗ khác)
+            System.err.println("Error retrieving Auto Increment for " + table + ": " + e.getMessage());
+        }
+        return 0;
+    }
 }

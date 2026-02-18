@@ -40,6 +40,10 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
     protected Integer getKey(CategoryDTO obj) {
         return obj.getId();
     }
+
+    public int nextId() {
+        return CategoryDAL.getInstance().getLastIdEver() + 1;
+    }
     // --- NGHIỆP VỤ CHÍNH ---
 
     // Trong CategoryBUS.java

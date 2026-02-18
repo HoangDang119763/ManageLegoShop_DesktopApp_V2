@@ -102,12 +102,18 @@
                             </rowConstraints>
                         </GridPane>
 
-                        <HBox fx:id="updatedAt" alignment="CENTER_LEFT" spacing="10.0">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
-                                <Label styleClass="label-metadata" text="Cập nhật lần cuối:" textFill="#95a5a6">
-                                    <font><Font name="System Italic" size="12.0" /></font>
-                                </Label>
-                                <TextField fx:id="txtUpdatedAt" editable="false" prefHeight="25.0" prefWidth="180.0" style="-fx-background-color: transparent; -fx-padding: 0;" styleClass="field-metadata" />
+                        <HBox fx:id="updatedAt" alignment="CENTER" spacing="10.0">
+                           <children>
+                                      <Label styleClass="label-metadata" text="Cập nhật lần cuối:" textFill="#95a5a6">
+                                          <font>
+                                    <Font name="System Italic" size="12.0" />
+                                 </font>
+                                      </Label>
+                                      <TextField fx:id="txtUpdatedAt" editable="false" prefHeight="25.0" prefWidth="180.0" style="-fx-background-color: transparent; -fx-padding: 0;" styleClass="field-metadata" />
+                           </children>
+                        </HBox>
                                 <AnchorPane HBox.hgrow="ALWAYS" />
                                 <FontAwesomeIcon fill="#30bac4" glyphName="USER" opacity="0.3" size="3em" />
                             </children>
@@ -133,10 +139,6 @@
                 </AnchorPane>
             </bottom>
         </BorderPane>
-        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml"
-                    AnchorPane.bottomAnchor="0.0"
-                    AnchorPane.leftAnchor="0.0"
-                    AnchorPane.rightAnchor="0.0"
-                    AnchorPane.topAnchor="0.0" />
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
     </children>
 </AnchorPane>

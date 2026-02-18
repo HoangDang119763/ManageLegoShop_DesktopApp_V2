@@ -38,6 +38,10 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
         return obj.getId();
     }
 
+    public int nextId() {
+        return CustomerDAL.getInstance().getLastIdEver() + 1;
+    }
+
     public BUSResult delete(int id) {
         // 1. Kiểm tra đầu vào cơ bản
         if (id <= 0) {
@@ -87,16 +91,6 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
 
-        // 7. Cập nhật Database (không cache)
-        if (hasInvoice) {
-            // Cập nhật trạng thái mới cho object trong DB
-            targetCustomer.setStatusId(inactiveStatusId);
-        } else {
-            // Xóa hoàn toàn khỏi DB
-            // Dữ liệu đã bị xóa ở bước 6
-        }
-
-        // 8. Trả về kết quả thành công
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.CUSTOMER_DELETE_SUCCESS);
     }
 

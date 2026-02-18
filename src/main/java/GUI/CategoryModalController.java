@@ -93,7 +93,7 @@ public class CategoryModalController implements IModalController {
 
         if (typeModal == 0) {
             modalName.setText("Thêm thể loại mới");
-            // txtCategoryId.setText(categoryBus.nextId());
+            txtCategoryId.setText(String.valueOf(categoryBus.nextId()));
             UiUtils.gI().setVisibleItem(containerMetadata);
         } else {
             if (category == null)
@@ -112,7 +112,7 @@ public class CategoryModalController implements IModalController {
         this.category = categoryBus.getById(categoryId);
 
         if (this.category == null) {
-            NotificationUtils.showErrorAlert("Không tìm thấy thể loại.", AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert(AppMessages.NOT_FOUND, AppMessages.DIALOG_TITLE);
             handleClose();
             return;
         }

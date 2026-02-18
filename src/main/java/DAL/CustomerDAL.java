@@ -155,16 +155,6 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
         return false;
     }
 
-    /**
-     * Filter customers with pagination, search, and status filtering for manage
-     * display
-     * 
-     * @param keyword   Search keyword (by ID, first name, or last name)
-     * @param statusId  Status filter (-1 to skip filtering)
-     * @param pageIndex Page index (0-based)
-     * @param pageSize  Page size
-     * @return PagedResponse with CustomerDisplayDTO items
-     */
     public PagedResponse<CustomerDisplayDTO> filterCustomersPagedForManageDisplay(
             String keyword, int statusId, int pageIndex, int pageSize) {
 
@@ -227,12 +217,6 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
         return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
     }
 
-    /**
-     * Map ResultSet to CustomerDisplayDTO
-     * 
-     * @param rs ResultSet from filterCustomersPagedForManageDisplay
-     * @return CustomerDisplayDTO
-     */
     private CustomerDisplayDTO mapResultSetToDisplayObject(ResultSet rs) throws SQLException {
         return new CustomerDisplayDTO(
                 rs.getInt("id"),

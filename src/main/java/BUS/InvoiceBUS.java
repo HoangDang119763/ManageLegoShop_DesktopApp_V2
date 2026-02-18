@@ -4,7 +4,6 @@ import DAL.InvoiceDAL;
 import DTO.BUSResult;
 import DTO.InvoiceDTO;
 import DTO.InvoiceDisplayDTO;
-import DTO.DetailInvoiceDTO;
 import DTO.PagedResponse;
 import ENUM.*;
 import UTILS.ValidationUtils;
@@ -13,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
     private static final InvoiceBUS INSTANCE = new InvoiceBUS();
@@ -161,9 +159,15 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
     }
 
     public boolean isCustomerInAnyInvoice(int customerId) {
+        if (customerId <= 0)
+            return false;
+        return InvoiceDAL.getInstance().existsByCustomerId(customerId);
+    }
 
-        return this.getAll().stream()
-                .anyMatch(invoice -> invoice.getCustomerId() == customerId);
+    public boolean isEmployeeInAnyInvoice(int employeeId) {
+        if (employeeId <= 0)
+            return false;
+        return InvoiceDAL.getInstance().existsByEmployeeId(employeeId);
     }
 
     @Override
