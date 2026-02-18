@@ -497,6 +497,8 @@ public class EmployeeModalController implements IModalController {
         txtPhone.setText(personalInfo.getPhone() != null ? personalInfo.getPhone() : "");
         txtEmail.setText(personalInfo.getEmail() != null ? personalInfo.getEmail() : "");
 
+        lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(personalInfo.getCreatedAt()));
+        lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(personalInfo.getUpdatedAt()));
         if (!canUpdatePersonal) {
             txtFirstName.setEditable(false);
             txtLastName.setEditable(false);
@@ -527,6 +529,10 @@ public class EmployeeModalController implements IModalController {
                 cbAccountStatus.getSelectionModel().select(accountStatus);
             }
         }
+
+        // Set created/updated time
+        lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(accountInfo.getCreatedAt()));
+        lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(accountInfo.getUpdatedAt()));
 
         if (!canUpdateAccount && !canResetPassword) {
             cbAccountStatus.setDisable(true);
@@ -577,6 +583,10 @@ public class EmployeeModalController implements IModalController {
         txtCoefficient
                 .setText(jobInfo.getSalaryCoefficient() != null ? jobInfo.getSalaryCoefficient().toString() : "0");
 
+        // Set created/updated time
+        lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(jobInfo.getCreatedAt()));
+        lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(jobInfo.getUpdatedAt()));
+
         // Setup job history table and load separately
         setupJobHistoryTable();
         loadEmploymentHistory(0);
@@ -606,6 +616,10 @@ public class EmployeeModalController implements IModalController {
         cbPersonalTax.setSelected(payrollInfo.isPersonalIncomeTax());
         cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
         cbAccommodationSupport.setSelected(payrollInfo.isAccommodationSupport());
+
+        // Set created/updated time
+        lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(payrollInfo.getCreatedAt()));
+        lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(payrollInfo.getUpdatedAt()));
 
         if (!canUpdatePayroll) {
             txtNumDependents.setEditable(false);

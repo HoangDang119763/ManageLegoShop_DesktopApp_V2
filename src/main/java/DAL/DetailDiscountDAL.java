@@ -1,8 +1,6 @@
 package DAL;
 
 import DTO.DetailDiscountDTO;
-import DTO.DetailImportDTO;
-import DTO.RolePermissionDTO;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -32,8 +30,7 @@ public class DetailDiscountDAL extends BaseDAL<DetailDiscountDTO, String> {
         return new DetailDiscountDTO(
                 resultSet.getString("discount_code"),
                 resultSet.getBigDecimal("total_price_invoice"),
-                resultSet.getBigDecimal("discount_amount")
-        );
+                resultSet.getBigDecimal("discount_amount"));
     }
 
     @Override
@@ -59,11 +56,12 @@ public class DetailDiscountDAL extends BaseDAL<DetailDiscountDTO, String> {
         statement.setBigDecimal(2, obj.getDiscountAmount());
         statement.setString(3, obj.getDiscountCode());
     }
+
     public boolean insertAllDetailDiscountByDiscountCode(String discountCode, ArrayList<DetailDiscountDTO> list) {
         final String query = "INSERT INTO detail_discount (discount_code, total_price_invoice, discount_amount) VALUES (?, ?, ?)";
 
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             for (DetailDiscountDTO obj : list) {
                 statement.setString(1, discountCode);
@@ -91,7 +89,7 @@ public class DetailDiscountDAL extends BaseDAL<DetailDiscountDTO, String> {
     public boolean deleteAllDetailDiscountByDiscountCode(String discountCode) {
         final String query = "DELETE FROM detail_discount WHERE discount_code = ?";
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setString(1, discountCode);
             return statement.executeUpdate() > 0;
@@ -106,7 +104,7 @@ public class DetailDiscountDAL extends BaseDAL<DetailDiscountDTO, String> {
         ArrayList<DetailDiscountDTO> list = new ArrayList<>();
 
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setString(1, discountCode);
             try (ResultSet resultSet = statement.executeQuery()) {

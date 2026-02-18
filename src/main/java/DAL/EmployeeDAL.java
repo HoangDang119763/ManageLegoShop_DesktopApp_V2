@@ -614,7 +614,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      */
     public EmployeeAccountInfoDTO getAccountInfo(int employeeId) {
         String sql = "SELECT a.id AS account_id, a.username, a.status_id AS account_status_id, " +
-                "st_acc.description AS account_status, a.last_login " +
+                "st_acc.description AS account_status, a.last_login, e.created_at, e.updated_at " +
                 "FROM employee e " +
                 "LEFT JOIN account a ON e.account_id = a.id " +
                 "LEFT JOIN status st_acc ON a.status_id = st_acc.id " +
@@ -638,6 +638,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                             .lastLogin(resultSet.getTimestamp("last_login") != null
                                     ? resultSet.getTimestamp("last_login").toLocalDateTime()
                                     : null)
+                            .createdAt(resultSet.getTimestamp("created_at") != null
+                                    ? resultSet.getTimestamp("created_at").toLocalDateTime()
+                                    : null)
+                            .updatedAt(resultSet.getTimestamp("updated_at") != null
+                                    ? resultSet.getTimestamp("updated_at").toLocalDateTime()
+                                    : null)
                             .build();
                 }
             }
@@ -658,7 +664,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     public EmployeeJobInfoDTO getJobInfo(int employeeId) {
         String sql = "SELECT e.department_id, d.name AS department_name, r.id AS role_id, r.name AS role_name, " +
                 "e.status_id, st.description AS status_description, s.id AS salary_id, s.base AS base_salary, " +
-                "s.coefficient AS salary_coefficient " +
+                "s.coefficient AS salary_coefficient, e.created_at, e.updated_at " +
                 "FROM employee e " +
                 "LEFT JOIN department d ON e.department_id = d.id " +
                 "LEFT JOIN role r ON e.role_id = r.id " +
@@ -693,6 +699,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                             .salaryCoefficient(resultSet.getObject("salary_coefficient") != null
                                     ? resultSet.getBigDecimal("salary_coefficient")
                                     : null)
+                            .createdAt(resultSet.getTimestamp("created_at") != null
+                                    ? resultSet.getTimestamp("created_at").toLocalDateTime()
+                                    : null)
+                            .updatedAt(resultSet.getTimestamp("updated_at") != null
+                                    ? resultSet.getTimestamp("updated_at").toLocalDateTime()
+                                    : null)
                             .build();
                 }
             }
@@ -712,7 +724,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     public EmployeePayrollInfoDTO getPayrollInfo(int employeeId) {
         String sql = "SELECT e.id, e.health_ins_code, tax.id AS tax_id, tax.num_dependents, " +
                 "e.is_social_insurance, e.is_unemployment_insurance, e.is_personal_income_tax, " +
-                "e.is_transportation_support, e.is_accommodation_support " +
+                "e.is_transportation_support, e.is_accommodation_support, e.created_at, e.updated_at " +
                 "FROM employee e " +
                 "LEFT JOIN tax ON tax.employee_id = e.id " +
                 "WHERE e.id = ? LIMIT 1";
@@ -736,6 +748,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                             .isPersonalIncomeTax(resultSet.getBoolean("is_personal_income_tax"))
                             .isTransportationSupport(resultSet.getBoolean("is_transportation_support"))
                             .isAccommodationSupport(resultSet.getBoolean("is_accommodation_support"))
+                            .createdAt(resultSet.getTimestamp("created_at") != null
+                                    ? resultSet.getTimestamp("created_at").toLocalDateTime()
+                                    : null)
+                            .updatedAt(resultSet.getTimestamp("updated_at") != null
+                                    ? resultSet.getTimestamp("updated_at").toLocalDateTime()
+                                    : null)
                             .build();
                 }
             }

@@ -17,6 +17,8 @@ public class EmployeeAccountInfoDTO {
     private Integer accountStatusId;
     private String accountStatus;
     private LocalDateTime lastLogin;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @Override
     public String toString() {
@@ -26,6 +28,8 @@ public class EmployeeAccountInfoDTO {
                 ", accountStatusId=" + accountStatusId +
                 ", accountStatus='" + accountStatus + '\'' +
                 ", lastLogin=" + lastLogin +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }
