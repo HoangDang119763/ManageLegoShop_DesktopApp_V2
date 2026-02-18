@@ -62,6 +62,10 @@ public class SessionManagerService {
         return currentSession != null ? currentSession.getRoleName() : "No Role";
     }
 
+    public int getRoleId() {
+        return currentSession != null ? currentSession.getRoleId() : -1;
+    }
+
     public void forceLogout(String customMessage) {
         Platform.runLater(() -> {
             // 1. Xóa dữ liệu phiên trước

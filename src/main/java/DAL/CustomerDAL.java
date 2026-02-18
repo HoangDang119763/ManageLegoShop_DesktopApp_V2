@@ -1,10 +1,12 @@
 package DAL;
 
 import DTO.CustomerDTO;
-import DTO.ProductDTO;
+import DTO.CustomerDisplayDTO;
+import DTO.PagedResponse;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
     public static final CustomerDAL INSTANCE = new CustomerDAL();
@@ -153,57 +155,94 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
         return false;
     }
 
-    public ArrayList<CustomerDTO> filterCustomers(String keyword, int status, int page, int pageSize) {
-        ArrayList<CustomerDTO> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM customer WHERE 1=1");
-        ArrayList<Object> params = new ArrayList<>();
+    /**
+     * Filter customers with pagination, search, and status filtering for manage
+     * display
+     * 
+     * @param keyword   Search keyword (by ID, first name, or last name)
+     * @param statusId  Status filter (-1 to skip filtering)
+     * @param pageIndex Page index (0-based)
+     * @param pageSize  Page size
+     * @return PagedResponse with CustomerDisplayDTO items
+     */
+    public PagedResponse<CustomerDisplayDTO> filterCustomersPagedForManageDisplay(
+            String keyword, int statusId, int pageIndex, int pageSize) {
 
-        // 1. Lọc theo trạng thái
-        if (status != -1) {
-            sql.append(" AND status_id = ?");
-            params.add(status);
-        }
+        List<CustomerDisplayDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
 
-        // 2. Tìm kiếm gom hết (Unified OR Search)
-        if (keyword != null && !keyword.isEmpty()) {
-            sql.append(" AND (CAST(id AS CHAR) LIKE ? ") // Tìm theo mã
-                    .append(" OR LOWER(first_name) LIKE ? ") // Tìm theo họ đệm
-                    .append(" OR LOWER(last_name) LIKE ? ") // Tìm theo tên
-                    .append(" OR phone LIKE ?)"); // Tìm theo SĐT
-
-            String dbKeyword = "%" + keyword + "%";
-            params.add(dbKeyword);
-            params.add(dbKeyword);
-            params.add(dbKeyword);
-            params.add(dbKeyword);
-        }
-
-        // 3. Sắp xếp mới nhất lên đầu
-        sql.append(" ORDER BY id DESC");
-
-        // 4. THỰC HIỆN PHÂN TRANG
-        if (page > 0 && pageSize > 0) {
-            sql.append(" LIMIT ? OFFSET ?");
-            int offset = (page - 1) * pageSize;
-            params.add(pageSize);
-            params.add(offset);
-        }
+        // Sử dụng CONCAT để hỗ trợ tìm kiếm Full Name (Họ + Tên)
+        String sql = "SELECT " +
+                "c.id, c.first_name, c.last_name, c.phone, c.address, c.date_of_birth, " +
+                "c.status_id, s.description as status_description, c.updated_at, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM customer c " +
+                "LEFT JOIN status s ON c.status_id = s.id " +
+                "WHERE (? = '' OR (" +
+                "    CAST(c.id AS CHAR) LIKE ? " +
+                "    OR LOWER(c.first_name) LIKE ? " +
+                "    OR LOWER(c.last_name) LIKE ? " +
+                "    OR LOWER(CONCAT(c.first_name, ' ', c.last_name)) LIKE ?" +
+                ")) " +
+                "AND (? = -1 OR c.status_id = ?) " +
+                "LIMIT ?, ?";
 
         try (Connection conn = connectionFactory.newConnection();
-                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
+            // Chuẩn hóa từ khóa
+            String cleanKeyword = (keyword == null) ? "" : keyword.trim();
+            String searchKey = "%" + cleanKeyword.toLowerCase() + "%";
+
+            int idx = 1;
+
+            // Gán tham số cho phần Tìm kiếm (Dùng cleanKeyword cho vế ? = '')
+            ps.setString(idx++, cleanKeyword);
+            ps.setString(idx++, searchKey); // Like ID
+            ps.setString(idx++, searchKey); // Like First Name
+            ps.setString(idx++, searchKey); // Like Last Name
+            ps.setString(idx++, searchKey); // Like Full Name (CONCAT)
+
+            // Gán tham số cho Filter Status
+            ps.setInt(idx++, statusId);
+            ps.setInt(idx++, statusId);
+
+            // Tham số cho phân trang
+            ps.setInt(idx++, offset);
+            ps.setInt(idx++, pageSize);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    list.add(mapResultSetToObject(rs));
+                    if (totalItems == 0) {
+                        totalItems = rs.getInt("total_count");
+                    }
+                    items.add(mapResultSetToDisplayObject(rs));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi phân trang CustomerDAL: " + e.getMessage());
+            System.err.println("Error filtering customers: " + e.getMessage());
         }
-        return list;
+
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
     }
+
+    /**
+     * Map ResultSet to CustomerDisplayDTO
+     * 
+     * @param rs ResultSet from filterCustomersPagedForManageDisplay
+     * @return CustomerDisplayDTO
+     */
+    private CustomerDisplayDTO mapResultSetToDisplayObject(ResultSet rs) throws SQLException {
+        return new CustomerDisplayDTO(
+                rs.getInt("id"),
+                rs.getString("first_name") + " " + rs.getString("last_name"),
+                rs.getString("phone"),
+                rs.getString("address"),
+                rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null,
+                rs.getInt("status_id"),
+                rs.getString("status_description"),
+                rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
+    }
+
 }

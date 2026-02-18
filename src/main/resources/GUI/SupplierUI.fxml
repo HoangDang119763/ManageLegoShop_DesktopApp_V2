@@ -27,7 +27,6 @@
                                 
                                 <HBox alignment="CENTER_LEFT" layoutX="200.0" layoutY="3.0" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="3.0">
                                     <children>
-                                        <ComboBox fx:id="cbSearchBy" prefHeight="26.0" prefWidth="140.0" stylesheets="@../css/base.css" />
                                         <ComboBox fx:id="cbStatusFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
                                     </children>
                                 </HBox>
@@ -95,9 +94,11 @@
                                 </Button>
                             </children>
                         </HBox>
+                    <fx:include fx:id="pagination" source="PaginationControl.fxml" AnchorPane.leftAnchor="310.0" />
                     </children>
                 </AnchorPane>
             </bottom>
         </BorderPane>
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
     </children>
 </AnchorPane>

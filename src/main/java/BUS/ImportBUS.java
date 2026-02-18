@@ -1,13 +1,17 @@
 package BUS;
 
 import DAL.ImportDAL;
+import DTO.BUSResult;
 import DTO.ImportDTO;
+import DTO.ImportDisplayDTO;
+import DTO.PagedResponse;
+import ENUM.BUSOperationResult;
 import ENUM.ServiceAccessCode;
+import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
     private static final ImportBUS INSTANCE = new ImportBUS();
@@ -67,8 +71,26 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
 
     @Override
     public ImportDTO getById(Integer id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (id == null || id <= 0)
+            return null;
+        return ImportDAL.getInstance().getById(id);
     }
 
+    /**
+     * [OPTIMIZED] Filter imports with pagination for manage display
+     */
+    public BUSResult filterImportsPagedForManage(String keyword, int pageIndex, int pageSize) {
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? 10 : pageSize;
+        int finalSearchId = (keyword == null || keyword.trim().isEmpty()) ? -1 : Integer.parseInt(keyword);
+
+        // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
+        PagedResponse<ImportDisplayDTO> pagedData = ImportDAL.getInstance()
+                .filterImportsPagedForManage(finalSearchId, finalPageIndex, finalPageSize);
+        if (pagedData == null) {
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.UNKNOWN_ERROR);
+        }
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
+    }
 }

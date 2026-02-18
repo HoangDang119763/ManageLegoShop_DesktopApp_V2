@@ -38,7 +38,7 @@ public class Status {
 
     // Enum cho Phiếu nhập
     public enum Import {
-        COMPLETED, CANCELED
+        COMPLETED, CANCELED, INCOMPLETED
     }
 
     // Enum cho Loại nghỉ phép

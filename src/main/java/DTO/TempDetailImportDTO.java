@@ -15,7 +15,7 @@ public class TempDetailImportDTO {
     }
 
     public TempDetailImportDTO(int importId, String productId, String name, int quantity,
-                               BigDecimal price, BigDecimal sellingPrice, BigDecimal totalPrice) {
+            BigDecimal price, BigDecimal sellingPrice, BigDecimal totalPrice) {
         this.importId = importId;
         this.productId = productId;
         this.name = name;

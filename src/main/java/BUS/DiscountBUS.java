@@ -1,7 +1,10 @@
 package BUS;
 
 import DAL.DiscountDAL;
+import DTO.BUSResult;
 import DTO.DiscountDTO;
+import DTO.PagedResponse;
+import ENUM.BUSOperationResult;
 import ENUM.ServiceAccessCode;
 import UTILS.ValidationUtils;
 
@@ -161,8 +164,23 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
 
     @Override
     public DiscountDTO getById(String id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (id == null || id.isEmpty())
+            return null;
+        return DiscountDAL.getInstance().getById(id);
+    }
+
+    /**
+     * [OPTIMIZED] Filter discounts with pagination for manage display
+     */
+    public BUSResult filterDiscountsPagedForManage(String keyword, int pageIndex, int pageSize) {
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+        String searchKeyword = (keyword == null) ? "" : keyword.trim();
+
+        PagedResponse<DiscountDTO> pagedData = DiscountDAL.getInstance()
+                .filterDiscountsPagedForManage(searchKeyword, finalPageIndex, finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
 }

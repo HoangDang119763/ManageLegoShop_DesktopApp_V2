@@ -10,6 +10,7 @@ import ENUM.BUSOperationResult;
 public class BUSResult {
     private final BUSOperationResult code;
     private final String message; // message runtime (lấy từ AppMessages hoặc custom)
+    private Object data;
 
     /**
      * Tạo BUSResult với custom message
@@ -19,6 +20,12 @@ public class BUSResult {
     public BUSResult(BUSOperationResult code) {
         this.code = code;
         this.message = null;
+    }
+
+    public BUSResult(BUSOperationResult code, String message, Object data) {
+        this.code = code;
+        this.message = message;
+        this.data = data;
     }
 
     public BUSResult(BUSOperationResult code, String customMessage) {
@@ -48,5 +55,22 @@ public class BUSResult {
                 "code=" + code +
                 ", message='" + message + '\'' +
                 '}';
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> PagedResponse<T> getPagedData() {
+        if (this.data instanceof PagedResponse) {
+            return (PagedResponse<T>) this.data;
+        }
+        return new PagedResponse<>(new java.util.ArrayList<>(), 0, 0, 0);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getData() {
+        try {
+            return (T) this.data;
+        } catch (ClassCastException e) {
+            return null;
+        }
     }
 }

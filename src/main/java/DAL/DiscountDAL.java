@@ -1,6 +1,11 @@
 package DAL;
+
 import DTO.DiscountDTO;
+import DTO.PagedResponse;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DiscountDAL extends BaseDAL<DiscountDTO, String> {
     private static final DiscountDAL INSTANCE = new DiscountDAL();
@@ -16,9 +21,10 @@ public class DiscountDAL extends BaseDAL<DiscountDTO, String> {
     @Override
     protected DiscountDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
         return new DiscountDTO(resultSet.getString("code"), resultSet.getString("name"), resultSet.getInt("type"),
-                resultSet.getDate("startDate") != null ? resultSet.getDate("startDate").toLocalDate().atStartOfDay() : null,
-                resultSet.getDate("endDate") != null ? resultSet.getDate("endDate").toLocalDate().atStartOfDay() : null
-        );
+                resultSet.getDate("startDate") != null ? resultSet.getDate("startDate").toLocalDate().atStartOfDay()
+                        : null,
+                resultSet.getDate("endDate") != null ? resultSet.getDate("endDate").toLocalDate().atStartOfDay()
+                        : null);
     }
 
     @Override
@@ -31,7 +37,8 @@ public class DiscountDAL extends BaseDAL<DiscountDTO, String> {
         statement.setString(1, obj.getCode());
         statement.setString(2, obj.getName());
         statement.setInt(3, obj.getType());
-        statement.setDate(4, obj.getStartDate() != null ? java.sql.Date.valueOf(obj.getStartDate().toLocalDate()) : null);
+        statement.setDate(4,
+                obj.getStartDate() != null ? java.sql.Date.valueOf(obj.getStartDate().toLocalDate()) : null);
         statement.setDate(5, obj.getEndDate() != null ? java.sql.Date.valueOf(obj.getEndDate().toLocalDate()) : null);
     }
 
@@ -44,8 +51,77 @@ public class DiscountDAL extends BaseDAL<DiscountDTO, String> {
     protected void setUpdateParameters(PreparedStatement statement, DiscountDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setInt(2, obj.getType());
-        statement.setDate(3, obj.getStartDate() != null ? java.sql.Date.valueOf(obj.getStartDate().toLocalDate()) : null);
+        statement.setDate(3,
+                obj.getStartDate() != null ? java.sql.Date.valueOf(obj.getStartDate().toLocalDate()) : null);
         statement.setDate(4, obj.getEndDate() != null ? java.sql.Date.valueOf(obj.getEndDate().toLocalDate()) : null);
         statement.setString(5, obj.getCode());
     }
+
+    /**
+     * Get all discounts with pagination
+     */
+    public PagedResponse<DiscountDTO> getAllDiscountsPaged(int pageIndex, int pageSize) {
+        List<DiscountDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        String sql = "SELECT *, COUNT(*) OVER() as total_count FROM discount " +
+                "ORDER BY code DESC " +
+                "LIMIT ? OFFSET ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, pageSize);
+            ps.setInt(2, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+                    items.add(mapResultSetToObject(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy danh sách khuyến mãi phân trang: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * Filter discounts by code with pagination
+     */
+    public PagedResponse<DiscountDTO> filterDiscountsPagedForManage(String searchCode, int pageIndex, int pageSize) {
+        List<DiscountDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        String sql = "SELECT *, COUNT(*) OVER() as total_count FROM discount " +
+                "WHERE (? = '' OR code LIKE ? OR name LIKE ?) " +
+                "ORDER BY code DESC " +
+                "LIMIT ? OFFSET ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKey = "%" + (searchCode == null ? "" : searchCode.trim()) + "%";
+            ps.setString(1, searchCode == null ? "" : searchCode.trim());
+            ps.setString(2, searchKey);
+            ps.setString(3, searchKey);
+            ps.setInt(4, pageSize);
+            ps.setInt(5, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+                    items.add(mapResultSetToObject(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lọc khuyến mãi phân trang: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
 }

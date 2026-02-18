@@ -1,7 +1,13 @@
 package DAL;
 
 import DTO.EmploymentHistoryDTO;
+import DTO.EmploymentHistoryDetailBasicDTO;
+import DTO.EmploymentHistoryDetailDTO;
+import DTO.PagedResponse;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer> {
     public static final EmploymentHistoryDAL INSTANCE = new EmploymentHistoryDAL();
@@ -74,4 +80,118 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
         statement.setInt(8, obj.getId());
     }
 
+    /**
+     * Lấy chi tiết lịch sử công tác với tên phòng ban và chức vụ (JOIN)
+     * Kết quả gồm: departmentId, departmentName, roleId, roleName, effectiveDate,
+     * createdAt
+     */
+    public PagedResponse<EmploymentHistoryDetailBasicDTO> getDetailsByEmployeeIdPaged(int employeeId, int pageIndex,
+            int pageSize) {
+        List<EmploymentHistoryDetailBasicDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        String sql = "SELECT " +
+                "eh.department_id, " +
+                "d.name as department_name, " +
+                "eh.role_id, " +
+                "r.name as role_name, " +
+                "eh.effective_date, " +
+                "eh.created_at, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM employment_history eh " +
+                "LEFT JOIN department d ON eh.department_id = d.id " +
+                "LEFT JOIN role r ON eh.role_id = r.id " +
+                "WHERE eh.employee_id = ? " +
+                "ORDER BY eh.effective_date DESC " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+            ps.setInt(2, offset);
+            ps.setInt(3, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0) {
+                        totalItems = rs.getInt("total_count");
+                    }
+
+                    EmploymentHistoryDetailBasicDTO dto = new EmploymentHistoryDetailBasicDTO(
+                            rs.getInt("department_id"),
+                            rs.getString("department_name"),
+                            rs.getInt("role_id"),
+                            rs.getString("role_name"),
+                            rs.getDate("effective_date") != null ? rs.getDate("effective_date").toLocalDate() : null,
+                            rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime()
+                                    : null);
+                    items.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy lịch sử công tác chi tiết: " + e.getMessage());
+        }
+
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    public PagedResponse<EmploymentHistoryDetailDTO> getDetailsFullByEmployeeIdPaged(int employeeId, int pageIndex,
+            int pageSize) {
+        List<EmploymentHistoryDetailDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // SQL lấy đầy đủ thông tin: Lý do, Người duyệt, Phòng ban, Chức vụ
+        String sql = "SELECT " +
+                "eh.employee_id, eh.effective_date, eh.reason, eh.created_at, " +
+                "eh.department_id, d.name as department_name, " +
+                "eh.role_id, r.name as role_name, " +
+                "eh.approver_id, CONCAT(app.first_name, ' ', app.last_name) as approver_name, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM employment_history eh " +
+                "LEFT JOIN department d ON eh.department_id = d.id " +
+                "LEFT JOIN role r ON eh.role_id = r.id " +
+                "LEFT JOIN employee app ON eh.approver_id = app.id " + // Join lấy tên người duyệt
+                "WHERE eh.employee_id = ? " +
+                "ORDER BY eh.effective_date DESC " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+            ps.setInt(2, offset);
+            ps.setInt(3, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0) {
+                        totalItems = rs.getInt("total_count");
+                    }
+
+                    // Sử dụng Constructor của EmploymentHistoryDetailDTO
+                    EmploymentHistoryDetailDTO dto = new EmploymentHistoryDetailDTO(
+                            rs.getInt("employee_id"),
+                            rs.getDate("effective_date") != null ? rs.getDate("effective_date").toLocalDate() : null,
+                            rs.getObject("department_id") != null ? rs.getInt("department_id") : null,
+                            rs.getString("department_name"),
+                            rs.getObject("role_id") != null ? rs.getInt("role_id") : null,
+                            rs.getString("role_name"),
+                            rs.getString("reason"),
+                            rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime()
+                                    : null,
+                            rs.getInt("approver_id"),
+                            rs.getString("approver_name"));
+                    items.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            // Log lỗi hoặc ném custom exception
+            System.err.println("Lỗi DAL lấy lịch sử công tác full: " + e.getMessage());
+        }
+
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
 }

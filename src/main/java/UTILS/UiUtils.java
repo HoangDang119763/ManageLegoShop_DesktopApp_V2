@@ -3,12 +3,16 @@ package UTILS;
 
 import GUI.LoginController;
 import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
+import javafx.animation.Timeline;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -17,14 +21,20 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class UiUtils {
     private static final UiUtils INSTANCE = new UiUtils();
+
     private double xOffset = 0;
     private double yOffset = 0;
+    private static final Map<TextField, Timeline> debounceMap = new HashMap<>();
 
     private UiUtils() {
 
@@ -419,6 +429,62 @@ public class UiUtils {
                     comboBox.setStyle(null); // Reset về bình thường
                 }
             }
+        });
+    }
+
+    /**
+     * Tạo ImageView từ file
+     * Background loading = true để UI không bị treo khi đọc file
+     */
+    public ImageView createImageView(String imageUrl, double width, double height) {
+        Image image = null;
+
+        // 1. Load từ file
+        try {
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                File imageFile = new File(imageUrl);
+                if (imageFile.exists()) {
+                    image = new Image(imageFile.toURI().toString(), width, height, true, true, true);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi load ảnh: " + e.getMessage());
+        }
+
+        // 2. Nếu không có ảnh hoặc lỗi, dùng ảnh default từ resource
+        if (image == null || image.isError()) {
+            try {
+                URL defaultUrl = getClass().getResource("/images/default/default.png");
+                if (defaultUrl != null) {
+                    image = new Image(defaultUrl.toExternalForm(), width, height, true, true, true);
+                }
+            } catch (Exception e) {
+                return new ImageView(); // Trả về view trống nếu cả default cũng lỗi
+            }
+        }
+
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(width);
+        imageView.setFitHeight(height);
+
+        return imageView;
+    }
+
+    public void applySearchDebounce(TextField textField, int delayMillis, Runnable action) {
+        textField.textProperty().addListener((obs, oldVal, newVal) -> {
+            // Hủy bộ đếm cũ nếu có
+            if (debounceMap.containsKey(textField)) {
+                debounceMap.get(textField).stop();
+            }
+
+            // Tạo bộ đếm mới
+            Timeline timeline = new Timeline(new KeyFrame(Duration.millis(delayMillis), e -> {
+                action.run();
+                debounceMap.remove(textField); // Chạy xong thì dọn dẹp
+            }));
+
+            debounceMap.put(textField, timeline);
+            timeline.play();
         });
     }
 }

@@ -3,6 +3,8 @@ package BUS;
 import DAL.CategoryDAL;
 import DTO.BUSResult;
 import DTO.CategoryDTO;
+import DTO.CategoryDisplayDTO;
+import DTO.PagedResponse;
 import DTO.StatusDTO;
 import ENUM.BUSOperationResult;
 import ENUM.Status;
@@ -11,7 +13,6 @@ import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
     private static final CategoryBUS INSTANCE = new CategoryBUS();
@@ -167,6 +168,22 @@ public class CategoryBUS extends BaseBUS<CategoryDTO, Integer> {
             return false;
 
         return CategoryDAL.getInstance().existsByIdAndStatus(categoryId, activeStatus.getId());
+    }
+
+    /**
+     * Lọc danh mục cho màn hình quản lý (với statusDescription từ JOIN)
+     * Tránh gọi BUS lẻ cho mỗi dòng bảng
+     */
+    public BUSResult filterCategoriesPagedForManageDisplay(String keyword, int statusId, int pageIndex, int pageSize) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalStatusId = (statusId <= 0) ? -1 : statusId;
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+
+        PagedResponse<CategoryDisplayDTO> pagedResponse = CategoryDAL.getInstance()
+                .filterCategoriesPagedDisplay(cleanKeyword, finalStatusId, finalPageIndex, finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedResponse);
     }
 
     public int getNextPotentialId() {

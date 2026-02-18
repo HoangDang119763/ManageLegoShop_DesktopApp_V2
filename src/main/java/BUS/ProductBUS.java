@@ -2,7 +2,9 @@ package BUS;
 
 import DAL.ProductDAL;
 import DTO.ProductDTO;
+import DTO.ProductDisplayDTO;
 import DTO.BUSResult;
+import DTO.PagedResponse;
 import ENUM.*;
 import UTILS.AppMessages;
 import UTILS.ValidationUtils;
@@ -335,58 +337,47 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
     }
 
     // [STATELESS] Filter products from fresh DB data
-    public ArrayList<ProductDTO> filterProducts(String searchBy, String keyword, int categoryIdFilter, int statusFilter,
-            BigDecimal startPrice, BigDecimal endPrice, boolean inStockOnly) {
-        ArrayList<ProductDTO> filteredList = new ArrayList<>();
+    public BUSResult filterProductsPagedForManage(String keyword, int categoryId, int statusId,
+            BigDecimal startPrice, BigDecimal endPrice,
+            int pageIndex, int pageSize) {
 
-        // [STATELESS] Query fresh data from DB instead of using arrLocal
-        ArrayList<ProductDTO> allProducts = getAll();
+        // 1. Tiền xử lý (Ví dụ: mặc định inStockOnly = false hoặc lấy từ setting)
+        boolean inStockOnly = false;
 
-        if (keyword == null)
-            keyword = "";
-        if (searchBy == null)
-            searchBy = "";
+        // 2. Gọi DAL lấy dữ liệu phân trang
+        PagedResponse<ProductDTO> pagedData = ProductDAL.getInstance()
+                .filterProductsPaged(keyword, categoryId, statusId, startPrice, endPrice, inStockOnly, pageIndex,
+                        pageSize);
 
-        keyword = keyword.trim().toLowerCase();
-
-        for (ProductDTO pro : allProducts) {
-            boolean matchesSearch = true;
-            boolean matchesCategory = (categoryIdFilter == -1) || (pro.getCategoryId() == categoryIdFilter);
-            boolean matchesStatus = (statusFilter == -1) || (pro.getStatusId() == statusFilter);
-            boolean matchesPrice = true;
-            boolean matchesStock = !inStockOnly || pro.getStockQuantity() > 0;
-
-            // Giá
-            if (startPrice != null && endPrice != null) {
-                matchesPrice = pro.getSellingPrice().compareTo(startPrice) >= 0 &&
-                        pro.getSellingPrice().compareTo(endPrice) <= 0;
-            } else if (startPrice != null) {
-                matchesPrice = pro.getSellingPrice().compareTo(startPrice) >= 0;
-            } else if (endPrice != null) {
-                matchesPrice = pro.getSellingPrice().compareTo(endPrice) <= 0;
-            }
-
-            String name = pro.getName() != null ? pro.getName().toLowerCase() : "";
-            String productId = pro.getId() != null ? pro.getId().toLowerCase() : "";
-
-            if (!keyword.isEmpty()) {
-                switch (searchBy) {
-                    case "Mã sản phẩm" -> matchesSearch = productId.contains(keyword);
-                    case "Tên sản phẩm" -> matchesSearch = name.contains(keyword);
-                }
-            }
-
-            if (matchesSearch && matchesCategory && matchesStatus && matchesPrice && matchesStock) {
-                filteredList.add(pro);
-            }
-        }
-
-        return filteredList;
+        // 3. Trả về BUSResult (Đã tích hợp hàm getPagedData() ma thuật)
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
-    public ArrayList<ProductDTO> filterProducts(String searchBy, String keyword, int categoryIdFilter,
-            int statusFilter, BigDecimal startPrice, BigDecimal endPrice) {
-        return filterProducts(searchBy, keyword, categoryIdFilter, statusFilter, startPrice, endPrice, false);
+    /**
+     * [OPTIMIZED] Filter products với category name & status description (JOIN -
+     * không cần gọi DB lẻ)
+     * Sử dụng cho display trong TableView
+     */
+    public BUSResult filterProductsPagedForManageDisplay(String keyword, int categoryId, int statusId,
+            BigDecimal startPrice, BigDecimal endPrice,
+            int pageIndex, int pageSize) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalStatusId = (statusId <= 0) ? -1 : statusId;
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+        BigDecimal finalStartPrice = (startPrice == null || startPrice.compareTo(BigDecimal.ZERO) < 0) ? null
+                : startPrice;
+        BigDecimal finalEndPrice = (endPrice == null || endPrice.compareTo(BigDecimal.ZERO) < 0) ? null : endPrice;
+        boolean inStockOnly = false;
+
+        // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
+        PagedResponse<ProductDisplayDTO> pagedData = ProductDAL.getInstance()
+                .filterProductsPagedForManageDisplay(cleanKeyword, categoryId, finalStatusId, finalStartPrice,
+                        finalEndPrice,
+                        inStockOnly, finalPageIndex,
+                        finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
     // [STATELESS] Check if category is used in any product

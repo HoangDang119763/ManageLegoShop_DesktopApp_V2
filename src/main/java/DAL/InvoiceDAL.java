@@ -1,9 +1,13 @@
 package DAL;
 
 import DTO.InvoiceDTO;
+import DTO.InvoiceDisplayDTO;
+import DTO.PagedResponse;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
     public static final InvoiceDAL INSTANCE = new InvoiceDAL();
@@ -72,6 +76,105 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
     @Override
     protected String getUpdateQuery() {
         throw new UnsupportedOperationException("Cannot update permission records.");
+    }
+
+    /**
+     * [OPTIMIZED] Get all invoices with status description (JOIN)
+     * Tránh gọi BUS lẻ lẻ từng dòng
+     */
+    public PagedResponse<InvoiceDisplayDTO> getAllInvoicesPagedForManage(int pageIndex, int pageSize) {
+        List<InvoiceDisplayDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // JOIN với status table để lấy statusDescription
+        String sql = "SELECT " +
+                "i.id, i.create_date, i.employee_id, i.customer_id, i.discount_code, i.discount_amount, i.total_price, i.status_id, "
+                +
+                "s.description as status_description, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM invoice i " +
+                "LEFT JOIN status s ON i.status_id = s.id " +
+                "ORDER BY i.id DESC " +
+                "LIMIT ? OFFSET ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, pageSize);
+            ps.setInt(2, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+                    items.add(mapResultSetToInvoiceDisplay(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy danh sách hóa đơn phân trang: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * [OPTIMIZED] Filter invoices with pagination for manage display
+     */
+    public PagedResponse<InvoiceDisplayDTO> filterInvoicesPagedForManage(
+            int searchId, int pageIndex, int pageSize) {
+        List<InvoiceDisplayDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // JOIN với status table để lấy statusDescription
+        String sql = "SELECT " +
+                "i.id, i.create_date, i.employee_id, i.customer_id, i.discount_code, i.discount_amount, i.total_price, i.status_id, "
+                +
+                "s.description as status_description, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM invoice i " +
+                "LEFT JOIN status s ON i.status_id = s.id " +
+                "WHERE (? = -1 OR i.id = ?) " +
+                "ORDER BY i.id DESC " +
+                "LIMIT ? OFFSET ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, searchId);
+            ps.setInt(2, searchId);
+            ps.setInt(3, pageSize);
+            ps.setInt(4, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+                    items.add(mapResultSetToInvoiceDisplay(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lọc hóa đơn phân trang: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * Map ResultSet to InvoiceDisplayDTO (với status description)
+     */
+    private InvoiceDisplayDTO mapResultSetToInvoiceDisplay(ResultSet rs) throws SQLException {
+        return new InvoiceDisplayDTO(
+                rs.getInt("id"),
+                rs.getTimestamp("create_date") != null
+                        ? rs.getTimestamp("create_date").toLocalDateTime()
+                        : null,
+                rs.getInt("employee_id"),
+                rs.getInt("customer_id"),
+                rs.getString("discount_code"),
+                rs.getBigDecimal("discount_amount") != null ? rs.getBigDecimal("discount_amount") : BigDecimal.ZERO,
+                rs.getBigDecimal("total_price"),
+                rs.getInt("status_id"),
+                rs.getString("status_description"));
     }
 
 }

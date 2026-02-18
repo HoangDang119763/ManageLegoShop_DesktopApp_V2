@@ -134,7 +134,7 @@
 
                         <Tab fx:id="tabJob" text="Đơn vị công tác">
                             <content>
-                                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;">
+                                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" vvalue="1.0">
                                     <content>
                                         <VBox spacing="15.0">
                                             <padding><Insets bottom="10.0" left="25.0" right="25.0" top="15.0" /></padding>
@@ -186,10 +186,12 @@
                                                         </Label>
                                                     </placeholder>
                                                     <columns>
-                                                        <TableColumn fx:id="colEffectiveDate" prefWidth="110.0" text="Ngày áp dụng" />
-                                                        <TableColumn fx:id="colDepartment" prefWidth="201.59999084472656" text="Phòng ban" />
+                                                        <TableColumn fx:id="colEffectiveDate" prefWidth="100.79997712373734" text="Ngày áp dụng" />
+                                                        <TableColumn fx:id="colDepartment" prefWidth="112.00000762939453" text="Phòng ban" />
                                                         <TableColumn fx:id="colRole" prefWidth="148.79998779296875" text="Chức vụ" />
-                                                        <TableColumn fx:id="colCreatedAt" prefWidth="174.39999999999998" text="Ngày tạo" />
+                                          <TableColumn fx:id="colReason" prefWidth="148.79998779296875" text="Lý do" />
+                                                        <TableColumn fx:id="colApprover" prefWidth="174.39999999999998" text="Người duyệt" />
+                                          <TableColumn fx:id="colReason1" prefWidth="148.79998779296875" text="Lý do" />
                                                     </columns>
                                        <VBox.margin>
                                           <Insets />
@@ -198,8 +200,15 @@
                                           <Insets left="-3.0" right="-2.0" top="-10.0" />
                                        </padding>
                                                 </TableView>
-                                                <HBox alignment="CENTER_RIGHT" minHeight="45.0">
-                                                    <Button fx:id="saveJobBtn" prefHeight="38.0" prefWidth="100.0" styleClass="action-btn" text="LƯU"><graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.1em" /></graphic></Button>
+                                                <HBox alignment="CENTER_RIGHT" minHeight="45.0" spacing="15.0">
+                                         <fx:include fx:id="historyPagination" source="PaginationControl.fxml" />
+                                                    <Button fx:id="saveJobBtn" prefHeight="35.0" prefWidth="100.0" styleClass="action-btn" text="LƯU"><graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.1em" /></graphic>
+                                          <HBox.margin>
+                                             <Insets top="3.0" />
+                                          </HBox.margin></Button>
+                                       <VBox.margin>
+                                          <Insets />
+                                       </VBox.margin>
                                                 </HBox>
                                             </children>
                                         </VBox>
@@ -301,5 +310,6 @@
                 </VBox>
             </bottom>
         </BorderPane>
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
     </children>
 </AnchorPane>

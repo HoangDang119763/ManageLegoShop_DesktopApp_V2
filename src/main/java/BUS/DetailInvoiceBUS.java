@@ -72,7 +72,8 @@ public class DetailInvoiceBUS extends BaseBUS<DetailInvoiceDTO, Integer> {
 
     @Override
     public DetailInvoiceDTO getById(Integer id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (id == null || id <= 0)
+            return null;
+        return DetailInvoiceDAL.getInstance().getById(id);
     }
 }
