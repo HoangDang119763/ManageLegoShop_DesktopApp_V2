@@ -18,10 +18,10 @@ public class EmployeeDTO extends BaseInformationDTO {
     private String gender;
     private Integer accountId; // Dùng Integer để có thể nhận giá trị null
     private String healthInsCode; // Mã BHYT
+    private String socialInsuranceCode;
+    private String unemploymentInsuranceCode;
 
     // Các cờ hiệu bảo hiểm & phụ cấp (tinyint 1 -> boolean)
-    private boolean isSocialInsurance;
-    private boolean isUnemploymentInsurance;
     private boolean isPersonalIncomeTax;
     private boolean isTransportationSupport;
     private boolean isAccommodationSupport;
@@ -50,8 +50,8 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.gender = gender;
         this.accountId = accountId;
         this.healthInsCode = healthInsCode;
-        this.isSocialInsurance = isSocialInsurance;
-        this.isUnemploymentInsurance = isUnemploymentInsurance;
+        this.socialInsuranceCode = isSocialInsurance ? "1" : "0";
+        this.unemploymentInsuranceCode = isUnemploymentInsurance ? "1" : "0";
         this.isPersonalIncomeTax = isPersonalIncomeTax;
         this.isTransportationSupport = isTransportationSupport;
         this.isAccommodationSupport = isAccommodationSupport;

@@ -18,6 +18,7 @@ import UTILS.ValidationUtils;
 import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -25,6 +26,7 @@ import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.io.IOException;
 
 /**
  * Controller quản lý màn hình thông tin nhân viên (Employee Info)
@@ -109,7 +111,19 @@ public class EmployeeInfoController {
     @FXML
     private StackPane loadingOverlay;
 
-    // ==================== BUS INSTANCES ====================
+    // ==================== TAB CONTROLLERS ====================
+    @FXML
+    private AllowanceTabController allowanceTabController;
+    @FXML
+    private DeductionTabController deductionTabController;
+    @FXML
+    private FineTabController fineTabController;
+    @FXML
+    private PayrollTabController payrollTabController;
+    @FXML
+    private LeaveRequestTabController leaveRequestTabController;
+    @FXML
+    private AttendanceTabController attendanceTabController;
     // Gán một lần trong initialize() để tránh gọi getInstance() nhiều lần
     private EmployeeBUS employeeBUS;
     private AccountBUS accountBUS;
@@ -231,6 +245,27 @@ public class EmployeeInfoController {
             lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getUpdatedAt()));
             // === Account ===
             lblUsername.setText(employee.getUsername() != null ? employee.getUsername() : "");
+
+            // ===== LOAD TAB CONTROLLERS =====
+            int employeeId = employee.getEmployeeId();
+            if (allowanceTabController != null) {
+                allowanceTabController.loadEmployeeAllowances(employeeId);
+            }
+            if (deductionTabController != null) {
+                deductionTabController.loadEmployeeDeductions(employeeId);
+            }
+            if (fineTabController != null) {
+                fineTabController.loadEmployeeFines(employeeId);
+            }
+            if (payrollTabController != null) {
+                payrollTabController.loadEmployeePayroll(employeeId);
+            }
+            if (leaveRequestTabController != null) {
+                leaveRequestTabController.loadEmployeeLeaves(employeeId);
+            }
+            if (attendanceTabController != null) {
+                attendanceTabController.loadEmployeeAttendance(employeeId);
+            }
         } else {
             NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_DETAIL_LOAD_ERROR,
                     AppMessages.DIALOG_TITLE);

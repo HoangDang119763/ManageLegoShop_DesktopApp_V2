@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.AllowanceTabController">
+    <padding><Insets bottom="15.0" left="20.0" right="20.0" top="10.0" /></padding>
+    <children>
+        <VBox spacing="12.0" styleClass="white-bg, shadow" VBox.vgrow="ALWAYS">
+            <padding><Insets bottom="15.0" left="15.0" right="30.0" top="15.0" /></padding>
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <FontAwesomeIcon fill="#1f7d84" glyphName="HEART" size="1.8em" />
+                        <Label styleClass="label-header" text="QUẢN LÝ TRỢ CẤP" textFill="#1f7d84">
+                            <font><Font name="System Bold" size="20.0" /></font>
+                        </Label>
+                    </children>
+                </HBox>
+                <Line endX="980.0" stroke="#eee" strokeWidth="2.0" />
+
+                <BorderPane prefHeight="500.0" VBox.vgrow="ALWAYS">
+                    <left>
+                        <VBox prefWidth="300.0" spacing="10.0">
+                            <padding><Insets left="10.0" right="10.0" top="10.0" /></padding>
+                            <children>
+                                <Label fx:id="lblEmployeeName" styleClass="label-a" text="Nhân viên:" />
+                                <Label styleClass="label-a" text="Chọn kỳ:" />
+                                <ComboBox fx:id="cbPeriod" prefHeight="32.0" />
+                                
+                                <Separator />
+                                <Label styleClass="label-a" text="Thưởng kiểm soát:" />
+                                <TextField fx:id="txtAttendanceBonus" promptText="Nhập giá trị" />
+                                
+                                <Label styleClass="label-a" text="Số ngày phép:" />
+                                <TextField fx:id="txtLeaveDays" promptText="Nhập giá trị" />
+                                
+                                <Label styleClass="label-a" text="Hỗ trợ đi lại:" />
+                                <TextField fx:id="txtTransport" promptText="Nhập giá trị" />
+                                
+                                <Label styleClass="label-a" text="Hỗ trợ ở:" />
+                                <TextField fx:id="txtAccommodation" promptText="Nhập giá trị" />
+                                
+                                <Separator />
+                                <HBox spacing="5.0">
+                                    <children>
+                                        <Button fx:id="btnAdd" prefHeight="34.0" prefWidth="70.0" styleClass="action-btn" text="Thêm">
+                                            <graphic><FontAwesomeIcon glyphName="PLUS" /></graphic>
+                                        </Button>
+                                        <Button fx:id="btnEdit" prefHeight="34.0" prefWidth="70.0" styleClass="action-btn" text="Sửa">
+                                            <graphic><FontAwesomeIcon glyphName="EDIT" /></graphic>
+                                        </Button>
+                                        <Button fx:id="btnDelete" prefHeight="34.0" prefWidth="70.0" styleClass="action-btn" text="Xóa">
+                                            <graphic><FontAwesomeIcon glyphName="TRASH" /></graphic>
+                                        </Button>
+                                        <Button fx:id="btnRefresh" prefHeight="34.0" prefWidth="70.0" styleClass="action-btn" text="F5">
+                                            <graphic><FontAwesomeIcon glyphName="REFRESH" /></graphic>
+                                        </Button>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </left>
+                    <center>
+                        <TableView fx:id="tblAllowance" BorderPane.alignment="CENTER">
+                            <columns>
+                                <TableColumn fx:id="colId" prefWidth="50.0" text="ID" />
+                                <TableColumn fx:id="colPeriod" prefWidth="100.0" text="Kỳ" />
+                                <TableColumn fx:id="colAttendanceBonus" prefWidth="100.0" text="Thưởng kiểm soát" />
+                                <TableColumn fx:id="colLeaveDays" prefWidth="100.0" text="Ngày phép" />
+                                <TableColumn fx:id="colTransport" prefWidth="100.0" text="Hỗ trợ đi lại" />
+                                <TableColumn fx:id="colAccommodation" prefWidth="100.0" text="Hỗ trợ ở" />
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                        </TableView>
+                    </center>
+                </BorderPane>
+            </children>
+        </VBox>
+    </children>
+</VBox>

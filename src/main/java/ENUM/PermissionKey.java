@@ -26,6 +26,22 @@ public enum PermissionKey {
     EMPLOYEE_INSERT,
     EMPLOYEE_DELETE,
 
+    // === HR TAB: Đơn nghỉ phép ===
+    EMPLOYEE_LEAVE_REQUEST_VIEW,
+    EMPLOYEE_LEAVE_REQUEST_CREATE,
+    EMPLOYEE_LEAVE_REQUEST_MANAGE,
+
+    // === HR TAB: Kỷ luật & khen thưởng ===
+    EMPLOYEE_FINE_REWARD_VIEW,
+    EMPLOYEE_FINE_REWARD_MANAGE,
+
+    // === HR TAB: Chấm công ===
+    EMPLOYEE_ATTENDANCE_VIEW,
+    EMPLOYEE_ATTENDANCE_MANAGE,
+
+    // === HR TAB: Chức vụ/Vị trí ===
+    EMPLOYEE_ROLE_POSITION_UPDATE,
+
     // === 👥 MODULE KHÁCH HÀNG ===
     CUSTOMER_LIST_VIEW, CUSTOMER_INSERT, CUSTOMER_UPDATE, CUSTOMER_DELETE,
 

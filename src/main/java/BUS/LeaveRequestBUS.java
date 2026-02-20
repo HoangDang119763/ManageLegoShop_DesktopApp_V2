@@ -104,6 +104,21 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
         return 1;
     }
 
+    public boolean delete(Integer id, int employeeRoleId, int employeeLoginId) {
+        return delete(id) == 1;
+    }
+
+    public ArrayList<LeaveRequestDTO> getByEmployeeId(int employeeId) {
+        ArrayList<LeaveRequestDTO> allLeaveRequests = getAll();
+        ArrayList<LeaveRequestDTO> result = new ArrayList<>();
+        for (LeaveRequestDTO leave : allLeaveRequests) {
+            if (leave.getEmployeeId() == employeeId) {
+                result.add(leave);
+            }
+        }
+        return result;
+    }
+
     private boolean isValidLeaveRequestInput(LeaveRequestDTO obj) {
         // Type and content can be nullable
         // But start_date and end_date are required
