@@ -3,6 +3,7 @@ package BUS;
 import DAL.ProductDAL;
 import DTO.ProductDTO;
 import DTO.ProductDisplayDTO;
+import DTO.ProductDisplayForImportDTO;
 import DTO.BUSResult;
 import DTO.PagedResponse;
 import ENUM.*;
@@ -15,6 +16,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 public class ProductBUS extends BaseBUS<ProductDTO, String> {
     private static final ProductBUS INSTANCE = new ProductBUS();
@@ -360,6 +363,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
             BigDecimal startPrice, BigDecimal endPrice,
             int pageIndex, int pageSize) {
         String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalCategoryId = (categoryId <= 0) ? -1 : categoryId;
         int finalStatusId = (statusId <= 0) ? -1 : statusId;
         int finalPageIndex = Math.max(0, pageIndex);
         int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
@@ -370,7 +374,7 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
 
         // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
         PagedResponse<ProductDisplayDTO> pagedData = ProductDAL.getInstance()
-                .filterProductsPagedForManageDisplay(cleanKeyword, categoryId, finalStatusId, finalStartPrice,
+                .filterProductsPagedForManageDisplay(cleanKeyword, finalCategoryId, finalStatusId, finalStartPrice,
                         finalEndPrice,
                         inStockOnly, finalPageIndex,
                         finalPageSize);
@@ -382,5 +386,29 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
     public boolean isCategoryInAnyProduct(int categoryId) {
         // [STATELESS] Query database instead of loading cache
         return ProductDAL.getInstance().isCategoryInUse(categoryId);
+    }
+
+    /**
+     * Filter sản phẩm cho giao diện nhập hàng
+     * Chỉ hiển thị sản phẩm có tồn kho > 0
+     * 
+     * @param keyword    Tìm kiếm theo tên sản phẩm
+     * @param categoryId Lọc theo thể loại (-1 = tất cả)
+     * @param pageIndex  Trang hiện tại (0-based)
+     * @param pageSize   Số item/trang
+     * @return BUSResult chứa PagedResponse<ProductDisplayForImportDTO>
+     */
+    public BUSResult filterProductsPagedForImport(String keyword, int categoryId, int pageIndex, int pageSize) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalCategoryId = (categoryId <= 0) ? -1 : categoryId;
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+        int inActiveStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
+        PagedResponse<ProductDisplayForImportDTO> pagedData = ProductDAL.getInstance()
+                .filterProductsPagedForImport(cleanKeyword, finalCategoryId, inActiveStatusId, finalPageIndex,
+                        finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 }

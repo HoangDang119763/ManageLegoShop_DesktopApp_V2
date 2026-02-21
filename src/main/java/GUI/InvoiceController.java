@@ -92,6 +92,7 @@ public class InvoiceController implements IController {
     private DetailInvoiceBUS detailInvoiceBUS;
     private StatusBUS statusBUS;
     private static final int PAGE_SIZE = 10;
+    private boolean isResetting = false;
 
     @FXML
     public void initialize() {
@@ -201,7 +202,14 @@ public class InvoiceController implements IController {
     }
 
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
@@ -242,9 +250,15 @@ public class InvoiceController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         txtSearch.clear();
+        keyword = "";
         clearSubTable();
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override

@@ -55,6 +55,7 @@ public class CategoryController implements IController {
     private String keyword = "";
     private StatusDTO statusFilter = null;
     private CategoryDisplayDTO selectedCategory;
+    private boolean isResetting = false;
     private CategoryBUS categoryBUS;
     private SessionManagerService session;
     private final int PAGE_SIZE = 15;
@@ -209,7 +210,14 @@ public class CategoryController implements IController {
     // 4️⃣ FILTER & PERMISSION
     // =====================
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
@@ -234,13 +242,18 @@ public class CategoryController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         cbSearchBy.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
         searchBy = "Mã thể loại";
         keyword = "";
         statusFilter = null;
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override

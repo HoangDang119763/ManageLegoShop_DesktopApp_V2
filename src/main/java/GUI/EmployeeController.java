@@ -73,6 +73,7 @@ public class EmployeeController implements IController {
     private RoleDTO roleFilter = null;
     private StatusDTO statusFilter = null;
     private EmployeeDisplayDTO selectedEmployeeTable;
+    private boolean isResetting = false;
 
     private static final int PAGE_SIZE = 14;
 
@@ -166,7 +167,14 @@ public class EmployeeController implements IController {
     }
 
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
@@ -191,14 +199,18 @@ public class EmployeeController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         cbRoleFilter.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
-
         keyword = "";
         roleFilter = null;
         statusFilter = null;
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     private void setupPagination() {

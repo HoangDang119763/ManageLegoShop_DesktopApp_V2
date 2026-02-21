@@ -3,6 +3,7 @@ package DAL;
 import DTO.PagedResponse;
 import DTO.ProductDTO;
 import DTO.ProductDisplayDTO;
+import DTO.ProductDisplayForImportDTO;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -391,5 +392,77 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
                 rs.getString("status_description"), // JOIN từ status table
                 rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null,
                 rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
+    }
+
+    /**
+     * Filter sản phẩm cho giao diện nhập hàng
+     * Chỉ hiển thị sản phẩm có tồn kho > 0
+     * Hỗ trợ tìm kiếm theo tên sản phẩm + lọc theo thể loại
+     * 
+     * @param keyword    Tìm kiếm theo tên sản phẩm
+     * @param categoryId Lọc theo thể loại (-1 = tất cả)
+     * @param pageIndex  Trang hiện tại (0-based)
+     * @param pageSize   Số item/trang
+     * @return PagedResponse chứa danh sách ProductDisplayForImportDTO
+     */
+    public PagedResponse<ProductDisplayForImportDTO> filterProductsPagedForImport(
+            String keyword, int categoryId, int inactiveStatusId, int pageIndex, int pageSize) {
+
+        List<ProductDisplayForImportDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        String sql = "SELECT " +
+                "  p.id, p.name, p.image_url, p.import_price, p.stock_quantity, " +
+                "  p.category_id, c.name as category_name, " +
+                "  s.name as status_name, s.description as status_description, " +
+                "  COUNT(*) OVER() as total_count " +
+                "FROM product p " +
+                "LEFT JOIN category c ON p.category_id = c.id " +
+                "LEFT JOIN status s ON p.status_id = s.id " +
+                "WHERE p.status_id != ? " + // Loại bỏ sản phẩm Ngừng kinh doanh
+                "  AND (? = '' OR LOWER(p.name) LIKE ?) " +
+                "  AND (? = -1 OR p.category_id = ?) " +
+                "ORDER BY p.stock_quantity ASC, p.name ASC " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKey = "%" + (keyword == null ? "" : keyword.trim().toLowerCase()) + "%";
+            String keywordParam = (keyword == null ? "" : keyword.trim());
+
+            // Gán tham số (Thứ tự đã được rút gọn)
+            ps.setInt(1, inactiveStatusId);
+            ps.setString(2, keywordParam);
+            ps.setString(3, searchKey);
+            ps.setInt(4, categoryId);
+            ps.setInt(5, categoryId);
+            ps.setInt(6, offset);
+            ps.setInt(7, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+
+                    ProductDisplayForImportDTO dto = new ProductDisplayForImportDTO();
+                    dto.setId(rs.getString("id"));
+                    dto.setName(rs.getString("name"));
+                    dto.setImageUrl(rs.getString("image_url"));
+                    dto.setImportPrice(rs.getBigDecimal("import_price"));
+                    dto.setStockQuantity(rs.getInt("stock_quantity"));
+                    dto.setCategoryId(rs.getInt("category_id"));
+                    dto.setCategoryName(rs.getString("category_name"));
+                    dto.setStatusName(rs.getString("status_name"));
+                    dto.setStatusDescription(rs.getString("status_description"));
+
+                    items.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi tại ProductDAL: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
     }
 }

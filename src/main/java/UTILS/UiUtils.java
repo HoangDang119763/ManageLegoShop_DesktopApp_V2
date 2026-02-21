@@ -486,4 +486,50 @@ public class UiUtils {
             timeline.play();
         });
     }
+
+    /**
+     * Tạo Label placeholder icon khi ảnh không tìm thấy
+     * Hiển thị một icon mặc định
+     */
+    public Label createPlaceholderIcon() {
+        Label placeholder = new Label("📷");
+        placeholder.setStyle("-fx-font-size: 40; -fx-text-fill: #bdc3c7;");
+        placeholder.setAlignment(javafx.geometry.Pos.CENTER);
+        return placeholder;
+    }
+
+    /**
+     * Tạo Tooltip cho một control bất kỳ
+     * Sử dụng khi cần hiển thị thông tin full text của control bị cắt ngắn
+     */
+    public Tooltip createTooltip(String text) {
+        Tooltip tooltip = new Tooltip(text);
+        tooltip.setShowDelay(Duration.millis(300));
+        tooltip.setHideDelay(Duration.millis(50));
+        tooltip.setWrapText(true);
+        tooltip.setMaxWidth(300);
+        return tooltip;
+    }
+
+    /**
+     * Gán Tooltip cho một Label với logic: nếu text dài hơn maxLength thì gán
+     * tooltip
+     */
+    public void addTooltipToLabel(Label label, int maxLength) {
+        // Hàm cập nhật tooltip
+        Runnable updateTooltip = () -> {
+            String text = label.getText();
+            if (text != null && text.length() > maxLength) {
+                label.setTooltip(createTooltip(text));
+            } else {
+                label.setTooltip(null);
+            }
+        };
+
+        // Cập nhật ngay khi add (trường hợp label đã có text sẵn)
+        updateTooltip.run();
+
+        // Cập nhật khi text thay đổi
+        label.textProperty().addListener((obs, oldVal, newVal) -> updateTooltip.run());
+    }
 }
