@@ -95,6 +95,7 @@ public class ImportController implements IController {
     private ImportBUS importBUS;
     private DetailImportBUS detailImportBUS;
     private static final int PAGE_SIZE = 10;
+    private boolean isResetting = false;
 
     @FXML
     public void initialize() {
@@ -228,7 +229,14 @@ public class ImportController implements IController {
     }
 
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
@@ -244,9 +252,15 @@ public class ImportController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         txtSearch.clear();
+        keyword = "";
         clearSubTable();
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override
