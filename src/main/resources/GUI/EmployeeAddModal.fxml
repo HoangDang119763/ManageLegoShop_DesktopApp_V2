@@ -70,11 +70,11 @@
                                                     <VBox prefWidth="120.0" spacing="5.0"><Label styleClass="label-s" text="Tên*" textFill="#30bac4" /><TextField fx:id="txtLastName" prefHeight="35.0" styleClass="textfield-1" /></VBox>
                                                 </HBox>
                                                 <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                                    <VBox spacing="5.0" HBox.hgrow="ALWAYS"><Label styleClass="label-s" text="Ngày sinh" textFill="#30bac4" /><DatePicker fx:id="dpDateOfBirth" maxWidth="Infinity" prefHeight="35.0" /></VBox>
+                                                    <VBox spacing="5.0" HBox.hgrow="ALWAYS"><Label styleClass="label-s" text="Ngày sinh*" textFill="#30bac4" /><DatePicker fx:id="dpDateOfBirth" maxWidth="Infinity" prefHeight="35.0" /></VBox>
                                                     <VBox prefWidth="130.0" spacing="5.0"><Label styleClass="label-s" text="Giới tính" textFill="#30bac4" /><ComboBox fx:id="cbGender" maxWidth="Infinity" prefHeight="35.0" /></VBox>
                                                 </HBox>
                                                 <VBox spacing="5.0" GridPane.rowIndex="2"><Label styleClass="label-s" text="Số điện thoại*" textFill="#30bac4" /><TextField fx:id="txtPhone" prefHeight="35.0" styleClass="textfield-1" /></VBox>
-                                                <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2"><Label styleClass="label-s" text="Email liên hệ" textFill="#30bac4" /><TextField fx:id="txtEmail" prefHeight="35.0" styleClass="textfield-1" /></VBox>
+                                                <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2"><Label styleClass="label-s" text="Email liên hệ*" textFill="#30bac4" /><TextField fx:id="txtEmail" prefHeight="35.0" styleClass="textfield-1" /></VBox>
                                             </children>
                                  <rowConstraints>
                                     <RowConstraints />

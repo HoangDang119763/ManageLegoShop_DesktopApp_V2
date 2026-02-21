@@ -85,96 +85,6 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         throw new UnsupportedOperationException("Cannot update Employee records.");
     }
 
-    public boolean updateAdvance(EmployeeDTO obj, boolean allowAdvanceChange) {
-        String query = allowAdvanceChange
-                ? "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, role_id = ?, department_id = ?, status_id = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?"
-                : "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?";
-
-        try (Connection connection = connectionFactory.newConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setString(1, obj.getFirstName());
-            statement.setString(2, obj.getLastName());
-            statement.setString(3, obj.getPhone());
-            statement.setString(4, obj.getEmail());
-            statement.setDate(5,
-                    obj.getDateOfBirth() != null ? java.sql.Date.valueOf(obj.getDateOfBirth()) : null);
-
-            if (allowAdvanceChange) {
-                statement.setInt(6, obj.getRoleId());
-                statement.setObject(7, obj.getDepartmentId());
-                statement.setInt(8, obj.getStatusId());
-                statement.setString(9, obj.getGender());
-                statement.setObject(10, obj.getAccountId());
-                statement.setString(11, obj.getHealthInsCode());
-                statement.setBoolean(12, obj.isSocialInsurance());
-                statement.setBoolean(13, obj.isUnemploymentInsurance());
-                statement.setBoolean(14, obj.isPersonalIncomeTax());
-                statement.setBoolean(15, obj.isTransportationSupport());
-                statement.setBoolean(16, obj.isAccommodationSupport());
-                statement.setObject(17, obj.getUpdatedAt());
-                statement.setInt(18, obj.getId());
-            } else {
-                statement.setString(6, obj.getGender());
-                statement.setObject(7, obj.getAccountId());
-                statement.setString(8, obj.getHealthInsCode());
-                statement.setBoolean(9, obj.isSocialInsurance());
-                statement.setBoolean(10, obj.isUnemploymentInsurance());
-                statement.setBoolean(11, obj.isPersonalIncomeTax());
-                statement.setBoolean(12, obj.isTransportationSupport());
-                statement.setBoolean(13, obj.isAccommodationSupport());
-                statement.setObject(14, obj.getUpdatedAt());
-                statement.setInt(15, obj.getId());
-            }
-
-            return statement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating advance employee: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean updateBasic(EmployeeDTO obj, boolean allowAdvanceChange) {
-        String query = allowAdvanceChange
-                ? "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, role_id = ?, department_id = ?, status_id = ?, updated_at = ? WHERE id = ?"
-                : "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, account_id = ?, health_ins_code = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?";
-
-        try (Connection connection = connectionFactory.newConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setString(1, obj.getFirstName());
-            statement.setString(2, obj.getLastName());
-            statement.setString(3, obj.getPhone());
-            statement.setString(4, obj.getEmail());
-            statement.setDate(5,
-                    obj.getDateOfBirth() != null ? java.sql.Date.valueOf(obj.getDateOfBirth()) : null);
-            statement.setString(6, obj.getGender());
-            statement.setObject(7, obj.getAccountId());
-            statement.setString(8, obj.getHealthInsCode());
-            statement.setBoolean(9, obj.isSocialInsurance());
-            statement.setBoolean(10, obj.isUnemploymentInsurance());
-            statement.setBoolean(11, obj.isPersonalIncomeTax());
-            statement.setBoolean(12, obj.isTransportationSupport());
-            statement.setBoolean(13, obj.isAccommodationSupport());
-
-            if (allowAdvanceChange) {
-                statement.setInt(14, obj.getRoleId());
-                statement.setObject(15, obj.getDepartmentId());
-                statement.setInt(16, obj.getStatusId());
-                statement.setObject(17, obj.getUpdatedAt());
-                statement.setInt(18, obj.getId());
-            } else {
-                statement.setObject(14, obj.getUpdatedAt());
-                statement.setInt(15, obj.getId());
-            }
-
-            return statement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating basic employee: " + e.getMessage());
-            return false;
-        }
-    }
-
     /**
      * Cập nhật TAB 1: Thông tin cá nhân
      * Update: firstName, lastName, phone, email, dateOfBirth, gender, healthInsCode
@@ -241,32 +151,38 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         }
     }
 
-    /**
-     * Cập nhật TAB 3: Lương & Bảo hiểm
-     * Update: role_id, insurance flags (isSocialInsurance, isUnemploymentInsurance,
-     * isPersonalIncomeTax, isTransportationSupport, isAccommodationSupport)
-     * Lưu ý: baseSalary, coefficient sẽ được update qua SalaryDAL
-     * numDependents sẽ được update qua TaxDAL
-     */
-    public boolean updatePayrollInfo(EmployeeDTO obj) {
-        String query = "UPDATE employee SET role_id = ?, is_social_insurance = ?, is_unemployment_insurance = ?, is_personal_income_tax = ?, is_transportation_support = ?, is_accommodation_support = ?, updated_at = ? WHERE id = ?";
+    public boolean updateJobInfo(Connection conn, EmployeeDTO obj) {
+        String query = "UPDATE employee SET department_id = ?, role_id = ?, status_id = ? WHERE id = ?";
 
-        try (Connection connection = connectionFactory.newConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
+        // Không dùng try-with-resources cho Connection ở đây vì BUS quản lý vòng đời
+        // của nó
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
 
-            statement.setInt(1, obj.getRoleId());
-            statement.setBoolean(2, obj.isSocialInsurance());
-            statement.setBoolean(3, obj.isUnemploymentInsurance());
-            statement.setBoolean(4, obj.isPersonalIncomeTax());
-            statement.setBoolean(5, obj.isTransportationSupport());
-            statement.setBoolean(6, obj.isAccommodationSupport());
-            statement.setObject(7, obj.getUpdatedAt());
-            statement.setInt(8, obj.getId());
+            statement.setObject(1, obj.getDepartmentId());
+            statement.setObject(2, obj.getRoleId());
+            statement.setInt(3, obj.getStatusId());
+            statement.setInt(4, obj.getId());
 
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error updating payroll info: " + e.getMessage());
+            System.err.println("Error updating job info in DAL: " + e.getMessage());
             return false;
+        }
+    }
+
+    public boolean updatePayrollInfo(Connection conn, EmployeeDTO obj) throws SQLException {
+        String sql = "UPDATE employee SET health_ins_code = ?, is_social_insurance = ?, " +
+                "is_unemployment_insurance = ?, is_personal_income_tax = ?, " +
+                "is_transportation_support = ?, is_accommodation_support = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, obj.getHealthInsCode());
+            ps.setBoolean(2, obj.isSocialInsurance());
+            ps.setBoolean(3, obj.isUnemploymentInsurance());
+            ps.setBoolean(4, obj.isPersonalIncomeTax());
+            ps.setBoolean(5, obj.isTransportationSupport());
+            ps.setBoolean(6, obj.isAccommodationSupport());
+            ps.setInt(7, obj.getId());
+            return ps.executeUpdate() > 0;
         }
     }
 
@@ -541,6 +457,83 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
     }
 
+    public PagedResponse<EmployeeDisplayDTO> filterEmployeesPagedForManageDisplay(
+            String keyword, int roleId, int statusId, int pageIndex, int pageSize, int excludeId) {
+
+        List<EmployeeDisplayDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // Thêm điều kiện e.id != ? để loại bỏ chính mình
+        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, e.role_id, e.status_id, e.account_id, " +
+                "r.name AS roleName, " +
+                "s.description AS statusDescription, " +
+                "sal.base AS salary, " +
+                "sal.coefficient AS efficientSalary, " +
+                "acc.username, " +
+                "COUNT(*) OVER() AS total_count " +
+                "FROM employee e " +
+                "LEFT JOIN role r ON e.role_id = r.id " +
+                "LEFT JOIN status s ON e.status_id = s.id " +
+                "LEFT JOIN salary sal ON r.salary_id = sal.id " +
+                "LEFT JOIN account acc ON e.account_id = acc.id " +
+                "WHERE e.id != 1 " + // Loại trừ admin hệ thống
+                "AND e.id != ? " + // LOẠI TRỪ CHÍNH MÌNH (Tham số mới)
+                "AND (? = '' OR (" +
+                "    CAST(e.id AS CHAR) LIKE ? " +
+                "    OR LOWER(e.first_name) LIKE ? " +
+                "    OR LOWER(e.last_name) LIKE ? " +
+                "    OR LOWER(CONCAT(e.first_name, ' ', e.last_name)) LIKE ?" +
+                ")) " +
+                "AND (? = -1 OR e.role_id = ?) " +
+                "AND (? = -1 OR e.status_id = ?) " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String cleanKeyword = (keyword == null) ? "" : keyword.trim();
+            String searchKey = "%" + cleanKeyword.toLowerCase() + "%";
+
+            int idx = 1;
+
+            // 1. Gán ID cần loại trừ
+            ps.setInt(idx++, excludeId);
+
+            // 2. Gán tham số tìm kiếm
+            ps.setString(idx++, cleanKeyword);
+            ps.setString(idx++, searchKey);
+            ps.setString(idx++, searchKey);
+            ps.setString(idx++, searchKey);
+            ps.setString(idx++, searchKey);
+
+            // 3. Gán Filter Role
+            ps.setInt(idx++, roleId);
+            ps.setInt(idx++, roleId);
+
+            // 4. Gán Filter Status
+            ps.setInt(idx++, statusId);
+            ps.setInt(idx++, statusId);
+
+            // 5. Phân trang
+            ps.setInt(idx++, offset);
+            ps.setInt(idx++, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0) {
+                        totalItems = rs.getInt("total_count");
+                    }
+                    items.add(mapResultSetToDisplayObject(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lọc nhân viên: " + e.getMessage());
+        }
+
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
     /**
      * Map ResultSet to EmployeeDisplayDTO for manage display
      * 
@@ -793,6 +786,21 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                     }
                 }
             }
+            return false;
+        }
+    }
+
+    public boolean updateStatus(int id, int newStatusId) {
+        String query = "UPDATE employee SET status_id = ? WHERE id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, newStatusId);
+            statement.setInt(2, id);
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating employee status: " + e.getMessage());
             return false;
         }
     }

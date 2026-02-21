@@ -1,6 +1,7 @@
 package BUS;
 
 import DTO.TimeSheetDTO;
+import DAL.ImportDAL;
 import DAL.TimeSheetDAL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,4 +74,11 @@ public class TimeSheetBUS extends BaseBUS<TimeSheetDTO, Integer> {
         }
         return true;
     }
+
+    public boolean isEmployeeInAnyTimeSheet(int employeeId) {
+        if (employeeId <= 0)
+            return false;
+        return TimeSheetDAL.getInstance().existsByEmployeeId(employeeId);
+    }
+
 }

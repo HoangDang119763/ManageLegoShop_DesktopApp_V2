@@ -118,7 +118,7 @@ public class EmployeeAddModalController implements IModalController {
         loadComboBoxData();
         generateEmployeeId();
         setupInitialValues();
-        UiUtils.gI().setReadOnlyItem(cbSocialIns);
+        UiUtils.gI().setReadOnlyItem(cbHealthIns);
     }
 
     private void setupListeners() {
@@ -133,13 +133,8 @@ public class EmployeeAddModalController implements IModalController {
         attachDepartmentWarning(-1);
 
         // Auto-tick Social Insurance khi Health Insurance Code có giá trị hợp lệ
-        txtHealthInsCode.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) { // Khi mất focus
-                String healthCode = txtHealthInsCode.getText().trim();
-                if (!healthCode.isEmpty() && healthCode.length() <= 15) {
-                    cbSocialIns.setSelected(true);
-                }
-            }
+        txtHealthInsCode.textProperty().addListener((observable, oldValue, newValue) -> {
+            cbHealthIns.setSelected(!newValue.trim().isEmpty());
         });
 
         // Alternative: Trigger khi nhập text (real-time)
@@ -360,23 +355,32 @@ public class EmployeeAddModalController implements IModalController {
             return false;
         }
 
-        // 4. Kiểm tra Email (CHỈ KIỂM TRA NẾU CÓ NHẬP)
+        // 4. Kiểm tra Email (BẮT BUỘC ĐIỀN)
         String email = txtEmail.getText().trim();
-        if (!email.isEmpty()) {
-            if (!validator.validateEmail(email)) {
-                NotificationUtils.showErrorAlert("Định dạng email không hợp lệ.", "Thông báo");
-                clearAndFocus(txtEmail);
-                return false;
-            }
+        if (email.isEmpty()) {
+            NotificationUtils.showErrorAlert("Email không được để trống.", "Thông báo");
+            clearAndFocus(txtEmail);
+            return false;
+        }
+        if (!validator.validateEmail(email)) {
+            NotificationUtils.showErrorAlert("Định dạng email không hợp lệ.", "Thông báo");
+            clearAndFocus(txtEmail);
+            return false;
         }
 
-        // 5. Kiểm tra Ngày sinh (CHỈ KIỂM TRA NẾU ĐÃ CHỌN)
+        // 5. Kiểm tra Ngày sinh (BẮT BUỘC CHỌN)
         LocalDate dob = dpDateOfBirth.getValue();
-        if (dob != null) {
-            if (dob.isAfter(LocalDate.now().minusYears(18))) {
-                NotificationUtils.showErrorAlert("Nhân viên phải từ 18 tuổi trở lên.", "Thông báo");
-                return false;
-            }
+        if (dob == null) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn ngày sinh.", "Thông báo");
+            dpDateOfBirth.requestFocus();
+            return false;
+        }
+        // Validate logic nghiệp vụ (Ví dụ: phải đủ 18 tuổi hoặc chỉ cần trước ngày hiện
+        // tại)
+        if (!validator.validateDateOfBirth(dob)) {
+            NotificationUtils.showErrorAlert("Ngày sinh không hợp lệ (phải đủ 18 tuổi và trước ngày hiện tại).",
+                    "Thông báo");
+            return false;
         }
 
         // 6. Kiểm tra Số người phụ thuộc (Bắt buộc vì có giá trị mặc định là 0)

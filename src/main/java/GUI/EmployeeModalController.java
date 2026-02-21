@@ -35,6 +35,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.Getter;
 
@@ -105,6 +106,8 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TextField txtCoefficient;
     @FXML
+    private VBox jobHistorySection;
+    @FXML
     private TableView<EmploymentHistoryDetailDTO> tblJobHistory;
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colEffectiveDate;
@@ -155,8 +158,6 @@ public class EmployeeModalController implements IModalController {
     private static final int PAGE_SIZE = 10;
 
     @Getter
-    private boolean isSaved = false;
-    @Getter
     private String resultMessage = "";
     private int typeModal; // 0=Add, 1=Edit, 2=View
     private EmployeeDTO employee;
@@ -205,6 +206,7 @@ public class EmployeeModalController implements IModalController {
         setupListeners();
         setupHistoryPagination();
         setupTabLoadingListeners();
+        UiUtils.gI().setReadOnlyItem(cbHealthIns);
     }
 
     /**
@@ -320,7 +322,10 @@ public class EmployeeModalController implements IModalController {
     }
 
     private void loadRoleComboBox() {
-        cbRole.getItems().addAll(roleBUS.getAll());
+        ArrayList<RoleDTO> roles = RoleBUS.getInstance().getAll();
+        if (SessionManagerService.getInstance().getRoleId() != 1)
+            roles.removeIf(role -> role.getId() == 1);
+        cbRole.getItems().addAll(roles);
 
         // Auto-update salary when role changes
         cbRole.setOnAction(event -> handleRoleSelectChange());
@@ -377,11 +382,17 @@ public class EmployeeModalController implements IModalController {
     }
 
     private void setupListeners() {
-        savePersonalBtn.setOnAction(e -> handleSave());
-        saveAccountBtn.setOnAction(e -> handleSave());
-        saveJobBtn.setOnAction(e -> handleSave());
-        savePayrollBtn.setOnAction(e -> handleSave());
+        savePersonalBtn.setOnAction(e -> handleSavePersonal());
+        saveAccountBtn.setOnAction(e -> handleSaveAccount());
+        saveJobBtn.setOnAction(e -> handleSaveJob());
+        savePayrollBtn.setOnAction(e -> handleSavePayroll());
+        btnResetPassword.setOnAction(e -> handleResetPassword());
         closeBtn.setOnAction(e -> handleClose());
+
+        // Auto-toggle cbHealthIns based on txtHealthInsCode
+        txtHealthInsCode.textProperty().addListener((observable, oldValue, newValue) -> {
+            cbHealthIns.setSelected(!newValue.trim().isEmpty());
+        });
     }
 
     public void setTypeModal(int type) {
@@ -392,6 +403,9 @@ public class EmployeeModalController implements IModalController {
             txtEmployeeId.setText("Hệ thống tự tạo");
         } else if (typeModal == 1) {
             modalName.setText("Sửa nhân viên");
+            // Ẩn job history section khi sửa (không cần thiết)
+            jobHistorySection.setVisible(false);
+            jobHistorySection.setManaged(false);
         } else if (typeModal == 2) {
             modalName.setText("Xem thông tin nhân viên");
             setReadOnly();
@@ -399,19 +413,26 @@ public class EmployeeModalController implements IModalController {
     }
 
     /**
-     * Set employee ID and load initial tab (Tab 1: Personal)
+     * Set employee ID and select initial tab dựa vào quyền
+     * Ưu tiên: Tab 1 (Personal) > Tab 2 (Account) > Tab 3 (Job) > Tab 4 (Payroll)
      */
     public void setData(int empId) {
         currentEmployeeId = empId;
-        // Có quyền nào thì load tab đó đầu tiên, ưu tiên Tab 1 > Tab 2 > Tab 3 > Tab 4
-        if (canViewPersonal)
+
+        // Chọn tab đầu tiên mà user có quyền xem
+        if (canViewPersonal) {
+            tabPaneEmployee.getSelectionModel().select(tabPersonal);
             loadTabPersonal();
-        else if (canViewAccount)
+        } else if (canViewAccount) {
+            tabPaneEmployee.getSelectionModel().select(tabAccount);
             loadTabAccount();
-        else if (canViewJob)
+        } else if (canViewJob) {
+            tabPaneEmployee.getSelectionModel().select(tabJob);
             loadTabJob();
-        else if (canViewPayroll)
+        } else if (canViewPayroll) {
+            tabPaneEmployee.getSelectionModel().select(tabPayroll);
             loadTabPayroll();
+        }
     }
 
     /**
@@ -587,9 +608,12 @@ public class EmployeeModalController implements IModalController {
         lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(jobInfo.getCreatedAt()));
         lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(jobInfo.getUpdatedAt()));
 
-        // Setup job history table and load separately
-        setupJobHistoryTable();
-        loadEmploymentHistory(0);
+        // Setup job history table chỉ khi ở chế độ thêm mới (typeModal = 0)
+        // Khi edit (typeModal = 1) hoặc view (typeModal = 2) không load history
+        if (typeModal == 2) {
+            setupJobHistoryTable();
+            loadEmploymentHistory(0);
+        }
 
         if (!canUpdateJob) {
             cbDepartment.setDisable(true);
@@ -697,89 +721,193 @@ public class EmployeeModalController implements IModalController {
 
     }
 
-    private void handleSave() {
+    /**
+     * Handle save personal info (Tab 1)
+     * Cập nhật: firstName, lastName, dateOfBirth, gender, phone, email
+     */
+    private void handleSavePersonal() {
         // Validation
         if (txtFirstName.getText().trim().isEmpty() || txtLastName.getText().trim().isEmpty()) {
             NotificationUtils.showErrorAlert("Họ tên không được để trống", AppMessages.DIALOG_TITLE);
             return;
         }
 
-        if (cbRole.getSelectionModel().getSelectedItem() == null) {
+        if (dpDateOfBirth.getValue() == null) {
+            NotificationUtils.showErrorAlert("Ngày sinh không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        if (cbGender.getSelectionModel().getSelectedItem() == null) {
+            NotificationUtils.showErrorAlert("Giới tính không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        if (txtPhone.getText().trim().isEmpty()) {
+            NotificationUtils.showErrorAlert("Số điện thoại không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        // Build EmployeeDTO with personal info
+        EmployeeDTO personal = new EmployeeDTO();
+        personal.setId(currentEmployeeId);
+        personal.setFirstName(txtFirstName.getText().trim());
+        personal.setLastName(txtLastName.getText().trim());
+        personal.setDateOfBirth(dpDateOfBirth.getValue());
+        personal.setGender(cbGender.getValue());
+        personal.setPhone(txtPhone.getText().trim());
+        personal.setEmail(txtEmail.getText().trim());
+
+        // Save to database
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_PERSONAL_UPDATE,
+                () -> employeeBUS.updatePersonalInfoByAdmin(personal),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) savePersonalBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
+
+    /**
+     * Handle save account info (Tab 2)
+     * Cập nhật: account status, reset password
+     */
+    private void handleSaveAccount() {
+        if (currentEmployeeId <= 0) {
+            NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        StatusDTO selectedStatus = cbAccountStatus.getSelectionModel().getSelectedItem();
+        if (selectedStatus == null) {
+            NotificationUtils.showErrorAlert("Trạng thái tài khoản không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        // Update account status
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS,
+                () -> employeeBUS.updateAccountStatus(currentEmployeeId, selectedStatus.getId()),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) saveAccountBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
+
+    /**
+     * Handle save job info (Tab 3)
+     * Cập nhật: department, role, status
+     */
+    private void handleSaveJob() {
+        // Validation
+        DepartmentDTO selectedDept = cbDepartment.getSelectionModel().getSelectedItem();
+        if (selectedDept == null) {
+            NotificationUtils.showErrorAlert("Phòng ban không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        RoleDTO selectedRole = cbRole.getSelectionModel().getSelectedItem();
+        if (selectedRole == null) {
             NotificationUtils.showErrorAlert("Chức vụ không được để trống", AppMessages.DIALOG_TITLE);
             return;
         }
 
-        if (cbStatus.getSelectionModel().getSelectedItem() == null) {
+        StatusDTO selectedStatus = cbStatus.getSelectionModel().getSelectedItem();
+        if (selectedStatus == null) {
             NotificationUtils.showErrorAlert("Trạng thái không được để trống", AppMessages.DIALOG_TITLE);
             return;
         }
 
-        // Update employee
-        if (employee == null) {
-            employee = new EmployeeDTO();
+        // Build EmployeeDTO with job info
+        EmployeeDTO jobInfo = new EmployeeDTO();
+        jobInfo.setId(currentEmployeeId);
+        jobInfo.setDepartmentId(selectedDept.getId());
+        jobInfo.setRoleId(selectedRole.getId());
+        jobInfo.setStatusId(selectedStatus.getId());
+
+        // Save to database
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_JOB_UPDATE,
+                () -> employeeBUS.updateJobInfo(jobInfo),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) saveJobBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
+
+    /**
+     * Handle save payroll info (Tab 4)
+     * Cập nhật: healthInsCode, insurance flags (social, unemployment, tax,
+     * transport, accommodation)
+     */
+    private void handleSavePayroll() {
+        if (currentEmployeeId <= 0) {
+            NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ", AppMessages.DIALOG_TITLE);
+            return;
         }
 
-        employee.setFirstName(txtFirstName.getText().trim());
-        employee.setLastName(txtLastName.getText().trim());
-        employee.setDateOfBirth(dpDateOfBirth.getValue());
-        employee.setGender(cbGender.getValue());
-        employee.setPhone(txtPhone.getText().trim());
-        employee.setEmail(txtEmail.getText().trim());
+        // Build EmployeeDTO with payroll info
+        EmployeeDTO payrollInfo = new EmployeeDTO();
+        payrollInfo.setId(currentEmployeeId);
+        payrollInfo.setHealthInsCode(txtHealthInsCode.getText().trim());
+        payrollInfo.setSocialInsurance(cbSocialIns.isSelected());
+        payrollInfo.setUnemploymentInsurance(cbUnemploymentIns.isSelected());
+        payrollInfo.setPersonalIncomeTax(cbPersonalTax.isSelected());
+        payrollInfo.setTransportationSupport(cbTransportSupport.isSelected());
+        payrollInfo.setAccommodationSupport(cbAccommodationSupport.isSelected());
+        int numDependents = txtNumDependents.getText().trim().isEmpty() ? 0
+                : Integer.parseInt(txtNumDependents.getText().trim());
+        // Save to database
+        TaskUtil.executeSecure(loadingOverlay,
+                PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE,
+                () -> employeeBUS.updatePayrollInfo(payrollInfo, numDependents),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) savePayrollBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
 
-        DepartmentDTO dept = cbDepartment.getSelectionModel().getSelectedItem();
-        if (dept != null) {
-            employee.setDepartmentId(dept.getId());
+    /**
+     * Handle reset password (Button on Tab 2)
+     * Reset mật khẩu thành 123456 và ép user phải đăng nhập lại
+     */
+    private void handleResetPassword() {
+        if (currentEmployeeId <= 0) {
+            NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ", AppMessages.DIALOG_TITLE);
+            return;
         }
 
-        RoleDTO role = cbRole.getSelectionModel().getSelectedItem();
-        if (role != null) {
-            employee.setRoleId(role.getId());
-        }
+        // Confirm before reset
+        boolean confirmed = UiUtils.gI().showConfirmAlert(
+                "Bạn chắc chắn muốn reset mật khẩu nhân viên này? - Mật khẩu sẽ được reset về 123456",
+                AppMessages.DIALOG_TITLE);
 
-        StatusDTO status = cbStatus.getSelectionModel().getSelectedItem();
-        if (status != null) {
-            employee.setStatusId(status.getId());
-        }
+        if (!confirmed)
+            return;
 
-        employee.setHealthInsCode(txtHealthInsCode.getText().trim());
-        employee.setSocialInsurance(cbSocialIns.isSelected());
-        employee.setUnemploymentInsurance(cbUnemploymentIns.isSelected());
-        employee.setPersonalIncomeTax(cbPersonalTax.isSelected());
-        employee.setTransportationSupport(cbTransportSupport.isSelected());
-        employee.setAccommodationSupport(cbAccommodationSupport.isSelected());
-
-        // Save to database with loading overlay
-        if (typeModal == 0) {
-            // Insert new employee
-            // TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_INSERT, () -> {
-            // var result = employeeBUS.insert(employee);
-            // return result;
-            // }, result -> {
-            // if (result.isSuccess()) {
-            // resultMessage = result.getMessage();
-            // isSaved = true;
-            // handleClose();
-            // } else {
-            // NotificationUtils.showErrorAlert(result.getMessage(),
-            // AppMessages.DIALOG_TITLE);
-            // }
-            // });
-        } else if (typeModal == 1) {
-            // // Update existing employee
-            // TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_UPDATE, () -> {
-            // var result = employeeBUS.update(employee);
-            // return result;
-            // }, result -> {
-            // if (result.isSuccess()) {
-            // resultMessage = result.getMessage();
-            // isSaved = true;
-            // handleClose();
-            // } else {
-            // NotificationUtils.showErrorAlert(result.getMessage(),
-            // AppMessages.DIALOG_TITLE);
-            // }
-            // });
-        }
+        // Reset password
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD,
+                () -> employeeBUS.resetAccountPassword(currentEmployeeId),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) btnResetPassword.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void handleClose() {

@@ -73,14 +73,6 @@
                      <children>
                         <HBox alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0">
                            <children>
-                              <Button fx:id="detailBtn" layoutX="10.0" layoutY="17.0" mnemonicParsing="false" prefHeight="34.0" prefWidth="94.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Chi tiết">
-                                 <graphic>
-                                    <FontAwesomeIcon glyphName="EYE" size="1.2em" styleClass="action-icon" />
-                                 </graphic>
-                                 <font>
-                                    <Font size="14.0" />
-                                 </font>
-                              </Button>
                               <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Thêm">
                                  <graphic>
                                     <FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" />
