@@ -152,7 +152,7 @@ public class ImportController implements IController {
                 validationUtils.formatPercent(
                         cellData.getValue().getProfitPercent() != null ? cellData.getValue().getProfitPercent()
                                 : BigDecimal.ZERO)));
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_LIST_VIEW,
+        TaskUtil.executeSecure(null, PermissionKey.DISCOUNT_LIST_VIEW,
                 () -> DetailImportBUS.getInstance().getAllDetailImportByImportId(importId),
                 result -> {
                     ArrayList<DetailImportDTO> detailImports = result.getData();
@@ -160,7 +160,6 @@ public class ImportController implements IController {
                         tblDetailImport.setItems(FXCollections.observableArrayList(detailImports));
                         Stage currentStage = (Stage) tblDetailImport.getScene().getWindow();
                         NotificationUtils.showToast(currentStage, result.getMessage());
-                        tblImport.getSelectionModel().clearSelection();
                     }
                 });
     }

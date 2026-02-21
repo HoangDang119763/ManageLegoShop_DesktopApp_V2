@@ -152,7 +152,7 @@ public class InvoiceController implements IController {
         tlb_col_costPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getCostPrice())));
 
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_LIST_VIEW,
+        TaskUtil.executeSecure(null, PermissionKey.DISCOUNT_LIST_VIEW,
                 () -> DetailInvoiceBUS.getInstance().getAllDetailInvoiceByInvoiceId(invoiceId),
                 result -> {
                     ArrayList<DetailInvoiceDTO> detailInvoices = result.getData();
@@ -160,7 +160,6 @@ public class InvoiceController implements IController {
                         tblDetailInvoice.setItems(FXCollections.observableArrayList(detailInvoices));
                         Stage currentStage = (Stage) tblDetailInvoice.getScene().getWindow();
                         NotificationUtils.showToast(currentStage, result.getMessage());
-                        tblInvoice.getSelectionModel().clearSelection();
                     }
                 });
     }

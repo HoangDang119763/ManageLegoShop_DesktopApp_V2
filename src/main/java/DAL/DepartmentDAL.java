@@ -63,4 +63,27 @@ public class DepartmentDAL extends BaseDAL<DepartmentDTO, Integer> {
         statement.setInt(3, obj.getStatusId());
         statement.setInt(4, obj.getId());
     }
+
+    public boolean existsByIdAndStatus(int departmentId, int statusId) {
+        // SELECT 1 là cách nhanh nhất để check tồn tại
+        String query = "SELECT 1 FROM department WHERE id = ? AND status_id = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setInt(1, departmentId);
+            ps.setInt(2, statusId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                // Chỉ cần rs.next() là đủ để biết roleId có tồn tại hay không
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            // Log lỗi rõ ràng hơn để dễ debug
+            System.err.println(
+                    "[ERROR] Error checking department existence for ID: " + departmentId + ", Status ID: " + statusId);
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

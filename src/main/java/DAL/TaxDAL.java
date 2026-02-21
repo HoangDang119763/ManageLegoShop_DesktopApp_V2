@@ -1,5 +1,6 @@
 package DAL;
 
+import DTO.AccountDTO;
 import DTO.TaxDTO;
 import java.sql.*;
 
@@ -57,4 +58,20 @@ public class TaxDAL extends BaseDAL<TaxDTO, Integer> {
         statement.setInt(3, obj.getId());
     }
 
+    public boolean insertWithConn(Connection conn, TaxDTO obj) throws SQLException {
+        String sql = "INSERT INTO tax (employee_id, num_dependents) VALUES (?, ?)";
+
+        // Sử dụng Statement.RETURN_GENERATED_KEYS để lấy ID sau khi chèn
+        try (PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            // 1. Gán các tham số (Dùng lại hàm setInsertParameters đã có ở trên)
+            statement.setInt(1, obj.getEmployeeId());
+            statement.setInt(2, obj.getNumDependents());
+            // 2. Thực thi
+            int affectedRows = statement.executeUpdate();
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                setGeneratedKey(obj, generatedKeys);
+            }
+            return affectedRows > 0;
+        }
+    }
 }
