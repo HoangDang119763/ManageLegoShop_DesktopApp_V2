@@ -13,6 +13,10 @@ public class AppMessages {
     public static final String EMPLOYEE_DETAIL_LOAD_ERROR = "Không thể tải thông tin chi tiết nhân viên";
     public static final String EMPLOYEE_PERSONAL_UPDATE_SUCCESS = "Cập nhật thông tin cá nhân thành công!";
     public static final String EMPLOYEE_PERSONAL_UPDATE_ERROR = "Có lỗi khi cập nhật thông tin cá nhân. Vui lòng thử lại.";
+    public static final String EMPLOYEE_JOB_UPDATE_SUCCESS = "Cập nhật thông tin công việc thành công!";
+    public static final String EMPLOYEE_ACCOUNT_UPDATE_STATUS_SUCCESS = "Cập nhật trạng thái tài khoản thành công!";
+    public static final String EMPLOYEE_ACCOUNT_RESET_PASSWORD_SUCCESS = "Đặt lại mật khẩu thành công!";
+    public static final String EMPLOYEE_PAYROLL_INFO_UPDATE_STATUS_SUCCESS = "Cập nhật thông tin quyền lợi thành công!";
     public static final String EMPLOYEE_PERSONAL_INFO_LOAD_SUCCESS = "Tải thông tin hồ sơ nhân viên thành công.";
     public static final String EMPLOYEE_ACCOUNT_INFO_LOAD_SUCCESS = "Tải thông tin tài khoản hệ thống thành công.";
     public static final String EMPLOYEE_JOB_INFO_LOAD_SUCCESS = "Tải thông tin lương và công tác thành công.";
@@ -25,7 +29,6 @@ public class AppMessages {
     public static final String INVOICE_DETAIL_QUANTITY_MIN = "Số lượng phải lớn hơn hoặc bằng 1.";
     public static final String INVOICE_DETAIL_QUANTITY_EXCEED = "Vượt quá số lượng tồn kho!";
     public static final String INVOICE_DETAIL_QUANTITY_INVALID = "Số lượng phải là số nguyên hợp lệ.";
-    public static final String INVOICE_DETAIL_ADD_ERROR = "Có lỗi khi thêm chi tiết hóa đơn. Vui lòng thử lại.";
     public static final String INVOICE_DETAIL_LOAD_SUCCESS = "Tải chi tiết hóa đơn thành công";
     // ==================== MODULE NHẬP HÀNG ====================
     /**
@@ -41,11 +44,16 @@ public class AppMessages {
     public static final String EMPLOYEE_REFRESH_SUCCESS = "Làm mới thành công";
     public static final String EMPLOYEE_ADD_SUCCESS = "Thêm nhân viên thành công";
     public static final String EMPLOYEE_DELETE_SUCCESS = "Xóa nhân viên thành công!";
-    public static final String EMPLOYEE_DELETE_NO_SELECTION = "Vui lòng chọn một nhân viên để xóa!";
+    public static final String EMPLOYEE_NO_SELECTION = "Vui lòng chọn một nhân viên để xóa!";
     public static final String EMPLOYEE_UPDATE_SUCCESS = "Sửa nhân viên thành công";
     public static final String EMPLOYEE_CANNOT_DELETE_SYSTEM = "Không thể xóa nhân viên hệ thống";
     public static final String EMPLOYEE_CANNOT_DELETE_SELF = "Không thể xóa thông tin nhân viên của chính mình";
+    public static final String EMPLOYEE_CANNOT_UPDATE_SYSTEM = "Không thể cập nhật nhân viên hệ thống";
+    public static final String EMPLOYEE_CANNOT_UPDATE_SELF = "Không thể cập nhật thông tin nhân viên của chính mình ở UI này";
     public static final String EMPLOYEE_ADD_DEPARTMENT_INVALID = "Phòng ban không còn được sử dụng";
+    public static final String EMPLOYEE_ERROR_DELETE_SAME_AUTHORITY = "Bạn không thể xóa nhân viên có cùng thẩm quyền quản trị.";
+    public static final String EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY = "Bạn không thể cập nhật nhân viên có cùng thẩm quyền quản trị.";
+    public static final String EMPLOYEE_DELETE_CONFIRM = "Bạn chắc muốn xóa nhân viên này?";
     // ==================== MODULE KHÁCH HÀNG (CUSTOMER) ====================
     /**
      * Các thông báo liên quan đến quản lý thông tin khách hàng
@@ -138,6 +146,8 @@ public class AppMessages {
      */
     public static final String ACCOUNT_PASSWORD_CHANGE_SUCCESS = "Đổi mật khẩu thành công!";
     public static final String ACCOUNT_DELETE_SUCCESS = "Xóa tài khoản thành công!";
+    public static final String ACCOUNT_UPDATE_SUCCESS = "Cập nhật tài khoản thành công!";
+    public static final String ACCOUNT_RESET_PASSWORD_SUCCESS = "Reset mật khẩu thành công! Mật khẩu mới là: 123456";
     public static final String ACCOUNT_OLD_PASSWORD_WRONG = "Mật khẩu cũ không đúng. Vui lòng thử lại.";
     public static final String ACCOUNT_CANNOT_DELETE_SYSTEM = "Không thể xóa tài khoản gốc hệ thống";
     public static final String ACCOUNT_CANNOT_DELETE_SELF = "Không thể xóa tài khoản của chính mình";

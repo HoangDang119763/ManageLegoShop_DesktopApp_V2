@@ -169,7 +169,15 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
      * Dùng khi Manager thay đổi phân quyền của Role đó.
      */
     public boolean setRequireReloginByRoleId(int roleId, boolean requireRelogin) {
+        if (roleId <= 0)
+            return false;
         return AccountDAL.getInstance().setRequireReloginByRoleId(roleId, requireRelogin);
+    }
+
+    public boolean setRequireRelogin(int accountId, boolean requireRelogin) {
+        if (accountId <= 0)
+            return false;
+        return AccountDAL.getInstance().setRequireRelogin(accountId, requireRelogin);
     }
 
     /**
@@ -193,6 +201,60 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
     private boolean isValidPassword(String password) {
         ValidationUtils validator = ValidationUtils.getInstance();
         return password != null && validator.validatePassword(password, 6, 255);
+    }
+
+    /**
+     * Cập nhật trạng thái tài khoản (TAB 2: ACCOUNT INFO)
+     * Update: status_id
+     * ⚠️ Caller PHẢI kiểm tra quyền EMPLOYEE_ACCOUNT_UPDATE_STATUS trước khi gọi
+     * 
+     * @param accountId ID của tài khoản
+     * @param statusId  ID trạng thái mới
+     * @return true nếu thành công, false nếu thất bại
+     */
+    public boolean updateAccountStatus(int accountId, int statusId) {
+        if (accountId <= 0 || statusId <= 0) {
+            return false;
+        }
+
+        if (accountId == 1) {
+            return false;
+        }
+
+        return AccountDAL.getInstance().updateAccountStatus(accountId, statusId);
+    }
+
+    /**
+     * Reset mật khẩu tài khoản thành mặc định (123456)
+     * ⚠️ Chỉ update password, KHÔNG set require_relogin (gọi
+     * forceLogoutAndSecurityUpdate riêng)
+     * 
+     * @param username Username của tài khoản
+     * @return true nếu thành công, false nếu thất bại
+     */
+    public boolean resetPassword(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+
+        // Hash mật khẩu mặc định
+        String defaultPassword = "123456";
+        String hashedPassword = PasswordUtils.getInstance().hashPassword(defaultPassword);
+
+        // Chỉ update password, KHÔNG set require_relogin
+        return AccountDAL.getInstance().resetPassword(username, hashedPassword);
+    }
+
+    public boolean forceLogoutAndSecurityUpdate(Connection conn, int accountId, boolean isDeactivate)
+            throws SQLException {
+        if (isDeactivate) {
+            // Nếu là nghỉ việc: Văng ra + Khóa luôn Account
+            int lockedId = StatusBUS.getInstance()
+                    .getByTypeAndStatusName(StatusType.ACCOUNT, Status.Account.LOCKED).getId();
+            return AccountDAL.getInstance().updateAccountSecurity(conn, accountId, true, lockedId);
+        }
+        // Nếu chỉ đổi quyền: Chỉ văng ra để nạp lại session
+        return AccountDAL.getInstance().updateAccountSecurity(conn, accountId, true, null);
     }
 
 }

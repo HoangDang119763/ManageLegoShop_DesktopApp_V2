@@ -74,4 +74,13 @@ public class TaxDAL extends BaseDAL<TaxDTO, Integer> {
             return affectedRows > 0;
         }
     }
+
+    public boolean updateNumDependent(Connection conn, int employeeId, int numDependent) throws SQLException {
+        String sql = "UPDATE tax SET num_dependents = ? WHERE employee_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, numDependent);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() >= 0;
+        }
+    }
 }

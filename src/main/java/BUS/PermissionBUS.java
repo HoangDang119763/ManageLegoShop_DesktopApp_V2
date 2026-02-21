@@ -2,6 +2,8 @@ package BUS;
 
 import DAL.PermissionDAL;
 import DTO.PermissionDTO;
+import ENUM.PermissionKey;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,5 +62,11 @@ public class PermissionBUS extends BaseBUS<PermissionDTO, Integer> {
         if (roleId <= 0)
             return new ArrayList<>();
         return PermissionDAL.getInstance().getPermissionKeysByRoleId(roleId);
+    }
+
+    public boolean isRoleHavePermission(int roleId, PermissionKey permissionKey) {
+        if (roleId <= 0 || permissionKey == null)
+            return false;
+        return PermissionDAL.getInstance().isRoleHavePermission(roleId, permissionKey.name());
     }
 }

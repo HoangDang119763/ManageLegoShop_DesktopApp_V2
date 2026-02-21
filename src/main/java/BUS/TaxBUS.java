@@ -106,4 +106,15 @@ public class TaxBUS extends BaseBUS<TaxDTO, Integer> {
         }
         return true;
     }
+
+    public boolean updateNumDependents(Connection conn, TaxDTO obj) {
+        if (obj.getEmployeeId() <= 0 || obj.getNumDependents() < 0 || !isValidTaxInput(obj))
+            return false;
+        try {
+            return TaxDAL.getInstance().updateNumDependent(conn, obj.getEmployeeId(), obj.getNumDependents());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
