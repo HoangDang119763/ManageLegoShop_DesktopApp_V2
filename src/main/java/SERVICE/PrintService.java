@@ -31,7 +31,7 @@ public class PrintService {
             return;
 
         DetailInvoiceBUS dinvBus = DetailInvoiceBUS.getInstance();
-        ArrayList<DetailInvoiceDTO> arrDetailInvoice = dinvBus.getAllDetailInvoiceByInvoiceId(invoiceId);
+        ArrayList<DetailInvoiceDTO> arrDetailInvoice = new ArrayList<>();
         if (arrDetailInvoice.isEmpty())
             return;
 

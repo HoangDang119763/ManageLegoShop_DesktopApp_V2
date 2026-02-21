@@ -16,25 +16,20 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
 import java.io.*;
-import java.nio.channels.FileChannel;
 import java.math.BigDecimal;
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.BiConsumer;
 
 import static java.time.LocalDate.now;
 
 public class ExcelService {
     private static final ExcelService INSTANCE = new ExcelService();
+    private final ExcelFileHandler fileHandler = new ExcelFileHandler();
 
     private ExcelService() {
     }
@@ -43,103 +38,97 @@ public class ExcelService {
         return INSTANCE;
     }
 
-    public void exportToFileExcel(String exportData) throws IOException {
+    /**
+     * Generic method để export dữ liệu với custom header và row mapper
+     * 
+     * @param fileName  tên file cần lưu
+     * @param headers   danh sách header (cột)
+     * @param data      danh sách dữ liệu cần export
+     * @param rowMapper function để map object sang Row
+     * @param <T>       kiểu dữ liệu generic
+     */
+    public <T> void exportGeneric(
+            String fileName,
+            List<String> headers,
+            List<T> data,
+            BiConsumer<Row, T> rowMapper) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Source");
 
-        if (exportData.equalsIgnoreCase("employee"))
-            sheet = sheetOfEmployee(sheet, EmployeeBUS.getInstance().getAll());
-        else if (exportData.equalsIgnoreCase("product"))
-            sheet = sheetOfProduct(sheet, ProductBUS.getInstance().getAll());
+        // Tạo header row
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.size(); i++) {
+            headerRow.createCell(i).setCellValue(headers.get(i));
+        }
+
+        // Tạo data rows
+        int rowIndex = 1;
+        for (T item : data) {
+            Row dataRow = sheet.createRow(rowIndex++);
+            rowMapper.accept(dataRow, item);
+        }
 
         // Auto-size all columns
-        int numberOfColumns = sheet.getRow(0).getPhysicalNumberOfCells();
-        for (int i = 0; i < numberOfColumns; i++) {
+        for (int i = 0; i < headers.size(); i++) {
             sheet.autoSizeColumn(i);
         }
 
-        String fileName = exportData.toLowerCase() + ".xlsx";
-        File file = new File(fileName);
-
-        // Kiểm tra nếu file đang mở
-        if (file.exists()) {
-            try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                    FileChannel channel = raf.getChannel()) {
-                try {
-                    channel.lock(); // thử lock file
-                } catch (IOException e) {
-                    System.err.println("File đang được mở. Vui lòng đóng file trước khi xuất.");
-                    workbook.close();
-                    return;
-                }
-            } catch (IOException e) {
-                NotificationUtils.showErrorAlert("Không thể truy cập file: " +
-                        e.getMessage(), "Thông báo");
-                workbook.close();
-                return;
-            }
-        }
-
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            workbook.write(fos);
-        } finally {
-            workbook.close();
-        }
-
-        if (file.exists()) {
-            try {
-                Desktop.getDesktop().open(file);
-            } catch (IOException e) {
-                System.err.println("Không thể mở file: " + e.getMessage());
-            }
-        }
+        fileHandler.saveAndOpenFile(fileName, workbook, false);
     }
 
-    private Sheet sheetOfEmployee(Sheet sheet, List<EmployeeDTO> employeeDTOList) {
-        int rowIndex = 0;
-        Row rowHeader = sheet.createRow(rowIndex++);
-        rowHeader.createCell(0).setCellValue("ID");
-        rowHeader.createCell(1).setCellValue("First Name");
-        rowHeader.createCell(2).setCellValue("Last Name");
-        rowHeader.createCell(3).setCellValue("Date Of Birth");
-        rowHeader.createCell(4).setCellValue("Role Name");
-        rowHeader.createCell(5).setCellValue("Salary");
-        rowHeader.createCell(6).setCellValue("Final Salary");
-        rowHeader.createCell(7).setCellValue("Status");
-        RoleBUS rolBus = RoleBUS.getInstance();
+    /**
+     * Export danh sách nhân viên
+     */
+    public void exportEmployeeToFileExcel() throws IOException {
+
+        List<EmployeeDTO> employees = EmployeeBUS.getInstance().getAll();
+        RoleBUS roleBUS = RoleBUS.getInstance();
         ValidationUtils validate = ValidationUtils.getInstance();
-        for (EmployeeDTO employee : employeeDTOList) {
-            Row dataRow = sheet.createRow(rowIndex++);
-            RoleDTO role = rolBus.getById(employee.getRoleId());
-            dataRow.createCell(0).setCellValue(employee.getId());
-            dataRow.createCell(1).setCellValue(employee.getFirstName());
-            dataRow.createCell(2).setCellValue(employee.getLastName());
-            dataRow.createCell(3).setCellValue(ValidationUtils.getInstance().formatDateTime(employee.getDateOfBirth()));
-            dataRow.createCell(4).setCellValue(role != null ? role.getName() : "");
-            // dataRow.createCell(7).setCellValue(employee.isStatus() ? "Hoạt động" : "Ngưng
-            // hoạt động");
-        }
 
-        return sheet;
+        List<String> headers = Arrays.asList(
+                "ID", "First Name", "Last Name", "Date Of Birth", "Role Name", "Salary", "Final Salary", "Status");
+
+        exportGeneric(
+                "employee.xlsx",
+                headers,
+                employees,
+                (row, emp) -> {
+                    RoleDTO role = roleBUS.getById(emp.getRoleId());
+                    row.createCell(0).setCellValue(emp.getId());
+                    row.createCell(1).setCellValue(emp.getFirstName());
+                    row.createCell(2).setCellValue(emp.getLastName());
+                    row.createCell(3).setCellValue(validate.formatDateTime(emp.getDateOfBirth()));
+                    row.createCell(4).setCellValue(role != null ? role.getName() : "");
+                });
     }
 
-    private Sheet sheetOfProduct(Sheet sheet, List<ProductDTO> productDTOList) {
-        int rowIndex = 0;
-        Row rowHeader = sheet.createRow(0);
-        rowHeader.createCell(0).setCellValue("ID");
-        rowHeader.createCell(1).setCellValue("Name");
-        rowHeader.createCell(2).setCellValue("Stock Quantity");
-        rowHeader.createCell(3).setCellValue("Selling Price");
+    public void exportProductToFileExcel() throws IOException {
+        List<ProductDTO> products = ProductBUS.getInstance().getAll();
+        CategoryBUS categoryBUS = CategoryBUS.getInstance();
 
-        for (ProductDTO product : productDTOList) {
-            Row dataRow = sheet.createRow(++rowIndex);
-            dataRow.createCell(0).setCellValue(product.getId());
-            dataRow.createCell(1).setCellValue(product.getName());
-            dataRow.createCell(2).setCellValue(product.getStockQuantity());
-            dataRow.createCell(3).setCellValue(product.getSellingPrice().toString());
-        }
-        return sheet;
+        List<String> headers = Arrays.asList(
+                "ID", "Name", "Description", "Category Name", "Status");
+
+        exportGeneric(
+                "products.xlsx",
+                headers,
+                products,
+                (row, prod) -> {
+                    String categoryName = "";
+                    if (prod.getCategoryId() > 0) {
+                        categoryName = categoryBUS.getById(prod.getCategoryId()) != null
+                                ? categoryBUS.getById(prod.getCategoryId()).getName()
+                                : "";
+                    }
+                    row.createCell(0).setCellValue(prod.getId());
+                    row.createCell(1).setCellValue(prod.getName());
+                    row.createCell(2).setCellValue(prod.getDescription());
+                    row.createCell(3).setCellValue(categoryName);
+                    row.createCell(4).setCellValue(prod.getStatusId());
+                });
     }
+
+    // ========== IMPORT METHODS ==========
 
     public void ImportSheet(String importData, Stage stage) throws IOException {
         FileChooser fileChooser = new FileChooser();
@@ -308,31 +297,32 @@ public class ExcelService {
         return errorCount >= 20;
     }
 
+    /**
+     * Export thống kê doanh thu theo sản phẩm
+     */
     public void exportToFileExcelProductRevenues(ArrayList<StatisticDTO.ProductRevenue> productRevenuesList,
             String timestamp, LocalDate start, LocalDate end) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("TK_Product_" + now());
 
+        // Header info
         Row headerInfoRow = sheet.createRow(0);
         headerInfoRow.createCell(0).setCellValue("Bảng thống kê doanh thu sản phẩm từ " +
                 start.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) +
                 " đến " + end.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
 
-        // Thêm thời gian xuất file vào ô
         String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Row timeRow = sheet.createRow(1);
         timeRow.createCell(0).setCellValue("Thời gian xuất file: " + currentTime);
 
-        // Thêm tiêu đề cho bảng thống kê
+        // Table header
         Row headerRow = sheet.createRow(2);
         headerRow.createCell(0).setCellValue("Mã sản phẩm");
         headerRow.createCell(1).setCellValue("Tên sản phẩm");
         headerRow.createCell(2).setCellValue("Thể loại sản phẩm");
         headerRow.createCell(3).setCellValue("Số lượng bán ra");
 
-        ValidationUtils validate = ValidationUtils.getInstance();
-
-        // Dữ liệu bảng thống kê
+        // Data rows
         int rowNum = 3;
         for (StatisticDTO.ProductRevenue item : productRevenuesList) {
             Row row = sheet.createRow(rowNum++);
@@ -342,7 +332,7 @@ public class ExcelService {
             row.createCell(3).setCellValue(item.getTotalQuantity());
         }
 
-        // Tổng doanh thu
+        // Total row
         Row totalRevenueRow = sheet.createRow(rowNum + 1);
         totalRevenueRow.createCell(3).setCellValue("Tổng: ");
         int totalProductQuantity = 0;
@@ -351,63 +341,32 @@ public class ExcelService {
         }
         totalRevenueRow.createCell(4).setCellValue(totalProductQuantity);
 
-        // Căn chỉnh cột trước khi lưu(bỏ qua cột đầu tiên)
+        // Auto-size columns
         for (int i = 1; i < 5; i++) {
             sheet.autoSizeColumn(i);
         }
 
         String fileName = "ThongKe_LegoStore_TK_Product_" + timestamp + ".xlsx";
-        File file = new File(fileName);
-
-        // Kiểm tra nếu file đang mở
-        if (file.exists()) {
-            try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                    FileChannel channel = raf.getChannel()) {
-                try {
-                    channel.lock(); // thử lock file
-                } catch (IOException e) {
-                    System.err.println("File đang được mở. Vui lòng đóng file trước khi xuất.");
-                    workbook.close();
-                    return;
-                }
-            } catch (IOException e) {
-                NotificationUtils.showErrorAlert("Không thể truy cập file: " + e.getMessage(), "Thông báo");
-                workbook.close();
-                return;
-            }
-        }
-
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            workbook.write(fos);
-        } finally {
-            workbook.close();
-        }
-
-        if (file.exists()) {
-            try {
-                NotificationUtils.showInfoAlert("Xuất file Excel thành công!", "Thông báo");
-                Desktop.getDesktop().open(file);
-            } catch (IOException e) {
-                System.err.println("Không thể mở file: " + e.getMessage());
-            }
-        }
+        fileHandler.saveAndOpenFile(fileName, workbook);
     }
 
+    /**
+     * Export thống kê doanh thu theo nhân viên theo quý
+     */
     public void exportToFileExcelEmployeeRevenues(ArrayList<StatisticDTO.QuarterlyEmployeeRevenue> employeeRevenueList,
             String timestamp, String year) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("TK_Employee_" + now());
 
-        // Thêm tên bảng thống kê và thời gian từ ngày đến ngày
+        // Header info
         Row headerInfoRow = sheet.createRow(0);
         headerInfoRow.createCell(0).setCellValue("Bảng thống kê doanh thu sản phẩm theo Quý năm " + year);
 
-        // Thêm thời gian xuất file vào ô
         String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
         Row timeRow = sheet.createRow(1);
         timeRow.createCell(0).setCellValue("Thời gian xuất file: " + currentTime);
 
-        // Thêm tiêu đề cho bảng thống kê
+        // Table header
         Row headerRow = sheet.createRow(2);
         headerRow.createCell(0).setCellValue("Mã Nhân viên");
         headerRow.createCell(1).setCellValue("Quý 1");
@@ -415,7 +374,10 @@ public class ExcelService {
         headerRow.createCell(3).setCellValue("Quý 3");
         headerRow.createCell(4).setCellValue("Quý 4");
         headerRow.createCell(5).setCellValue("Tổng doanh thu");
+
         ValidationUtils validate = ValidationUtils.getInstance();
+
+        // Data rows
         int rowNum = 3;
         for (StatisticDTO.QuarterlyEmployeeRevenue item : employeeRevenueList) {
             Row row = sheet.createRow(rowNum++);
@@ -427,7 +389,7 @@ public class ExcelService {
             row.createCell(5).setCellValue(validate.formatCurrency(item.getRevenue()));
         }
 
-        // Tổng doanh thu
+        // Total row
         Row totalRevenueRow = sheet.createRow(rowNum + 1);
         totalRevenueRow.createCell(4).setCellValue("Tổng: ");
         BigDecimal totalEmployeeRevenue = BigDecimal.ZERO;
@@ -436,46 +398,13 @@ public class ExcelService {
         }
         totalRevenueRow.createCell(5).setCellValue(validate.formatCurrency(totalEmployeeRevenue));
 
-        // Căn chỉnh cột trước khi lưu(bỏ qua cột đầu tiên)
+        // Auto-size columns
         for (int i = 1; i <= 5; i++) {
             sheet.autoSizeColumn(i);
         }
 
         String fileName = "ThongKe_LegoStore_TK_Employee_" + timestamp + ".xlsx";
-        File file = new File(fileName);
-
-        // Kiểm tra nếu file đang mở
-        if (file.exists()) {
-            try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                    FileChannel channel = raf.getChannel()) {
-                try {
-                    channel.lock(); // thử lock file
-                } catch (IOException e) {
-                    System.err.println("File đang được mở. Vui lòng đóng file trước khi xuất.");
-                    workbook.close();
-                    return;
-                }
-            } catch (IOException e) {
-                NotificationUtils.showErrorAlert("Không thể truy cập file: " + e.getMessage(), "Thông báo");
-                workbook.close();
-                return;
-            }
-        }
-
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            workbook.write(fos);
-        } finally {
-            workbook.close();
-        }
-
-        if (file.exists()) {
-            try {
-                NotificationUtils.showInfoAlert("Xuất file Excel thành công!", "Thông báo");
-                Desktop.getDesktop().open(file);
-            } catch (IOException e) {
-                System.err.println("Không thể mở file: " + e.getMessage());
-            }
-        }
+        fileHandler.saveAndOpenFile(fileName, workbook);
     }
 
 }

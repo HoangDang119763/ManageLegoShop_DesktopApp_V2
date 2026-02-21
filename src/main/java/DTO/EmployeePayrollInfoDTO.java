@@ -1,5 +1,6 @@
 package DTO;
 
+import java.time.LocalDateTime;
 
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,8 @@ public class EmployeePayrollInfoDTO {
     private boolean isPersonalIncomeTax;
     private boolean isTransportationSupport;
     private boolean isAccommodationSupport;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public boolean isHealthInsurance() {
         return healthInsCode != null && !healthInsCode.isEmpty();
@@ -37,6 +40,8 @@ public class EmployeePayrollInfoDTO {
                 ", isPersonalIncomeTax=" + isPersonalIncomeTax +
                 ", isTransportationSupport=" + isTransportationSupport +
                 ", isAccommodationSupport=" + isAccommodationSupport +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

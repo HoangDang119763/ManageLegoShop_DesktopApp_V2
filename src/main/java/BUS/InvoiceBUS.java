@@ -170,6 +170,12 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
         return InvoiceDAL.getInstance().existsByEmployeeId(employeeId);
     }
 
+    public boolean isDiscountInAnyInvoice(String discountCode) {
+        if (discountCode == null || discountCode.isEmpty())
+            return false;
+        return InvoiceDAL.getInstance().existsByDiscountCode(discountCode);
+    }
+
     @Override
     public InvoiceDTO getById(Integer id) {
         if (id == null || id <= 0)

@@ -1,8 +1,11 @@
 package BUS;
 
 import DAL.DetailInvoiceDAL;
+import DTO.BUSResult;
 import DTO.DetailInvoiceDTO;
+import ENUM.BUSOperationResult;
 import ENUM.ServiceAccessCode;
+import UTILS.AppMessages;
 
 import java.util.ArrayList;
 
@@ -34,10 +37,14 @@ public class DetailInvoiceBUS extends BaseBUS<DetailInvoiceDTO, Integer> {
         return true;
     }
 
-    public ArrayList<DetailInvoiceDTO> getAllDetailInvoiceByInvoiceId(int invoiceId) {
+    public BUSResult getAllDetailInvoiceByInvoiceId(int invoiceId) {
         if (invoiceId <= 0)
-            return null;
-        return DetailInvoiceDAL.getInstance().getAllDetailInvoiceByInvoiceId(invoiceId);
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS, new ArrayList<>());
+        ArrayList<DetailInvoiceDTO> detailInvoices = DetailInvoiceDAL.getInstance()
+                .getAllDetailInvoiceByInvoiceId(invoiceId);
+        if (detailInvoices.isEmpty())
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND, new ArrayList<>());
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.INVOICE_DETAIL_LOAD_SUCCESS, detailInvoices);
     }
 
     public boolean createDetailInvoiceByInvoiceId(int invoiceId, int employee_roleId, ArrayList<DetailInvoiceDTO> list,

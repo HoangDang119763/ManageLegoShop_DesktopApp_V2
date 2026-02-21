@@ -2,10 +2,10 @@ package GUI;
 
 import BUS.*;
 import DTO.DetailInvoiceDTO;
-import DTO.InvoiceDTO;
 import DTO.InvoiceDisplayDTO;
 import DTO.PagedResponse;
-import java.math.BigDecimal;
+import java.util.ArrayList;
+
 import ENUM.PermissionKey;
 import INTERFACE.IController;
 import SERVICE.PrintService;
@@ -152,10 +152,17 @@ public class InvoiceController implements IController {
         tlb_col_costPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getCostPrice())));
 
-        tblDetailInvoice.setItems(
-                FXCollections.observableArrayList(detailInvoiceBUS.getAllDetailInvoiceByInvoiceId(invoiceId)));
-
-        tblDetailInvoice.getSelectionModel().clearSelection();
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_LIST_VIEW,
+                () -> DetailInvoiceBUS.getInstance().getAllDetailInvoiceByInvoiceId(invoiceId),
+                result -> {
+                    ArrayList<DetailInvoiceDTO> detailInvoices = result.getData();
+                    if (!detailInvoices.isEmpty()) {
+                        tblDetailInvoice.setItems(FXCollections.observableArrayList(detailInvoices));
+                        Stage currentStage = (Stage) tblDetailInvoice.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                        tblInvoice.getSelectionModel().clearSelection();
+                    }
+                });
     }
 
     private SimpleStringProperty formatCell(String value) {

@@ -176,9 +176,9 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 
 -- === 💰 MODULE GIAO DỊCH (Module ID: 5 & 6) ===
 ('Xem danh sách đơn hàng', 'INVOICE_LIST_VIEW', 5),
-('Tạo đơn hàng mới', 'INVOICE_CREATE', 5),
+('Tạo đơn hàng mới', 'INVOICE_INSERT', 5),
 ('Xem phiếu nhập hàng', 'IMPORT_LIST_VIEW', 6),
-('Tạo phiếu nhập hàng mới', 'IMPORT_CREATE', 6),
+('Tạo phiếu nhập hàng mới', 'IMPORT_INSERT', 6),
 
 -- === 📑 MODULE DANH MỤC & KHUYẾN MÃI (Module ID: 7 & 8) ===
 ('Xem danh mục sản phẩm', 'CATEGORY_LIST_VIEW', 7),
@@ -186,13 +186,13 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 ('Cập nhật danh mục sản phẩm', 'CATEGORY_UPDATE', 7),
 ('Xóa danh mục sản phẩm', 'CATEGORY_DELETE', 7),
 
-('Xem chương trình khuyến mãi', 'PROMOTION_LIST_VIEW', 8),
-('Thêm chương trình khuyến mãi', 'PROMOTION_INSERT', 8),
-('Cập nhật chương trình khuyến mãi', 'PROMOTION_UPDATE', 8),
-('Xóa chương trình khuyến mãi', 'PROMOTION_DELETE', 8),
+('Xem chương trình khuyến mãi', 'DISCOUNT_LIST_VIEW', 8),
+('Thêm chương trình khuyến mãi', 'DISCOUNT_INSERT', 8),
+('Cập nhật chương trình khuyến mãi', 'DISCOUNT_UPDATE', 8),
+('Xóa chương trình khuyến mãi', 'DISCOUNT_DELETE', 8),
 
 -- === ⚙️ MODULE HỆ THỐNG (Module ID: 9) ===
-('Xem danh sách chức vụ', 'ROLE_VIEW', 9),
+('Xem danh sách chức vụ', 'ROLE_LIST_VIEW', 9),
 ('Thêm chức vụ mới', 'ROLE_INSERT', 9),
 ('Cập nhật chức vụ', 'ROLE_UPDATE', 9),
 ('Xóa chức vụ', 'ROLE_DELETE', 9),
@@ -224,8 +224,8 @@ SELECT 2, id FROM `permission`;
 --     'EMPLOYEE_PERSONAL_VIEW',
 --     'EMPLOYEE_JOB_VIEW',
 --     'EMPLOYEE_PAYROLL_VIEW',
---     'PRODUCT_VIEW',
---     'CUSTOMER_VIEW',
+--     'PRODUCT_LIST_VIEW',
+--     'CUSTOMER_LIST_VIEW',
 --     'STATISTICS_VIEW'
 -- );
 
@@ -236,10 +236,10 @@ WHERE permission_key IN (
     'EMPLOYEE_LIST_VIEW',
     'EMPLOYEE_PERSONAL_VIEW',
     'EMPLOYEE_JOB_VIEW',
-    'PRODUCT_VIEW',
+    'PRODUCT_LIST_VIEW',
     'PRODUCT_UPDATE',
-    'CUSTOMER_VIEW',
-    'ORDER_VIEW',
+    'CUSTOMER_LIST_VIEW',
+    'INVOICE_LIST_VIEW',
     'STATISTICS_VIEW'
 );
 
@@ -247,9 +247,9 @@ INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
 SELECT 4, id
 FROM `permission`
 WHERE permission_key IN (
-    'PRODUCT_VIEW',
-    'ORDER_CREATE',
-    'CUSTOMER_VIEW'
+    'PRODUCT_LIST_VIEW',
+    'INVOICE_INSERT',
+    'CUSTOMER_LIST_VIEW'
 );
 
 INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
@@ -261,9 +261,9 @@ FROM (
 ) AS r
 JOIN `permission` p
     ON p.permission_key IN (
-        'PRODUCT_VIEW',
-        'CUSTOMER_VIEW',
-        'ORDER_CREATE'
+        'PRODUCT_LIST_VIEW',
+        'CUSTOMER_LIST_VIEW',
+        'INVOICE_INSERT'
     );
 
 INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
@@ -274,10 +274,10 @@ FROM (
 ) AS r
 JOIN `permission` p
     ON p.permission_key IN (
-        'PRODUCT_VIEW',
+        'PRODUCT_LIST_VIEW',
         'PRODUCT_UPDATE',
-        'IMPORT_CREATE',
-        'IMPORT_VIEW'
+        'IMPORT_INSERT',
+        'IMPORT_LIST_VIEW'
     );
 
 CREATE TABLE `department` (

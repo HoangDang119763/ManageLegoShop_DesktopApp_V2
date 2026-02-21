@@ -1,7 +1,7 @@
 package DTO;
 
 import java.math.BigDecimal;
-import DTO.PagedResponse;
+import java.time.LocalDateTime;
 
 import lombok.*;
 
@@ -23,6 +23,8 @@ public class EmployeeJobInfoDTO {
     private Integer salaryId;
     private BigDecimal baseSalary;
     private BigDecimal salaryCoefficient;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @Override
     public String toString() {
@@ -36,6 +38,8 @@ public class EmployeeJobInfoDTO {
                 ", salaryId=" + salaryId +
                 ", baseSalary=" + baseSalary +
                 ", salaryCoefficient=" + salaryCoefficient +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

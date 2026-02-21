@@ -1,11 +1,8 @@
 package GUI;
 
-import BUS.DetailDiscountBUS;
-import BUS.EmployeeBUS;
 import DTO.DetailDiscountDTO;
-import DTO.EmployeeDTO;
+import ENUM.DiscountType;
 import INTERFACE.IModalController;
-import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
 import javafx.fxml.FXML;
@@ -16,7 +13,6 @@ import javafx.stage.Stage;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class DetailDiscountModalController implements IModalController {
@@ -33,14 +29,14 @@ public class DetailDiscountModalController implements IModalController {
     @Getter
     private boolean isSaved;
     private int typeModal;
-    private boolean typeDiscount;
+    private int typeDiscount;
 
     /**
      * Interface implementation - match IModalController signature
      */
     @Override
     public void setTypeModal(int mode) {
-        setTypeModal(mode, false); // Default typeDiscount = false
+        setTypeModal(mode, 0); // Default typeDiscount = 0 (hard discount)
     }
 
     /**
@@ -84,7 +80,7 @@ public class DetailDiscountModalController implements IModalController {
         } else if (isValid) {
             try {
                 BigDecimal totalPrice = new BigDecimal(totalPriceInvoice);
-                if (!validator.validateSalary(totalPrice, 12, 2, false)) {
+                if (!validator.formatCurrency(totalPrice, 12, 2, false)) {
                     NotificationUtils.showErrorAlert(
                             "Tổng tiền hóa đơn tối thiểu không hợp lệ (Tối đa 12 chữ số, 2 số thập phân, không âm hoặc bằng 0).",
                             "Thông báo");
@@ -105,7 +101,7 @@ public class DetailDiscountModalController implements IModalController {
         } else if (isValid) {
             try {
                 BigDecimal discount = new BigDecimal(discountAmount);
-                if (typeDiscount) {
+                if (typeDiscount == DiscountType.PERCENTAGE.getCode()) {
                     // Giảm theo phần trăm: từ >0 đến <100
                     if (discount.compareTo(BigDecimal.ZERO) <= 0 || discount.compareTo(BigDecimal.valueOf(100)) >= 0) {
                         NotificationUtils.showErrorAlert("Phần trăm giảm giá phải lớn hơn 0 và nhỏ hơn 100.",
@@ -113,15 +109,18 @@ public class DetailDiscountModalController implements IModalController {
                         clearAndFocus(txtDiscountAmount);
                         isValid = false;
                     }
-                } else {
+                } else if (typeDiscount == DiscountType.FIXED_AMOUNT.getCode()) {
                     // Giảm cứng: số tiền, không âm, > 0
-                    if (!validator.validateSalary(discount, 10, 2, false)) {
+                    if (!validator.formatCurrency(discount, 10, 2, false)) {
                         NotificationUtils.showErrorAlert(
                                 "Số tiền giảm giá không hợp lệ (Tối đa 10 chữ số, 2 số thập phân, không âm hoặc bằng 0).",
                                 "Thông báo");
                         clearAndFocus(txtDiscountAmount);
                         isValid = false;
                     }
+                } else {
+                    NotificationUtils.showErrorAlert("Loại khuyến mãi không hợp lệ.", "Thông báo");
+                    isValid = false;
                 }
             } catch (NumberFormatException e) {
                 NotificationUtils.showErrorAlert("Số tiền giảm giá phải là số.", "Thông báo");
@@ -155,12 +154,14 @@ public class DetailDiscountModalController implements IModalController {
         }
     }
 
-    public void setTypeModal(int type, boolean typeDiscount) {
+    public void setTypeModal(int type, int typeDiscount) {
         if (type != 0 && type != 1)
             handleClose();
         typeModal = type;
         this.typeDiscount = typeDiscount;
-        txtTypeDiscount.setText(typeDiscount ? "Phần trăm" : "Giảm cứng");
+        txtTypeDiscount.setText(
+                typeDiscount == DiscountType.PERCENTAGE.getCode() ? DiscountType.PERCENTAGE.getDisplayName()
+                        : DiscountType.FIXED_AMOUNT.getDisplayName());
         if (typeModal == 0) {
             modalName.setText("Thêm chi tiết khuyến mãi");
         } else {

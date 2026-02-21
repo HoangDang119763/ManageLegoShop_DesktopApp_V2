@@ -2,6 +2,7 @@
 package GUI;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 
 import BUS.DetailImportBUS;
 import BUS.ImportBUS;
@@ -151,10 +152,17 @@ public class ImportController implements IController {
                 validationUtils.formatPercent(
                         cellData.getValue().getProfitPercent() != null ? cellData.getValue().getProfitPercent()
                                 : BigDecimal.ZERO)));
-        tblDetailImport.setItems(FXCollections
-                .observableArrayList(detailImportBUS.getAllDetailImportByImportId(importId)));
-
-        tblDetailImport.getSelectionModel().clearSelection();
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_LIST_VIEW,
+                () -> DetailImportBUS.getInstance().getAllDetailImportByImportId(importId),
+                result -> {
+                    ArrayList<DetailImportDTO> detailImports = result.getData();
+                    if (!detailImports.isEmpty()) {
+                        tblDetailImport.setItems(FXCollections.observableArrayList(detailImports));
+                        Stage currentStage = (Stage) tblDetailImport.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                        tblImport.getSelectionModel().clearSelection();
+                    }
+                });
     }
 
     private SimpleStringProperty formatCell(String value) {

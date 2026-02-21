@@ -114,7 +114,8 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
                     RolePermissionBUS.getInstance().getAllowedModuleIdsByRoleId(session.getRoleId()));
         }
         SessionManagerService.getInstance().login(session);
-        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.LOGIN_SUCCESS);
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.LOGIN_SUCCESS + " - Chào "
+                + SessionManagerService.getInstance().getLoggedName());
     }
 
     public BUSResult changePasswordBySelf(String username, String oldPassword, String newPassword) {

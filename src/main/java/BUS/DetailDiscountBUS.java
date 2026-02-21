@@ -1,8 +1,13 @@
 package BUS;
 
 import DAL.DetailDiscountDAL;
+import DTO.BUSResult;
 import DTO.DetailDiscountDTO;
-import ENUM.ServiceAccessCode;
+import ENUM.BUSOperationResult;
+import ENUM.DiscountType;
+import java.sql.*;
+import UTILS.AppMessages;
+import UTILS.ValidationUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -24,60 +29,91 @@ public class DetailDiscountBUS extends BaseBUS<DetailDiscountDTO, String> {
         return obj.getDiscountCode();
     }
 
-    public int delete(String code, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE || code == null || code.isEmpty())
-            return 2;
-
-        // if (!AvailableUtils.getInstance().isNotUsedDiscount(code)) {
-        // return 4;
-        // }
-
-        if (!DetailDiscountDAL.getInstance().deleteAllDetailDiscountByDiscountCode(code)) {
-            return 5;
-        }
-        return 1;
-    }
-
-    public ArrayList<DetailDiscountDTO> getAllDetailDiscountByDiscountId(String discountCode) {
+    public BUSResult getAllDetailDiscountByDiscountId(String discountCode) {
         if (discountCode == null || discountCode.isEmpty())
-            return null;
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS, new ArrayList<>());
 
-        return DetailDiscountDAL.getInstance().getAllDetailDiscountByDiscountCode(discountCode);
+        ArrayList<DetailDiscountDTO> detailDiscounts = DetailDiscountDAL.getInstance()
+                .getAllDetailDiscountByDiscountCode(discountCode);
+        if (detailDiscounts.isEmpty())
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND, new ArrayList<>());
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.DISCOUNT_DETAIL_LOAD_SUCCESS,
+                detailDiscounts);
     }
 
-    public boolean createDetailDiscountByDiscountCode(String discountCode, int employee_roleId,
-            ArrayList<DetailDiscountDTO> list, ServiceAccessCode codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE || list == null || list.isEmpty()
-                || discountCode == null || discountCode.isEmpty())
+    public boolean isValidDetail(DetailDiscountDTO detail, int discountType) {
+        if (detail == null) {
             return false;
+        }
+
+        BigDecimal minInvoice = detail.getTotalPriceInvoice();
+        BigDecimal amount = detail.getDiscountAmount();
+        ValidationUtils validator = ValidationUtils.getInstance();
+
+        // 1. Kiểm tra cơ bản: Không được null, phải > 0
+        if (minInvoice == null || amount == null) {
+            return false;
+        }
+        if (!validator.formatCurrency(minInvoice, 12, 2, false)) {
+            return false; // (nếu điều kiện không hợp lệ)
+        }
+
+        if (amount.compareTo(BigDecimal.ZERO) <= 0 || amount.compareTo(BigDecimal.valueOf(100)) >= 0) {
+            return false;
+        }
+
+        // 2. Kiểm tra theo kiểu khuyến mãi (Chặn đứng lỗi từ UI)
+        if (discountType == DiscountType.PERCENTAGE.getCode()) {
+            // Giảm phần trăm thì không được >= 100%
+            return amount.compareTo(new BigDecimal("100")) < 0;
+        } else {
+            // Giảm tiền mặt thì số tiền giảm không được lớn hơn hoặc bằng ngưỡng hóa đơn
+            // tối thiểu
+            return amount.compareTo(minInvoice) < 0;
+        }
+    }
+
+    public boolean insertDetailDiscountWithConn(Connection conn, String discountCode, int discountType,
+            List<DetailDiscountDTO> list) throws SQLException {
+        if (list == null || list.isEmpty() || discountCode == null)
+            return true;
+
         Set<BigDecimal> seenPrices = new HashSet<>();
+
         for (DetailDiscountDTO dto : list) {
+            // 1. Đồng bộ thông tin từ Master
+            dto.setDiscountCode(discountCode);
+
+            // 2. Nếu một dòng không hợp lệ, phải trả về false để ROLLBACK
+            if (!isValidDetail(dto, discountType)) {
+                System.err.println("[DEBUG] Detail validation failed for one record.");
+                return false;
+            }
+
+            // 3. Nếu trùng ngưỡng hóa đơn, cũng phải trả về false
             if (!seenPrices.add(dto.getTotalPriceInvoice())) {
+                System.err.println("[DEBUG] Duplicate TotalPriceInvoice found in list.");
                 return false;
             }
         }
 
+        // Sắp xếp lại danh sách
         list.sort(Comparator.comparing(DetailDiscountDTO::getTotalPriceInvoice));
-        if (!DetailDiscountDAL.getInstance().insertAllDetailDiscountByDiscountCode(discountCode, list)) {
-            return false;
+
+        // 4. Gọi DAL: Bỏ dấu ! để trả về kết quả thật (Thành công = true)
+        boolean result = DetailDiscountDAL.getInstance().insertAllDetailDiscount(conn, list);
+
+        if (!result) {
+            System.err.println("[DEBUG] DAL insertAllDetailDiscount returned false.");
         }
-        ArrayList<DetailDiscountDTO> newDetailDiscount = DetailDiscountDAL.getInstance()
-                .getAllDetailDiscountByDiscountCode(discountCode);
-        return true;
+
+        return result;
     }
 
-    public boolean insertRollbackDetailDiscount(ArrayList<DetailDiscountDTO> list, int employee_roleId,
-            ServiceAccessCode codeAccess,
-            int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.IMPORT_DETAILIMPORT_SERVICE || list == null || list.isEmpty())
-            return false;
-        if (!DetailDiscountDAL.getInstance().insertAllDetailDiscountByDiscountCode(list.get(0).getDiscountCode(),
-                list)) {
-            return false;
-        }
-        ArrayList<DetailDiscountDTO> newDetailDiscount = DetailDiscountDAL.getInstance()
-                .getAllDetailDiscountByDiscountCode(list.get(0).getDiscountCode());
-        return true;
+    public boolean deleteByDiscountCodeWithConn(Connection conn, String discountCode) throws SQLException {
+        if (discountCode == null || discountCode.isEmpty())
+            return true;
+        return DetailDiscountDAL.getInstance().deleteByDiscountCode(conn, discountCode);
     }
 
     @Override

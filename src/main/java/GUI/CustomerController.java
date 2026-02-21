@@ -2,10 +2,8 @@ package GUI;
 
 import java.util.ArrayList;
 
-import BUS.CategoryBUS;
 import BUS.CustomerBUS;
 import BUS.StatusBUS;
-import DTO.BUSResult;
 import DTO.CustomerDisplayDTO;
 import DTO.PagedResponse;
 import DTO.StatusDTO;
@@ -13,7 +11,6 @@ import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.ExcelService;
-import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
@@ -168,10 +165,6 @@ public class CustomerController implements IController {
         addBtn.setOnAction(e -> handleAdd());
         editBtn.setOnAction(e -> handleEdit());
         deleteBtn.setOnAction(e -> handleDelete());
-        tblCustomer.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2)
-                handleDetail();
-        });
         exportExcel.setOnAction(event -> {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             handleExportExcel(stage);
@@ -211,18 +204,6 @@ public class CustomerController implements IController {
                     modalController.getResultMessage());
             loadPageData(paginationController.getCurrentPage(), false);
         }
-    }
-
-    private void handleDetail() {
-        if (isNotSelectedCustomer()) {
-            NotificationUtils.showErrorAlert(AppMessages.CUSTOMER_NO_SELECTION, AppMessages.DIALOG_TITLE);
-            return;
-        }
-        new ModalBuilder<CustomerModalController>("/GUI/CustomerModal.fxml", CustomerModalController.class)
-                .setTitle("Xem chi tiết khách hàng")
-                .modeDetail()
-                .configure(c -> c.setCustomer(selectedCustomer.getId()))
-                .open();
     }
 
     private void handleDelete() {

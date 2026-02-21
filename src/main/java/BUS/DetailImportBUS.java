@@ -1,8 +1,11 @@
 package BUS;
 
 import DAL.DetailImportDAL;
+import DTO.BUSResult;
 import DTO.DetailImportDTO;
+import ENUM.BUSOperationResult;
 import ENUM.ServiceAccessCode;
+import UTILS.AppMessages;
 
 import java.util.ArrayList;
 
@@ -32,10 +35,13 @@ public class DetailImportBUS extends BaseBUS<DetailImportDTO, Integer> {
         return true;
     }
 
-    public ArrayList<DetailImportDTO> getAllDetailImportByImportId(int importId) {
+    public BUSResult getAllDetailImportByImportId(int importId) {
         if (importId <= 0)
-            return null;
-        return DetailImportDAL.getInstance().getAllDetailImportByImportId(importId);
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS, new ArrayList<>());
+        ArrayList<DetailImportDTO> detailImports = DetailImportDAL.getInstance().getAllDetailImportByImportId(importId);
+        if (detailImports.isEmpty())
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND, new ArrayList<>());
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.IMPORT_DETAIL_LOAD_SUCCESS, detailImports);
     }
 
     public boolean createDetailImportByImportId(int importId, int employee_roleId, ArrayList<DetailImportDTO> list,

@@ -6,6 +6,7 @@ import BUS.DiscountBUS;
 import DTO.CustomerDTO;
 import DTO.DetailDiscountDTO;
 import DTO.DiscountDTO;
+import ENUM.DiscountType;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
@@ -66,13 +67,14 @@ public class DiscountForSellingModalController {
         tbcCode.setCellValueFactory(new PropertyValueFactory<>("code"));
         tbcDiscountName.setCellValueFactory(new PropertyValueFactory<>("name"));
         tbcDiscountType.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getType() == 0 ? "Phần trăm" : "Giảm cứng"));
+                cellData -> new SimpleStringProperty(
+                        DiscountType.fromCode(cellData.getValue().getType()).getDisplayName()));
         tbcStartDate.setCellValueFactory(cellData -> new SimpleStringProperty(
                 ValidationUtils.getInstance().formatDateTime(cellData.getValue().getStartDate())));
         tbcEndDate.setCellValueFactory(cellData -> new SimpleStringProperty(
                 ValidationUtils.getInstance().formatDateTime(cellData.getValue().getEndDate())));
 
-        tbvDiscount.setItems(FXCollections.observableArrayList(DiscountBUS.getInstance().filterDiscountsActive()));
+        // tbvDiscount.setItems(FXCollections.observableArrayList(DiscountBUS.getInstance().filterDiscountsActive()));
         tbvDiscount.getSelectionModel().clearSelection();
     }
 
@@ -86,8 +88,8 @@ public class DiscountForSellingModalController {
 
     // handle search
     private void handleSearch() {
-        tbvDiscount.setItems(FXCollections
-                .observableArrayList(DiscountBUS.getInstance().searchByCodeLocal(txtSearchDiscount.getText().trim())));
+        // tbvDiscount.setItems(FXCollections
+        // .observableArrayList(DiscountBUS.getInstance().searchByCodeLocal(txtSearchDiscount.getText().trim())));
         tbvDiscount.getSelectionModel().clearSelection();
     }
 
@@ -101,23 +103,24 @@ public class DiscountForSellingModalController {
 
     // handle select customer
     private void handleGetDiscount() {
-        selectedDiscount = tbvDiscount.getSelectionModel().getSelectedItem();
-        detailDiscountList.clear();
-        detailDiscountList = getDetails(selectedDiscount.getCode());
-        if (!isValid(detailDiscountList)) {
-            NotificationUtils.showErrorAlert("Vui lòng mua thêm tối thiểu "
-                    + ValidationUtils.getInstance()
-                            .formatCurrency(detailDiscountList.getFirst().getTotalPriceInvoice().subtract(price))
-                    + " Đ để dùng voucher này!", "Thông báo");
-            return;
-        }
-        isSaved = true;
-        handleClose();
+        // selectedDiscount = tbvDiscount.getSelectionModel().getSelectedItem();
+        // detailDiscountList.clear();
+        // detailDiscountList = getDetails(selectedDiscount.getCode());
+        // if (!isValid(detailDiscountList)) {
+        // NotificationUtils.showErrorAlert("Vui lòng mua thêm tối thiểu "
+        // + ValidationUtils.getInstance()
+        // .formatCurrency(detailDiscountList.getFirst().getTotalPriceInvoice().subtract(price))
+        // + " Đ để dùng voucher này!", "Thông báo");
+        // return;
+        // }
+        // isSaved = true;
+        // handleClose();
     }
 
-    private ArrayList<DetailDiscountDTO> getDetails(String discountID) {
-        return DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountId(discountID);
-    }
+    // private ArrayList<DetailDiscountDTO> getDetails(String discountID) {
+    // return
+    // DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountId(discountID);
+    // }
 
     private boolean isValid(ArrayList<DetailDiscountDTO> details) {
         for (DetailDiscountDTO detail : details) {
