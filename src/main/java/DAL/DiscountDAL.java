@@ -124,4 +124,45 @@ public class DiscountDAL extends BaseDAL<DiscountDTO, String> {
         return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
     }
 
+    public boolean existsByCode(String code, String excludeCode) {
+        String query = "SELECT 1 FROM discount WHERE UPPER(code) = UPPER(?) AND code != COALESCE(?, '') LIMIT 1";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, code != null ? code.trim() : "");
+            statement.setString(2, excludeCode != null ? excludeCode.trim() : "");
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking discount code existence: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean insert(Connection conn, DiscountDTO obj) throws SQLException {
+        String query = "INSERT INTO discount " + getInsertQuery();
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            setInsertParameters(statement, obj);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    public boolean update(Connection conn, DiscountDTO obj) throws SQLException {
+        String query = "UPDATE discount " + getUpdateQuery();
+        // Lưu ý: Không dùng try-with-resources cho Connection ở đây
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            setUpdateParameters(statement, obj);
+            return statement.executeUpdate() >= 0;
+        }
+    }
+
+    public boolean delete(Connection conn, String code) throws SQLException {
+        String query = "DELETE FROM discount WHERE code = ?";
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setString(1, code);
+            return statement.executeUpdate() > 0;
+        }
+    }
 }

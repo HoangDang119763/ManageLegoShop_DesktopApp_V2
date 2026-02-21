@@ -1,12 +1,8 @@
 package GUI;
 
-import BUS.ProductBUS;
 import DTO.ProductDTO;
-import DTO.RoleDTO;
 import DTO.TempDetailImportDTO;
 import INTERFACE.IModalController;
-import SERVICE.RolePermissionService;
-import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
 import javafx.fxml.FXML;
@@ -133,7 +129,7 @@ public class ImportProductModalController implements IModalController {
         } else if (isValid) {
             try {
                 priceValue = new BigDecimal(price);
-                if (!validator.validateSalary(priceValue, 10, 2, false)) {
+                if (!validator.formatCurrency(priceValue, 10, 2, false)) {
                     NotificationUtils.showErrorAlert(
                             "Giá nhập không hợp lệ (tối đa 10 chữ số, 2 số thập phân, không âm hoặc bằng 0).",
                             "Thông báo");

@@ -380,11 +380,11 @@ public class EmployeeController implements IController {
     }
 
     private void handleExportExcel() throws IOException {
-        try {
-            ExcelService.getInstance().exportToFileExcel("employee");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // try {
+        // ExcelService.getInstance().exportToFileExcel("employee");
+        // } catch (IOException e) {
+        // e.printStackTrace();
+        // }
     }
 
     private boolean isNotSelectedEmployee() {

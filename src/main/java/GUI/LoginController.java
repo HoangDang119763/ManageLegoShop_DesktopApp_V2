@@ -3,7 +3,6 @@ package GUI;
 import BUS.AccountBUS;
 import BUS.ModuleBUS;
 import BUS.StatusBUS;
-import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
@@ -89,8 +88,7 @@ public class LoginController {
                     if (navigateStage != null) {
                         NotificationUtils.showToast(
                                 navigateStage,
-                                result.getMessage() + " - Chào "
-                                        + SessionManagerService.getInstance().getLoggedName());
+                                result.getMessage());
                     }
                 });
     }

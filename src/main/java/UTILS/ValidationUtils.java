@@ -63,7 +63,7 @@ public class ValidationUtils {
         }
     }
 
-    public boolean validateSalary(BigDecimal value, int precision, int scale, boolean allowNegative) {
+    public boolean formatCurrency(BigDecimal value, int precision, int scale, boolean allowNegative) {
         if (value == null)
             return false;
         if (!allowNegative && value.compareTo(BigDecimal.ZERO) <= 0)

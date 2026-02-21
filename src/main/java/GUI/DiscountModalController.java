@@ -3,11 +3,11 @@ package GUI;
 import BUS.DetailDiscountBUS;
 import BUS.DiscountBUS;
 import DTO.*;
+import ENUM.DiscountType;
 import ENUM.PermissionKey;
-import ENUM.ServiceAccessCode;
 import INTERFACE.IModalController;
-import SERVICE.DiscountService;
-import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
+import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
 import UTILS.UiUtils;
@@ -22,6 +22,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -68,7 +69,6 @@ public class DiscountModalController implements IModalController {
 
     @FXML
     public void initialize() {
-        arrDetailDiscount.clear();
         loadComboBox();
         setupListeners();
     }
@@ -82,21 +82,36 @@ public class DiscountModalController implements IModalController {
     }
 
     private void loadComboBox() {
-        cbTypeDiscount.getItems().addAll("Phần trăm", "Giảm cứng");
+        for (DiscountType type : DiscountType.values()) {
+            cbTypeDiscount.getItems().add(type.getDisplayName());
+        }
         cbTypeDiscount.getSelectionModel().selectFirst();
     }
 
-    public void setDiscount(DiscountDTO discount) {
-        this.discount = discount;
+    public void setDiscount(String code) {
+        this.discount = DiscountBUS.getInstance().getById(code);
         txtDiscountCode.setText(discount.getCode());
         txtDiscountName.setText(discount.getName());
-        cbTypeDiscount.getSelectionModel().select(discount.getType() == 0 ? "Phần trăm" : "Giảm cứng");
+        cbTypeDiscount.getSelectionModel().select(DiscountType.fromCode(discount.getType()).getDisplayName());
         LocalDateTime startDate = discount.getStartDate();
         LocalDateTime endDate = discount.getEndDate();
 
         dpStartDate.setValue(startDate != null ? startDate.toLocalDate() : null);
         dpEndDate.setValue(endDate != null ? endDate.toLocalDate() : null);
+        if (typeModal == 1) {
+            TaskUtil.executeSecure(null, PermissionKey.DISCOUNT_UPDATE,
+                    () -> DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountId(discount.getCode()),
+                    result -> {
+                        if (result.isSuccess()) {
+                            arrDetailDiscount = result.getData();
 
+                            loadTable();
+                        } else {
+                            NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                        }
+                    });
+
+        }
     }
 
     public void loadTable() {
@@ -104,15 +119,15 @@ public class DiscountModalController implements IModalController {
         tlb_col_totalPriceInvoice.setCellValueFactory(cellData -> new SimpleStringProperty(
                 validationUtils.formatCurrency(cellData.getValue().getTotalPriceInvoice())));
         tlb_col_discountAmount.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatCurrency(cellData.getValue().getDiscountAmount())));
-
+                validationUtils.formatCurrency(cellData.getValue().getDiscountAmount())
+                        + (DiscountType.PERCENTAGE.getDisplayName().equals(cbTypeDiscount.getValue()) ? " %" : "")));
         UiUtils.gI().addTooltipToColumn(tlb_col_totalPriceInvoice, 10);
         UiUtils.gI().addTooltipToColumn(tlb_col_discountAmount, 10);
         tblDetailDiscount.setItems(FXCollections.observableArrayList(arrDetailDiscount));
         tblDetailDiscount.getSelectionModel().clearSelection();
     }
 
-    private boolean isValidInput() {
+    private boolean isValidInput(boolean isEdit) {
         boolean isValid = true;
         String discountCode = txtDiscountCode.getText().trim();
         String discountName = txtDiscountName.getText().trim();
@@ -121,57 +136,68 @@ public class DiscountModalController implements IModalController {
 
         ValidationUtils validator = ValidationUtils.getInstance();
 
-        // Kiểm tra mã khuyến mãi
+        // 1. Kiểm tra mã và tên (Giữ nguyên logic cũ của bạn)
         if (discountCode.isEmpty()) {
             NotificationUtils.showErrorAlert("Mã khuyến mãi không được để trống.", "Thông báo");
             clearAndFocus(txtDiscountCode);
-            isValid = false;
+            return false;
         } else if (!validator.validateDiscountCode(discountCode, 4, 50)) {
             NotificationUtils.showErrorAlert(
                     "Mã khuyến mãi không hợp lệ (Tối thiểu 4 và tối đa 50 ký tự, chỉ chữ và số, không được chứa khoảng trắng).",
                     "Thông báo");
             clearAndFocus(txtDiscountCode);
             isValid = false;
-        }
 
+        }
         // Kiểm tra tên khuyến mãi
         if (isValid && discountName.isEmpty()) {
             NotificationUtils.showErrorAlert("Tên khuyến mãi không được để trống ", "Thông báo");
             clearAndFocus(txtDiscountName);
             isValid = false;
+
         } else if (isValid && !validator.validateVietnameseText100(discountName)) {
             NotificationUtils.showErrorAlert(
                     "Tên khuyến mãi không hợp lệ (Tối đa 100 ký tự, chỉ chữ và số, \"_\", \"-\", \"/\").", "Thông báo");
             clearAndFocus(txtDiscountName);
             isValid = false;
+
         }
 
-        // Kiểm tra ngày bắt đầu/kết thúc
-        if (isValid && (startDate == null || endDate == null)) {
+        // 2. Kiểm tra ngày bắt đầu/kết thúc
+        if (startDate == null || endDate == null) {
             NotificationUtils.showErrorAlert("Ngày bắt đầu và ngày kết thúc không được bỏ trống.", "Thông báo");
-            isValid = false;
-        } else if (isValid) {
-            LocalDate today = LocalDate.now();
+            return false;
+        }
 
-            if (startDate.isAfter(endDate)) {
-                NotificationUtils.showErrorAlert("Ngày bắt đầu không được lớn hơn ngày kết thúc.", "Thông báo");
-                isValid = false;
-            } else if (startDate.isBefore(today)) {
+        LocalDate today = LocalDate.now();
+
+        // Lỗi: Bắt đầu > Kết thúc (Luôn luôn sai bất kể Add hay Edit)
+        if (startDate.isAfter(endDate)) {
+            NotificationUtils.showErrorAlert("Ngày bắt đầu không được sau ngày kết thúc.", "Thông báo");
+            return false;
+        }
+
+        // Lỗi: Kết thúc ở quá khứ (Luôn luôn sai)
+        if (endDate.isBefore(today)) {
+            NotificationUtils.showErrorAlert("Ngày kết thúc phải là hôm nay hoặc sau hôm nay.", "Thông báo");
+            return false;
+        }
+
+        // CHỈ KIỂM TRA KHI THÊM MỚI (ADD)
+        if (!isEdit) {
+            if (startDate.isBefore(today)) {
                 NotificationUtils.showErrorAlert("Ngày bắt đầu phải là hôm nay hoặc sau hôm nay.", "Thông báo");
-                isValid = false;
-            } else if (endDate.isBefore(today)) {
-                NotificationUtils.showErrorAlert("Ngày kết thúc phải là hôm nay hoặc sau hôm nay.", "Thông báo");
-                isValid = false;
+                return false;
             }
         }
 
-        // Kiểm tra chi tiết khuyến mãi
-        if (isValid && arrDetailDiscount.size() == 0) {
+        // 3. Kiểm tra chi tiết khuyến mãi
+        if (arrDetailDiscount.isEmpty()) {
             NotificationUtils.showErrorAlert("Vui lòng thêm ít nhất 1 chi tiết khuyến mãi.", "Thông báo");
-            isValid = false;
+            return false;
         }
 
-        return isValid;
+        return true;
     }
 
     private void handleSave() {
@@ -188,161 +214,204 @@ public class DiscountModalController implements IModalController {
         typeModal = type;
         if (typeModal == 0) {
             modalName.setText("Thêm khuyến mãi");
+            dpStartDate.setValue(LocalDate.now());
+            dpEndDate.setValue(LocalDate.now().plusDays(1));
         } else {
             if (discount == null)
                 handleClose();
             modalName.setText("Sửa khuyến mãi");
-            // if (!AvailableUtils.getInstance().isNotUsedDiscount(discount.getCode()))
-            // makeReadOnly(dpStartDate);
             makeReadOnly(cbTypeDiscount);
             makeReadOnly(txtDiscountCode);
-            arrDetailDiscount.clear();
-            // arrDetailDiscount
-            // .addAll(DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountIdLocal(discount.getCode()));
-            loadTable();
-        }
-    }
-
-    private void handleAddBtn() {
-        DetailDiscountModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/DetailDiscountModal.fxml",
-                controller -> controller.setTypeModal(0, cbTypeDiscount.getValue().equals("Phần trăm")),
-                "Thêm chi tiết khuyến mãi");
-        if (modalController != null && modalController.isSaved()) {
-            DetailDiscountDTO temp = new DetailDiscountDTO(modalController.getDetailDiscount());
-            if (isDuplicateDetailDiscount(temp)) {
-                NotificationUtils.showErrorAlert(
-                        "Mốc tổng tiền hóa đơn tối thiểu này đã tồn tại trong chương trình khuyến mãi.", "Thông báo");
-                return;
-            }
-            arrDetailDiscount.add(temp);
-            makeReadOnly(cbTypeDiscount);
-            loadTable();
-            NotificationUtils.showInfoAlert("Thêm chi tiết khuyến mãi thành công.", "Thông báo");
+            txtDiscountCode.setStyle("-fx-background-color: #D3D3D3");
         }
     }
 
     private void updateDiscount() {
-        if (arrDetailDiscount.isEmpty()) {
-            NotificationUtils.showErrorAlert("Vui lòng thêm ít nhất một chi tiết khuyến mãi.", "Thông báo");
-            return;
-        }
-
-        if (!isValidInput())
+        if (!isValidInput(true))
             return;
 
-        DiscountDTO temp = new DiscountDTO(txtDiscountCode.getText().trim(), txtDiscountName.getText().trim(),
-                cbTypeDiscount.getValue().equals("Phần trăm") ? 0 : 1,
-                dpStartDate.getValue().atStartOfDay(), dpEndDate.getValue().atStartOfDay());
-        ArrayList<DetailDiscountDTO> list = new ArrayList<>();
-        for (DetailDiscountDTO dto : arrDetailDiscount) {
-            list.add(new DetailDiscountDTO(dto));
-        }
+        DiscountDTO temp = new DiscountDTO(
+                txtDiscountCode.getText().trim(),
+                txtDiscountName.getText().trim(),
+                DiscountType.fromDisplayName(cbTypeDiscount.getValue()).getCode(),
+                dpStartDate.getValue().atStartOfDay(),
+                dpEndDate.getValue().atStartOfDay());
+        // Copy danh sách detail để gửi đi
+        ArrayList<DetailDiscountDTO> list = new ArrayList<>(arrDetailDiscount);
 
-        // TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_UPDATE, () -> {
-        // // Delete old details and insert new ones
-        // DetailDiscountBUS.getInstance().delete(txtDiscountCode.getText().trim(), 1,
-        // ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, 1);
-        // DetailDiscountBUS.getInstance().createDetailDiscountByDiscountCode(txtDiscountCode.getText().trim(),
-        // 1, list, ServiceAccessCode.DISCOUNT_DETAILDISCOUNT_SERVICE, 1);
-        // var result = DiscountBUS.getInstance().update(temp);
-        // return result;
-        // }, result -> {
-        // if (result.isSuccess()) {
-        // resultMessage = result.getMessage();
-        // isSaved = true;
-        // handleClose();
-        // } else {
-        // NotificationUtils.showErrorAlert(result.getMessage(), "Thông báo");
-        // }
-        // });
+        // 3. Thực thi thông qua TaskUtil
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_UPDATE, () ->
+        // Gọi trực tiếp BUS hoặc Service xử lý Transaction
+        DiscountBUS.getInstance().updateFullDiscount(temp, list),
+                result -> {
+                    if (result.isSuccess()) {
+                        // NotificationUtils.showInfoAlert(result.getMessage(), "Thành công");
+                        this.isSaved = true;
+                        this.resultMessage = result.getMessage();
+                        handleClose(); // Đóng modal sau khi thêm thành công
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                        // Nếu trùng mã, focus lại ô nhập mã
+                        if (result.getMessage().contains(AppMessages.DISCOUNT_ADD_DUPLICATE)) {
+                            clearAndFocus(txtDiscountCode);
+                        }
+                    }
+                });
     }
 
     private void insertDiscount() {
-        if (arrDetailDiscount.isEmpty()) {
-            NotificationUtils.showErrorAlert("Vui lòng thêm ít nhất một chi tiết khuyến mãi.", "Thông báo");
-            return;
-        }
-
-        if (!isValidInput())
+        if (!isValidInput(false))
             return;
 
-        DiscountDTO temp = new DiscountDTO(txtDiscountCode.getText().trim(), txtDiscountName.getText().trim(),
-                cbTypeDiscount.getValue().equals("Phần trăm") ? 0 : 1,
-                dpStartDate.getValue().atStartOfDay(), dpEndDate.getValue().atStartOfDay());
-        ArrayList<DetailDiscountDTO> list = new ArrayList<>();
-        for (DetailDiscountDTO dto : arrDetailDiscount) {
-            list.add(new DetailDiscountDTO(dto));
-        }
+        // 2. Đóng gói dữ liệu DTO
+        DiscountDTO temp = new DiscountDTO(
+                txtDiscountCode.getText().trim(),
+                txtDiscountName.getText().trim(),
+                DiscountType.fromDisplayName(cbTypeDiscount.getValue()).getCode(),
+                dpStartDate.getValue().atStartOfDay(),
+                dpEndDate.getValue().atStartOfDay());
 
-        DiscountService disService = DiscountService.getInstance();
-        // TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_INSERT, () -> {
-        // var result = disService.createDiscountWithDetailDiscount(temp,
-        // SessionManagerService.getInstance().employeeRoleId(), list,
-        // SessionManagerService.getInstance().employeeLoginId());
-        // return result;
-        // }, result -> {
-        // if (result.isSuccess()) {
-        // resultMessage = result.getMessage();
-        // isSaved = true;
-        // handleClose();
-        // } else {
-        // NotificationUtils.showErrorAlert(result.getMessage(), "Thông báo");
-        // }
-        // });
+        // Copy danh sách detail để gửi đi
+        ArrayList<DetailDiscountDTO> list = new ArrayList<>(arrDetailDiscount);
+
+        // 3. Thực thi thông qua TaskUtil
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.DISCOUNT_INSERT, () ->
+        // Gọi trực tiếp BUS hoặc Service xử lý Transaction
+        DiscountBUS.getInstance().insertFullDiscount(temp, list),
+                result -> {
+                    if (result.isSuccess()) {
+                        // NotificationUtils.showInfoAlert(result.getMessage(), "Thành công");
+                        this.isSaved = true;
+                        this.resultMessage = result.getMessage();
+                        handleClose(); // Đóng modal sau khi thêm thành công
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                        // Nếu trùng mã, focus lại ô nhập mã
+                        if (result.getMessage().contains(AppMessages.DISCOUNT_ADD_DUPLICATE)) {
+                            clearAndFocus(txtDiscountCode);
+                        }
+                    }
+                });
     }
 
-    // lại.", "Thông báo");
-    // case 3 ->
-    // NotificationUtils.showErrorAlert(
-    // "Bạn không có quyền \"Thêm khuyến mãi\" để thực hiện thao tác này.", "Thông
-    // báo");
-    // case 4 -> {
-    // NotificationUtils.showErrorAlert("Mã khuyến mãi đã tồn tại trong hệ thống.",
-    // "Thông báo");
-    // clearAndFocus(txtDiscountCode);
-    // }
-    // case 5 ->
-    // NotificationUtils.showErrorAlert("Thêm khuyến mãi thất bại. Vui lòng thử lại
-    // sau.", "Thông báo");
-    // default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử
-    // lại sau.", "Thông báo");
-    // }
-
-    private boolean isDuplicateDetailDiscount(DetailDiscountDTO obj) {
+    private boolean isDuplicateDetailDiscount(DetailDiscountDTO obj, boolean isEdit) {
         for (DetailDiscountDTO dc : arrDetailDiscount) {
             // So sánh mốc hóa đơn đã có với mốc mới, bỏ qua chính nó nếu đang sửa
             if (dc.getTotalPriceInvoice().compareTo(obj.getTotalPriceInvoice()) == 0
-                    && !dc.getDiscountCode().equalsIgnoreCase(obj.getDiscountCode())) {
+                    && (isEdit ? !dc.getDiscountCode().equalsIgnoreCase(obj.getDiscountCode()) : true)) {
                 return true;
             }
         }
         return false;
     }
 
+    /**
+     * Validate discount amount theo logic mốc giá:
+     * - Mốc giá lớn hơn → discount amount phải ≥ discount amount của mốc giá nhỏ
+     * hơn
+     * - Mốc giá nhỏ hơn → discount amount phải ≤ discount amount của mốc giá lớn
+     * hơn
+     */
+    private boolean isValidDetailDiscountAmount(DetailDiscountDTO newDiscount, boolean isEdit) {
+        // Tạo list sắp xếp theo mốc giá tăng dần
+        ArrayList<DetailDiscountDTO> sortedList = new ArrayList<>(arrDetailDiscount);
+
+        // Nếu đang edit, loại bỏ detail cũ khỏi list để so sánh (dùng totalPrice để
+        // identify)
+        if (isEdit && selectedDetailDiscount != null) {
+            sortedList.removeIf(
+                    d -> d.getTotalPriceInvoice().compareTo(selectedDetailDiscount.getTotalPriceInvoice()) == 0);
+        }
+
+        sortedList.sort((d1, d2) -> d1.getTotalPriceInvoice().compareTo(d2.getTotalPriceInvoice()));
+
+        BigDecimal newPrice = newDiscount.getTotalPriceInvoice();
+        BigDecimal newAmount = newDiscount.getDiscountAmount();
+
+        // Check tính hợp lệ với các mốc đã có
+        for (DetailDiscountDTO existing : sortedList) {
+            BigDecimal existingPrice = existing.getTotalPriceInvoice();
+            BigDecimal existingAmount = existing.getDiscountAmount();
+
+            // Nếu mốc mới LỚN HƠN mốc cũ → amount mới phải ≥ amount cũ
+            if (newPrice.compareTo(existingPrice) > 0) {
+                if (newAmount.compareTo(existingAmount) < 0) {
+                    return false; // Mốc 15k không được discount < mốc 10k
+                }
+            }
+            // Nếu mốc mới NHỎ HƠN mốc cũ → amount mới phải ≤ amount cũ
+            else if (newPrice.compareTo(existingPrice) < 0) {
+                if (newAmount.compareTo(existingAmount) > 0) {
+                    return false; // Mốc 5k không được discount > mốc 10k
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void handleAddBtn() {
+        DetailDiscountModalController modalController = new ModalBuilder<DetailDiscountModalController>(
+                "/GUI/DetailDiscountModal.fxml", DetailDiscountModalController.class)
+                .setTitle("Thêm chi tiết khuyến mãi")
+                .configure(c -> c.setTypeModal(0,
+                        DiscountType.fromDisplayName(cbTypeDiscount.getValue()).getCode()))
+                .open();
+        if (modalController != null && modalController.isSaved()) {
+            DetailDiscountDTO temp = new DetailDiscountDTO(modalController.getDetailDiscount());
+            if (isDuplicateDetailDiscount(temp, false)) {
+                NotificationUtils.showErrorAlert(
+                        "Mốc tổng tiền hóa đơn tối thiểu này đã tồn tại trong chương trình khuyến mãi.", "Thông báo");
+                return;
+            }
+            // Validate discount amount theo logic mốc giá
+            if (!isValidDetailDiscountAmount(temp, false)) {
+                NotificationUtils.showErrorAlert(
+                        "Số tiền giảm giá không hợp lệ. Mốc giá lớn hơn phải có discount ≥ mốc giá nhỏ hơn.",
+                        "Thông báo");
+                return;
+            }
+            arrDetailDiscount.add(temp);
+            makeReadOnly(cbTypeDiscount);
+            loadTable();
+            Stage currentStage = (Stage) tblDetailDiscount.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, AppMessages.DISCOUNT_ADD_DETAIL_SUCCESS);
+        }
+    }
+
     private void handleEditBtn() {
         if (isNotSelectedDetailDiscount()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn chi tiết khuyến mãi cần xóa.", "Thông báo");
+            NotificationUtils.showErrorAlert(AppMessages.DISCOUNT_DETAIL_NO_SELECTION, AppMessages.DIALOG_TITLE);
             return;
         }
         DetailDiscountDTO oldDC = new DetailDiscountDTO(selectedDetailDiscount);
-        DetailDiscountModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/DetailDiscountModal.fxml",
-                controller -> {
-                    controller.setTypeModal(1, cbTypeDiscount.getValue().equals("Phần trăm"));
-                    controller.setDetailDiscount(selectedDetailDiscount);
-                },
-                "Sửa chi tiết khuyến mãi");
+        DetailDiscountModalController modalController = new ModalBuilder<DetailDiscountModalController>(
+                "/GUI/DetailDiscountModal.fxml", DetailDiscountModalController.class)
+                .setTitle("Sửa chi tiết khuyến mãi")
+                .configure(c -> c.setTypeModal(1,
+                        DiscountType.fromDisplayName(cbTypeDiscount.getValue()).getCode()))
+                .configure(c -> c.setDetailDiscount(selectedDetailDiscount))
+                .open();
         if (modalController != null && modalController.isSaved()) {
-            if (isDuplicateDetailDiscount(modalController.getDetailDiscount())) {
+            if (isDuplicateDetailDiscount(modalController.getDetailDiscount(), true)) {
                 NotificationUtils.showErrorAlert(
                         "Mốc tổng tiền hóa đơn tối thiểu này đã tồn tại trong chương trình khuyến mãi.", "Thông báo");
                 modalController.getDetailDiscount().setTotalPriceInvoice(oldDC.getTotalPriceInvoice());
                 modalController.getDetailDiscount().setDiscountAmount(oldDC.getDiscountAmount());
                 return;
             }
+            // Validate discount amount theo logic mốc giá
+            if (!isValidDetailDiscountAmount(modalController.getDetailDiscount(), true)) {
+                NotificationUtils.showErrorAlert(
+                        "Số tiền giảm giá không hợp lệ. Mốc giá lớn hơn phải có discount ≥ mốc giá nhỏ hơn.",
+                        "Thông báo");
+                modalController.getDetailDiscount().setTotalPriceInvoice(oldDC.getTotalPriceInvoice());
+                modalController.getDetailDiscount().setDiscountAmount(oldDC.getDiscountAmount());
+                return;
+            }
             loadTable();
-            NotificationUtils.showInfoAlert("Sửa chi tiết khuyến mãi thành công.", "Thông báo");
+            Stage currentStage = (Stage) tblDetailDiscount.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, AppMessages.DISCOUNT_UPDATE_DETAIL_SUCCESS);
         }
     }
 
@@ -351,14 +420,15 @@ public class DiscountModalController implements IModalController {
             // Nếu đang ở chế độ sửa và chỉ còn một chi tiết khuyến mãi, không cho phép xóa
             arrDetailDiscount.remove(selectedDetailDiscount);
             loadTable();
-            NotificationUtils.showInfoAlert("Xóa chi tiết khuyến mãi thành công.", "Thông báo");
+            Stage currentStage = (Stage) tblDetailDiscount.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, AppMessages.DISCOUNT_DELETE_DETAIL_SUCCESS);
 
             // Nếu không còn chi tiết nào, mở lại comboBox
             if (arrDetailDiscount.isEmpty()) {
                 makeEditableForComboBox(cbTypeDiscount);
             }
         } else {
-            NotificationUtils.showErrorAlert("Vui lòng chọn chi tiết khuyến mãi cần xóa.", "Thông báo");
+            NotificationUtils.showErrorAlert(AppMessages.DISCOUNT_DETAIL_NO_SELECTION, AppMessages.DIALOG_TITLE);
         }
     }
 

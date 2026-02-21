@@ -1,8 +1,6 @@
 package DAL;
 
 import DTO.DepartmentDTO;
-import DTO.EmployeeDTO;
-
 import java.sql.*;
 
 public class DepartmentDAL extends BaseDAL<DepartmentDTO, Integer> {

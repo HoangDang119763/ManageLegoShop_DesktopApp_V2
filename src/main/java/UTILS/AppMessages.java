@@ -26,14 +26,14 @@ public class AppMessages {
     public static final String INVOICE_DETAIL_QUANTITY_EXCEED = "Vượt quá số lượng tồn kho!";
     public static final String INVOICE_DETAIL_QUANTITY_INVALID = "Số lượng phải là số nguyên hợp lệ.";
     public static final String INVOICE_DETAIL_ADD_ERROR = "Có lỗi khi thêm chi tiết hóa đơn. Vui lòng thử lại.";
-
+    public static final String INVOICE_DETAIL_LOAD_SUCCESS = "Tải chi tiết hóa đơn thành công";
     // ==================== MODULE NHẬP HÀNG ====================
     /**
      * Các thông báo liên quan đến quá trình nhập hàng và quản lý hóa đơn nhập
      */
     public static final String IMPORT_SUPPLIER_REQUIRED = "Vui lòng chọn nhà cung cấp";
     public static final String IMPORT_SUPPLIER_ADD_SUCCESS = "Thêm nhà cung cấp thành công";
-
+    public static final String IMPORT_DETAIL_LOAD_SUCCESS = "Tải chi tiết phiếu nhập thành công";
     // ==================== MODULE NHÂN VIÊN (EMPLOYEE) ====================
     /**
      * Các thông báo liên quan đến quản lý thông tin nhân viên
@@ -111,7 +111,21 @@ public class AppMessages {
      * Các thông báo liên quan đến quản lý chiết khấu và khuyến mãi
      */
     // Placeholder cho các messages về discount
-
+    public static final String DISCOUNT_ADD_DUPLICATE = "Đã có khuyến mãi trong cơ sở dữ liệu";
+    public static final String DISCOUNT_DETAIL_LOAD_SUCCESS = "Tải chi tiết khuyến mãi thành công";
+    public static final String DISCOUNT_ADD_SUCCESS = "Tạo khuyến mãi thành công!";
+    public static final String DISCOUNT_UPDATE_SUCCESS = "Cập nhật khuyến mãi thành công!";
+    public static final String DISCOUNT_DELETE_SUCCESS = "Xóa khuyến mãi thành công";
+    public static final String DISCOUNT_IN_USED = "Khuyến mãi đã được sử dụng, không thể xóa!";
+    public static final String DISCOUNT_LOCK_START_DATE = "Ngày bắt đầu không được sửa vì khuyến mãi đã được sử dụng!";
+    public static final String DISCOUNT_NO_DETAIL = "Vui lòng thêm ít nhất một chi tiết khuyến mãi.";
+    public static final String DISCOUNT_ADD_DETAIL_SUCCESS = "Thêm chi tiết khuyến mãi thành công.";
+    public static final String DISCOUNT_UPDATE_DETAIL_SUCCESS = "Sửa chi tiết khuyến mãi thành công.";
+    public static final String DISCOUNT_DELETE_DETAIL_SUCCESS = "Xóa chi tiết khuyến mãi thành công.";
+    public static final String DISCOUNT_LOCK_OUTDATE = "Khuyến mãi đã hết hạn, không thể sửa.";
+    public static final String DISCOUNT_NO_SELECTION = "Vui lòng chọn khuyến mãi.";
+    public static final String DISCOUNT_DETAIL_NO_SELECTION = "Vui lòng chọn chi tiết khuyến mãi.";
+    public static final String DISCOUNT_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa khuyến mãi này không?";
     // ==================== MODULE PHÂN QUYỀN (ROLE & PERMISSION)
     // ====================
     /**

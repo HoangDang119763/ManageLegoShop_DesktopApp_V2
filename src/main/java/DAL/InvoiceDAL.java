@@ -212,4 +212,24 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
             return false;
         }
     }
+
+    public boolean existsByDiscountCode(String discountCode) {
+        if (discountCode == null || discountCode.trim().isEmpty()) return false;
+
+        // Kiểm tra xem mã KM này đã từng xuất hiện trong hóa đơn nào chưa
+        String sql = "SELECT 1 FROM invoice WHERE UPPER(discount_code) = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, discountCode.trim().toLowerCase());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Trả về true nếu đã có hóa đơn sử dụng mã này
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking invoice existence by discount code: " + e.getMessage());
+            return false;
+        }
+    }
 }

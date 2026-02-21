@@ -177,29 +177,37 @@
                                                     </children>
                                                 </HBox>
                                                 <Line endX="630.0" stroke="#eee" strokeWidth="2.0" />
-                                                <TableView fx:id="tblJobHistory" minHeight="140.0" prefHeight="180.0" prefWidth="635.0" styleClass="table-view">
-                                                    <placeholder>
-                                                        <Label text="Chưa có lịch sử điều chuyển" textFill="#95a5a6">
-                                                            <font>
-                                                                <Font name="System Italic" size="14.0" />
-                                                            </font>
-                                                        </Label>
-                                                    </placeholder>
-                                                    <columns>
-                                                        <TableColumn fx:id="colEffectiveDate" prefWidth="100.79997712373734" text="Ngày áp dụng" />
-                                                        <TableColumn fx:id="colDepartment" prefWidth="112.00000762939453" text="Phòng ban" />
-                                                        <TableColumn fx:id="colRole" prefWidth="148.79998779296875" text="Chức vụ" />
-                                          <TableColumn fx:id="colReason" prefWidth="148.79998779296875" text="Lý do" />
-                                                        <TableColumn fx:id="colApprover" prefWidth="174.39999999999998" text="Người duyệt" />
-                                          <TableColumn fx:id="colReason1" prefWidth="148.79998779296875" text="Lý do" />
-                                                    </columns>
+                                    <AnchorPane prefHeight="188.0" prefWidth="628.0">
                                        <VBox.margin>
                                           <Insets />
                                        </VBox.margin>
-                                       <padding>
-                                          <Insets left="-3.0" right="-2.0" top="-10.0" />
-                                       </padding>
-                                                </TableView>
+                                       <children>
+                                                      <TableView fx:id="tblJobHistory" layoutX="0.7999992370605469" layoutY="8.0" minHeight="140.0" prefHeight="180.0" prefWidth="635.0" styleClass="table-view" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="1.0" AnchorPane.rightAnchor="1.0" AnchorPane.topAnchor="1.0">
+                                                          <placeholder>
+                                                              <Label text="Chưa có lịch sử điều chuyển" textFill="#95a5a6">
+                                                                  <font>
+                                                                      <Font name="System Italic" size="14.0" />
+                                                                  </font>
+                                                              </Label>
+                                                          </placeholder>
+                                                          <columns>
+                                                              <TableColumn fx:id="colEffectiveDate" prefWidth="108.79998171329498" text="Ngày áp dụng" />
+                                                              <TableColumn fx:id="colDepartment" prefWidth="40.800048828125" text="Phòng ban" />
+                                                              <TableColumn fx:id="colRole" prefWidth="100.800048828125" text="Chức vụ" />
+                                                <TableColumn fx:id="colReason" prefWidth="103.19998168945312" text="Lý do" />
+                                                              <TableColumn fx:id="colApprover" prefWidth="174.39999999999998" text="Người duyệt" />
+                                                <TableColumn fx:id="colReason1" prefWidth="148.79998779296875" text="Lý do" />
+                                                          </columns>
+                                             <padding>
+                                                <Insets left="-3.0" right="-2.0" top="-10.0" />
+                                             </padding>
+                                                      </TableView>
+                                       </children>
+                                       <styleClass>
+                                          <String fx:value="shadow" />
+                                          <String fx:value="white-bg" />
+                                       </styleClass>
+                                    </AnchorPane>
                                                 <HBox alignment="CENTER_RIGHT" minHeight="45.0" spacing="15.0">
                                          <fx:include fx:id="historyPagination" source="PaginationControl.fxml" />
                                                     <Button fx:id="saveJobBtn" prefHeight="35.0" prefWidth="100.0" styleClass="action-btn" text="LƯU"><graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.1em" /></graphic>
