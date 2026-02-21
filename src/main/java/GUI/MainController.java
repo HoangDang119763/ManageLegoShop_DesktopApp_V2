@@ -65,7 +65,7 @@ public class MainController {
         logoutBtn.setOnMouseClicked(e -> {
             if (UiUtils.gI().showConfirmAlert(AppMessages.LOGOUT_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM)) {
                 // Sử dụng forceLogout để dọn dẹp sạch sẽ toàn bộ App
-                SessionManagerService.getInstance().forceLogout();
+                SessionManagerService.getInstance().normalLogout();
             }
         });
 

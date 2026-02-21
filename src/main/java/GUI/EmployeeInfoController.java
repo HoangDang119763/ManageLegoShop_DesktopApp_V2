@@ -18,6 +18,7 @@ import DTO.PagedResponse;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
+import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import SERVICE.SessionManagerService;
 import javafx.beans.property.SimpleStringProperty;
@@ -162,8 +163,12 @@ public class EmployeeInfoController {
         setupListeners();
         setupTabLoadingListeners();
 
-        // Load data cho tab 1 (Hồ sơ nhân viên) ngay lập tức
-        loadTabPersonalInfo();
+        if (sessionManagerService.getRoleId() == 1) {
+            hideInfo();
+            loadTabAccountSecurity();
+        } else {
+            loadTabPersonalInfo();
+        }
     }
 
     /**
@@ -209,7 +214,7 @@ public class EmployeeInfoController {
 
                     // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
                     if (jobInfo.getRoleId() != null && jobInfo.getRoleId() == 1) {
-                        hidePersonalInfo();
+                        hideInfo();
                         return;
                     }
                     displayPersonalInfo(personalInfo, jobInfo, payrollInfo);
@@ -301,9 +306,9 @@ public class EmployeeInfoController {
     /**
      * Ẩn thông tin nhân viên khỏi UI
      */
-    private void hidePersonalInfo() {
-        vboxPersonalInfo.setVisible(false);
-        vboxPersonalInfo.setManaged(false);
+    private void hideInfo() {
+        tabPaneInfo.getTabs().remove(tabPersonalInfo);
+        tabPaneInfo.getTabs().remove(tabJobHistory);
     }
 
     // Tab 1: Hiển thị thông tin nhân viên

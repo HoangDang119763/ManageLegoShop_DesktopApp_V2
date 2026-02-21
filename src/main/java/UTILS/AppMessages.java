@@ -45,7 +45,7 @@ public class AppMessages {
     public static final String EMPLOYEE_UPDATE_SUCCESS = "Sửa nhân viên thành công";
     public static final String EMPLOYEE_CANNOT_DELETE_SYSTEM = "Không thể xóa nhân viên hệ thống";
     public static final String EMPLOYEE_CANNOT_DELETE_SELF = "Không thể xóa thông tin nhân viên của chính mình";
-
+    public static final String EMPLOYEE_ADD_DEPARTMENT_INVALID = "Phòng ban không còn được sử dụng";
     // ==================== MODULE KHÁCH HÀNG (CUSTOMER) ====================
     /**
      * Các thông báo liên quan đến quản lý thông tin khách hàng
@@ -118,7 +118,6 @@ public class AppMessages {
     public static final String DISCOUNT_DELETE_SUCCESS = "Xóa khuyến mãi thành công";
     public static final String DISCOUNT_IN_USED = "Khuyến mãi đã được sử dụng, không thể xóa!";
     public static final String DISCOUNT_LOCK_START_DATE = "Ngày bắt đầu không được sửa vì khuyến mãi đã được sử dụng!";
-    public static final String DISCOUNT_NO_DETAIL = "Vui lòng thêm ít nhất một chi tiết khuyến mãi.";
     public static final String DISCOUNT_ADD_DETAIL_SUCCESS = "Thêm chi tiết khuyến mãi thành công.";
     public static final String DISCOUNT_UPDATE_DETAIL_SUCCESS = "Sửa chi tiết khuyến mãi thành công.";
     public static final String DISCOUNT_DELETE_DETAIL_SUCCESS = "Xóa chi tiết khuyến mãi thành công.";
@@ -149,8 +148,8 @@ public class AppMessages {
     public static final String LOGIN_EMPTY_CREDENTIALS = "Vui lòng điền tài khoản và mật khẩu";
     public static final String LOGIN_INVALID_CREDENTIALS = "Tài khoản hoặc mật khẩu không chính xác!";
     public static final String LOGIN_ACCOUNT_LOCKED = "Tài khoản của bạn hiện đang bị khóa!";
-    public static final String LOGIN_EMPLOYEE_INVALID = "Thông tin nhân viên không hợp lệ!";
     public static final String LOGOUT_CONFIRM = "Bạn chắc muốn đăng xuất?";
+    public static final String LOGOUT_SUCCESS = "Đăng xuất thành công";
     // Placeholder cho các messages về account
 
     // ==================== MODULE THỐNG KÊ (STATISTIC) ====================
@@ -170,7 +169,6 @@ public class AppMessages {
     public static final String DIALOG_TITLE_CONFIRM = "Thông báo xác nhận";
     public static final String GENERAL_REFRESH_SUCCESS = "Làm mới thành công";
     public static final String DB_ERROR = "Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.";
-    public static final String GENERAL_ERROR = "Lỗi không xác định. Thao tác thất bại.";
     public static final String UNKNOWN_ERROR = "Lỗi không xác định. Vui lòng thử lại.";
     public static final String OPERATION_SUCCESS = "Thao tác thành công!";
     public static final String INVALID_DATA = "Dữ liệu đầu vào không hợp lệ";

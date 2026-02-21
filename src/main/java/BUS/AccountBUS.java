@@ -10,6 +10,8 @@ import UTILS.AppMessages;
 import UTILS.PasswordUtils;
 import UTILS.ValidationUtils;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
@@ -44,7 +46,7 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
     // ============================================================
 
     public BUSResult insert(AccountDTO obj) {
-        if (obj == null || isInvalidAccountInput(obj)) {
+        if (obj == null || !isValidUsername(obj.getUsername()) || !isValidPassword(obj.getPassword())) {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
 
@@ -63,6 +65,20 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         }
 
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.ACCOUNT_ADD_SUCCESS);
+    }
+
+    public boolean insertWithConn(Connection conn, AccountDTO obj) throws SQLException {
+        if (obj == null || !isValidUsername(obj.getUsername()))
+            return false;
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.ACCOUNT, obj.getStatusId()))
+            return false;
+
+        // Logic nghiệp vụ đặc trưng của Account
+        obj.setUsername(obj.getUsername().toLowerCase().trim());
+        obj.setPassword(PasswordUtils.getInstance().hashPassword("123456"));
+
+        return AccountDAL.getInstance().insertWithConn(conn, obj);
     }
 
     public BUSResult delete(Integer id, int currentLoginId) {
@@ -156,10 +172,27 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         return AccountDAL.getInstance().setRequireReloginByRoleId(roleId, requireRelogin);
     }
 
-    private boolean isInvalidAccountInput(AccountDTO obj) {
-        ValidationUtils validator = ValidationUtils.getInstance();
-        return obj.getUsername() == null || obj.getPassword() == null ||
-                !validator.validateUsername(obj.getUsername(), 4, 50) ||
-                !validator.validatePassword(obj.getPassword(), 6, 255);
+    /**
+     * Kiểm tra username có tồn tại hay không
+     *
+     * @param username Username cần kiểm tra
+     * @return true nếu username đã tồn tại, false nếu chưa
+     */
+    public boolean existsByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+        return AccountDAL.getInstance().getByUsername(username) != null;
     }
+
+    private boolean isValidUsername(String username) {
+        ValidationUtils validator = ValidationUtils.getInstance();
+        return username != null && validator.validateUsername(username, 4, 50);
+    }
+
+    private boolean isValidPassword(String password) {
+        ValidationUtils validator = ValidationUtils.getInstance();
+        return password != null && validator.validatePassword(password, 6, 255);
+    }
+
 }

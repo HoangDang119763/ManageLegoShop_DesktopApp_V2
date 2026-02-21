@@ -366,7 +366,6 @@ CREATE TABLE `account` (
   `status_id` INT NOT NULL,
     `require_relogin` TINYINT(1) DEFAULT 0, 
   PRIMARY KEY (`id`),
-  CONSTRAINT `fk_account_employee` FOREIGN KEY (`id`) REFERENCES `employee` (`id`),
   CONSTRAINT `fk_account_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 

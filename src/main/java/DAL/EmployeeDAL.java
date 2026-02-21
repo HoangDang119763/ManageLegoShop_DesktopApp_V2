@@ -763,4 +763,37 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
         return null;
     }
+
+    /**
+     * Insert Employee sử dụng Connection truyền vào (phục vụ Transaction)
+     * 
+     * @param conn Connection từ Master BUS
+     * @param obj  EmployeeDTO cần lưu
+     * @return true nếu insert thành công
+     * @throws SQLException
+     */
+    public boolean insertWithConn(Connection conn, EmployeeDTO obj) throws SQLException {
+        String sql = "INSERT INTO employee " + getInsertQuery();
+
+        // Sử dụng RETURN_GENERATED_KEYS để lấy ID tự tăng sau khi chèn thành công
+        try (PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            // 1. Gán các tham số (Dùng lại hàm setInsertParameters bạn đã viết ở trên)
+            setInsertParameters(statement, obj);
+
+            // 2. Thực thi lệnh
+            int affectedRows = statement.executeUpdate();
+
+            if (affectedRows > 0) {
+                // 3. Lấy ID vừa sinh ra gán ngược lại cho đối tượng DTO
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        obj.setId(generatedKeys.getInt(1));
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
 }

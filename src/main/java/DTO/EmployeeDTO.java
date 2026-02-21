@@ -59,6 +59,28 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.updatedAt = updatedAt;
     }
 
+    public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
+            LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
+            String gender, Integer accountId, String healthInsCode,
+            boolean isSocialInsurance, boolean isUnemploymentInsurance,
+            boolean isPersonalIncomeTax, boolean isTransportationSupport,
+            boolean isAccommodationSupport) {
+        super(id, dateOfBirth, phone, statusId);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.roleId = roleId;
+        this.departmentId = departmentId;
+        this.gender = gender;
+        this.accountId = accountId;
+        this.healthInsCode = healthInsCode;
+        this.isSocialInsurance = isSocialInsurance;
+        this.isUnemploymentInsurance = isUnemploymentInsurance;
+        this.isPersonalIncomeTax = isPersonalIncomeTax;
+        this.isTransportationSupport = isTransportationSupport;
+        this.isAccommodationSupport = isAccommodationSupport;
+    }
+
     // Copy Constructor (Clone)
     public EmployeeDTO(EmployeeDTO other) {
         super(other);

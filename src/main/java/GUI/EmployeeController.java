@@ -268,10 +268,9 @@ public class EmployeeController implements IController {
     }
 
     public void handleAddBtn() {
-        EmployeeModalController modalController = new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
-                EmployeeModalController.class)
-                .setTitle("Thêm nhân viên")
-                .modeAdd()
+        EmployeeAddModalController modalController = new ModalBuilder<EmployeeAddModalController>(
+                "/GUI/EmployeeAddModal.fxml",
+                EmployeeAddModalController.class)
                 .open();
         if (modalController != null && modalController.isSaved()) {
             Stage currentStage = (Stage) addBtn.getScene().getWindow();

@@ -42,7 +42,6 @@ public class AccountDTO {
         this.username = username;
         this.password = password;
         this.lastLogin = null;
-        this.statusId = 1; // Default status ID for active accounts
     }
 
     public AccountDTO(AccountDTO other) {
