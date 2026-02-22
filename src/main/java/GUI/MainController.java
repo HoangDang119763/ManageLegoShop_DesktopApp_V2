@@ -13,6 +13,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +22,7 @@ import java.util.*;
 
 @Slf4j
 public class MainController {
+    private static final Logger log = LoggerFactory.getLogger(MainController.class);
     @FXML
     private Button closeBtn, minimizeBtn, logoutBtn;
     @FXML
@@ -43,7 +46,8 @@ public class MainController {
             Map.entry(7, "/GUI/CategoryUI.fxml"),
             Map.entry(8, "/GUI/DiscountUI.fxml"),
             Map.entry(9, "/GUI/RoleUI.fxml"),
-            Map.entry(10, "/GUI/StatisticUI.fxml"));
+            Map.entry(10, "/GUI/StatisticUI.fxml"),
+            Map.entry(11, "/GUI/HROperationsTab.fxml")); // Quản lý Nhân sự
 
     @FXML
     public void initialize() {
@@ -84,16 +88,17 @@ public class MainController {
         // 1. Định nghĩa TẤT CẢ Module có trong hệ thống Lego của bạn
         List<ModuleMetadata> allModules = Arrays.asList(
                 new ModuleMetadata(0, "Cá nhân", "employee_info.png"), // ID 0: Luôn cho phép
-                new ModuleMetadata(5, "Bán hàng", "invoice.png"), // ID 5: Module quan trọng nhất
-                new ModuleMetadata(6, "Nhập hàng", "import.png"), // ID 6
+                new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
+                new ModuleMetadata(2, "Khách hàng", "customer.png"), // ID 2
                 new ModuleMetadata(3, "Sản phẩm", "product.png"), // ID 3
                 new ModuleMetadata(7, "Thể loại", "category.png"), // ID 7
-                new ModuleMetadata(2, "Khách hàng", "customer.png"), // ID 2
-                new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
                 new ModuleMetadata(4, "Nhà cung cấp", "supplier.png"), // ID 4
                 new ModuleMetadata(8, "Khuyến mãi", "discount.png"), // ID 8
-                new ModuleMetadata(9, "Phòng ban & Quyền", "role.png"), // ID 9
-                new ModuleMetadata(10, "Thống kê", "statistical.png") // ID 10
+                new ModuleMetadata(5, "Bán hàng", "invoice.png"), // ID 5: Module quan trọng nhất
+                new ModuleMetadata(6, "Nhập hàng", "import.png"), // ID 6
+                new ModuleMetadata(9, "Cơ cấu", "role.png"), // ID 9
+                new ModuleMetadata(10, "Thống kê", "statistical.png"), // ID 10
+                new ModuleMetadata(11, "Quản lý Nhân sự", "employee.png") // ID 11: HR Operations
         );
 
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session

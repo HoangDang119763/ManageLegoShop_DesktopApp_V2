@@ -1,14 +1,17 @@
 package BUS;
 
-import DAL.CustomerDAL;
 import DAL.SupplierDAL;
-import DTO.CategoryDTO;
-import DTO.CustomerDTO;
+import DTO.BUSResult;
 import DTO.SupplierDTO;
+import DTO.SupplierDisplayDTO;
+import ENUM.BUSOperationResult;
+import ENUM.Status;
+import ENUM.StatusType;
+import DTO.PagedResponse;
+import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
     private static final SupplierBUS INSTANCE = new SupplierBUS();
@@ -30,83 +33,53 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
         return obj.getId();
     }
 
-    public ArrayList<SupplierDTO> filterSuppliers(String searchBy, String keyword, int statusFilter) {
-        ArrayList<SupplierDTO> filteredList = new ArrayList<>();
-
-        // if (keyword == null)
-        // keyword = "";
-        // if (searchBy == null)
-        // searchBy = "";
-
-        // keyword = keyword.trim().toLowerCase();
-
-        // for (SupplierDTO sup : arrLocal) {
-        // // Check keyword match
-        // boolean matchesSearch = true;
-        // String name = sup.getName() != null ? sup.getName().toLowerCase() : "";
-        // String id = String.valueOf(sup.getId());
-
-        // if (!keyword.isEmpty()) {
-        // matchesSearch = switch (searchBy) {
-        // case "Mã nhà cung cấp" -> id.contains(keyword);
-        // case "Tên nhà cung cấp" -> name.contains(keyword);
-        // default -> false;
-        // };
-        // }
-
-        // // Check status match (-1 = all, 1 = active, 0 = inactive)
-        // boolean matchesStatus = (statusFilter == -1) || sup.getStatusId() ==
-        // statusFilter;
-
-        // // Add if matches all conditions
-        // if (matchesSearch && matchesStatus) {
-        // filteredList.add(sup);
-        // }
-        // }
-
-        return filteredList;
+    public int nextId() {
+        return SupplierDAL.getInstance().getLastIdEver() + 1;
     }
 
-    public ArrayList<SupplierDTO> searchSupplierByPhone(String phone) {
-        ArrayList<SupplierDTO> temp = new ArrayList<>();
-
-        if (phone == null || phone.trim().isEmpty()) {
-            return temp; // hoặc return arrLocal nếu bạn muốn hiển thị tất cả
-        }
-
-        // for (SupplierDTO s : arrLocal) {
-        // if (s.getPhone() != null && s.getPhone().contains(phone.trim())) {
-        // temp.add(s);
-        // }
-        // }
-        return temp;
-    }
-
-    public int delete(Integer id, int employee_roleId, int employeeLoginId) {
+    public BUSResult delete(int id) {
         // 1.Kiểm tra null
-        if (id == null || id <= 0)
-            return 2;
+        if (id <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
 
-        // 2.Kiểm tra quyền xóa Nhà cung cấp (permission ID = 11)
-
-        // 3.Kiểm tra Nhà cung cấp da bi xoa hoac khong ton tai || !targetSup.isStatus()
-        // SupplierDTO targetSup = getByIdLocal(id);
-        // if (targetSup == null)
-        // return 5;
-
-        // 4.Kiểm tra đã xoá ở CSDL
-        if (!SupplierDAL.getInstance().delete(id)) {
-            return 6;
+        SupplierDTO targetSupplier = getById(id);
+        if (targetSupplier == null) {
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
         }
 
-        // Cập nhật trạng thái trong bộ nhớ local
-        // for (SupplierDTO sup : arrLocal) {
-        // if (Objects.equals(sup.getId(), id)) {
-        // // sup.setStatus(false);
-        // break;
-        // }
-        // }
-        return 1;
+        // 4. Lấy ID trạng thái INACTIVE để so sánh và sử dụng
+        int inactiveStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.SUPPLIER, Status.Supplier.INACTIVE).getId();
+
+        // 5. Kiểm tra ràng buộc dữ liệu (Quyết định Xóa mềm hay Xóa cứng)
+        boolean hasImport = ImportBUS.getInstance().isSupplierInAnyImport(id);
+        // --- CHỐT CHẶN: XỬ LÝ KHI ĐÃ INACTIVE ---
+        if (targetSupplier.getStatusId() == inactiveStatusId) {
+            if (hasImport) {
+                // Đã ẩn rồi và có lịch sử -> Trả về thành công luôn
+                return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.DATA_ALREADY_DELETED);
+            }
+            // Nếu đã Inactive mà không có hóa đơn (do dữ liệu rác) -> Cho phép rơi xuống
+            // Xóa Cứng bên dưới
+        }
+
+        boolean success;
+        if (hasImport) {
+            // --- XỬ LÝ XÓA MỀM (SOFT DELETE) ---
+            // Gọi DAL truyền trực tiếp ID và Status ID mới
+            success = SupplierDAL.getInstance().updateStatus(id, inactiveStatusId);
+        } else {
+            // --- XỬ LÝ XÓA CỨNG (HARD DELETE) ---
+            success = SupplierDAL.getInstance().delete(id);
+        }
+
+        // 6. Kiểm tra kết quả thực thi Database
+        if (!success) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+
+        // 8. Trả về kết quả thành công
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.CUSTOMER_DELETE_SUCCESS);
     }
 
     private boolean isValidSupplierInput(SupplierDTO obj) {
@@ -122,83 +95,94 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
                 (obj.getEmail() == null || obj.getEmail().isEmpty() || validator.validateEmail(obj.getEmail()));
     }
 
-    public int insert(SupplierDTO obj, int employee_roleId, int employeeLoginId) {
+    public BUSResult insert(SupplierDTO obj) {
         // 1. Kiểm tra ID hợp lệ
-        if (obj == null || employee_roleId <= 0 || employeeLoginId <= 0)
-            return 2;
+        if (obj == null)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
 
-        // 3. Kiểm tra dữ liệu đầu vào trên GUI
-        if (!isValidSupplierInput(obj))
-            return 6;
-
-        // 5. validate khi chuyen xuong database
         ValidationUtils validate = ValidationUtils.getInstance();
-        // obj.setStatus(true);
-        obj.setName(validate.normalizeWhiteSpace(obj.getName()));
-        obj.setPhone(obj.getPhone());
-        obj.setAddress(validate.normalizeWhiteSpace(obj.getAddress()));
-        if (obj.getEmail() != null && !obj.getEmail().isEmpty()) {
-            obj.setEmail(validate.normalizeWhiteSpace(obj.getEmail()));
-        }
-
-        // 6. Kiểm tra thêm vào CSDL
-        if (!SupplierDAL.getInstance().insert(obj))
-            return 5;
-
-        return 1;// them thanh cong
-    }
-
-    public int update(SupplierDTO obj, int employee_roleId, int employeeLoginId) {
-        // 1. Kiểm tra null & phân quyền
-        if (obj == null || employee_roleId <= 0 || employeeLoginId <= 0)
-            return 2;
-
-        if (!isValidSupplierInput(obj))
-            return 6;
-
-        // 6. Kiểm tra đầu vào hợp lệ khi truyền xuống CSDL
-        ValidationUtils validate = ValidationUtils.getInstance();
-        // obj.setStatus(true);
+        obj.setEmail(validate.convertEmptyStringToNull(obj.getEmail()));
         obj.setName(validate.normalizeWhiteSpace(obj.getName()));
         obj.setPhone(validate.normalizeWhiteSpace(obj.getPhone()));
         obj.setAddress(validate.normalizeWhiteSpace(obj.getAddress()));
-        if (obj.getEmail() != null && !obj.getEmail().isEmpty()) {
-            obj.setEmail(validate.normalizeWhiteSpace(obj.getEmail()));
+        obj.setEmail(validate.normalizeWhiteSpace(obj.getEmail()));
+        if (!isValidSupplierInput(obj)) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        }
+        // Đảm bảo trạng thái có id hợp lệ
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.SUPPLIER, obj.getStatusId()))
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.STATUS_IDForType_INVALID);
+
+        if (isExistsSupplier(obj, -1)) {
+            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.SUPPLIER_ADD_DUPLICATE);
         }
 
-        // 6. Kiểm tra thêm vào CSDL
-        if (!SupplierDAL.getInstance().update(obj)) {
-            return 5;
+        if (!SupplierDAL.getInstance().insert(obj)) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
-        return 1;
+
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.SUPPLIER_ADD_SUCCESS);
     }
 
-    public boolean isExistsSupplier(SupplierDTO obj) {
+    public BUSResult update(SupplierDTO obj) {
+        // 1. Kiểm tra null & phân quyền
+        if (obj == null)
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+
+        // 2. Kiểm tra Status
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.SUPPLIER, obj.getStatusId()))
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.STATUS_IDForType_INVALID);
+        // 3. Kiểm tra đầu vào hợp lệ khi truyền xuống CSDL
         ValidationUtils validate = ValidationUtils.getInstance();
+        obj.setEmail(validate.convertEmptyStringToNull(obj.getEmail()));
+        obj.setName(validate.normalizeWhiteSpace(obj.getName()));
+        obj.setPhone(validate.normalizeWhiteSpace(obj.getPhone()));
+        obj.setAddress(validate.normalizeWhiteSpace(obj.getAddress()));
+        obj.setEmail(validate.normalizeWhiteSpace(obj.getEmail()));
+        if (!isValidSupplierInput(obj)) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        }
 
-        // Chuẩn hóa dữ liệu đầu vào một lần để tối ưu hiệu năng
-        String nName = validate.normalizeWhiteSpace(obj.getName());
-        String nPhone = validate.normalizeWhiteSpace(obj.getPhone());
-        String nAddress = validate.normalizeWhiteSpace(obj.getAddress());
-        String nEmail = validate.normalizeWhiteSpace(obj.getEmail());
+        if (isExistsSupplier(obj, obj.getId())) {
+            return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.SUPPLIER_UPDATE_DUPLICATE);
+        }
+        // 6. Kiểm tra thêm vào CSDL
+        if (!SupplierDAL.getInstance().update(obj)) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.SUPPLIER_UPDATE_SUCCESS);
+    }
 
-        // for (SupplierDTO sup : arrLocal) {
-        // // Chỉ coi là trùng nếu khác ID nhưng KHỚP HẾT 4 trường quan trọng
-        // if (sup.getId() != obj.getId() &&
-        // sup.getName().equalsIgnoreCase(nName) &&
-        // sup.getPhone().equalsIgnoreCase(nPhone) &&
-        // sup.getAddress().equalsIgnoreCase(nAddress) &&
-        // sup.getEmail().equalsIgnoreCase(nEmail)) {
-        // return true;
-        // }
-        // }
-        return false;
+    public boolean isExistsSupplier(SupplierDTO obj, int currentId) {
+        if (obj.getName() == null || obj.getName().trim().isEmpty() ||
+                obj.getPhone() == null || obj.getPhone().trim().isEmpty() ||
+                obj.getAddress() == null || obj.getAddress().trim().isEmpty())
+            return false;
+        return SupplierDAL.getInstance().existsBySupplierData(obj.getName(), obj.getPhone(), obj.getAddress(),
+                obj.getEmail(), currentId);
+    }
+
+    public BUSResult filterSuppliersPagedForManageDisplay(
+            String keyword, int statusId, int pageIndex, int pageSize) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalStatusId = (statusId <= 0) ? -1 : statusId;
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+
+        // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
+        PagedResponse<SupplierDisplayDTO> pagedData = SupplierDAL.getInstance()
+                .filterSuppliersPagedForManageDisplay(cleanKeyword, finalStatusId, finalPageIndex,
+                        finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
     @Override
     public SupplierDTO getById(Integer id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (id == null || id <= 0)
+            return null;
+        return SupplierDAL.getInstance().getById(id);
     }
-
 }

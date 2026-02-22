@@ -15,6 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.Getter;
 
@@ -35,8 +36,13 @@ public class ImportProductModalController implements IModalController {
     private HBox hbInputPrice, hbInputSellingPrice;
     @FXML
     private AnchorPane acRootInput;
+    @FXML
+    private StackPane loadingOverlay;
+
     @Getter
     private boolean isSaved;
+    @Getter
+    private String resultMessage = "";
     private int typeModal;
     @Getter
     private TempDetailImportDTO tempDetailImport;

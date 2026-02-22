@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="GUI.AttendanceTabNestedController"
+      prefHeight="400.0" prefWidth="900.0" spacing="10.0">
+    <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/></padding>
+
+    <children>
+        <!-- Header -->
+        <Label text="CHẤM CÔNG VÀ TÍNH GIỜ OT" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #1f7d84;"/>
+
+        <Separator/>
+
+        <!-- Action Buttons -->
+        <HBox spacing="8.0">
+            <children>
+                <Button fx:id="btnAdd" styleClass="btn-primary" text="Thêm Mới"/>
+            </children>
+        </HBox>
+
+        <!-- Month Selector -->
+        <HBox spacing="10.0" alignment="CENTER_LEFT">
+            <children>
+                <Label text="Chọn Tháng:"/>
+                <ComboBox fx:id="cbMonth" prefWidth="150.0" styleClass="combobox-1"/>
+            </children>
+        </HBox>
+
+        <!-- Statistics Section -->
+        <VBox spacing="8.0" styleClass="white-bg, shadow">
+            <padding><Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/></padding>
+            <children>
+                <HBox spacing="30.0">
+                    <children>
+                        <VBox spacing="4.0">
+                            <children>
+                                <Label style="-fx-font-size: 11; -fx-text-fill: #666;" text="Tổng Giờ Làm"/>
+                                <Label fx:id="lblTotalHours" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #1f7d84;" text="0.00 giờ"/>
+                            </children>
+                        </VBox>
+                        <VBox spacing="4.0">
+                            <children>
+                                <Label style="-fx-font-size: 11; -fx-text-fill: #666;" text="Tổng Ngày Làm"/>
+                                <Label fx:id="lblWorkDays" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #1f7d84;" text="0 ngày"/>
+                            </children>
+                        </VBox>
+                        <VBox spacing="4.0">
+                            <children>
+                                <Label style="-fx-font-size: 11; -fx-text-fill: #666;" text="Tổng Giờ OT"/>
+                                <Label fx:id="lblOtHours" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #d9534f;" text="0.00 giờ"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+        <!-- Attendance Table -->
+        <TableView fx:id="tblAttendance" prefHeight="250.0" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colDate" prefWidth="100.0" text="Ngày" sortable="false"/>
+                <TableColumn fx:id="colCheckIn" prefWidth="150.0" text="Giờ Vào" sortable="false"/>
+                <TableColumn fx:id="colCheckOut" prefWidth="150.0" text="Giờ Ra" sortable="false"/>
+                <TableColumn fx:id="colWorkHours" prefWidth="100.0" text="Giờ Làm" sortable="false"/>
+                <TableColumn fx:id="colOtHours" prefWidth="100.0" text="Giờ OT" sortable="false"/>
+            </columns>
+        </TableView>
+    </children>
+</VBox>

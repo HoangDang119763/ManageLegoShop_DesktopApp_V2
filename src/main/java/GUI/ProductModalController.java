@@ -11,10 +11,10 @@ import ENUM.PermissionKey;
 import ENUM.Status;
 import ENUM.StatusType;
 import SERVICE.ImageService;
-import SERVICE.SecureExecutor;
 import INTERFACE.IModalController;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.collections.FXCollections;
@@ -23,6 +23,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -66,10 +67,14 @@ public class ProductModalController implements IModalController {
     private ComboBox<CategoryDTO> cbSelectCategory;
     @FXML
     private ComboBox<StatusDTO> cbSelectStatus;
+    @FXML
+    private StackPane loadingOverlay;
     @Getter
     private boolean isSaved;
+    @Getter
+    private String resultMessage; // Lưu message để trả về stage cha
     private int typeModal;
-    private ProductDTO product;
+    private ProductDTO product; // Full product data from BUS
     private ProductBUS productBUS;
     private StatusBUS statusBUS;
     private CategoryBUS categoryBUS;
@@ -154,21 +159,26 @@ public class ProductModalController implements IModalController {
             cbSelectStatus.getSelectionModel().selectFirst();
             cbSelectCategory.getSelectionModel().selectFirst();
         } else if (typeModal == 1) {
-            if (product == null) {
-                handleClose();
-            }
             modalName.setText("Sửa sản phẩm");
 
         } else if (typeModal == 2) {
-            if (product == null) {
-                handleClose();
-            }
             modalName.setText("Xem chi tiết sản phẩm");
         }
     }
 
-    public void setProduct(ProductDTO product) {
-        this.product = product;
+    /**
+     * Set product by ID - tự động lấy full data từ BUS
+     * 
+     * @param productId ID sản phẩm cần load
+     */
+    public void setProduct(String productId) {
+        // Lấy full product data từ BUS
+        this.product = productBUS.getById(productId);
+        if (this.product == null) {
+            handleClose();
+            return;
+        }
+        // Điền dữ liệu vào form
         txtProductName.setText(product.getName());
         txtProductId.setText(product.getId());
         txtDescription.setText(product.getDescription() == null ? "" : product.getDescription());
@@ -202,7 +212,6 @@ public class ProductModalController implements IModalController {
         if (typeModal == 2) {
             setupReadOnlyMode();
         }
-
     }
 
     private void prepareCategorySelection(int initialId) {
@@ -420,11 +429,17 @@ public class ProductModalController implements IModalController {
                 newImgUrl, // Có thể là null
                 cbSelectCategory.getValue().getId());
 
-        BUSResult insertResult = SecureExecutor.executeSafeBusResult(
-                PermissionKey.PRODUCT_INSERT,
-                () -> productBUS.insert(temp));
-
-        handleResult(insertResult);
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.PRODUCT_INSERT,
+                () -> productBUS.insert(temp),
+                result -> {
+                    if (result.isSuccess()) {
+                        isSaved = true;
+                        resultMessage = result.getMessage();
+                        handleClose();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void updateProduct() throws IOException {
@@ -461,11 +476,17 @@ public class ProductModalController implements IModalController {
                 finalImgUrl,
                 cbSelectCategory.getValue().getId());
 
-        BUSResult updateResult = SecureExecutor.executeSafeBusResult(
-                PermissionKey.PRODUCT_UPDATE,
-                () -> productBUS.update(temp));
-
-        handleResult(updateResult);
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.PRODUCT_UPDATE,
+                () -> productBUS.update(temp),
+                result -> {
+                    if (result.isSuccess()) {
+                        isSaved = true;
+                        resultMessage = result.getMessage();
+                        handleClose();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void handleResult(BUSResult result) {

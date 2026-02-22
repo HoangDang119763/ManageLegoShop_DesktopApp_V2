@@ -118,11 +118,11 @@ public class SellingProductController {
     }
 
     private void loadProductWrapper() {
-        clearGrid(gpShowProductWrapper);
-        addConstraintRow(gpShowProductWrapper,
-                ProductBUS.getInstance().filterProducts("", "", -1, 1, null, null, true),
-                140);
-        addEventClickForProduct(tbvDetailInvoiceProduct, gpShowProductWrapper);
+//        clearGrid(gpShowProductWrapper);
+//        addConstraintRow(gpShowProductWrapper,
+//                ProductBUS.getInstance().filterProducts("", "", -1, 1, null, null, true),
+//                140);
+//        addEventClickForProduct(tbvDetailInvoiceProduct, gpShowProductWrapper);
     }
 
     public void loadTable() {
@@ -176,9 +176,10 @@ public class SellingProductController {
 
     // search
     private void onMousedClickSearchProduct() {
-        ArrayList<ProductDTO> list = ProductBUS.getInstance().filterProducts("Tên sản phẩm",
-                txtProductNameSearch.getText(), -1, 1, null, null);
+//        ArrayList<ProductDTO> list = ProductBUS.getInstance().filterProducts("Tên sản phẩm",
+//                txtProductNameSearch.getText(), -1, 1, null, null);
         clearGrid(gpShowProductWrapper);
+        ArrayList<ProductDTO> list = new ArrayList<>();
         if (list.isEmpty()) {
             return;
         }
@@ -582,15 +583,15 @@ public class SellingProductController {
     }
 
     private void handleCategoryFilterChange() {
-        ArrayList<ProductDTO> list = ProductBUS.getInstance().filterProducts("", "",
-                categoryMap.getOrDefault(cbCategoryFilter.getValue(), -1), 1, null, null,
-                true);
-        clearGrid(gpShowProductWrapper);
-        if (list.isEmpty()) {
-            return;
-        }
-        addConstraintRow(gpShowProductWrapper, list, 140);
-        addEventClickForProduct(tbvDetailInvoiceProduct, gpShowProductWrapper);
+//        ArrayList<ProductDTO> list = ProductBUS.getInstance().filterProducts("", "",
+//                categoryMap.getOrDefault(cbCategoryFilter.getValue(), -1), 1, null, null,
+//                true);
+//        clearGrid(gpShowProductWrapper);
+//        if (list.isEmpty()) {
+//            return;
+//        }
+//        addConstraintRow(gpShowProductWrapper, list, 140);
+//        addEventClickForProduct(tbvDetailInvoiceProduct, gpShowProductWrapper);
     }
 
     private boolean isNotSelectedCustomer() {

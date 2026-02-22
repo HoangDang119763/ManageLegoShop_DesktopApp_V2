@@ -5,6 +5,8 @@ import ENUM.BUSOperationResult;
 import ENUM.PermissionKey;
 import UTILS.AppMessages;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
@@ -19,6 +21,7 @@ import BUS.AccountBUS;
  */
 @Slf4j
 public class SecureExecutor {
+    private static final Logger log = LoggerFactory.getLogger(SecureExecutor.class);
 
     // ==========================
     // 1️⃣ DEV MODE THROW EXCEPTION

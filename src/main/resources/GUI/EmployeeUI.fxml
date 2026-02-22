@@ -27,7 +27,6 @@
                                 
                                 <HBox alignment="CENTER_LEFT" layoutX="210.0" layoutY="3.0" prefHeight="46.0" spacing="10.0" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="3.0">
                                     <children>
-                                        <ComboBox fx:id="cbSearchBy" prefHeight="26.0" prefWidth="140.0" stylesheets="@../css/base.css" />
                                         <ComboBox fx:id="cbRoleFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
                                         <ComboBox fx:id="cbStatusFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
                                     </children>
@@ -72,7 +71,7 @@
                <children>
                   <AnchorPane prefHeight="50.0" prefWidth="880.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <HBox alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="0.0">
+                        <HBox alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0">
                            <children>
                               <Button fx:id="detailBtn" layoutX="10.0" layoutY="17.0" mnemonicParsing="false" prefHeight="34.0" prefWidth="94.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Chi tiết">
                                  <graphic>
@@ -108,6 +107,7 @@
                               </Button>
                            </children>
                         </HBox>
+                        <fx:include fx:id="pagination" source="PaginationControl.fxml" AnchorPane.leftAnchor="310.0" />
                         <HBox layoutX="10.399999618530273" layoutY="4.800000190734863" spacing="10.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="10.0">
                            <children>
                               <Button fx:id="refreshBtn" mnemonicParsing="false" prefHeight="35.0" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Làm mới">
@@ -134,5 +134,6 @@
             </AnchorPane>
          </bottom>
       </BorderPane>
+      <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
    </children>
 </AnchorPane>

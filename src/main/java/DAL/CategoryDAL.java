@@ -1,6 +1,8 @@
 package DAL;
 
 import DTO.CategoryDTO;
+import DTO.CategoryDisplayDTO;
+import DTO.PagedResponse;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -42,35 +44,27 @@ public class CategoryDAL extends BaseDAL<CategoryDTO, Integer> {
     @Override
     protected String getInsertQuery() {
         // Thêm created_at và updated_at vào danh sách cột
-        return "(name, status_id, created_at, updated_at) VALUES (?, ?, ?, ?)";
+        return "(name, status_id) VALUES (?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, CategoryDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setInt(2, obj.getStatusId());
-
-        // Nạp thời gian từ Java truyền xuống
-        statement.setTimestamp(3, obj.getCreatedAt() != null ? java.sql.Timestamp.valueOf(obj.getCreatedAt()) : null);
-        statement.setTimestamp(4, obj.getUpdatedAt() != null ? java.sql.Timestamp.valueOf(obj.getUpdatedAt()) : null);
     }
 
     @Override
     protected String getUpdateQuery() {
         // Thêm updated_at vào câu lệnh SET
-        return "SET name = ?, status_id = ?, updated_at = ? WHERE id = ?";
+        return "SET name = ?, status_id = ? WHERE id = ?";
     }
 
     @Override
     protected void setUpdateParameters(PreparedStatement statement, CategoryDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setInt(2, obj.getStatusId());
-
-        // Tham số thứ 3 là thời gian cập nhật
-        statement.setTimestamp(3, obj.getUpdatedAt() != null ? java.sql.Timestamp.valueOf(obj.getUpdatedAt()) : null);
-
         // Tham số cuối là ID để WHERE
-        statement.setInt(4, obj.getId());
+        statement.setInt(3, obj.getId());
     }
 
     public boolean updateStatus(int id, int newStatusId) {
@@ -183,5 +177,75 @@ public class CategoryDAL extends BaseDAL<CategoryDTO, Integer> {
         } catch (SQLException e) {
             return false;
         }
+    }
+
+    /**
+     * Lọc danh mục với JOIN để lấy statusDescription
+     * Tránh gọi BUS lẻ nhiều lần cho mỗi dòng bảng
+     */
+    public PagedResponse<CategoryDisplayDTO> filterCategoriesPagedDisplay(
+            String keyword, int statusId, int pageIndex, int pageSize) {
+        ArrayList<CategoryDisplayDTO> list = new ArrayList<>();
+        int totalCount = 0;
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.id, c.name, c.status_id, s.description as status_description, " +
+                        "c.created_at, c.updated_at, COUNT(*) OVER() as total_count " +
+                        "FROM category c " +
+                        "LEFT JOIN status s ON c.status_id = s.id " +
+                        "WHERE 1=1");
+
+        ArrayList<Object> params = new ArrayList<>();
+
+        // 1. Lọc theo trạng thái
+        if (statusId != -1) {
+            sql.append(" AND c.status_id = ?");
+            params.add(statusId);
+        }
+
+        // 2. Tìm kiếm (Mã hoặc Tên)
+        if (keyword != null && !keyword.isEmpty()) {
+            sql.append(" AND (CAST(c.id AS CHAR) LIKE ? OR LOWER(c.name) LIKE ?)");
+            String dbKeyword = "%" + keyword + "%";
+            params.add(dbKeyword);
+            params.add(dbKeyword);
+        }
+
+        // 3. PHÂN TRANG
+        sql.append(" LIMIT ? OFFSET ?");
+        int offset = pageIndex * pageSize;
+        params.add(pageSize);
+        params.add(offset);
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalCount == 0) {
+                        totalCount = rs.getInt("total_count");
+                    }
+                    list.add(mapResultSetToCategoryDisplay(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return new PagedResponse<>(list, pageIndex, pageSize, totalCount);
+    }
+
+    private CategoryDisplayDTO mapResultSetToCategoryDisplay(ResultSet rs) throws SQLException {
+        return new CategoryDisplayDTO(
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getInt("status_id"),
+                rs.getString("status_description"),
+                rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null,
+                rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
     }
 }

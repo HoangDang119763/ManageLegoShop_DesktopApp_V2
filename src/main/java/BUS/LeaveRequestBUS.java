@@ -19,7 +19,7 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
 
     @Override
     public ArrayList<LeaveRequestDTO> getAll() {
-        return LeaveRequestDAL.getInstance().getAll();
+        return (ArrayList<LeaveRequestDTO>) LeaveRequestDAL.getInstance().getAll();
     }
 
     @Override
@@ -41,9 +41,6 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
         // 4. validate khi chuyển xuống database
         ValidationUtils validate = ValidationUtils.getInstance();
         obj.setStatus(true);
-        if (obj.getType() != null) {
-            obj.setType(validate.normalizeWhiteSpace(obj.getType()));
-        }
         if (obj.getContent() != null) {
             obj.setContent(validate.normalizeWhiteSpace(obj.getContent()));
         }
@@ -72,9 +69,6 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
 
         // 5. Kiểm tra đầu vào hợp lệ khi truyền xuống CSDL
         ValidationUtils validate = ValidationUtils.getInstance();
-        if (obj.getType() != null) {
-            obj.setType(validate.normalizeWhiteSpace(obj.getType()));
-        }
         if (obj.getContent() != null) {
             obj.setContent(validate.normalizeWhiteSpace(obj.getContent()));
         }
@@ -109,14 +103,7 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
     }
 
     public ArrayList<LeaveRequestDTO> getByEmployeeId(int employeeId) {
-        ArrayList<LeaveRequestDTO> allLeaveRequests = getAll();
-        ArrayList<LeaveRequestDTO> result = new ArrayList<>();
-        for (LeaveRequestDTO leave : allLeaveRequests) {
-            if (leave.getEmployeeId() == employeeId) {
-                result.add(leave);
-            }
-        }
-        return result;
+        return LeaveRequestDAL.getInstance().getByEmployeeId(employeeId);
     }
 
     private boolean isValidLeaveRequestInput(LeaveRequestDTO obj) {
@@ -130,11 +117,6 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
             return false;
 
         ValidationUtils validator = ValidationUtils.getInstance();
-
-        if (obj.getType() != null && !obj.getType().isEmpty()) {
-            if (!validator.validateVietnameseText100(obj.getType()))
-                return false;
-        }
 
         if (obj.getContent() != null && !obj.getContent().isEmpty()) {
             if (!validator.validateVietnameseText255(obj.getContent()))

@@ -2,9 +2,17 @@ package DAL;
 
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
+import DTO.PagedResponse;
 import DTO.EmployeeDetailDTO;
+import DTO.EmployeeDisplayDTO;
+import DTO.EmployeePersonalInfoDTO;
+import DTO.EmployeeAccountInfoDTO;
+import DTO.EmployeeJobInfoDTO;
+import DTO.EmployeePayrollInfoDTO;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     public static final EmployeeDAL INSTANCE = new EmployeeDAL();
@@ -34,8 +42,8 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 resultSet.getString("gender"),
                 resultSet.getObject("account_id") != null ? resultSet.getInt("account_id") : null,
                 resultSet.getString("health_ins_code"),
-                resultSet.getString("social_insurance_code"),
-                resultSet.getString("unemployment_insurance_code"),
+                !resultSet.getString("social_insurance_code").equals("0"),
+                !resultSet.getString("unemployment_insurance_code").equals("0"),
                 resultSet.getBoolean("is_personal_income_tax"),
                 resultSet.getBoolean("is_transportation_support"),
                 resultSet.getBoolean("is_accommodation_support"),
@@ -457,5 +465,284 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                         rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
 
                 .build();
+    }
+
+    public PagedResponse<EmployeeDisplayDTO> filterEmployeesPagedForManageDisplay(
+            String keyword, int roleId, int statusId, int pageIndex, int pageSize) {
+
+        List<EmployeeDisplayDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // SQL hỗ trợ tìm kiếm theo ID, Họ, Tên, và cả Họ Tên đầy đủ (CONCAT)
+        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, e.role_id, e.status_id, e.account_id, " +
+                "r.name AS roleName, " +
+                "s.description AS statusDescription, " +
+                "sal.base AS salary, " +
+                "sal.coefficient AS efficientSalary, " +
+                "acc.username, " +
+                "COUNT(*) OVER() AS total_count " +
+                "FROM employee e " +
+                "LEFT JOIN role r ON e.role_id = r.id " +
+                "LEFT JOIN status s ON e.status_id = s.id " +
+                "LEFT JOIN salary sal ON r.salary_id = sal.id " +
+                "LEFT JOIN account acc ON e.account_id = acc.id " +
+                "WHERE e.id != 1 " + // Loại trừ admin hệ thống (ID = 1)
+                "AND (? = '' OR (" +
+                "    CAST(e.id AS CHAR) LIKE ? " +
+                "    OR LOWER(e.first_name) LIKE ? " +
+                "    OR LOWER(e.last_name) LIKE ? " +
+                "    OR LOWER(CONCAT(e.first_name, ' ', e.last_name)) LIKE ?" +
+                ")) " +
+                "AND (? = -1 OR e.role_id = ?) " +
+                "AND (? = -1 OR e.status_id = ?) " +
+                "LIMIT ?, ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Chuẩn hóa từ khóa tìm kiếm
+            String cleanKeyword = (keyword == null) ? "" : keyword.trim();
+            String searchKey = "%" + cleanKeyword.toLowerCase() + "%";
+
+            int idx = 1;
+
+            // Gán tham số cho phần Tìm kiếm (Dựa trên cleanKeyword)
+            ps.setString(idx++, cleanKeyword);
+            ps.setString(idx++, searchKey); // Like ID
+            ps.setString(idx++, searchKey); // Like First Name
+            ps.setString(idx++, searchKey); // Like Last Name
+            ps.setString(idx++, searchKey); // Like Full Name (CONCAT)
+
+            // Gán tham số cho Filter Role
+            ps.setInt(idx++, roleId);
+            ps.setInt(idx++, roleId);
+
+            // Gán tham số cho Filter Status
+            ps.setInt(idx++, statusId);
+            ps.setInt(idx++, statusId);
+
+            // Gán tham số cho Phân trang
+            ps.setInt(idx++, offset);
+            ps.setInt(idx++, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0) {
+                        totalItems = rs.getInt("total_count");
+                    }
+                    items.add(mapResultSetToDisplayObject(rs)); // Sử dụng hàm map đã có của bạn
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lọc nhân viên: " + e.getMessage());
+        }
+
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * Map ResultSet to EmployeeDisplayDTO for manage display
+     * 
+     * @param rs ResultSet from filterEmployeesPagedForManageDisplay
+     * @return EmployeeDisplayDTO
+     */
+    private EmployeeDisplayDTO mapResultSetToDisplayObject(ResultSet rs) throws SQLException {
+        return new EmployeeDisplayDTO(
+                rs.getInt("id"),
+                rs.getString("first_name") + " " + rs.getString("last_name"),
+                rs.getString("gender"),
+                rs.getInt("role_id"),
+                rs.getString("roleName"),
+                rs.getObject("salary") != null ? rs.getBigDecimal("salary") : null,
+                rs.getObject("efficientSalary") != null ? rs.getBigDecimal("efficientSalary") : null,
+                rs.getString("username"),
+                rs.getInt("status_id"),
+                rs.getString("statusDescription"));
+    }
+    // ==================== 4 NEW GETTER METHODS (per tab) ====================
+
+    /**
+     * Lấy thông tin cá nhân của nhân viên (TAB 1: PERSONAL INFO)
+     * 
+     * @param employeeId ID của employee
+     * @return EmployeePersonalInfoDTO hoặc null nếu không tìm thấy
+     */
+    public EmployeePersonalInfoDTO getPersonalInfo(int employeeId) {
+        String sql = "SELECT e.id AS employee_id, e.first_name, e.last_name, e.date_of_birth, e.gender, " +
+                "e.phone, e.email, e.created_at, e.updated_at " +
+                "FROM employee e WHERE e.id = ? LIMIT 1";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, employeeId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return EmployeePersonalInfoDTO.builder()
+                            .employeeId(resultSet.getInt("employee_id"))
+                            .firstName(resultSet.getString("first_name"))
+                            .lastName(resultSet.getString("last_name"))
+                            .dateOfBirth(resultSet.getDate("date_of_birth") != null
+                                    ? resultSet.getDate("date_of_birth").toLocalDate()
+                                    : null)
+                            .gender(resultSet.getString("gender"))
+                            .phone(resultSet.getString("phone"))
+                            .email(resultSet.getString("email"))
+                            .createdAt(resultSet.getTimestamp("created_at") != null
+                                    ? resultSet.getTimestamp("created_at").toLocalDateTime()
+                                    : null)
+                            .updatedAt(resultSet.getTimestamp("updated_at") != null
+                                    ? resultSet.getTimestamp("updated_at").toLocalDateTime()
+                                    : null)
+                            .build();
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving employee personal info: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Lấy thông tin tài khoản của nhân viên (TAB 2: ACCOUNT INFO)
+     * 
+     * @param employeeId ID của employee
+     * @return EmployeeAccountInfoDTO hoặc null nếu không tìm thấy
+     */
+    public EmployeeAccountInfoDTO getAccountInfo(int employeeId) {
+        String sql = "SELECT a.id AS account_id, a.username, a.status_id AS account_status_id, " +
+                "st_acc.description AS account_status, a.last_login " +
+                "FROM employee e " +
+                "LEFT JOIN account a ON e.account_id = a.id " +
+                "LEFT JOIN status st_acc ON a.status_id = st_acc.id " +
+                "WHERE e.id = ? LIMIT 1";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, employeeId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return EmployeeAccountInfoDTO.builder()
+                            .accountId(
+                                    resultSet.getObject("account_id") != null ? resultSet.getInt("account_id") : null)
+                            .username(resultSet.getString("username"))
+                            .accountStatusId(resultSet.getObject("account_status_id") != null
+                                    ? resultSet.getInt("account_status_id")
+                                    : null)
+                            .accountStatus(resultSet.getString("account_status"))
+                            .lastLogin(resultSet.getTimestamp("last_login") != null
+                                    ? resultSet.getTimestamp("last_login").toLocalDateTime()
+                                    : null)
+                            .build();
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving employee account info: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Lấy thông tin công việc của nhân viên (TAB 3: JOB INFO)
+     * Note: employmentHistoryDetail sẽ được load riêng thông qua BUS
+     * 
+     * @param employeeId ID của employee
+     * @return EmployeeJobInfoDTO hoặc null nếu không tìm thấy
+     */
+    public EmployeeJobInfoDTO getJobInfo(int employeeId) {
+        String sql = "SELECT e.department_id, d.name AS department_name, r.id AS role_id, r.name AS role_name, " +
+                "e.status_id, st.description AS status_description, s.id AS salary_id, s.base AS base_salary, " +
+                "s.coefficient AS salary_coefficient " +
+                "FROM employee e " +
+                "LEFT JOIN department d ON e.department_id = d.id " +
+                "LEFT JOIN role r ON e.role_id = r.id " +
+                "LEFT JOIN status st ON e.status_id = st.id " +
+                "LEFT JOIN salary s ON r.salary_id = s.id " +
+                "WHERE e.id = ? LIMIT 1";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, employeeId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return EmployeeJobInfoDTO.builder()
+                            .departmentId(resultSet.getObject("department_id") != null
+                                    ? resultSet.getInt("department_id")
+                                    : null)
+                            .departmentName(resultSet.getString("department_name"))
+                            .roleId(resultSet.getObject("role_id") != null
+                                    ? resultSet.getInt("role_id")
+                                    : null)
+                            .roleName(resultSet.getString("role_name"))
+                            .statusId(resultSet.getObject("status_id") != null
+                                    ? resultSet.getInt("status_id")
+                                    : null)
+                            .statusDescription(resultSet.getString("status_description"))
+                            .salaryId(resultSet.getObject("salary_id") != null ? resultSet.getInt("salary_id") : null)
+                            .baseSalary(resultSet.getObject("base_salary") != null
+                                    ? resultSet.getBigDecimal("base_salary")
+                                    : null)
+                            .salaryCoefficient(resultSet.getObject("salary_coefficient") != null
+                                    ? resultSet.getBigDecimal("salary_coefficient")
+                                    : null)
+                            .build();
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving employee job info: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Lấy thông tin lương & bảo hiểm của nhân viên (TAB 4: PAYROLL & BENEFITS)
+     * 
+     * @param employeeId ID của employee
+     * @return EmployeePayrollInfoDTO hoặc null nếu không tìm thấy
+     */
+    public EmployeePayrollInfoDTO getPayrollInfo(int employeeId) {
+        String sql = "SELECT e.id, e.health_ins_code, tax.id AS tax_id, tax.num_dependents, " +
+                "e.is_social_insurance, e.is_unemployment_insurance, e.is_personal_income_tax, " +
+                "e.is_transportation_support, e.is_accommodation_support " +
+                "FROM employee e " +
+                "LEFT JOIN tax ON tax.employee_id = e.id " +
+                "WHERE e.id = ? LIMIT 1";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, employeeId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return EmployeePayrollInfoDTO.builder()
+                            .id(resultSet.getInt("id"))
+                            .healthInsCode(resultSet.getString("health_ins_code"))
+                            .taxId(resultSet.getObject("tax_id") != null ? resultSet.getInt("tax_id") : null)
+                            .numDependents(resultSet.getObject("num_dependents") != null
+                                    ? resultSet.getInt("num_dependents")
+                                    : null)
+                            .isSocialInsurance(resultSet.getBoolean("is_social_insurance"))
+                            .isUnemploymentInsurance(resultSet.getBoolean("is_unemployment_insurance"))
+                            .isPersonalIncomeTax(resultSet.getBoolean("is_personal_income_tax"))
+                            .isTransportationSupport(resultSet.getBoolean("is_transportation_support"))
+                            .isAccommodationSupport(resultSet.getBoolean("is_accommodation_support"))
+                            .build();
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving employee payroll info: " + e.getMessage());
+        }
+
+        return null;
     }
 }

@@ -26,7 +26,7 @@ public class DepartmentBUS extends BaseBUS<DepartmentDTO, Integer> {
 
     @Override
     public DepartmentDTO getById(Integer id) {
-        if (id == null || id <=0 ) {
+        if (id == null || id <= 0) {
             return null;
         }
         return DepartmentDAL.getInstance().getById(id);

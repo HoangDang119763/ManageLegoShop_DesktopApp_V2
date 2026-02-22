@@ -253,9 +253,24 @@ CREATE TABLE `detail_import` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+<<<<<<< HEAD:java_sql.sql
 --
 -- Dumping data for table `detail_import`
 --
+=======
+-- 2. Chi tiết phiếu nhập
+-- Lô 1: Nhập 20 cái cho mỗi SP (từ SP00001 đến SP00014 - bỏ qua SP00003 vì giá 0)
+INSERT INTO `detail_import` (`import_id`, `product_id`, `quantity`, `price`, `total_price`, `is_pushed`, `profit_percent`) VALUES
+(1, 'SP00001', 20, 20000.00, 400000.00, 1, 5),
+(1, 'SP00002', 20, 18000.00, 360000.00, 1, 5),
+(1, 'SP00004', 20, 15000.00, 300000.00, 1, 5),
+(1, 'SP00005', 20, 25000.00, 500000.00, 1, 5),
+(1, 'SP00007', 20, 40000.00, 800000.00, 1, 5),
+(1, 'SP00008', 20, 30000.00, 600000.00, 1, 5),
+(1, 'SP00010', 20, 100000.00, 2000000.00, 1, 5),
+(1, 'SP00011', 20, 30000.00, 600000.00, 1, 5),
+(1, 'SP00014', 20, 45000.00, 900000.00, 1, 5);
+>>>>>>> ff73bee5e39e562a35643c941616a0099229a0af:java_sql_16_2.sql
 
 LOCK TABLES `detail_import` WRITE;
 /*!40000 ALTER TABLE `detail_import` DISABLE KEYS */;
@@ -1006,6 +1021,7 @@ INSERT INTO `time_sheet` VALUES (1,1,'2026-02-01 08:00:00','2026-02-01 17:00:00'
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
+<<<<<<< HEAD:java_sql.sql
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
@@ -1015,3 +1031,32 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2026-02-20 20:32:25
+=======
+-- =============================================
+-- 2. CẬP NHẬT TRẠNG THÁI CHO GIAO DỊCH (COMPLETED)
+-- =============================================
+UPDATE invoice    SET status_id = (SELECT id FROM status WHERE type = 'INVOICE' AND name = 'Completed' LIMIT 1);
+UPDATE import
+SET status_id = (
+    SELECT id 
+    FROM status 
+    WHERE type = 'IMPORT' AND name = 'Incompleted' 
+    LIMIT 1
+)
+WHERE id = 2;  -- Cập nhật cho bản ghi có id = 2
+
+UPDATE import
+SET status_id = (
+    SELECT id 
+    FROM status 
+    WHERE type = 'IMPORT' AND name = 'Completed' 
+    LIMIT 1
+)
+WHERE id = 1;  -- Cập nhật cho bản ghi có id = 2
+-- =============================================
+-- 3. CẬP NHẬT TRẠNG THÁI CHO QUY TRÌNH (PENDING)
+-- =============================================
+UPDATE leave_request SET status_id = (SELECT id FROM status WHERE type = 'LEAVE_REQUEST' AND name = 'Canceled' LIMIT 1);
+UPDATE employment_history SET status_id = (SELECT id FROM status WHERE type = 'WORKING_HISTORY' AND name = 'Canceled' LIMIT 1);
+SET SQL_SAFE_UPDATES = 1;
+>>>>>>> ff73bee5e39e562a35643c941616a0099229a0af:java_sql_16_2.sql

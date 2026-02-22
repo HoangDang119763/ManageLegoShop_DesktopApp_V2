@@ -29,9 +29,28 @@
                   <FontAwesomeIcon fill="#58c9c9" glyphName="SEARCH" layoutX="175.0" layoutY="35.0" size="1.8em" AnchorPane.leftAnchor="175.0" AnchorPane.topAnchor="15.0" />
                   <Line endX="85.0" layoutX="115.0" layoutY="45.0" startX="-100.0" stroke="#58c9c9" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="45.0" />
 
-                  <Button fx:id="advanceSearchBtn" layoutX="215.0" layoutY="12.0" mnemonicParsing="false" prefHeight="34.0" prefWidth="40.0" styleClass="action-btn" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="12.0">
+                  <Button fx:id="advanceSearchBtn" layoutX="215.0" layoutY="12.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="40.0" styleClass="action-btn" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                      <graphic><FontAwesomeIcon glyphName="FILTER" size="1.2em" styleClass="action-icon" /></graphic>
                   </Button>
+                  <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="727.0" layoutY="1.0" prefHeight="50.0" spacing="12.0" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="4.0">
+                     <children>
+                        <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="82.0" styleClass="action-btn" text="Thêm">
+                           <graphic>
+                              <FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" />
+                           </graphic>
+                        </Button>
+                        <Button fx:id="editBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="82.0" styleClass="action-btn" text="Sửa">
+                           <graphic>
+                              <FontAwesomeIcon glyphName="PENCIL" size="1.2em" styleClass="action-icon" />
+                           </graphic>
+                        </Button>
+                        <Button fx:id="deleteBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="82.0" styleClass="action-btn" text="Xóa">
+                           <graphic>
+                              <FontAwesomeIcon glyphName="TRASH" size="1.2em" styleClass="action-icon" />
+                           </graphic>
+                        </Button>
+                     </children>
+                  </HBox>
                </children>
             </AnchorPane>
          </top>
@@ -71,19 +90,7 @@
                         <AnchorPane prefHeight="65.0">
                            <children>
                               <Line endX="640.0" stroke="#58c9c9" strokeWidth="1.5" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="0.0" />
-                              <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" prefHeight="50.0" spacing="12.0" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
-                                 <children>
-                                    <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="100.0" styleClass="action-btn" text="Thêm">
-                                       <graphic><FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" /></graphic>
-                                    </Button>
-                                    <Button fx:id="editBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="100.0" styleClass="action-btn" text="Sửa">
-                                       <graphic><FontAwesomeIcon glyphName="PENCIL" size="1.2em" styleClass="action-icon" /></graphic>
-                                    </Button>
-                                    <Button fx:id="deleteBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="100.0" styleClass="action-btn" text="Xóa">
-                                       <graphic><FontAwesomeIcon glyphName="TRASH" size="1.2em" styleClass="action-icon" /></graphic>
-                                    </Button>
-                                 </children>
-                              </HBox>
+                              <fx:include fx:id="pagination" source="PaginationControl.fxml" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="10.0" />
                            </children>
                         </AnchorPane>
                      </children>
@@ -192,5 +199,6 @@
             </HBox>
          </center>
       </BorderPane>
+      <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
    </children>
 </AnchorPane>

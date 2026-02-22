@@ -1,6 +1,8 @@
 package DAL;
 
 import DTO.DepartmentDTO;
+import DTO.EmployeeDTO;
+
 import java.sql.*;
 
 public class DepartmentDAL extends BaseDAL<DepartmentDTO, Integer> {
@@ -63,5 +65,4 @@ public class DepartmentDAL extends BaseDAL<DepartmentDTO, Integer> {
         statement.setInt(3, obj.getStatusId());
         statement.setInt(4, obj.getId());
     }
-
 }

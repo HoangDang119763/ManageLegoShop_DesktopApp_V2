@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="GUI.DisciplineTabNestedController"
+      prefHeight="400.0" prefWidth="900.0" spacing="10.0">
+    <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/></padding>
+
+    <children>
+        <!-- Header -->
+        <Label text="KỶ LUẬT &amp; KHEN THƯỞNG" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #1f7d84;"/>
+
+        <Separator/>
+
+        <!-- Filter and Action Controls -->
+        <HBox spacing="8.0" alignment="CENTER_LEFT">
+            <children>
+                <Label text="Loại:"/>
+                <ComboBox fx:id="cbFilterType" prefWidth="150.0" styleClass="combobox-1"/>
+                <Separator orientation="VERTICAL"/>
+                <Button fx:id="btnAdd" styleClass="btn-primary" text="Thêm Mới"/>
+                <Button fx:id="btnEdit" styleClass="btn-primary" text="Chỉnh Sửa"/>
+                <Button fx:id="btnDelete" styleClass="btn-danger" text="Xóa"/>
+            </children>
+        </HBox>
+
+        <!-- Discipline Table -->
+        <TableView fx:id="tblDiscipline" prefHeight="300.0" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId" prefWidth="60.0" text="ID" sortable="false"/>
+                <TableColumn fx:id="colDate" prefWidth="120.0" text="Ngày" sortable="false"/>
+                <TableColumn fx:id="colType" prefWidth="120.0" text="Loại" sortable="false"/>
+                <TableColumn fx:id="colAmount" prefWidth="100.0" text="Số Tiền" sortable="false"/>
+                <TableColumn fx:id="colReason" prefWidth="220.0" text="Lý Do" sortable="false"/>
+                <TableColumn fx:id="colAction" prefWidth="120.0" text="Hành Động" sortable="false"/>
+            </columns>
+        </TableView>
+    </children>
+</VBox>

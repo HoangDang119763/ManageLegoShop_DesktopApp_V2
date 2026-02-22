@@ -8,17 +8,20 @@ import BUS.SalaryBUS;
 import BUS.StatusBUS;
 import BUS.TaxBUS;
 import DTO.EmployeeDetailDTO;
+import DTO.EmployeeDisplayDTO;
+import DTO.PagedResponse;
+import DTO.ProductDisplayDTO;
 import DTO.RoleDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
-import PROVIDER.EmployeeDetailFilterer;
 import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
@@ -28,29 +31,31 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class EmployeeController implements IController {
     @FXML
-    private TableView<EmployeeDetailDTO> tblEmployee;
+    private TableView<EmployeeDisplayDTO> tblEmployee;
     @FXML
-    private TableColumn<EmployeeDetailDTO, Integer> tlb_col_employeeId;
+    private TableColumn<EmployeeDisplayDTO, Integer> tlb_col_employeeId;
     @FXML
-    private TableColumn<EmployeeDetailDTO, String> tlb_col_fullName;
+    private TableColumn<EmployeeDisplayDTO, String> tlb_col_fullName;
     @FXML
-    private TableColumn<EmployeeDetailDTO, String> tlb_col_gender;
+    private TableColumn<EmployeeDisplayDTO, String> tlb_col_gender;
     @FXML
-    private TableColumn<EmployeeDetailDTO, String> tlb_col_role;
+    private TableColumn<EmployeeDisplayDTO, String> tlb_col_role;
     @FXML
-    private TableColumn<EmployeeDetailDTO, String> tlb_col_baseSalary;
+    private TableColumn<EmployeeDisplayDTO, String> tlb_col_baseSalary;
     @FXML
-    private TableColumn<EmployeeDetailDTO, String> tlb_col_salaryCoefficient;
+    private TableColumn<EmployeeDisplayDTO, String> tlb_col_salaryCoefficient;
     @FXML
-    private TableColumn<EmployeeDetailDTO, String> tlb_col_username;
+    private TableColumn<EmployeeDisplayDTO, String> tlb_col_username;
     @FXML
-    private TableColumn<EmployeeDetailDTO, String> tlb_col_status;
+    private TableColumn<EmployeeDisplayDTO, String> tlb_col_status;
     @FXML
     private Button addBtn, editBtn, deleteBtn, refreshBtn, detailBtn, exportExcel;
     @FXML
@@ -58,17 +63,20 @@ public class EmployeeController implements IController {
     @FXML
     private TextField txtSearch;
     @FXML
-    private ComboBox<String> cbSearchBy;
-    @FXML
     private ComboBox<RoleDTO> cbRoleFilter;
     @FXML
     private ComboBox<StatusDTO> cbStatusFilter;
+    @FXML
+    private PaginationController paginationController;
+    @FXML
+    private StackPane loadingOverlay;
 
-    private String searchBy = "Mã nhân viên";
     private String keyword = "";
     private RoleDTO roleFilter = null;
     private StatusDTO statusFilter = null;
-    private EmployeeDetailDTO selectedEmployeeTable;
+    private EmployeeDisplayDTO selectedEmployeeTable;
+
+    private static final int PAGE_SIZE = 14;
 
     // BUS instances
     private EmployeeBUS employeeBUS;
@@ -97,6 +105,7 @@ public class EmployeeController implements IController {
         setupListeners();
         hideButtonWithoutPermission();
         loadTable();
+        setupPagination();
         applyFilters();
     }
 
@@ -106,9 +115,9 @@ public class EmployeeController implements IController {
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_fullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         tlb_col_baseSalary.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatCurrency(cellData.getValue().getBaseSalary())));
+                validationUtils.formatCurrency(cellData.getValue().getSalary())));
         tlb_col_salaryCoefficient.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatCurrency(cellData.getValue().getSalaryCoefficient())));
+                validationUtils.formatCurrency(cellData.getValue().getEfficientSalary())));
         tlb_col_username.setCellValueFactory(new PropertyValueFactory<>("username"));
         tlb_col_role.setCellValueFactory(new PropertyValueFactory<>("roleName"));
         tlb_col_gender.setCellValueFactory(new PropertyValueFactory<>("gender"));
@@ -119,8 +128,6 @@ public class EmployeeController implements IController {
     }
 
     private void loadComboBox() {
-        cbSearchBy.getItems().addAll("Mã nhân viên", "Họ tên", "SDT", "Email");
-
         // Load Status ComboBox
         ArrayList<StatusDTO> statusList = statusBUS.getAllByType(StatusType.EMPLOYEE);
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
@@ -132,22 +139,20 @@ public class EmployeeController implements IController {
         RoleDTO allRole = new RoleDTO(-1, "Tất cả chức vụ");
         cbRoleFilter.getItems().add(allRole); // "Tất cả" option
         cbRoleFilter.getItems().addAll(roleList);
-
-        cbSearchBy.getSelectionModel().selectFirst();
         cbRoleFilter.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
     }
 
     @Override
     public void setupListeners() {
-        cbSearchBy.setOnAction(event -> handleSearchByChange());
         cbRoleFilter.setOnAction(event -> handleRoleFilterChange());
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
 
         refreshBtn.setOnAction(event -> {
             resetFilters();
-            NotificationUtils.showInfoAlert("Làm mới thành công", AppMessages.DIALOG_TITLE);
+            Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, "Làm mới thành công");
         });
 
         detailBtn.setOnAction(event -> handleDetailView());
@@ -161,11 +166,6 @@ public class EmployeeController implements IController {
                 throw new RuntimeException(ex);
             }
         });
-    }
-
-    private void handleSearchByChange() {
-        searchBy = cbSearchBy.getValue();
-        applyFilters();
     }
 
     private void handleKeywordChange() {
@@ -185,34 +185,50 @@ public class EmployeeController implements IController {
 
     @Override
     public void applyFilters() {
-//        EmployeeViewProvider provider = EmployeeViewProvider.getInstance();
-//        EmployeeDetailFilterer filterer = EmployeeDetailFilterer.getInstance();
-//        int statusId = statusFilter == null ? -1 : statusFilter.getId();
-//        int roleId = roleFilter == null ? -1 : roleFilter.getId();
-//        // Step 1: Transform employee data using provider
-//        ArrayList<EmployeeDetailDTO> tableData = provider.toTableDTOs(employeeBUS.getAll());
-//
-//        tblEmployee.setItems(FXCollections.observableArrayList(filterer.applyAllFilters(
-//                tableData,
-//                searchBy,
-//                keyword,
-//                roleId,
-//                statusId)));
-//        tblEmployee.getSelectionModel().clearSelection();
+        if (paginationController != null && paginationController.getCurrentPage() == 0) {
+            loadPageData(0, true);
+        } else if (paginationController != null) {
+            paginationController.setCurrentPage(0);
+        }
     }
 
     @Override
     public void resetFilters() {
-        cbSearchBy.getSelectionModel().selectFirst();
         cbRoleFilter.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
 
-        searchBy = "Mã nhân viên";
         keyword = "";
         roleFilter = null;
         statusFilter = null;
         applyFilters();
+    }
+
+    private void setupPagination() {
+        paginationController.init(0, PAGE_SIZE, pageIndex -> {
+            loadPageData(pageIndex, true);
+        });
+    }
+
+    private void loadPageData(int pageIndex, boolean showOverlay) {
+        int statusId = statusFilter == null ? -1 : statusFilter.getId();
+        int roleId = roleFilter == null ? -1 : roleFilter.getId();
+
+        StackPane overlay = showOverlay ? loadingOverlay : null;
+        TaskUtil.executeSecure(overlay, PermissionKey.EMPLOYEE_LIST_VIEW,
+                () -> employeeBUS.filterEmployeesPagedForManageDisplay(keyword, roleId, statusId, pageIndex,
+                        PAGE_SIZE),
+                result -> {
+                    PagedResponse<EmployeeDisplayDTO> res = result.getPagedData();
+
+                    tblEmployee.setItems(FXCollections.observableArrayList(res.getItems()));
+
+                    // Cập nhật tổng số trang dựa trên COUNT(*) từ DB
+                    int totalPages = (int) Math.ceil((double) res.getTotalItems() / PAGE_SIZE);
+                    paginationController.setPageCount(totalPages > 0 ? totalPages : 1);
+
+                    tblEmployee.getSelectionModel().clearSelection();
+                });
     }
 
     @Override
@@ -258,6 +274,8 @@ public class EmployeeController implements IController {
                 .modeAdd()
                 .open();
         if (modalController != null && modalController.isSaved()) {
+            Stage currentStage = (Stage) addBtn.getScene().getWindow();
+            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
             resetFilters();
         }
     }
@@ -329,28 +347,34 @@ public class EmployeeController implements IController {
             return;
         }
 
-        EmployeeModalController modalController = new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
-                EmployeeModalController.class)
-                .setTitle("Sửa nhân viên")
-                .modeEdit()
-                .configure(c -> c.setEmployee(selectedEmployeeTable))
-                .open();
+        // EmployeeModalController modalController = new
+        // ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
+        // EmployeeModalController.class)
+        // .setTitle("Sửa nhân viên")
+        // .modeEdit()
+        // .configure(c -> c.setEmployee(selectedEmployeeTable.getEmployeeId()))
+        // .open();
 
-        if (modalController != null && modalController.isSaved()) {
-            applyFilters();
-        }
+        // if (modalController != null && modalController.isSaved()) {
+        // Stage currentStage = (Stage) editBtn.getScene().getWindow();
+        // NotificationUtils.showToast(currentStage,
+        // modalController.getResultMessage());
+        // resetFilters();
+        // }
     }
 
     private void handleDetailView() {
         if (isNotSelectedEmployee()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên", AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên",
+                    AppMessages.DIALOG_TITLE);
             return;
         }
 
-        new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml", EmployeeModalController.class)
+        new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
+                EmployeeModalController.class)
                 .setTitle("Xem thông tin nhân viên")
                 .modeDetail()
-                .configure(c -> c.setEmployee(selectedEmployeeTable))
+                .configure(c -> c.setData(selectedEmployeeTable.getEmployeeId()))
                 .open();
 
     }

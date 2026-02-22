@@ -69,7 +69,8 @@ public class DetailImportBUS extends BaseBUS<DetailImportDTO, Integer> {
 
     @Override
     public DetailImportDTO getById(Integer id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (id == null || id <= 0)
+            return null;
+        return DetailImportDAL.getInstance().getById(id);
     }
 }

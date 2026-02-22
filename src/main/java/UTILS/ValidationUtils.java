@@ -143,6 +143,20 @@ public class ValidationUtils {
         return currencyFormat.format(price);
     }
 
+    public String formatPercent(BigDecimal value) {
+        if (value == null) {
+            return "0%";
+        }
+
+        // Sử dụng định dạng số của Việt Nam (để có dấu phẩy nếu có số lẻ)
+        NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.of("vi", "VN"));
+
+        // Thiết lập số lượng số lẻ tối đa (ví dụ: 2 số lẻ như 5,25%)
+        numberFormat.setMaximumFractionDigits(2);
+
+        return numberFormat.format(value) + "%";
+    }
+
     public String formatDateTime(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(DATE_TIME_FORMATTER) : "";
     }

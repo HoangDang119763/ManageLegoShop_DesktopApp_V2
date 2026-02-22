@@ -1,8 +1,10 @@
 package BUS;
 
 import DAL.InvoiceDAL;
+import DTO.BUSResult;
 import DTO.InvoiceDTO;
-import DTO.DetailInvoiceDTO;
+import DTO.InvoiceDisplayDTO;
+import DTO.PagedResponse;
 import ENUM.*;
 import UTILS.ValidationUtils;
 import java.math.BigDecimal;
@@ -10,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
     private static final InvoiceBUS INSTANCE = new InvoiceBUS();
@@ -158,15 +159,60 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
     }
 
     public boolean isCustomerInAnyInvoice(int customerId) {
+        if (customerId <= 0)
+            return false;
+        return InvoiceDAL.getInstance().existsByCustomerId(customerId);
+    }
 
-        return this.getAll().stream()
-                .anyMatch(invoice -> invoice.getCustomerId() == customerId);
+    public boolean isEmployeeInAnyInvoice(int employeeId) {
+        if (employeeId <= 0)
+            return false;
+        return InvoiceDAL.getInstance().existsByEmployeeId(employeeId);
     }
 
     @Override
     public InvoiceDTO getById(Integer id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (id == null || id <= 0)
+            return null;
+        return InvoiceDAL.getInstance().getById(id);
+    }
+
+    /**
+     * [OPTIMIZED] Get all invoices with pagination for manage display
+     * Tránh gọi BUS lẻ lẻ từng dòng
+     */
+    public BUSResult getAllInvoicesPagedForManage(int pageIndex, int pageSize) {
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+
+        // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
+        PagedResponse<InvoiceDisplayDTO> pagedData = InvoiceDAL.getInstance()
+                .getAllInvoicesPagedForManage(finalPageIndex, finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
+    }
+
+    /**
+     * [OPTIMIZED] Filter invoices with pagination for manage display
+     */
+    public BUSResult filterInvoicesPagedForManage(String keyword, int pageIndex, int pageSize) {
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+
+        int finalSearchId = -1;
+        try {
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                finalSearchId = Integer.parseInt(keyword.trim());
+            }
+        } catch (NumberFormatException e) {
+            finalSearchId = -1;
+        }
+
+        // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
+        PagedResponse<InvoiceDisplayDTO> pagedData = InvoiceDAL.getInstance()
+                .filterInvoicesPagedForManage(finalSearchId, finalPageIndex, finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
 }

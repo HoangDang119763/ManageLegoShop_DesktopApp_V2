@@ -2,21 +2,19 @@ package GUI;
 
 import BUS.StatusBUS;
 import BUS.SupplierBUS;
-import DTO.BUSResult;
 import DTO.StatusDTO;
 import DTO.SupplierDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IModalController;
-import SERVICE.SecureExecutor;
-import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
-import UTILS.UiUtils;
+import UTILS.TaskUtil;
 import UTILS.ValidationUtils;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.Getter;
 
@@ -40,10 +38,15 @@ public class SupplierModalController implements IModalController {
     private ComboBox<StatusDTO> cbSelectStatus;
     @FXML
     private Button saveBtn, closeBtn;
+    @FXML
+    public StackPane loadingOverlay;
 
     @Getter
     private boolean isSaved;
-    private int typeModal; // 0: Add, 1: Edit, 2: Detail
+    @Getter
+    private String resultMessage;
+
+    private int typeModal; // 0: Add, 1: Edit,
     private SupplierDTO supplier;
 
     private SupplierBUS supplierBUS;
@@ -86,26 +89,28 @@ public class SupplierModalController implements IModalController {
     // =====================
     @Override
     public void setTypeModal(int type) {
-        if (type != 0 && type != 1 && type != 2) {
+        if (type != 0 && type != 1) {
             handleClose();
         }
         typeModal = type;
 
         if (typeModal == 0) {
-            modalName.setText("THÊM NHÀ CUNG CẤP");
-            txtSupplierId.setText(String.valueOf(supplierBUS.getAll().size() + 1));
+            modalName.setText("Thêm nhà cung cấp");
+            txtSupplierId.setText(String.valueOf(supplierBUS.nextId()));
         } else if (typeModal == 1) {
-            modalName.setText("SỬA NHÀ CUNG CẤP");
-        } else if (typeModal == 2) {
-            modalName.setText("CHI TIẾT NHÀ CUNG CẤP");
+            modalName.setText("Sửa nhà cung cấp");
         }
     }
 
-    public void setSupplier(SupplierDTO supplier) {
-        this.supplier = supplier;
+    public void setSupplier(int id) {
+        this.supplier = supplierBUS.getById(id);
         if (supplier == null)
             return;
-
+        if (this.supplier == null) {
+            NotificationUtils.showErrorAlert(AppMessages.NOT_FOUND, AppMessages.DIALOG_TITLE);
+            handleClose();
+            return;
+        }
         txtSupplierId.setText(String.valueOf(supplier.getId()));
         txtCompanyName.setText(supplier.getName());
         txtPhone.setText(supplier.getPhone());
@@ -116,23 +121,6 @@ public class SupplierModalController implements IModalController {
                 .filter(item -> item.getId() == supplier.getStatusId())
                 .findFirst()
                 .ifPresent(item -> cbSelectStatus.getSelectionModel().select(item));
-
-        if (typeModal == 2) {
-            setupReadOnlyMode();
-        }
-    }
-
-    private void setupReadOnlyMode() {
-        txtCompanyName.setEditable(false);
-        txtPhone.setEditable(false);
-        txtEmail.setEditable(false);
-        txtAddress.setEditable(false);
-
-        cbSelectStatus.setMouseTransparent(true);
-        cbSelectStatus.setFocusTraversable(false);
-
-        // Remove save button in detail mode
-        UiUtils.gI().setVisibleItem(saveBtn);
     }
 
     // =====================
@@ -157,96 +145,111 @@ public class SupplierModalController implements IModalController {
     // 5️⃣ VALIDATION & BUSINESS LOGIC
     // =====================
     private boolean isValidInput() {
-        String name = txtCompanyName.getText().trim();
-        String phone = txtPhone.getText().trim();
-        String address = txtAddress.getText().trim();
-        String email = txtEmail.getText().trim();
         ValidationUtils validator = ValidationUtils.getInstance();
 
+        // 1. Kiểm tra Tên (Sai là đá luôn)
+        String name = txtCompanyName.getText().trim();
         if (name.isEmpty()) {
-            NotificationUtils.showErrorAlert("Tên nhà cung cấp không được để trống.", AppMessages.DIALOG_TITLE);
-            focus(txtCompanyName);
+            showError("Tên nhà cung cấp không được để trống.", txtCompanyName);
+            return false;
+        }
+        if (!validator.validateVietnameseText100(name)) {
+            showError("Tên không hợp lệ (tối đa 100 ký tự).", txtCompanyName);
             return false;
         }
 
+        // 2. Kiểm tra Số điện thoại (Sai là đá luôn)
+        String phone = txtPhone.getText().trim();
         if (phone.isEmpty()) {
-            NotificationUtils.showErrorAlert("Số điện thoại không được để trống.", AppMessages.DIALOG_TITLE);
-            focus(txtPhone);
+            showError("Số điện thoại không được để trống.", txtPhone);
             return false;
-        } else if (!validator.validateVietnamesePhoneNumber(phone)) {
-            NotificationUtils.showErrorAlert("Số điện thoại không hợp lệ.", AppMessages.DIALOG_TITLE);
-            focus(txtPhone);
+        }
+        if (!validator.validateVietnamesePhoneNumber(phone)) {
+            showError("Số điện thoại phải bắt đầu bằng 0 và đủ 10 số.", txtPhone);
             return false;
         }
 
+        // 3. Kiểm tra Email (Nếu có nhập thì phải đúng, sai là đá)
+        String email = txtEmail.getText().trim();
         if (!email.isEmpty() && !validator.validateEmail(email)) {
-            NotificationUtils.showErrorAlert("Email không hợp lệ.", AppMessages.DIALOG_TITLE);
-            focus(txtEmail);
+            showError("Định dạng Email không hợp lệ.", txtEmail);
             return false;
         }
 
+        // 4. Kiểm tra Địa chỉ
+        String address = txtAddress.getText().trim();
         if (address.isEmpty()) {
-            NotificationUtils.showErrorAlert("Địa chỉ không được để trống.", AppMessages.DIALOG_TITLE);
-            focus(txtAddress);
+            showError("Địa chỉ không được để trống.", txtAddress);
             return false;
         }
 
-        if (cbSelectStatus.getValue() == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn trạng thái.", AppMessages.DIALOG_TITLE);
-            return false;
-        }
+        return true; // Đi qua hết các "cửa ải" trên thì mới là đúng
+    }
 
-        return true;
+    // Hàm phụ để viết code cho gọn, đỡ lặp lại NotificationUtils
+    private void showError(String message, TextField field) {
+        NotificationUtils.showErrorAlert(message, "Thông báo");
+        field.requestFocus();
+        field.selectAll(); // Bôi đen luôn để người dùng gõ đè lên cho nhanh
     }
 
     private void insertSupplier() {
-        // if (isValidInput()) {
-        // SupplierDTO temp = new SupplierDTO(
-        // -1,
-        // txtCompanyName.getText().trim(),
-        // txtPhone.getText().trim(),
-        // txtAddress.getText().trim(),
-        // txtEmail.getText().trim(),
-        // cbSelectStatus.getValue().getId() == 1);
+        if (!isValidInput())
+            return;
+        String name = txtCompanyName.getText().trim();
+        String phone = txtPhone.getText().trim();
+        String email = txtEmail.getText().trim();
+        String address = txtAddress.getText().trim();
+        int statusId = cbSelectStatus.getValue().getId();
+        SupplierDTO temp = new SupplierDTO(
+                -1,
+                name,
+                phone,
+                address,
+                email,
+                statusId);
 
-        // BUSResult result =
-        // SecureExecutor.runSafeBUSResult(PermissionKey.SUPPLIER_INSERT,
-        // () -> supplierBUS.insert(temp,
-        // SessionManagerService.getInstance().employeeRoleId(),
-        // SessionManagerService.getInstance().employeeLoginId()));
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.SUPPLIER_INSERT,
+                () -> supplierBUS.insert(temp),
+                result -> {
+                    if (result.isSuccess()) {
+                        isSaved = true;
+                        resultMessage = result.getMessage();
+                        handleClose();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
 
-        // handleResult(result);
-        // }
     }
 
     private void updateSupplier() {
-        // if (isValidInput()) {
-        // SupplierDTO temp = new SupplierDTO(
-        // supplier.getId(),
-        // txtCompanyName.getText().trim(),
-        // txtPhone.getText().trim(),
-        // txtAddress.getText().trim(),
-        // txtEmail.getText().trim(),
-        // cbSelectStatus.getValue().getId() == 1);
+        if (!isValidInput())
+            return;
+        String name = txtCompanyName.getText().trim();
+        String phone = txtPhone.getText().trim();
+        String email = txtEmail.getText().trim();
+        String address = txtAddress.getText().trim();
+        int statusId = cbSelectStatus.getValue().getId();
+        SupplierDTO temp = new SupplierDTO(
+                supplier.getId(),
+                name,
+                phone,
+                address,
+                email,
+                statusId);
 
-        // BUSResult result =
-        // SecureExecutor.runSafeBUSResult(PermissionKey.SUPPLIER_UPDATE,
-        // () -> supplierBUS.update(temp,
-        // SessionManagerService.getInstance().employeeRoleId(),
-        // SessionManagerService.getInstance().employeeLoginId()));
-
-        // handleResult(result);
-        // }
-    }
-
-    private void handleResult(BUSResult result) {
-        if (result.isSuccess()) {
-            NotificationUtils.showInfoAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
-            isSaved = true;
-            handleClose();
-        } else {
-            NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
-        }
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.SUPPLIER_UPDATE,
+                () -> supplierBUS.update(temp),
+                result -> {
+                    if (result.isSuccess()) {
+                        isSaved = true;
+                        resultMessage = result.getMessage();
+                        handleClose();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void focus(TextField field) {

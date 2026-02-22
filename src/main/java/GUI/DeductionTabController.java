@@ -111,15 +111,15 @@ public class DeductionTabController {
         }
         
         // Social Insurance
-        if (emp.getSocialInsuranceCode() != null && !emp.getSocialInsuranceCode().isEmpty() && !emp.getSocialInsuranceCode().equals("0")) {
-            status.append("BHXH: ").append(emp.getSocialInsuranceCode()).append(" ✓ | ");
+        if (emp.isSocialInsurance()) {
+            status.append("BHXH: ").append(emp.getSocialInsCode()).append(" ✓ | ");
         } else {
             status.append("BHXH: Chưa tham gia | ");
         }
         
         // Unemployment Insurance
-        if (emp.getUnemploymentInsuranceCode() != null && !emp.getUnemploymentInsuranceCode().isEmpty() && !emp.getUnemploymentInsuranceCode().equals("0")) {
-            status.append("BHTN: ").append(emp.getUnemploymentInsuranceCode()).append(" ✓");
+        if (emp.isUnemploymentInsurance()) {
+            status.append("BHTN: ").append(emp.getUnemploymentInsCode()).append(" ✓");
         } else {
             status.append("BHTN: Chưa tham gia");
         }

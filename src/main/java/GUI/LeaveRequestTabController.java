@@ -135,7 +135,8 @@ public class LeaveRequestTabController {
         leave.setContent(txtContent.getText());
         leave.setStartDate(dpStartDate.getValue());
         leave.setEndDate(dpEndDate.getValue());
-        leave.setType(cbLeaveType.getValue().getName());
+        leave.setLeaveTypeId(cbLeaveType.getValue().getId());
+        leave.setLeaveTypeName(cbLeaveType.getValue().getName());
         leave.setStatusId(22); // Status chờ duyệt
 
         int result = leaveRequestBUS.insert(leave, currentEmployeeRoleId, currentEmployeeId);

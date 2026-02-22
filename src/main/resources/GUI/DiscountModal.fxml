@@ -141,7 +141,7 @@
 
                         <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" spacing="20.0" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="25.0">
                             <children>
-                                <Button fx:id="saveBtn" mnemonicParsing="false" prefHeight="45.0" prefWidth="200.0" styleClass="action-btn" text="LƯU CHƯƠNG TRÌNH">
+                                <Button fx:id="saveBtn" mnemonicParsing="false" prefHeight="45.0" prefWidth="100.0" styleClass="action-btn" text="LƯU">
                                     <graphic><FontAwesomeIcon fill="WHITE" glyphName="SAVE" size="1.3em" /></graphic>
                                     <font><Font name="System Bold" size="14.0" /></font>
                                 </Button>
@@ -151,5 +151,7 @@
                 </AnchorPane>
             </bottom>
         </BorderPane>
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+        
     </children>
 </AnchorPane>

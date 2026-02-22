@@ -1,7 +1,12 @@
 package DAL;
 
 import DTO.ImportDTO;
+import DTO.ImportDisplayDTO;
+import DTO.PagedResponse;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
     public static final ImportDAL INSTANCE = new ImportDAL();
@@ -56,6 +61,96 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
     @Override
     protected String getUpdateQuery() {
         throw new UnsupportedOperationException("Cannot update permission records.");
+    }
+
+    private ImportDisplayDTO mapResultSetToImportDisplay(ResultSet rs) throws SQLException {
+        return new ImportDisplayDTO(
+                rs.getInt("id"),
+                rs.getTimestamp("create_date") != null
+                        ? rs.getTimestamp("create_date").toLocalDateTime()
+                        : null,
+                rs.getInt("employee_id"),
+                rs.getInt("supplier_id"),
+                rs.getBigDecimal("total_price"),
+                rs.getInt("status_id"),
+                rs.getString("status_description"));
+    }
+
+    /**
+     * [OPTIMIZED] Get imports with filter and pagination for manage display
+     */
+    public PagedResponse<ImportDisplayDTO> filterImportsPagedForManage(
+            int searchId, int pageIndex, int pageSize) {
+        List<ImportDisplayDTO> items = new ArrayList<>();
+        int totalItems = 0;
+        int offset = pageIndex * pageSize;
+
+        // JOIN với status table để lấy statusDescription
+        String sql = "SELECT " +
+                "i.id, i.create_date, i.employee_id, i.supplier_id, i.total_price, i.status_id, " +
+                "s.description as status_description, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM import i " +
+                "LEFT JOIN status s ON i.status_id = s.id " +
+                "WHERE (? = -1 OR i.id = ?) " +
+                "ORDER BY i.id DESC " +
+                "LIMIT ? OFFSET ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, searchId);
+            ps.setInt(2, searchId);
+            ps.setInt(3, pageSize);
+            ps.setInt(4, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (totalItems == 0)
+                        totalItems = rs.getInt("total_count");
+                    items.add(mapResultSetToImportDisplay(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lọc phiếu nhập phân trang: " + e.getMessage());
+        }
+        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    public boolean existsBySupplierId(int supplierId) {
+        // Sử dụng SELECT 1 và EXISTS để tối ưu tốc độ tối đa
+        String sql = "SELECT 1 FROM import WHERE supplier_id = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, supplierId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Trả về true nếu có ít nhất 1 dòng
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking import existence: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean existsByEmployeeId(int employeeId) {
+        // Sử dụng SELECT 1 và EXISTS để tối ưu tốc độ tối đa
+        String sql = "SELECT 1 FROM import WHERE employee_id = ? LIMIT 1";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Trả về true nếu có ít nhất 1 dòng
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking import existence: " + e.getMessage());
+            return false;
+        }
     }
 
 }

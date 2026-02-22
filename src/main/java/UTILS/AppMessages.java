@@ -13,7 +13,10 @@ public class AppMessages {
     public static final String EMPLOYEE_DETAIL_LOAD_ERROR = "Không thể tải thông tin chi tiết nhân viên";
     public static final String EMPLOYEE_PERSONAL_UPDATE_SUCCESS = "Cập nhật thông tin cá nhân thành công!";
     public static final String EMPLOYEE_PERSONAL_UPDATE_ERROR = "Có lỗi khi cập nhật thông tin cá nhân. Vui lòng thử lại.";
-
+    public static final String EMPLOYEE_PERSONAL_INFO_LOAD_SUCCESS = "Tải thông tin hồ sơ nhân viên thành công.";
+    public static final String EMPLOYEE_ACCOUNT_INFO_LOAD_SUCCESS = "Tải thông tin tài khoản hệ thống thành công.";
+    public static final String EMPLOYEE_JOB_INFO_LOAD_SUCCESS = "Tải thông tin lương và công tác thành công.";
+    public static final String EMPLOYEE_PAYROLL_INFO_LOAD_SUCCESS = "Tải thông tin quyền lợi và bảo hiểm thành công.";
     // ==================== MODULE BÁN HÀNG - CHI TIẾT HÓA ĐƠN ====================
     /**
      * Các thông báo liên quan đến quá trình bán hàng và quản lý hóa đơn
@@ -76,41 +79,12 @@ public class AppMessages {
     /**
      * Các thông báo liên quan đến quản lý nhà cung cấp
      */
-    // public static final String SUPPLIER_NAME_EMPTY = "Tên nhà cung cấp không được
-    // để trống.";
-    // public static final String SUPPLIER_NAME_INVALID = "Tên nhà cung cấp không
-    // hợp lệ (tối đa 100 ký tự).";
-    // public static final String SUPPLIER_PHONE_EMPTY = "Số điện thoại không được
-    // để trống.";
-    // public static final String SUPPLIER_PHONE_INVALID = "Số điện thoại không hợp
-    // lệ (Số 0 đứng đầu và 10 số).";
-    // public static final String SUPPLIER_ADDRESS_EMPTY = "Địa chỉ không được để
-    // trống.";
-    // public static final String SUPPLIER_ADDRESS_INVALID = "Địa chỉ không hợp lệ
-    // (tối đa 255 ký tự).";
-    // public static final String SUPPLIER_ADD_ERROR = "Có lỗi khi thêm nhà cung
-    // cấp. Vui lòng thử lại.";
-    // public static final String SUPPLIER_ADD_DUPLICATE = "Đã có nhà cung cấp trong
-    // cơ sở dữ liệu.";
-    // public static final String SUPPLIER_ADD_NO_PERMISSION = "Không có quyền thêm
-    // nhà cung cấp.";
-    // public static final String SUPPLIER_ADD_DB_ERROR = "Thêm nhà cung cấp vào
-    // CSDL thất bại.";
-    // public static final String SUPPLIER_ADD_INVALID_DATA = "Dữ liệu nhập không
-    // hợp lệ.";
-    // public static final String SUPPLIER_UPDATE_ERROR = "Có lỗi khi cập nhật thông
-    // tin nhà cung cấp. Vui lòng thử lại.";
-    // public static final String SUPPLIER_UPDATE_DUPLICATE = "Thông tin nhà cung
-    // cấp bị trùng lặp.";
-    // public static final String SUPPLIER_UPDATE_NO_PERMISSION = "Không có quyền
-    // cập nhật thông tin nhà cung cấp.";
-    // public static final String SUPPLIER_UPDATE_FAILED = "Không thể cập nhật thông
-    // tin nhà cung cấp. Vui lòng thử lại.";
-    // public static final String SUPPLIER_NOT_FOUND = "Nhà cung cấp không tồn tại
-    // hoặc đã bị xóa.";
     public static final String SUPPLIER_NO_SELECTION = "Vui lòng chọn nhà cung cấp.";
     public static final String SUPPLIER_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa nhà cung cấp này không?";
-
+    public static final String SUPPLIER_ADD_SUCCESS = "Thêm nhà cung cấp thành công";
+    public static final String SUPPLIER_ADD_DUPLICATE = "Đã có nhà cung cấp trong cơ sở dữ liệu";
+    public static final String SUPPLIER_UPDATE_DUPLICATE = "Đã có nhà cung cấp trong cơ sở dữ liệu";
+    public static final String SUPPLIER_UPDATE_SUCCESS = "Sửa nhà cung cấp thành công";
     // ==================== MODULE LOẠI SẢN PHẨM (CATEGORY) ====================
     /**
      * Các thông báo liên quan đến quản lý danh mục/loại sản phẩm
@@ -125,6 +99,13 @@ public class AppMessages {
     public static final String CATEGORY_DELETE_CONFIRM = "Bạn có chắc chắn muốn xóa thể loại này không?";
     public static final String CATEGORY_NO_SELECTION = "Vui lòng chọn thể loại.";
     public static final String CATEGORY_DELETED_WARNING = "Thể loại này đã ngưng dùng, không nên chọn cho sản phẩm";
+
+    // ==================== MODULE PHÒNG BAN (DEPARTMENT) ====================
+    /**
+     * Các thông báo liên quan đến quản lý phòng ban
+     */
+    public static final String DEPARTMENT_DELETED_WARNING = "Phòng ban này đã ngưng dùng, không nên chọn cho nhân viên";
+
     // ==================== MODULE CHIẾT KHẤU (DISCOUNT) ====================
     /**
      * Các thông báo liên quan đến quản lý chiết khấu và khuyến mãi
@@ -184,5 +165,5 @@ public class AppMessages {
     public static final String UNAUTHORIZED = "Bạn không có quyền để thực hiện thao tác này.";
     public static final String DATA_ALREADY_DELETED = "Dữ liệu này đã ở trạng thái Inactive (xóa hoặc ngừng hoạt động)";
     public static final String FORCE_RELOGIN = "Phiên làm việc hết hạn hoặc quyền đã thay đổi. Vui lòng đăng nhập lại.";
-    public static final String REQUEST_RELOGIN =  "Vui lòng đăng nhập lại.";
+    public static final String REQUEST_RELOGIN = "Vui lòng đăng nhập lại.";
 }

@@ -18,7 +18,7 @@ public class LeaveTypeDAL extends BaseDAL<LeaveTypeDTO, Integer> {
     protected LeaveTypeDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
         return new LeaveTypeDTO(
                 resultSet.getInt("id"),
-                resultSet.getString("type"),
+                resultSet.getString("name"),
                 resultSet.getBigDecimal("fine_amount"));
     }
 
@@ -36,7 +36,7 @@ public class LeaveTypeDAL extends BaseDAL<LeaveTypeDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(type, fine_amount) VALUES (?, ?)";
+        return "(name, fine_amount) VALUES (?, ?)";
     }
 
     @Override
@@ -47,7 +47,7 @@ public class LeaveTypeDAL extends BaseDAL<LeaveTypeDTO, Integer> {
 
     @Override
     protected String getUpdateQuery() {
-        return "SET type = ?, fine_amount = ? WHERE id = ?";
+        return "SET name = ?, fine_amount = ? WHERE id = ?";
     }
 
     @Override
