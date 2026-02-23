@@ -121,7 +121,7 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
      * [OPTIMIZED] Filter invoices with pagination for manage display
      */
     public PagedResponse<InvoiceDisplayDTO> filterInvoicesPagedForManage(
-            int searchId, int pageIndex, int pageSize) {
+            int searchId, int statusId, int pageIndex, int pageSize) {
         List<InvoiceDisplayDTO> items = new ArrayList<>();
         int totalItems = 0;
         int offset = pageIndex * pageSize;
@@ -135,6 +135,7 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
                 "FROM invoice i " +
                 "LEFT JOIN status s ON i.status_id = s.id " +
                 "WHERE (? = -1 OR i.id = ?) " +
+                "  AND (? = -1 OR i.status_id = ?) " +
                 "ORDER BY i.id DESC " +
                 "LIMIT ? OFFSET ?";
 
@@ -143,8 +144,10 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
 
             ps.setInt(1, searchId);
             ps.setInt(2, searchId);
-            ps.setInt(3, pageSize);
-            ps.setInt(4, offset);
+            ps.setInt(3, statusId);
+            ps.setInt(4, statusId);
+            ps.setInt(5, pageSize);
+            ps.setInt(6, offset);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -214,13 +217,14 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
     }
 
     public boolean existsByDiscountCode(String discountCode) {
-        if (discountCode == null || discountCode.trim().isEmpty()) return false;
+        if (discountCode == null || discountCode.trim().isEmpty())
+            return false;
 
         // Kiểm tra xem mã KM này đã từng xuất hiện trong hóa đơn nào chưa
         String sql = "SELECT 1 FROM invoice WHERE UPPER(discount_code) = ? LIMIT 1";
 
         try (Connection conn = connectionFactory.newConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, discountCode.trim().toLowerCase());
 
@@ -229,6 +233,55 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
             }
         } catch (SQLException e) {
             System.err.println("Error checking invoice existence by discount code: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean insert(Connection connection, InvoiceDTO obj) {
+        // SQL: Chèn các thông tin cơ bản của hóa đơn bán hàng
+        // Giả định bảng invoice có các cột: customer_id, employee_id, total_price,
+        // discount_code, discount_amount
+        String sql = "INSERT INTO invoice (customer_id, employee_id, total_price, discount_code, discount_amount, status_id) "
+                +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            // 1. Set các tham số (Mapping từ DTO sang DB)
+            statement.setInt(1, obj.getCustomerId());
+
+            statement.setInt(2, obj.getEmployeeId());
+            statement.setBigDecimal(3, obj.getTotalPrice());
+
+            // Xử lý mã giảm giá (Nếu không có thì để null)
+            if (obj.getDiscountCode() != null && !obj.getDiscountCode().isEmpty()) {
+                statement.setString(4, obj.getDiscountCode());
+            } else {
+                statement.setNull(4, java.sql.Types.VARCHAR);
+            }
+
+            statement.setBigDecimal(5, obj.getDiscountAmount());
+            statement.setInt(6, obj.getStatusId());
+
+            // 2. Thực thi lệnh
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows == 0) {
+                return false;
+            }
+
+            // 3. Lấy ID tự tăng vừa được sinh ra (Dùng để chèn vào invoice_detail)
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    obj.setId(generatedKeys.getInt(1)); // Gán ngược ID vào object DTO
+                } else {
+                    throw new SQLException("Inserting invoice failed, no ID obtained.");
+                }
+            }
+
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Error inserting into invoice table: " + e.getMessage());
             return false;
         }
     }

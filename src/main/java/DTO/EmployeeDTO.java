@@ -25,6 +25,7 @@ public class EmployeeDTO extends BaseInformationDTO {
     private boolean isPersonalIncomeTax;
     private boolean isTransportationSupport;
     private boolean isAccommodationSupport;
+    private String avatarUrl; // Đường dẫn ảnh đại diện
 
     // Thời gian
     private LocalDateTime createdAt;
@@ -57,6 +58,33 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.isAccommodationSupport = isAccommodationSupport;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    // Constructor đầy đủ với avatarUrl (New)
+    public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
+            LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
+            String gender, Integer accountId, String healthInsCode,
+            boolean isSocialInsurance, boolean isUnemploymentInsurance,
+            boolean isPersonalIncomeTax, boolean isTransportationSupport,
+            boolean isAccommodationSupport, LocalDateTime createdAt, LocalDateTime updatedAt,
+            String avatarUrl) {
+        super(id, dateOfBirth, phone, statusId, updatedAt);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.roleId = roleId;
+        this.departmentId = departmentId;
+        this.gender = gender;
+        this.accountId = accountId;
+        this.healthInsCode = healthInsCode;
+        this.isSocialInsurance = isSocialInsurance;
+        this.isUnemploymentInsurance = isUnemploymentInsurance;
+        this.isPersonalIncomeTax = isPersonalIncomeTax;
+        this.isTransportationSupport = isTransportationSupport;
+        this.isAccommodationSupport = isAccommodationSupport;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.avatarUrl = avatarUrl;
     }
 
     public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
@@ -98,6 +126,9 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.isPersonalIncomeTax = other.isPersonalIncomeTax;
         this.isTransportationSupport = other.isTransportationSupport;
         this.isAccommodationSupport = other.isAccommodationSupport;
+        this.createdAt = other.createdAt;
+        this.updatedAt = other.updatedAt;
+        this.avatarUrl = other.avatarUrl;
         this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;
     }

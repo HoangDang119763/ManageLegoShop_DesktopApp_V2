@@ -4,9 +4,11 @@ import BUS.*;
 import DTO.DetailInvoiceDTO;
 import DTO.InvoiceDisplayDTO;
 import DTO.PagedResponse;
+import DTO.StatusDTO;
 import java.util.ArrayList;
 
 import ENUM.PermissionKey;
+import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.PrintService;
 import UTILS.NotificationUtils;
@@ -82,6 +84,8 @@ public class InvoiceController implements IController {
     @FXML
     private TextField txtSearch;
     @FXML
+    private ComboBox<StatusDTO> cbStatusFilter;
+    @FXML
     private PaginationController paginationController;
     @FXML
     private StackPane loadingOverlay;
@@ -91,6 +95,7 @@ public class InvoiceController implements IController {
     private InvoiceBUS invoiceBUS;
     private DetailInvoiceBUS detailInvoiceBUS;
     private StatusBUS statusBUS;
+    private StatusDTO statusFilter = null;
     private static final int PAGE_SIZE = 10;
     private boolean isResetting = false;
 
@@ -107,6 +112,7 @@ public class InvoiceController implements IController {
         Platform.runLater(() -> tblDetailInvoice.getSelectionModel().clearSelection());
 
         hideButtonWithoutPermission();
+        loadComboBox();
         setupListeners();
 
         loadTable();
@@ -127,6 +133,13 @@ public class InvoiceController implements IController {
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
         tblInvoice.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         UiUtils.gI().addTooltipToColumn(tlb_col_createDate, 10);
+    }
+
+    private void loadComboBox() {
+        StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
+        cbStatusFilter.getItems().add(allStatus);
+        cbStatusFilter.getItems().addAll(statusBUS.getAllByType(StatusType.INVOICE));
+        cbStatusFilter.getSelectionModel().selectFirst();
     }
 
     public void loadSubTable(int invoiceId) {
@@ -180,6 +193,7 @@ public class InvoiceController implements IController {
             }
         });
         UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
+        cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
             Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
@@ -213,6 +227,11 @@ public class InvoiceController implements IController {
         applyFilters();
     }
 
+    private void handleStatusFilterChange() {
+        statusFilter = cbStatusFilter.getValue();
+        applyFilters();
+    }
+
     private void setupPagination() {
         paginationController.init(0, PAGE_SIZE, pageIndex -> {
             loadPageData(pageIndex, true);
@@ -221,9 +240,10 @@ public class InvoiceController implements IController {
 
     private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
+        int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
         StackPane overlay = showOverlay ? loadingOverlay : null;
         TaskUtil.executeSecure(overlay, PermissionKey.INVOICE_LIST_VIEW,
-                () -> invoiceBUS.filterInvoicesPagedForManage(keyword, pageIndex, PAGE_SIZE),
+                () -> invoiceBUS.filterInvoicesPagedForManage(keyword, statusId, pageIndex, PAGE_SIZE),
                 result -> {
                     // Lấy dữ liệu InvoiceDisplayDTO đã được JOIN
                     PagedResponse<InvoiceDisplayDTO> res = result.getPagedData();
@@ -253,7 +273,9 @@ public class InvoiceController implements IController {
         isResetting = true;
 
         txtSearch.clear();
+        cbStatusFilter.getSelectionModel().selectFirst();
         keyword = "";
+        statusFilter = null;
         clearSubTable();
 
         applyFilters();

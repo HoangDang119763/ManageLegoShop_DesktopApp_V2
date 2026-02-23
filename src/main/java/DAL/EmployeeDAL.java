@@ -52,12 +52,13 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                         : null,
                 resultSet.getTimestamp("updated_at") != null
                         ? resultSet.getTimestamp("updated_at").toLocalDateTime()
-                        : null);
+                        : null,
+                resultSet.getString("avatar_url"));
     }
 
     @Override
     protected String getInsertQuery() {
-        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, health_ins_code, is_social_insurance, is_unemployment_insurance, is_personal_income_tax, is_transportation_support, is_accommodation_support) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, health_ins_code, is_social_insurance, is_unemployment_insurance, is_personal_income_tax, is_transportation_support, is_accommodation_support, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -78,6 +79,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         statement.setBoolean(14, obj.isPersonalIncomeTax());
         statement.setBoolean(15, obj.isTransportationSupport());
         statement.setBoolean(16, obj.isAccommodationSupport());
+        statement.setString(17, obj.getAvatarUrl());
     }
 
     @Override
@@ -109,7 +111,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     public boolean updatePersonalInfoByAdmin(EmployeeDTO obj) {
-        String query = "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ? WHERE id = ?";
+        String query = "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, avatar_url = ? WHERE id = ?";
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
 
@@ -119,9 +121,10 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             statement.setString(4, obj.getEmail());
             statement.setDate(5, obj.getDateOfBirth() != null ? java.sql.Date.valueOf(obj.getDateOfBirth()) : null);
             statement.setString(6, obj.getGender());
-            statement.setInt(7, obj.getId());
+            statement.setString(7, obj.getAvatarUrl());
+            statement.setInt(8, obj.getId());
 
-            return statement.executeUpdate() > 0;
+            return statement.executeUpdate() >= 0;
         } catch (SQLException e) {
             System.err.println("Error updating personal info (admin): " + e.getMessage());
             return false;
@@ -563,7 +566,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      */
     public EmployeePersonalInfoDTO getPersonalInfo(int employeeId) {
         String sql = "SELECT e.id AS employee_id, e.first_name, e.last_name, e.date_of_birth, e.gender, " +
-                "e.phone, e.email, e.created_at, e.updated_at " +
+                "e.phone, e.email, e.avatar_url, e.created_at, e.updated_at " +
                 "FROM employee e WHERE e.id = ? LIMIT 1";
 
         try (Connection connection = connectionFactory.newConnection();
@@ -583,6 +586,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                             .gender(resultSet.getString("gender"))
                             .phone(resultSet.getString("phone"))
                             .email(resultSet.getString("email"))
+                            .avatarUrl(resultSet.getString("avatar_url"))
                             .createdAt(resultSet.getTimestamp("created_at") != null
                                     ? resultSet.getTimestamp("created_at").toLocalDateTime()
                                     : null)

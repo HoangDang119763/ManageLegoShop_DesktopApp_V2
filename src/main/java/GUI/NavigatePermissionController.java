@@ -53,8 +53,8 @@ public class NavigatePermissionController {
 
     @FXML
     private void openImporting() {
-        UiUtils.gI().openStage("/GUI/ImportProduct.fxml", "Nhập hàng");
-        handleClose();
+        // UiUtils.gI().openStage("/GUI/ImportProduct.fxml", "Nhập hàng");
+        // handleClose();
     }
 
     @FXML

@@ -272,11 +272,11 @@ public class CategoryController implements IController {
         boolean canDelete = session.hasPermission(PermissionKey.CATEGORY_DELETE);
 
         if (!canAdd)
-            UiUtils.gI().setReadOnlyItem(addBtn);
+            UiUtils.gI().setVisibleItem(addBtn);
         if (!canEdit)
-            UiUtils.gI().setReadOnlyItem(editBtn);
+            UiUtils.gI().setVisibleItem(editBtn);
         if (!canDelete)
-            UiUtils.gI().setReadOnlyItem(deleteBtn);
+            UiUtils.gI().setVisibleItem(deleteBtn);
     }
 
     private boolean isNotSelectedCategory() {

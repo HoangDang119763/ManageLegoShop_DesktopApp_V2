@@ -1,16 +1,12 @@
 
 package GUI;
 
-import BUS.CategoryBUS;
 import BUS.InvoiceBUS;
-import BUS.ProductBUS;
 import DTO.InvoiceDTO;
 import UTILS.NotificationUtils;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -21,7 +17,7 @@ import java.util.ArrayList;
 
 public class InvoiceAdvanceSearchModalController {
     @FXML
-    private Button saveBtn,closeBtn;
+    private Button saveBtn, closeBtn;
     @FXML
     private TextField txtEmployeeId;
     @FXML
@@ -47,6 +43,7 @@ public class InvoiceAdvanceSearchModalController {
     private boolean isSaved;
     @Getter
     private ArrayList<InvoiceDTO> filteredInvoices;
+
     @FXML
     public void initialize() {
         setupListeners();
@@ -75,15 +72,16 @@ public class InvoiceAdvanceSearchModalController {
             NotificationUtils.showErrorAlert("Ngày tạo không được lớn hơn ngày kết thúc.", "Thông báo");
             return;
         }
-        filteredInvoices = InvoiceBUS.getInstance().filterInvoicesAdvance(employeeId, customerId, discountCode, startCreateDate, endCreateDate, startTotalPrice, endTotalPrice);
-        int numResult = filteredInvoices.size();
-        if (numResult != 0) {
-            NotificationUtils.showErrorAlert("Tìm thấy " + numResult + " kết quả phù hợp.", "Thông báo");
-            this.isSaved = true;
-            handleClose();
-        } else {
-            NotificationUtils.showErrorAlert("Không tìm thấy kết quả phù hợp.", "Thông báo");
-        }
+//        filteredInvoices = InvoiceBUS.getInstance().filterInvoicesAdvance(employeeId, customerId, discountCode,
+//                startCreateDate, endCreateDate, startTotalPrice, endTotalPrice);
+//        int numResult = filteredInvoices.size();
+//        if (numResult != 0) {
+//            NotificationUtils.showErrorAlert("Tìm thấy " + numResult + " kết quả phù hợp.", "Thông báo");
+//            this.isSaved = true;
+//            handleClose();
+//        } else {
+//            NotificationUtils.showErrorAlert("Không tìm thấy kết quả phù hợp.", "Thông báo");
+//        }
     }
 
     private void validTotalPrice() {
@@ -104,7 +102,6 @@ public class InvoiceAdvanceSearchModalController {
         } catch (NumberFormatException e) {
         }
     }
-
 
     private void handleClose() {
         if (closeBtn.getScene() != null && closeBtn.getScene().getWindow() != null) {
