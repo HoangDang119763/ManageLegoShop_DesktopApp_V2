@@ -9,6 +9,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -48,40 +50,84 @@
                         <VBox spacing="25.0">
                             <padding><Insets bottom="30.0" left="40.0" right="40.0" top="15.0" /></padding>
                             <children>
-                                <VBox spacing="15.0" style="-fx-padding: 20; -fx-background-radius: 10;" styleClass="white-bg, shadow">
+                                <VBox spacing="15.0" style="-fx-padding: 25; -fx-background-radius: 12;" styleClass="white-bg, shadow">
                                     <children>
                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                             <FontAwesomeIcon fill="#1f7d84" glyphName="USER" size="1.5em" />
-                                            <Label text="THÔNG TIN CƠ BẢN" textFill="#1f7d84"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                            <Label text="THÔNG TIN CƠ BẢN" textFill="#1f7d84">
+                                                <font><Font name="System Bold" size="16.0" /></font>
+                                            </Label>
                                         </HBox>
                                         <Line endX="780.0" stroke="#eee" strokeWidth="2.0" />
-                                        <GridPane hgap="25.0" vgap="12.0">
-                                            <columnConstraints>
-                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-                                            </columnConstraints>
+
+                                        <HBox alignment="TOP_LEFT" spacing="35.0">
                                             <children>
-                                                <VBox spacing="5.0">
-                                                    <Label styleClass="label-s" text="Mã nhân viên" textFill="#30bac4" />
-                                                    <TextField fx:id="txtEmployeeId" editable="false" prefHeight="35.0" styleClass="textfield-1, readonly" />
+                                                <VBox alignment="TOP_CENTER" prefHeight="250.0" prefWidth="308.0" spacing="10.0">
+                                                    <children>
+                                          <Label styleClass="label-a" text="Avatar">
+                                             <graphic>
+                                                <FontAwesomeIcon fill="#1f7d84" glyphName="CAMERA" />
+                                             </graphic>
+                                          </Label>
+                                          <Line endX="100.0" startX="-60.0" stroke="#f4f4f4" strokeWidth="1.5" />
+                                          <AnchorPane maxWidth="230.0" prefWidth="230.0" style="-fx-border-color: #30bac4; -fx-border-radius: 5; -fx-border-width: 2;">
+                                             <children>
+                                                <ImageView fx:id="imgAvatar" fitHeight="152.0" fitWidth="227.0" layoutX="22.0" pickOnBounds="true" preserveRatio="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                   <image>
+                                                      <Image url="@../images/default/default.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </children>
+                                          </AnchorPane>
+                                          <HBox fx:id="functionImg" alignment="CENTER" spacing="10.0">
+                                             <children>
+                                                <Button fx:id="resetImgBtn" prefHeight="40.0" prefWidth="120.0" styleClass="action-btn" text="RESET">
+                                                   <graphic>
+                                                      <FontAwesomeIcon fill="WHITE" glyphName="UNDO" size="1.2em" />
+                                                   </graphic>
+                                                </Button>
+                                                <Button fx:id="choseImg" prefHeight="40.0" prefWidth="140.0" styleClass="action-btn" text="CHỌN ẢNH">
+                                                   <graphic>
+                                                      <FontAwesomeIcon fill="WHITE" glyphName="IMAGE" />
+                                                   </graphic>
+                                                </Button>
+                                             </children>
+                                          </HBox>
+                                                    </children>
                                                 </VBox>
-                                                <HBox spacing="10.0" GridPane.rowIndex="1">
-                                                    <VBox spacing="5.0" HBox.hgrow="ALWAYS"><Label styleClass="label-s" text="Họ đệm*" textFill="#30bac4" /><TextField fx:id="txtFirstName" prefHeight="35.0" styleClass="textfield-1" /></VBox>
-                                                    <VBox prefWidth="120.0" spacing="5.0"><Label styleClass="label-s" text="Tên*" textFill="#30bac4" /><TextField fx:id="txtLastName" prefHeight="35.0" styleClass="textfield-1" /></VBox>
-                                                </HBox>
-                                                <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                                    <VBox spacing="5.0" HBox.hgrow="ALWAYS"><Label styleClass="label-s" text="Ngày sinh*" textFill="#30bac4" /><DatePicker fx:id="dpDateOfBirth" maxWidth="Infinity" prefHeight="35.0" /></VBox>
-                                                    <VBox prefWidth="130.0" spacing="5.0"><Label styleClass="label-s" text="Giới tính" textFill="#30bac4" /><ComboBox fx:id="cbGender" maxWidth="Infinity" prefHeight="35.0" /></VBox>
-                                                </HBox>
-                                                <VBox spacing="5.0" GridPane.rowIndex="2"><Label styleClass="label-s" text="Số điện thoại*" textFill="#30bac4" /><TextField fx:id="txtPhone" prefHeight="35.0" styleClass="textfield-1" /></VBox>
-                                                <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2"><Label styleClass="label-s" text="Email liên hệ*" textFill="#30bac4" /><TextField fx:id="txtEmail" prefHeight="35.0" styleClass="textfield-1" /></VBox>
+
+                                                <GridPane hgap="25.0" vgap="12.0" HBox.hgrow="ALWAYS">
+                                                    <columnConstraints>
+                                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="280.0" />
+                                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="280.0" />
+                                                    </columnConstraints>
+                                                    <children>
+                                                        <VBox spacing="5.0" GridPane.columnSpan="1">
+                                                            <Label styleClass="label-s" text="Mã nhân viên" textFill="#30bac4" />
+                                                            <TextField fx:id="txtEmployeeId" editable="false" prefHeight="35.0" styleClass="textfield-1, readonly" />
+                                                        </VBox>
+
+                                                        <HBox spacing="10.0" GridPane.rowIndex="1">
+                                                            <VBox spacing="5.0" HBox.hgrow="ALWAYS"><Label styleClass="label-s" text="Họ đệm*" textFill="#30bac4" /><TextField fx:id="txtFirstName" prefHeight="35.0" prefWidth="158.0" styleClass="textfield-1" /></VBox>
+                                                            <VBox prefWidth="120.0" spacing="5.0"><Label styleClass="label-s" text="Tên*" textFill="#30bac4" /><TextField fx:id="txtLastName" prefHeight="35.0" styleClass="textfield-1" /></VBox>
+                                                        </HBox>
+
+                                                        <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                                            <VBox prefHeight="60.0" prefWidth="154.0" spacing="5.0" HBox.hgrow="ALWAYS"><Label styleClass="label-s" text="Ngày sinh*" textFill="#30bac4" /><DatePicker fx:id="dpDateOfBirth" maxWidth="Infinity" prefHeight="35.0" /></VBox>
+                                                            <VBox prefWidth="130.0" spacing="5.0"><Label styleClass="label-s" text="Giới tính" textFill="#30bac4" /><ComboBox fx:id="cbGender" maxWidth="Infinity" prefHeight="35.0" /></VBox>
+                                                        </HBox>
+
+                                                        <VBox spacing="5.0" GridPane.rowIndex="2"><Label styleClass="label-s" text="Số điện thoại*" textFill="#30bac4" /><TextField fx:id="txtPhone" prefHeight="35.0" styleClass="textfield-1" /></VBox>
+                                                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2"><Label styleClass="label-s" text="Email liên hệ*" textFill="#30bac4" /><TextField fx:id="txtEmail" prefHeight="35.0" styleClass="textfield-1" /></VBox>
+                                                    </children>
+                                                    <rowConstraints>
+                                                        <RowConstraints />
+                                                        <RowConstraints />
+                                                        <RowConstraints />
+                                                    </rowConstraints>
+                                                </GridPane>
                                             </children>
-                                 <rowConstraints>
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                 </rowConstraints>
-                                        </GridPane>
+                                        </HBox>
                                     </children>
                                 </VBox>
 

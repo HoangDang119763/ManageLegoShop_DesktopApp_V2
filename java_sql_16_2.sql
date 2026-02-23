@@ -63,7 +63,7 @@ INSERT INTO `status` (`name`, `description`, `type`) VALUES
 -- Nhóm Phiếu nhập - Import 
 ('Completed', 'Hoàn thành', 'IMPORT'),
 ('Incompleted', 'Chưa hoàn thành', 'IMPORT'),
-('Canceled', 'Hủy bỏ', 'IMPORT'),
+('Draft', 'Nháp', 'IMPORT'),
 -- Nhóm Xin nghỉ phép - Leave Request
 ('Pending', 'Đơn đang chờ quản lý phê duyệt', 'LEAVE_REQUEST'),
 ('Approved', 'Đơn đã được chấp thuận', 'LEAVE_REQUEST'),
@@ -179,6 +179,7 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 ('Tạo đơn hàng mới', 'INVOICE_INSERT', 5),
 ('Xem phiếu nhập hàng', 'IMPORT_LIST_VIEW', 6),
 ('Tạo phiếu nhập hàng mới', 'IMPORT_INSERT', 6),
+('Xem phiếu nhập hàng', 'IMPORT_APPROVE', 6),
 
 -- === 📑 MODULE DANH MỤC & KHUYẾN MÃI (Module ID: 7 & 8) ===
 ('Xem danh mục sản phẩm', 'CATEGORY_LIST_VIEW', 7),
@@ -311,6 +312,7 @@ CREATE TABLE `employee` (
   `department_id` INT DEFAULT NULL, -- Liên kết phòng ban
   `status_id` INT NOT NULL,
   `account_id` INT DEFAULT NULL,
+   `avatar_url` VARCHAR(255) DEFAULT NULL,
   `health_ins_code` VARCHAR(50) DEFAULT NULL, 
   `is_social_insurance` TINYINT(1) DEFAULT '0',
   `is_unemployment_insurance` TINYINT(1) DEFAULT '0',
@@ -572,9 +574,9 @@ CREATE TABLE `invoice` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- 1. Tạo Hóa đơn (Status 15: COMPLETED)
-INSERT INTO `invoice` (`id`, `create_date`, `employee_id`, `customer_id`, `discount_code`, `discount_amount`, `total_price`, `status_id`) VALUES
-(1, '2024-02-01 10:00:00', 1, 1, NULL, 0.00, 98700.00, 15),
-(2, '2024-02-10 14:20:00', 1, 2, NULL, 0.00, 162750.00, 15);
+-- INSERT INTO `invoice` (`id`, `create_date`, `employee_id`, `customer_id`, `discount_code`, `discount_amount`, `total_price`, `status_id`) VALUES
+-- (1, '2024-02-01 10:00:00', 1, 1, NULL, 0.00, 98700.00, 15),
+-- (2, '2024-02-10 14:20:00', 1, 2, NULL, 0.00, 162750.00, 15);
 
 CREATE TABLE `detail_invoice` (
   `invoice_id` INT(11) NOT NULL,
@@ -589,15 +591,15 @@ CREATE TABLE `detail_invoice` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- 2. Chi tiết hóa đơn (Lưu Snapshot giá vốn)
-INSERT INTO `detail_invoice` (`invoice_id`, `product_id`, `quantity`, `price`, `cost_price`, `total_price`) VALUES
--- Đơn 101: Bán Naruto 01 và 02
-(1, 'SP00001', 2, 21000.00, 20000.00, 60000.00),
-(1, 'SP00002', 3, 18900.00, 18000.00, 82500.00),
+-- INSERT INTO `detail_invoice` (`invoice_id`, `product_id`, `quantity`, `price`, `cost_price`, `total_price`) VALUES
+-- -- Đơn 101: Bán Naruto 01 và 02
+-- (1, 'SP00001', 2, 21000.00, 20000.00, 60000.00),
+-- (1, 'SP00002', 3, 18900.00, 18000.00, 82500.00),
 
--- Đơn 102: Bán Kakashi và Harry Potter
-(2, 'SP00004', 1, 15750.00, 15000.00, 15750.00),
-(2, 'SP00010', 1, 105000.00, 100000.00, 105000.00),
-(2, 'SP00007', 1, 42000.00, 40000.00, 42000.00);
+-- -- Đơn 102: Bán Kakashi và Harry Potter
+-- (2, 'SP00004', 1, 15750.00, 15000.00, 15750.00),
+-- (2, 'SP00010', 1, 105000.00, 100000.00, 105000.00),
+-- (2, 'SP00007', 1, 42000.00, 40000.00, 42000.00);
 
 CREATE TABLE `import` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -613,9 +615,9 @@ CREATE TABLE `import` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- 1. Tạo Phiếu nhập (Status 17: COMPLETED)
-INSERT INTO `import` (`id`, `create_date`, `employee_id`, `supplier_id`, `total_price`, `status_id`) VALUES
-(1, '2024-01-01 08:00:00', 1, 1, 6460000.00, 17), -- Lô đầu tiên (Đã đẩy)
-(2, '2024-02-15 09:30:00', 1, 1, 800000.00, 17);   -- Lô chờ (Chưa đẩy)
+-- INSERT INTO `import` (`id`, `create_date`, `employee_id`, `supplier_id`, `total_price`, `status_id`) VALUES
+-- (1, '2024-01-01 08:00:00', 1, 1, 6460000.00, 17), -- Lô đầu tiên (Đã đẩy)
+-- (2, '2024-02-15 09:30:00', 1, 1, 800000.00, 17);   -- Lô chờ (Chưa đẩy)
 
 CREATE TABLE `detail_import` (
   `import_id` INT(11) NOT NULL,
@@ -632,22 +634,22 @@ CREATE TABLE `detail_import` (
 
 -- 2. Chi tiết phiếu nhập
 -- Lô 1: Nhập 20 cái cho mỗi SP (từ SP00001 đến SP00014 - bỏ qua SP00003 vì giá 0)
-INSERT INTO `detail_import` (`import_id`, `product_id`, `quantity`, `price`, `total_price`, `is_pushed`, `profit_percent`) VALUES
-(1, 'SP00001', 20, 20000.00, 400000.00, 1, 5),
-(1, 'SP00002', 20, 18000.00, 360000.00, 1, 5),
-(1, 'SP00004', 20, 15000.00, 300000.00, 1, 5),
-(1, 'SP00005', 20, 25000.00, 500000.00, 1, 5),
-(1, 'SP00007', 20, 40000.00, 800000.00, 1, 5),
-(1, 'SP00008', 20, 30000.00, 600000.00, 1, 5),
-(1, 'SP00010', 20, 100000.00, 2000000.00, 1, 5),
-(1, 'SP00011', 20, 30000.00, 600000.00, 1, 5),
-(1, 'SP00014', 20, 45000.00, 900000.00, 1, 5);
+-- INSERT INTO `detail_import` (`import_id`, `product_id`, `quantity`, `price`, `total_price`, `is_pushed`, `profit_percent`) VALUES
+-- (1, 'SP00001', 20, 20000.00, 400000.00, 1, 5),
+-- (1, 'SP00002', 20, 18000.00, 360000.00, 1, 5),
+-- (1, 'SP00004', 20, 15000.00, 300000.00, 1, 5),
+-- (1, 'SP00005', 20, 25000.00, 500000.00, 1, 5),
+-- (1, 'SP00007', 20, 40000.00, 800000.00, 1, 5),
+-- (1, 'SP00008', 20, 30000.00, 600000.00, 1, 5),
+-- (1, 'SP00010', 20, 100000.00, 2000000.00, 1, 5),
+-- (1, 'SP00011', 20, 30000.00, 600000.00, 1, 5),
+-- (1, 'SP00014', 20, 45000.00, 900000.00, 1, 5);
 
 -- Lô 2: Nhập thêm Naruto 01 và 02 (Giá tăng, đang CHỜ ĐẨY)
 -- Bạn dùng cái này để test: Khi bán hết 20 cái cũ, sẽ lấy giá 22k và 20k này đẩy vào Product.
-INSERT INTO `detail_import` (`import_id`, `product_id`, `quantity`, `price`, `total_price`, `is_pushed`) VALUES
-(2, 'SP00001', 20, 22000.00, 440000.00, 0),
-(2, 'SP00002', 20, 20000.00, 400000.00, 0);
+-- INSERT INTO `detail_import` (`import_id`, `product_id`, `quantity`, `price`, `total_price`, `is_pushed`) VALUES
+-- (2, 'SP00001', 20, 22000.00, 440000.00, 0),
+-- (2, 'SP00002', 20, 20000.00, 400000.00, 0);
 
 CREATE TABLE `leave_request` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -845,7 +847,10 @@ CREATE TABLE `employment_history` (
 -- 1. CẬP NHẬT TRẠNG THÁI CHO CÁC THỰC THỂ (ACTIVE)
 -- =============================================
 SET SQL_SAFE_UPDATES = 0;
-
+UPDATE `product` 
+SET `stock_quantity` = 0, 
+    `selling_price` = 0, 
+    `import_price` = 0;
 UPDATE department SET status_id = (SELECT id FROM status WHERE type = 'DEPARTMENT' AND name = 'Active' LIMIT 1);
 UPDATE employee   SET status_id = (SELECT id FROM status WHERE type = 'EMPLOYEE' AND name = 'Active' LIMIT 1);
 UPDATE account    SET status_id = (SELECT id FROM status WHERE type = 'ACCOUNT' AND name = 'Active' LIMIT 1);

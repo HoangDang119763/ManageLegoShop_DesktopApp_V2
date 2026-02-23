@@ -15,25 +15,23 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="700.0" maxWidth="1074.0" minHeight="700.0" minWidth="1074.0" prefHeight="700.0" prefWidth="1074.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.SellingProductController">
+<AnchorPane maxHeight="700.0" maxWidth="1174.0" minHeight="700.0" minWidth="1174.0" prefHeight="700.0" prefWidth="1174.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.SellingProductController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
             <top>
-                <AnchorPane prefHeight="50.0" prefWidth="1074.0" BorderPane.alignment="CENTER">
+                <AnchorPane prefHeight="50.0" prefWidth="1174.0" BorderPane.alignment="CENTER">
                     <children>
-                        <Button fx:id="btnExitSellingForm" layoutX="1015.0" layoutY="8.0" prefHeight="35.0" prefWidth="45.0" styleClass="close" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="15.0">
+                        <Button fx:id="btnExitSellingForm" layoutX="1010.0" layoutY="8.0" prefHeight="35.0" prefWidth="45.0" styleClass="close" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="15.0">
                             <graphic><FontAwesomeIcon fill="#7f8c8d" glyphName="CLOSE" size="1.8em" /></graphic>
                         </Button>
-                        <Line endX="1044.0" layoutX="15.0" layoutY="45.0" stroke="#eee" strokeWidth="2.0" />
+                        <Line endX="1144.0" layoutX="15.0" layoutY="45.0" stroke="#eee" strokeWidth="2.0" />
                     </children>
-               <BorderPane.margin>
-                  <Insets />
-               </BorderPane.margin>
                 </AnchorPane>
             </top>
 
@@ -42,7 +40,7 @@
                     <padding><Insets bottom="10.0" left="10.0" right="10.0" top="0.0" /></padding>
                     <children>
 
-                        <VBox maxWidth="638.0" minWidth="638.0" prefWidth="638.0" spacing="12.0" styleClass="white-bg, shadow">
+                        <VBox maxWidth="738.0" minWidth="738.0" prefWidth="738.0" spacing="12.0" styleClass="white-bg, shadow">
                             <padding><Insets bottom="10.0" left="15.0" right="15.0" top="15.0" /></padding>
                             <children>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
@@ -52,104 +50,89 @@
                                             <font><Font name="System Bold" size="20.0" /></font>
                                         </Label>
                                     </children>
-                           <VBox.margin>
-                              <Insets bottom="-2.0" />
-                           </VBox.margin>
                                 </HBox>
-                                <Line endX="605.0" stroke="#58c9c9" strokeWidth="2.0" />
+                                <Line endX="705.0" stroke="#58c9c9" strokeWidth="2.0" />
 
                                 <HBox alignment="CENTER_LEFT" spacing="15.0">
                                     <children>
-                                        <AnchorPane>
+                                        <AnchorPane HBox.hgrow="ALWAYS">
                                             <children>
-                                                <TextField fx:id="txtProductNameSearch" prefHeight="35.0" prefWidth="240.0" promptText="Tìm tên sản phẩm..." style="-fx-padding: 0 10 0 35;" styleClass="textfield" />
+                                                <TextField fx:id="txtProductNameSearch" prefHeight="35.0" prefWidth="250.0" promptText="Tìm tên sản phẩm..." style="-fx-padding: 0 10 0 35;" styleClass="textfield" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
                                                 <FontAwesomeIcon fill="#58c9c9" glyphName="SEARCH" layoutX="10.0" layoutY="24.0" size="1.2em" />
                                             </children>
                                         </AnchorPane>
                                         <ComboBox fx:id="cbCategoryFilter" prefHeight="35.0" prefWidth="130.0" promptText="Thể loại" />
-                                        <Button fx:id="btnSearchProduct" prefHeight="35.0" prefWidth="85.0" styleClass="action-btn" text="LỌC" />
-                                        <Button fx:id="btnClearProduct" prefHeight="35.0" prefWidth="105.0" styleClass="action-btn" text="LÀM MỚI" />
+                                        <ComboBox fx:id="cbPriceSortOrder" prefHeight="35.0" prefWidth="160.0" promptText="Sắp xếp giá" />
+                                        <Button fx:id="btnClearProduct" prefHeight="35.0" prefWidth="90.0" styleClass="action-btn" text="LÀM MỚI" />
                                     </children>
                                 </HBox>
 
-                                <ScrollPane fx:id="spShowProductContainer" fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
-                                    <content>
-                                        <GridPane fx:id="gpShowProductWrapper" hgap="12.0" vgap="12.0">
-                                            <padding><Insets bottom="5.0" left="5.0" right="5.0" top="5.0" /></padding>
-                                            <columnConstraints>
-                                                <ColumnConstraints hgrow="ALWAYS" minWidth="285.0" prefWidth="290.0" />
-                                                <ColumnConstraints hgrow="ALWAYS" minWidth="285.0" prefWidth="290.0" />
-                                            </columnConstraints>
-                                            <children>
-                                                <HBox prefHeight="130.0" spacing="12.0" style="-fx-background-color: white; -fx-border-color: #eee; -fx-border-radius: 8; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 8, 0, 0, 2);">
-                                                    <padding><Insets bottom="10.0" left="10.0" right="10.0" top="10.0" /></padding>
+                                <StackPane VBox.vgrow="ALWAYS">
+                                    <children>
+                                        <ScrollPane fx:id="spShowProductContainer" fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent;">
+                                            <content>
+                                                <GridPane fx:id="gpShowProductWrapper" hgap="10.0" vgap="10.0">
+                                                    <padding><Insets bottom="10.0" left="5.0" right="15.0" top="10.0" /></padding>
+                                                    <columnConstraints>
+                                                        <ColumnConstraints hgrow="ALWAYS" minWidth="225.0" prefWidth="230.0" />
+                                                        <ColumnConstraints hgrow="ALWAYS" minWidth="225.0" prefWidth="230.0" />
+                                                        <ColumnConstraints hgrow="ALWAYS" minWidth="225.0" prefWidth="230.0" />
+                                                    </columnConstraints>
                                                     <children>
-                                                        <VBox alignment="CENTER" minHeight="110.0" minWidth="110.0" prefHeight="110.0" prefWidth="110.0" style="-fx-background-color: #f1f2f6; -fx-background-radius: 5;">
-                                                            <children><FontAwesomeIcon fill="#30bac4" glyphName="IMAGE" size="3.5em" /></children>
-                                                        </VBox>
-                                                        <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                                        <HBox prefHeight="130.0" spacing="12.0" style="-fx-background-color: white; -fx-border-color: #eee; -fx-border-radius: 8; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 8, 0, 0, 2);">
+                                                            <padding><Insets bottom="10.0" left="10.0" right="10.0" top="10.0" /></padding>
                                                             <children>
-                                                                <Label maxWidth="150.0" text="Lego Technic Bugatti" textFill="#2c3e50" textOverrun="ELLIPSIS">
-                                                                    <font><Font name="System Bold" size="14.0" /></font>
-                                                                </Label>
-                                                                <Label maxWidth="150.0" text="Dòng: Technic" textFill="#7f8c8d" />
-                                                                <Label text="Còn: 24 bộ" textFill="#16a085"><font><Font name="System Bold" size="12.0" /></font></Label>
-                                                                <AnchorPane VBox.vgrow="ALWAYS" />
-                                                                <Label text="2.500.000 Đ" textFill="#e74c3c"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                                                <VBox alignment="CENTER" minHeight="110.0" minWidth="110.0" prefHeight="110.0" prefWidth="110.0" style="-fx-background-color: #f1f2f6; -fx-background-radius: 5;">
+                                                                    <children><FontAwesomeIcon fill="#30bac4" glyphName="IMAGE" size="3.5em" /></children>
+                                                                </VBox>
+                                                                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                                                    <children>
+                                                                        <Label maxWidth="150.0" text="Lego Technic Bugatti" textFill="#2c3e50" textOverrun="ELLIPSIS">
+                                                                            <font><Font name="System Bold" size="14.0" /></font>
+                                                                        </Label>
+                                                                        <Label text="Còn: 24 bộ" textFill="#16a085"><font><Font name="System Bold" size="12.0" /></font></Label>
+                                                                        <AnchorPane VBox.vgrow="ALWAYS" />
+                                                                        <Label text="2.500.000 Đ" textFill="#e74c3c"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                                                    </children>
+                                                                </VBox>
                                                             </children>
-                                                        </VBox>
+                                                        </HBox>
                                                     </children>
-                                                </HBox>
-                                                <HBox prefHeight="130.0" spacing="12.0" style="-fx-background-color: white; -fx-border-color: #eee; -fx-border-radius: 8; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 8, 0, 0, 2);" GridPane.columnIndex="1">
-                                                    <padding><Insets bottom="10.0" left="10.0" right="10.0" top="10.0" /></padding>
-                                                    <children>
-                                                        <VBox alignment="CENTER" minHeight="110.0" minWidth="110.0" prefHeight="110.0" prefWidth="110.0" style="-fx-background-color: #f1f2f6; -fx-background-radius: 5;">
-                                                            <children><FontAwesomeIcon fill="#30bac4" glyphName="IMAGE" size="3.5em" /></children>
-                                                        </VBox>
-                                                        <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                                                            <children>
-                                                                <Label maxWidth="150.0" text="Lego Star Wars Millen" textFill="#2c3e50" textOverrun="ELLIPSIS">
-                                                                    <font><Font name="System Bold" size="14.0" /></font>
-                                                                </Label>
-                                                                <Label text="Dòng: Star Wars" textFill="#7f8c8d" />
-                                                                <Label text="Còn: 5 bộ" textFill="#e67e22"><font><Font name="System Bold" size="12.0" /></font></Label>
-                                                                <AnchorPane VBox.vgrow="ALWAYS" />
-                                                                <Label text="850.000 Đ" textFill="#e74c3c"><font><Font name="System Bold" size="16.0" /></font></Label>
-                                                            </children>
-                                                        </VBox>
-                                                    </children>
-                                                </HBox>
-                                            </children>
-                                 <rowConstraints>
-                                    <RowConstraints />
-                                 </rowConstraints>
-                                        </GridPane>
-                                    </content>
-                                </ScrollPane>
+                                       <rowConstraints>
+                                          <RowConstraints />
+                                       </rowConstraints>
+                                                </GridPane>
+                                            </content>
+                                        </ScrollPane>
+                                    </children>
+                                </StackPane>
+
+                                <HBox alignment="CENTER" prefHeight="45.0">
+                                    <children>
+                                        <fx:include fx:id="pagination" source="PaginationControl.fxml" />
+                                    </children>
+                                </HBox>
                             </children>
                         </VBox>
 
                         <VBox maxWidth="406.0" minWidth="406.0" prefWidth="406.0" spacing="0.0" styleClass="white-bg, shadow">
                             <children>
-                                <VBox spacing="8.0" VBox.vgrow="ALWAYS">
+                                <VBox spacing="10.0" VBox.vgrow="ALWAYS">
                                     <padding><Insets bottom="10.0" left="15.0" right="15.0" top="15.0" /></padding>
                                     <children>
                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                             <children>
                                                 <FontAwesomeIcon fill="#1f7d84" glyphName="FILE_TEXT_ALT" size="1.8em" />
                                                 <Label styleClass="label-header" text="CHI TIẾT HÓA ĐƠN" textFill="#1f7d84">
-                                                    <font><Font name="System Bold" size="20.0" /></font>
-                                       <HBox.margin>
-                                          <Insets top="5.0" />
-                                       </HBox.margin>
+                                                    <font><Font name="System Bold" size="18.0" /></font>
                                                 </Label>
                                                 <AnchorPane HBox.hgrow="ALWAYS" />
-                                                <TextField fx:id="txtInvoiceId" editable="false" prefHeight="26.0" prefWidth="55.0" styleClass="textfield-1, readonly" />
+                                                <TextField fx:id="txtInvoiceId" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="55.0" styleClass="textfield-1, readonly" />
                                             </children>
                                         </HBox>
                                         <Line endX="376.0" stroke="#58c9c9" strokeWidth="2.0" />
 
-                                        <GridPane hgap="10.0" vgap="8.0">
+                                        <GridPane hgap="10.0" vgap="10.0">
                                             <columnConstraints>
                                                 <ColumnConstraints halignment="RIGHT" minWidth="90.0" />
                                                 <ColumnConstraints hgrow="ALWAYS" />
@@ -159,56 +142,61 @@
                                                 <Label styleClass="label-s" text="Nhân viên:" />
                                                 <TextField fx:id="txtEmployeeFullName" editable="false" prefHeight="30.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.columnSpan="2" />
                                                 <Label styleClass="label-s" text="Khách hàng:" GridPane.rowIndex="1" />
-                                                <TextField fx:id="txtCustomerName" editable="false" prefHeight="30.0" promptText="Chọn khách..." styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                <TextField fx:id="txtCustomerName" editable="false" prefHeight="30.0" styleClass="textfield-1, readonly" text="Chọn khách..." GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                 <Button fx:id="btnGetCusInfo" prefHeight="30.0" prefWidth="35.0" styleClass="action-btn" text="..." GridPane.columnIndex="2" GridPane.rowIndex="1" />
                                                 <Label styleClass="label-s" text="Mã KM:" GridPane.rowIndex="2" />
-                                                <TextField fx:id="txtCodeDiscount" editable="false" prefHeight="30.0" promptText="Chọn khuyến mãi..." styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <TextField fx:id="txtCodeDiscount" editable="false" prefHeight="30.0" styleClass="textfield-1, readonly" text="Chọn khuyến mãi..." GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                                 <Button fx:id="btnGetDiscount" prefHeight="30.0" prefWidth="35.0" styleClass="action-btn" text="..." GridPane.columnIndex="2" GridPane.rowIndex="2" />
                                             </children>
-                                 <rowConstraints>
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                 </rowConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints />
+                                                <RowConstraints />
+                                                <RowConstraints />
+                                            </rowConstraints>
                                         </GridPane>
+                              <ScrollPane fx:id="scrollPane" VBox.vgrow="ALWAYS">
+                                 <content>
+      
+                                              <TableView fx:id="tbvDetailInvoiceProduct">
+                                                  <columns>
+                                          <TableColumn fx:id="tlb_col_index" minWidth="100.0" prefWidth="100.0" text="ID" />
+                                                      <TableColumn fx:id="tlb_col_productName" minWidth="180.0" prefWidth="180.0" text="Tên SP" />
+                                                      <TableColumn fx:id="tlb_col_quantity" minWidth="80.0" text="SL" />
+                                          <TableColumn fx:id="tlb_col_price" minWidth="130.0" prefWidth="130.0" text="Đơn giá" />
+                                                      <TableColumn fx:id="tlb_col_totalPrice" minWidth="130.0" prefWidth="130.0" text="Thành tiền" />
+                                                  </columns>
+                                              </TableView>
+                                 </content>
+                              </ScrollPane>
 
-                                        <TableView fx:id="tbvDetailInvoiceProduct" VBox.vgrow="ALWAYS">
-                                            <columns>
-                                                <TableColumn fx:id="tlb_col_productName" prefWidth="150.0" text="Tên SP" />
-                                                <TableColumn fx:id="tlb_col_quantity" prefWidth="50.0" text="SL" />
-                                                <TableColumn fx:id="tlb_col_totalPrice" prefWidth="110.0" text="Thành tiền" />
-                                            </columns>
-                                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
-                                        </TableView>
-
-                                        <GridPane hgap="10.0" style="-fx-background-color: #f9f9f9; -fx-padding: 10; -fx-background-radius: 8; -fx-border-color: #ddd; -fx-border-radius: 8;" vgap="8.0">
+                                        <GridPane hgap="10.0" style="-fx-background-color: #f9f9f9; -fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #ddd; -fx-border-radius: 8;" vgap="8.0">
                                             <columnConstraints>
-                                                <ColumnConstraints halignment="RIGHT" maxWidth="132.0" minWidth="110.0" prefWidth="132.0" />
-                                                <ColumnConstraints hgrow="ALWAYS" maxWidth="220.00001220703123" minWidth="212.79999999999998" prefWidth="212.79999999999998" />
+                                                <ColumnConstraints halignment="RIGHT" minWidth="110.0" />
+                                                <ColumnConstraints hgrow="ALWAYS" />
                                             </columnConstraints>
                                             <children>
                                                 <Label styleClass="label-a" text="Thành tiền:" />
-                                                <TextField fx:id="lbTotalInvoicePrice" editable="false" prefHeight="30.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" />
+                                                <TextField fx:id="lbTotalInvoicePrice" alignment="CENTER_RIGHT" editable="false" prefHeight="30.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" />
                                                 <Label styleClass="label-a" text="Giảm giá:" GridPane.rowIndex="1" />
-                                                <TextField fx:id="lbDiscountPrice" editable="false" prefHeight="30.0" style="-fx-text-fill: #e67e22;" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                <Label styleClass="label-m" text="TỔNG CỘNG:" textFill="#1f7d84" GridPane.rowIndex="2">
-                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                <TextField fx:id="lbDiscountPrice" alignment="CENTER_RIGHT" editable="false" prefHeight="30.0" style="-fx-text-fill: #e67e22;" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                <Label styleClass="label-m" text="TỔNG CỘNG" textFill="#1f7d84" GridPane.rowIndex="2">
+                                                    <font><Font name="System Bold" size="13.0" /></font>
                                                 </Label>
-                                                <TextField fx:id="lbFinalTotalInvoicePrice" editable="false" prefHeight="35.0" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 16px;" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <TextField fx:id="lbFinalTotalInvoicePrice" alignment="CENTER_RIGHT" editable="false" prefHeight="35.0" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 16px;" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                             </children>
-                                 <rowConstraints>
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                 </rowConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints />
+                                                <RowConstraints />
+                                                <RowConstraints />
+                                            </rowConstraints>
                                         </GridPane>
                                     </children>
                                 </VBox>
 
-                                <AnchorPane prefHeight="95.0">
+                                <AnchorPane prefHeight="100.0">
                                     <children>
                                         <Line endX="376.0" layoutX="15.0" stroke="#eee" strokeWidth="1.5" AnchorPane.topAnchor="0.0" />
-                                        <GridPane hgap="10.0" layoutX="15.0" layoutY="12.0" prefWidth="376.0" vgap="8.0" AnchorPane.bottomAnchor="10.0">
+                                        <GridPane hgap="10.0" layoutX="15.0" layoutY="12.0" prefWidth="376.0" vgap="10.0" AnchorPane.bottomAnchor="10.0">
                                             <columnConstraints>
                                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -222,18 +210,15 @@
                                                 </Button>
                                                 <Button fx:id="btnSubmitInvoice" maxWidth="1.7976931348623157E308" prefHeight="45.0" styleClass="action-btn" text="THANH TOÁN" GridPane.columnSpan="2" GridPane.rowIndex="1">
                                                     <graphic><FontAwesomeIcon fill="WHITE" glyphName="CHECK_CIRCLE" size="1.5em" /></graphic>
-                                                    <font><Font name="System Bold" size="15.0" /></font>
+                                                    <font><Font name="System Bold" size="16.0" /></font>
                                                 </Button>
                                             </children>
-                                 <rowConstraints>
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                 </rowConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints />
+                                                <RowConstraints />
+                                            </rowConstraints>
                                         </GridPane>
                                     </children>
-                           <VBox.margin>
-                              <Insets />
-                           </VBox.margin>
                                 </AnchorPane>
                             </children>
                         </VBox>

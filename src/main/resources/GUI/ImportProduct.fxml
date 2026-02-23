@@ -62,7 +62,7 @@
                                  </children>
                               </AnchorPane>
                               <ComboBox fx:id="cbCategoryFilter" prefHeight="35.0" prefWidth="130.0" promptText="Thể loại" />
-                              <Button fx:id="btnSearchProduct" prefHeight="35.0" prefWidth="70.0" styleClass="action-btn" text="LỌC" />
+                              <ComboBox fx:id="cbPriceSortOrder" prefHeight="35.0" prefWidth="120.0" promptText="Sắp xếp giá" />
                               <Button fx:id="btnClearProduct" prefHeight="35.0" prefWidth="90.0" styleClass="action-btn" text="LÀM MỚI" />
                            </children>
                         </HBox>
@@ -207,7 +207,7 @@
                                        <font><Font name="System Bold" size="18.0" /></font>
                                     </Label>
                                     <AnchorPane HBox.hgrow="ALWAYS" />
-                                    <TextField fx:id="txtImportId" editable="false" prefHeight="26.0" prefWidth="55.0" styleClass="textfield-1, readonly" />
+                                    <TextField fx:id="txtImportId" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="55.0" styleClass="textfield-1, readonly" />
                                  </children>
                               </HBox>
                               <Line endX="376.0" stroke="#58c9c9" strokeWidth="2.0" />
@@ -222,7 +222,7 @@
                                     <Label styleClass="label-s" text="Nhân viên:" />
                                     <TextField fx:id="txtEmployeeFullName" editable="false" prefHeight="30.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.columnSpan="2" />
                                     <Label styleClass="label-s" text="Nhà cung cấp:" GridPane.rowIndex="1" />
-                                    <TextField fx:id="txtSupplierName" editable="false" prefHeight="30.0" promptText="Chọn nhà cung cấp..." styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <TextField fx:id="txtSupplierName" editable="false" prefHeight="30.0" styleClass="textfield-1, readonly" text="Chọn nhà cung cấp..." GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                     <Button fx:id="btnGetSupInfo" prefHeight="30.0" prefWidth="35.0" styleClass="action-btn" text="..." GridPane.columnIndex="2" GridPane.rowIndex="1" />
                                  </children>
                                  <rowConstraints>
@@ -231,15 +231,21 @@
                                  </rowConstraints>
                               </GridPane>
 
-                              <TableView fx:id="tbvDetailImportProduct" VBox.vgrow="ALWAYS">
-                                 <columns>
-                                    <TableColumn fx:id="tlb_col_productName" prefWidth="130.0" text="Tên SP" />
-                                    <TableColumn fx:id="tlb_col_quantity" prefWidth="45.0" text="SL" />
-                                    <TableColumn fx:id="tlb_col_profitPercent" prefWidth="60.0" text="LN %" />
-                                    <TableColumn fx:id="tlb_col_totalPrice" prefWidth="110.0" text="Thành tiền" />
-                                 </columns>
-                                 <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
-                              </TableView>
+                              <ScrollPane fx:id="scrollPane" fitToHeight="true" VBox.vgrow="ALWAYS">
+                                 <TableView fx:id="tbvDetailImportProduct" tableMenuButtonVisible="true">
+                                    <columns>
+                                       <TableColumn fx:id="tlb_col_productId" minWidth="100.0" prefWidth="100.0" text="ID" />
+                                       <TableColumn fx:id="tlb_col_productName" minWidth="200.0" prefWidth="200.0" text="Tên SP" />
+                                       <TableColumn fx:id="tlb_col_quantity" minWidth="100.0" prefWidth="100.0" text="SL" />
+                                       <TableColumn fx:id="tlb_col_profitPercent" minWidth="100.0" prefWidth="100.0" text="LN %" />
+                                       <TableColumn fx:id="tlb_col_importPrice" minWidth="120.0" prefWidth="120.0" text="Giá nhập" />
+                                       <TableColumn fx:id="tlb_col_totalPrice" minWidth="130.0" prefWidth="130.0" text="Thành tiền" />
+                                    </columns>
+                                    <columnResizePolicy>
+                                       <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
+                                    </columnResizePolicy>
+                                 </TableView>
+                              </ScrollPane>
 
                               <GridPane hgap="10.0" style="-fx-background-color: #f9f9f9; -fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #ddd; -fx-border-radius: 8;" vgap="8.0">
                                  <columnConstraints>
@@ -247,12 +253,10 @@
                                     <ColumnConstraints hgrow="ALWAYS" maxWidth="211.19998779296876" minWidth="203.00001220703126" prefWidth="207.9999755859375" />
                                  </columnConstraints>
                                  <children>
-                                    <Label styleClass="label-a" text="Tổng tiền hàng:" />
-                                    <TextField fx:id="lbTotalImportPrice" editable="false" prefHeight="30.0" styleClass="textfield-1, readonly" GridPane.columnIndex="1" />
                                     <Label styleClass="label-m" text="TỔNG CỘNG" textFill="#1f7d84" GridPane.rowIndex="1">
                                        <font><Font name="System Bold" size="13.0" /></font>
                                     </Label>
-                                    <TextField fx:id="lbTotalImportPriceFinal" editable="false" prefHeight="35.0" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 16px;" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <TextField fx:id="lbTotalImportPrice" alignment="CENTER_RIGHT" editable="false" prefHeight="35.0" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 16px;" styleClass="textfield-1, readonly" text="0 VNĐ" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                  </children>
                                  <rowConstraints>
                                     <RowConstraints />
@@ -277,7 +281,7 @@
                                     <Button fx:id="btnImportListProductRemove" maxWidth="1.7976931348623157E308" prefHeight="35.0" styleClass="action-btn" text="XÓA SP" GridPane.columnIndex="1">
                                        <graphic><FontAwesomeIcon fill="WHITE" glyphName="TRASH" /></graphic>
                                     </Button>
-                                    <Button fx:id="btnSubmitImport" maxWidth="1.7976931348623157E308" prefHeight="45.0" styleClass="action-btn" text="NHẬP HÀNG (F5)" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                                    <Button fx:id="btnSubmitImport" maxWidth="1.7976931348623157E308" prefHeight="45.0" styleClass="action-btn" text="NHẬP HÀNG" GridPane.columnSpan="2" GridPane.rowIndex="1">
                                        <graphic><FontAwesomeIcon fill="WHITE" glyphName="TRUCK" size="1.5em" /></graphic>
                                        <font><Font name="System Bold" size="16.0" /></font>
                                     </Button>

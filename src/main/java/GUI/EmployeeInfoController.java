@@ -23,10 +23,15 @@ import SERVICE.SessionManagerService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.net.URL;
 
 /**
  * Controller quản lý màn hình thông tin nhân viên (Employee Info)
@@ -119,6 +124,8 @@ public class EmployeeInfoController {
     @FXML
     private VBox vboxPersonalInfo; // Container thông tin cá nhân
     @FXML
+    private ImageView imgAvatar; // Ảnh đại diện nhân viên
+    @FXML
     private Label lblLastLogin;
     @FXML
     private StackPane loadingOverlay;
@@ -158,6 +165,9 @@ public class EmployeeInfoController {
         roleBUS = RoleBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
         sessionManagerService = SessionManagerService.getInstance();
+
+        // Set avatar ImageView properties
+        imgAvatar.setPreserveRatio(false);
 
         setupListeners();
         setupTabLoadingListeners();
@@ -331,6 +341,9 @@ public class EmployeeInfoController {
                 personalInfo.getDateOfBirth() != null ? personalInfo.getDateOfBirth() : null);
         lblPhone.setText(personalInfo.getPhone() != null ? personalInfo.getPhone() : "");
         lblEmail.setText(personalInfo.getEmail() != null ? personalInfo.getEmail() : "");
+
+        // Avatar
+        loadEmployeeAvatar(personalInfo.getAvatarUrl());
 
         // Benefits (CheckBoxes)
         if (payrollInfo != null) {
@@ -627,4 +640,39 @@ public class EmployeeInfoController {
                     historyPaginationController.setPageCount(pageCount > 0 ? pageCount : 1);
                 });
     }
+
+    // ==================== 🖼️ AVATAR LOADER ====================
+    /**
+     * Load và hiển thị ảnh đại diện của nhân viên
+     * Tham khảo logic từ ProductModalController
+     */
+    private void loadEmployeeAvatar(String avatarUrl) {
+        File imageFile = null;
+        Image image = null;
+
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            imageFile = new File(avatarUrl);
+        }
+
+        if (imageFile != null && imageFile.exists()) {
+            image = new Image(imageFile.toURI().toString());
+        } else {
+            URL resource = getClass().getResource("/images/default/default.png");
+            if (resource != null) {
+                image = new Image(resource.toExternalForm());
+            } else {
+                System.err.println("Resource not found: /images/default/default.png");
+            }
+        }
+
+        if (image != null && imgAvatar != null) {
+            imgAvatar.setImage(image);
+            // Force fill ImageView bằng cách reload properties
+            imgAvatar.setPreserveRatio(false);
+        }
+    }
+
+    /**
+     * Reset button - không có ở EmployeeInfoUI (read-only tab)
+     */
 }

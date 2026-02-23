@@ -4,6 +4,7 @@ import DAL.SupplierDAL;
 import DTO.BUSResult;
 import DTO.SupplierDTO;
 import DTO.SupplierDisplayDTO;
+import DTO.SupplierForImportDTO;
 import ENUM.BUSOperationResult;
 import ENUM.Status;
 import ENUM.StatusType;
@@ -177,6 +178,18 @@ public class SupplierBUS extends BaseBUS<SupplierDTO, Integer> {
                         finalPageSize);
 
         return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
+    }
+
+    public BUSResult filterSuppliersByKeywordForImport(String keyword) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int activeStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.SUPPLIER, Status.Supplier.ACTIVE).getId();
+        ArrayList<SupplierForImportDTO> suppliers = SupplierDAL.getInstance()
+                .filterSuppliersByKeywordForImport(cleanKeyword, activeStatusId);
+        if (suppliers == null) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+        return new BUSResult(BUSOperationResult.SUCCESS, null, suppliers);
     }
 
     @Override

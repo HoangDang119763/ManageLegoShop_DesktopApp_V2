@@ -18,6 +18,7 @@ import ENUM.Status;
 import ENUM.StatusType;
 import INTERFACE.IModalController;
 import SERVICE.SessionManagerService;
+import SERVICE.ImageService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
@@ -26,14 +27,19 @@ import UTILS.ValidationUtils;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
-
-import com.mysql.cj.Session;
 
 /**
  * Controller cho modal thêm nhân viên mới
@@ -92,6 +98,17 @@ public class EmployeeAddModalController implements IModalController {
     @FXML
     private TextField txtHealthInsCode;
 
+    // ==================== AVATAR & IMAGE ====================
+    @FXML
+    private ImageView imgAvatar; // Ảnh đại diện nhân viên
+    @FXML
+    private Button choseImg; // Nút chọn ảnh
+    @FXML
+    private Button resetImgBtn; // Nút reset ảnh
+    @FXML
+    private HBox functionImg; // Container chứa các button ảnh
+    private String avatarUrl = null; // Đường dẫn ảnh tạm thời
+
     // ==================== ACCOUNT INFO ====================
     @FXML
     private TextField txtUsername;
@@ -114,6 +131,9 @@ public class EmployeeAddModalController implements IModalController {
 
     @FXML
     public void initialize() {
+        // Set avatar ImageView properties
+        imgAvatar.setPreserveRatio(false);
+
         setupListeners();
         loadComboBoxData();
         generateEmployeeId();
@@ -145,6 +165,10 @@ public class EmployeeAddModalController implements IModalController {
                 cbSocialIns.setSelected(true);
             }
         });
+
+        // Avatar button listeners
+        choseImg.setOnAction(e -> handleChooseAvatar());
+        resetImgBtn.setOnAction(e -> handleResetAvatar());
     }
 
     private void loadComboBoxData() {
@@ -276,7 +300,18 @@ public class EmployeeAddModalController implements IModalController {
         boolean isAccommodation = cbAccommodationSupport.isSelected();
         String healthCode = txtHealthInsCode.getText().trim();
 
-        // Khởi tạo Object đúng thứ tự Constructor
+        // Xử lý Avatar (tùy chọn - không bắt buộc)
+        String finalAvatarUrl = null;
+        if (avatarUrl != null && !avatarUrl.trim().isEmpty()) {
+            try {
+                finalAvatarUrl = ImageService.gI().saveEmployeeAvatar(txtEmployeeId.getText().trim(), avatarUrl);
+            } catch (IOException ex) {
+                NotificationUtils.showErrorAlert("Lỗi lưu ảnh: " + ex.getMessage(), AppMessages.DIALOG_TITLE);
+                return;
+            }
+        }
+
+        // Khởi tạo Object dùng constructor với avatarUrl
         EmployeeDTO tempEmployee = new EmployeeDTO(
                 0, // id
                 firstName, // first_name
@@ -294,7 +329,10 @@ public class EmployeeAddModalController implements IModalController {
                 isUnemployment, // is_unemployment_insurance
                 isPIT, // is_personal_income_tax
                 isTransport, // is_transportation_support
-                isAccommodation // is_accommodation_support
+                isAccommodation, // is_accommodation_support
+                null, // created_at
+                null, // updated_at
+                finalAvatarUrl // avatar_url
         );
         TaxDTO tempTax = new TaxDTO(-1, -1, Integer.parseInt(txtNumDependents.getText().trim()));
         AccountDTO tempAccount = new AccountDTO(-1, txtUsername.getText().trim(), "",
@@ -434,6 +472,80 @@ public class EmployeeAddModalController implements IModalController {
         if (closeBtn.getScene() != null && closeBtn.getScene().getWindow() != null) {
             Stage stage = (Stage) closeBtn.getScene().getWindow();
             stage.close();
+        }
+    }
+
+    // ==================== 🖼️ AVATAR HANDLERS ====================
+    /**
+     * Chọn ảnh đại diện từ hệ thống tệp
+     */
+    private void handleChooseAvatar() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters()
+                .add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"));
+
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            Image image = new Image(file.toURI().toString());
+            imgAvatar.setImage(image);
+            // Force fill ImageView bằng cách reload properties
+            imgAvatar.setPreserveRatio(false);
+            avatarUrl = file.toURI().toString();
+        }
+    }
+
+    /**
+     * Reset ảnh đại diện về mặc định
+     */
+    private void handleResetAvatar() {
+        if (!UiUtils.gI().showConfirmAlert("Bạn có chắc muốn reset ảnh đại diện?", AppMessages.DIALOG_TITLE_CONFIRM)) {
+            return;
+        }
+
+        Image image = null;
+        URL resource = getClass().getResource("/images/default/default.png");
+        if (resource != null) {
+            image = new Image(resource.toExternalForm());
+        } else {
+            System.err.println("Resource not found: /images/default/default.png");
+        }
+
+        if (image != null) {
+            imgAvatar.setImage(image);
+            // Force fill ImageView bằng cách reload properties
+            imgAvatar.setPreserveRatio(false);
+            avatarUrl = null;
+            NotificationUtils.showInfoAlert("Ảnh đại diện đã được reset", AppMessages.DIALOG_TITLE);
+        }
+    }
+
+    /**
+     * Load và hiển thị ảnh đại diện
+     * (Tham khảo logic từ ProductModalController)
+     */
+    private void loadEmployeeAvatar(String avatarUrlPath) {
+        File imageFile = null;
+        Image image = null;
+
+        if (avatarUrlPath != null && !avatarUrlPath.isEmpty()) {
+            imageFile = new File(avatarUrlPath);
+        }
+
+        if (imageFile != null && imageFile.exists()) {
+            image = new Image(imageFile.toURI().toString());
+        } else {
+            URL resource = getClass().getResource("/images/default/default.png");
+            if (resource != null) {
+                image = new Image(resource.toExternalForm());
+            } else {
+                System.err.println("Resource not found: /images/default/default.png");
+            }
+        }
+
+        if (image != null && imgAvatar != null) {
+            imgAvatar.setImage(image);
+            // Force fill ImageView bằng cách reload properties
+            imgAvatar.setPreserveRatio(false);
         }
     }
 }

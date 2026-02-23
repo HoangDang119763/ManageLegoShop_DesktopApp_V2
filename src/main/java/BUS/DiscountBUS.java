@@ -5,6 +5,7 @@ import DAL.DiscountDAL;
 import DTO.BUSResult;
 import DTO.DetailDiscountDTO;
 import DTO.DiscountDTO;
+import DTO.DiscountForInvoiceDTO;
 import DTO.PagedResponse;
 import ENUM.BUSOperationResult;
 import UTILS.AppMessages;
@@ -392,4 +393,15 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
         return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
+    public BUSResult filterDiscountsByKeywordForInvoice(String keyword) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim();
+        ArrayList<DiscountForInvoiceDTO> discounts = DiscountDAL.getInstance()
+                .filterDiscountsByKeywordForInvoice(cleanKeyword);
+        if (discounts == null) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+
+        }
+        // Delegate to DAL with ACTIVE statusId only
+        return new BUSResult(BUSOperationResult.SUCCESS, null, discounts);
+    }
 }

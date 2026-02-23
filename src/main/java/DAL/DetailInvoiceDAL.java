@@ -3,6 +3,7 @@ package DAL;
 import DTO.DetailInvoiceDTO;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 /*
 + Remain getAll
@@ -117,6 +118,44 @@ public class DetailInvoiceDAL extends BaseDAL<DetailInvoiceDTO, Integer> {
             System.err.println("Error retrieving " + table + ": " + e.getMessage());
         }
         return list;
+    }
+
+    /**
+     * Insert Detail Invoices using provided connection (for transaction)
+     * Thêm chi tiết phiếu bán sử dụng connection được cung cấp (cho transaction)
+     */
+    public boolean insertAllDetailInvoiceByInvoiceId(Connection connection, int invoiceId,
+            ArrayList<DetailInvoiceDTO> list) {
+        // SQL: id hóa đơn, id sản phẩm, số lượng, giá bán, giá vốn (snapshot), thành
+        // tiền
+        final String query = "INSERT INTO detail_invoice (invoice_id, product_id, quantity, price, cost_price, total_price) "
+                +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            for (DetailInvoiceDTO detail : list) {
+                statement.setInt(1, invoiceId);
+                statement.setString(2, detail.getProductId());
+                statement.setInt(3, detail.getQuantity());
+                statement.setBigDecimal(4, detail.getPrice()); // Giá bán cho khách
+                statement.setBigDecimal(5, detail.getCostPrice()); // Giá vốn tại thời điểm bán
+                statement.setBigDecimal(6, detail.getTotalPrice()); // Thành tiền của sản phẩm đó
+
+                statement.addBatch();
+            }
+
+            int[] results = statement.executeBatch();
+            for (int result : results) {
+                // SUCCESS_NO_INFO (-2) vẫn là thành công, chỉ return false nếu thực sự thất bại
+                if (result == PreparedStatement.EXECUTE_FAILED) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error inserting detail invoice Batch: " + e.getMessage());
+            return false;
+        }
     }
 
 }

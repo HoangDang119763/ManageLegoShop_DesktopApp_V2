@@ -108,6 +108,7 @@ public class SecureExecutor {
         if (isSessionInvalid()) {
             log.warn("Session invalidated for user {}. Relogin required.",
                     SessionManagerService.getInstance().employeeLoginId());
+            SessionManagerService.getInstance().normalLogout();
             return new BUSResult(BUSOperationResult.REQUIRE_RELOGIN,
                     AppMessages.FORCE_RELOGIN);
         }

@@ -20,6 +20,7 @@ public class EmployeePersonalInfoDTO {
     private String gender;
     private String phone;
     private String email;
+    private String avatarUrl; // Đường dẫn ảnh đại diện
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -37,6 +38,7 @@ public class EmployeePersonalInfoDTO {
                 ", gender='" + gender + '\'' +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +
+                ", avatarUrl='" + avatarUrl + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

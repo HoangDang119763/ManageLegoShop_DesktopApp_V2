@@ -4,6 +4,7 @@ import DAL.ProductDAL;
 import DTO.ProductDTO;
 import DTO.ProductDisplayDTO;
 import DTO.ProductDisplayForImportDTO;
+import DTO.ProductDisplayForSellingDTO;
 import DTO.BUSResult;
 import DTO.PagedResponse;
 import ENUM.*;
@@ -16,8 +17,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 public class ProductBUS extends BaseBUS<ProductDTO, String> {
     private static final ProductBUS INSTANCE = new ProductBUS();
@@ -398,16 +397,52 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
      * @param pageSize   Số item/trang
      * @return BUSResult chứa PagedResponse<ProductDisplayForImportDTO>
      */
-    public BUSResult filterProductsPagedForImport(String keyword, int categoryId, int pageIndex, int pageSize) {
+    public BUSResult filterProductsPagedForImport(String keyword, int categoryId, String priceOrder, int pageIndex,
+            int pageSize) {
         String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
         int finalCategoryId = (categoryId <= 0) ? -1 : categoryId;
+        String finalPriceOrder = (priceOrder == null || priceOrder.trim().isEmpty()) ? ""
+                : priceOrder.trim().toUpperCase();
         int finalPageIndex = Math.max(0, pageIndex);
         int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
         int inActiveStatusId = StatusBUS.getInstance()
                 .getByTypeAndStatusName(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
         PagedResponse<ProductDisplayForImportDTO> pagedData = ProductDAL.getInstance()
-                .filterProductsPagedForImport(cleanKeyword, finalCategoryId, inActiveStatusId, finalPageIndex,
+                .filterProductsPagedForImport(cleanKeyword, finalCategoryId, finalPriceOrder, inActiveStatusId,
+                        finalPageIndex,
                         finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
+    }
+
+    /**
+     * Filter products for selling with pagination
+     * Returns ACTIVE products with selling price for order placement
+     *
+     * @param keyword    Product name keyword (empty = all)
+     * @param categoryId Category filter (-1 = all categories)
+     * @param priceOrder Sort order: "" (none), "ASC" (low to high), "DESC" (high to
+     *                   low)
+     * @param pageIndex  Page number (0-indexed)
+     * @param pageSize   Items per page
+     * @return BUSResult with PagedResponse<ProductDisplayForSellingDTO>
+     */
+    public BUSResult filterProductsPagedForSelling(String keyword, int categoryId, String priceOrder, int pageIndex,
+            int pageSize) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        int finalCategoryId = (categoryId <= 0) ? -1 : categoryId;
+        String finalPriceOrder = (priceOrder == null || priceOrder.trim().isEmpty()) ? ""
+                : priceOrder.trim().toUpperCase();
+        int finalPageIndex = Math.max(0, pageIndex);
+        int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+
+        // Get ACTIVE status ID (we want to sell active products only)
+        int activeStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.PRODUCT, Status.Product.ACTIVE).getId();
+
+        PagedResponse<ProductDisplayForSellingDTO> pagedData = ProductDAL.getInstance()
+                .filterProductsPagedForSelling(cleanKeyword, finalCategoryId, finalPriceOrder, activeStatusId,
+                        finalPageIndex, finalPageSize);
 
         return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
