@@ -22,4 +22,52 @@ public class EmploymentHistoryDetailBasicDTO {
     private String roleName; // Tên chức vụ
     private LocalDate effectiveDate; // Ngày áp dụng
     private LocalDateTime createdAt; // Ngày tạo bản ghi
+
+    public Integer getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Integer departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public Integer getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Integer roleId) {
+        this.roleId = roleId;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    public LocalDate getEffectiveDate() {
+        return effectiveDate;
+    }
+
+    public void setEffectiveDate(LocalDate effectiveDate) {
+        this.effectiveDate = effectiveDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

@@ -658,7 +658,15 @@ CREATE TABLE `leave_request` (
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `status_id` int NOT NULL,
-  `employee_id` int NOT NULL,
+  `account_id` int DEFAULT NULL,
+  `health_ins_code` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL,
+  `social_insurance_code` varchar(50) COLLATE utf8mb4_bin DEFAULT '0',
+  `unemployment_insurance_code` varchar(50) COLLATE utf8mb4_bin DEFAULT '0',
+  `is_personal_income_tax` tinyint(1) DEFAULT '0',
+  `is_transportation_support` tinyint(1) DEFAULT '0',
+  `is_accommodation_support` tinyint(1) DEFAULT '0',
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   CONSTRAINT `leave_request_ibfk_1` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`),
   CONSTRAINT `leave_request_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
@@ -787,53 +795,85 @@ CREATE TABLE `allowance` (
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_allowance_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE `file` (
+--
+-- Dumping data for table `role_permission`
+--
+
+LOCK TABLES `role_permission` WRITE;
+/*!40000 ALTER TABLE `role_permission` DISABLE KEYS */;
+INSERT INTO `role_permission` VALUES (1,1),(2,1),(3,1),(1,2),(2,2),(3,2),(1,3),(2,3),(1,4),(2,4),(3,4),(1,5),(2,5),(1,6),(2,6),(1,7),(2,7),(1,8),(2,8),(1,9),(2,9),(1,10),(2,10),(1,11),(2,11),(1,12),(2,12),(1,13),(2,13),(1,14),(2,14),(1,15),(2,15),(1,16),(2,16),(1,17),(2,17),(1,18),(2,18),(1,19),(2,19),(3,19),(8,19),(9,19),(1,20),(2,20),(1,21),(2,21),(1,22),(2,22),(1,23),(2,23),(1,24),(2,24),(1,25),(2,25),(1,26),(2,26),(4,26),(5,26),(6,26),(7,26),(1,27),(2,27),(1,28),(2,28),(8,28),(9,28),(1,29),(2,29),(1,30),(2,30),(1,31),(2,31),(1,32),(2,32),(1,33),(2,33),(1,34),(2,34),(1,35),(2,35),(1,36),(2,36),(1,37),(2,37),(1,38),(2,38),(1,39),(2,39),(1,40),(2,40),(1,41),(2,41),(1,42),(2,42),(1,43),(2,43),(3,43);
+/*!40000 ALTER TABLE `role_permission` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `salary`
+--
+
+DROP TABLE IF EXISTS `salary`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `salary` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `file_path` varchar(255) NOT NULL,
-  `file_name` varchar(100) NOT NULL,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `base` decimal(10,2) NOT NULL,
+  `coefficient` decimal(5,2) NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE `holiday` (
+--
+-- Dumping data for table `salary`
+--
+
+LOCK TABLES `salary` WRITE;
+/*!40000 ALTER TABLE `salary` DISABLE KEYS */;
+INSERT INTO `salary` VALUES (1,30200000.00,2.95,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(2,25200000.00,2.65,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(3,24200000.00,2.45,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(4,19200000.00,2.15,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(5,18200000.00,2.15,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(6,14200000.00,1.65,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(7,15200000.00,1.75,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(8,9200000.00,1.35,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(9,10200000.00,1.40,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(10,11200000.00,1.45,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(11,6700000.00,1.20,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(12,7200000.00,1.25,'2026-02-15 23:54:40','2026-02-15 23:54:40'),(13,5400000.00,1.10,'2026-02-15 23:54:40','2026-02-15 23:54:40');
+/*!40000 ALTER TABLE `salary` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `status`
+--
+
+DROP TABLE IF EXISTS `status`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `status` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `date` DATE NOT NULL,
+  `name` varchar(50) COLLATE utf8mb4_bin NOT NULL,
+  `description` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
+  `type` varchar(50) COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `tax` (`employee_id`, `num_dependents`)
-SELECT id, 0 FROM `employee`; -- Mặc định ai cũng 0 người phụ thuộc cho nhanh
+--
+-- Dumping data for table `status`
+--
 
-INSERT INTO `allowance` (`employee_id`, `salary_period`, `transportation_support`, `accommodation_support`)
-SELECT 
-    id, 
-    '2026-02-01', 
-    IF(is_transportation_support = 1, 500000, 0), 
-    IF(is_accommodation_support = 1, 1000000, 0)
-FROM `employee`;
+LOCK TABLES `status` WRITE;
+/*!40000 ALTER TABLE `status` DISABLE KEYS */;
+INSERT INTO `status` VALUES (1,'Active','Đang làm việc','EMPLOYEE'),(2,'Inactive','Đã nghỉ việc','EMPLOYEE'),(3,'On_Leave','Đang nghỉ phép','EMPLOYEE'),(4,'Active','Được phép đăng nhập','ACCOUNT'),(5,'Locked','Bị khóa (do sai pass/vi phạm)','ACCOUNT'),(6,'Active','Đang kinh doanh','PRODUCT'),(7,'Suspended','Ngừng kinh doanh','PRODUCT'),(8,'Inactive','Vô hiệu','PRODUCT'),(9,'Active','Hoạt động','CATEGORY'),(10,'Inactive','Vô hiệu','CATEGORY'),(11,'Active','Hoạt động','SUPPLIER'),(12,'Inactive','Vô hiệu','SUPPLIER'),(13,'Active','Hoạt động','CUSTOMER'),(14,'Inactive','Ngưng tương tác','CUSTOMER'),(15,'Completed','Hoàn thành','INVOICE'),(16,'Canceled','Hủy bỏ','INVOICE'),(17,'Completed','Hoàn thành','IMPORT'),(18,'Canceled','Hủy bỏ','IMPORT'),(19,'Pending','Đơn đang chờ quản lý phê duyệt','LEAVE_REQUEST'),(20,'Approved','Đơn đã được chấp thuận','LEAVE_REQUEST'),(21,'Rejected','Đơn bị từ chối','LEAVE_REQUEST'),(22,'Canceled','Đơn đã bị hủy bởi nhân viên','LEAVE_REQUEST'),(23,'Pending','Quyết định đang chờ cấp trên phê duyệt','EMPLOYMENT_HISTORY'),(24,'Approved','Quyết định đã được duyệt, chờ ngày có hiệu lực','EMPLOYMENT_HISTORY'),(25,'Effective','Quyết định đã chính thức đi vào hiệu lực','EMPLOYMENT_HISTORY'),(26,'Rejected','Quyết định bị cấp trên từ chối','EMPLOYMENT_HISTORY'),(27,'Canceled','Quyết định đã bị hủy bỏ trước khi thực hiện','EMPLOYMENT_HISTORY'),(28,'Active','Hoạt động','DEPARTMENT'),(29,'Inactive','Vô hiệu','DEPARTMENT');
+/*!40000 ALTER TABLE `status` ENABLE KEYS */;
+UNLOCK TABLES;
 
-INSERT INTO `deduction` (`employee_id`, `salary_period`, `health_insurance`, `social_insurance`, `unemployment_insurance`)
-SELECT 
-    id, 
-    '2026-02-01', 
-    IF(health_ins_code != NULL, 150000, 0), 
-    IF(is_social_insurance = 1, 800000, 0),
-    IF(is_unemployment_insurance = 1, 100000, 0)
-FROM `employee`;
+--
+-- Table structure for table `supplier`
+--
 
-CREATE TABLE `employment_history` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `employee_id` INT NOT NULL,           -- Nhân viên được điều chuyển
-  -- Chỉ lưu thông tin mới nhất tại thời điểm điều chuyển
-  `department_id` INT NOT NULL,         -- Phòng ban mới
-  `role_id` INT NOT NULL,               -- Chức vụ mới
-  `effective_date` DATE NOT NULL,       -- Ngày quyết định có hiệu lực
-  `approver_id` INT DEFAULT NULL,       -- Người phê duyệt quyết định
-  `status_id` INT NOT NULL,             -- Trạng thái (Chờ duyệt, Đã duyệt, Hủy...)
-  `reason` TEXT,                        -- Lý do (Thăng chức, Chuyển công tác...)
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+DROP TABLE IF EXISTS `supplier`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `supplier` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8mb4_bin NOT NULL,
+  `phone` varchar(15) COLLATE utf8mb4_bin NOT NULL,
+  `address` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
+  `status_id` int NOT NULL,
   PRIMARY KEY (`id`),
   -- Khóa ngoại
   CONSTRAINT `fk_eh_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE,

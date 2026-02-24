@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="GUI.LeaveRequestModalController"
+      prefHeight="500.0" prefWidth="600.0" spacing="15.0">
+    <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/></padding>
+
+    <children>
+        <!-- Title -->
+        <Label text="THÊM ĐƠN NGHỈ PHÉP" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1f7d84;"/>
+        <Separator/>
+
+        <!-- Form -->
+        <VBox spacing="12.0">
+            <children>
+                <!-- Leave Type -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Loại Nghỉ *" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cbLeaveType" prefWidth="560.0" promptText="Chọn loại nghỉ phép"/>
+                    </children>
+                </VBox>
+
+                <!-- From Date -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Từ Ngày *" style="-fx-font-weight: bold;"/>
+                        <DatePicker fx:id="dpFromDate" prefWidth="560.0"/>
+                    </children>
+                </VBox>
+
+                <!-- To Date -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Đến Ngày *" style="-fx-font-weight: bold;"/>
+                        <DatePicker fx:id="dpToDate" prefWidth="560.0"/>
+                    </children>
+                </VBox>
+
+                <!-- Reason -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Lý Do" style="-fx-font-weight: bold;"/>
+                        <TextArea fx:id="taReason" prefHeight="100.0" wrapText="true" promptText="Nhập lý do"/>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+
+        <!-- Buttons -->
+        <HBox spacing="10.0" alignment="CENTER_RIGHT">
+            <children>
+                <Button fx:id="btnSave" text="Lưu" style="-fx-padding: 8 20;"/>
+                <Button fx:id="btnCancel" text="Hủy" style="-fx-padding: 8 20;"/>
+            </children>
+        </HBox>
+    </children>
+</VBox>

@@ -11,6 +11,7 @@ public class TimeSheetDTO {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private BigDecimal workHours;
+    private BigDecimal otHours;
 
     public TimeSheetDTO() {
     }
@@ -21,6 +22,16 @@ public class TimeSheetDTO {
         this.checkIn = checkIn;
         this.checkOut = checkOut;
         this.workHours = workHours;
+        this.otHours = BigDecimal.ZERO;
+    }
+
+    public TimeSheetDTO(int id, int employeeId, LocalDateTime checkIn, LocalDateTime checkOut, BigDecimal workHours, BigDecimal otHours) {
+        this.id = id;
+        this.employeeId = employeeId;
+        this.checkIn = checkIn;
+        this.checkOut = checkOut;
+        this.workHours = workHours;
+        this.otHours = otHours;
     }
 
     public TimeSheetDTO(TimeSheetDTO other) {
@@ -29,6 +40,7 @@ public class TimeSheetDTO {
         this.checkIn = other.checkIn;
         this.checkOut = other.checkOut;
         this.workHours = other.workHours;
+        this.otHours = other.otHours;
     }
 
     public int getId() {
@@ -71,6 +83,14 @@ public class TimeSheetDTO {
         this.workHours = workHours;
     }
 
+    public BigDecimal getOtHours() {
+        return otHours != null ? otHours : BigDecimal.ZERO;
+    }
+
+    public void setOtHours(BigDecimal otHours) {
+        this.otHours = otHours;
+    }
+
     public BigDecimal calculateWorkHours() {
         if (checkIn == null || checkOut == null) {
             return BigDecimal.ZERO;
@@ -96,6 +116,7 @@ public class TimeSheetDTO {
                 ", checkIn=" + checkIn +
                 ", checkOut=" + checkOut +
                 ", workHours=" + workHours +
+                ", otHours=" + otHours +
                 '}';
     }
 }

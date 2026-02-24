@@ -27,8 +27,12 @@ import UTILS.ValidationUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import lombok.extern.slf4j.Slf4j;
+
+import java.math.BigDecimal;
 import java.util.*;
 
+@Slf4j
 public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
     private static final EmployeeBUS INSTANCE = new EmployeeBUS();
 
@@ -78,7 +82,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
         SessionManagerService session = SessionManagerService.getInstance();
         int currentLoginId = session.employeeLoginId();
-        int currentUserRoleId = session.getRoleId();
+        int currentUserRoleId = session.employeeRoleId();
         // 1. Không cho tự xóa chính mình
         if (currentLoginId == id)
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_CANNOT_DELETE_SELF);
@@ -125,7 +129,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (employee == null || account == null || tax == null) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
-        if (SessionManagerService.getInstance().getRoleId() != 1 && employee.getRoleId() == 1) {
+        if (SessionManagerService.getInstance().employeeRoleId() != 1 && employee.getRoleId() == 1) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
         // 2. Chuẩn hóa dữ liệu
@@ -325,7 +329,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
         SessionManagerService session = SessionManagerService.getInstance();
         int currentLoginId = session.employeeLoginId();
-        int currentUserRoleId = session.getRoleId();
+        int currentUserRoleId = session.employeeRoleId();
 
         // 2. Kiểm tra đối tượng đặc biệt
         if (obj.getId() == 1) { // Bảo vệ IT Admin hệ thống
@@ -403,7 +407,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        if (session.getRoleId() != 1) {
+        if (session.employeeRoleId() != 1) {
             boolean isTargetAdmin = PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
                     PermissionKey.EMPLOYEE_JOB_UPDATE);
             if (isTargetAdmin)
@@ -471,7 +475,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        if (session.getRoleId() != 1) {
+        if (session.employeeRoleId() != 1) {
             boolean isTargetAdmin = PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
                     PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE);
             if (isTargetAdmin)
@@ -529,7 +533,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        if (session.getRoleId() != 1) {
+        if (session.employeeRoleId() != 1) {
             boolean isTargetAdmin = PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
                     PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS);
             if (isTargetAdmin)
@@ -602,7 +606,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
 
         // Kiểm tra quyền ngang hàng
-        if (session.getRoleId() != 1) {
+        if (session.employeeRoleId() != 1) {
             boolean isTargetAdmin = PermissionBUS.getInstance().isRoleHavePermission(existing.getRoleId(),
                     PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD);
             if (isTargetAdmin)
@@ -760,8 +764,13 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
      * @return EmployeeDetailDTO hoặc null nếu không tìm thấy
      */
     public EmployeeDetailDTO getDetailById(int employeeId) {
-        if (employeeId <= 0)
+        if (employeeId <= 0) {
+            log.debug("Invalid employeeId: {}", employeeId);
             return null;
-        return EmployeeDAL.getInstance().getDetailById(employeeId);
+        }
+        log.debug("Fetching employee detail for ID: {}", employeeId);
+        EmployeeDetailDTO result = EmployeeDAL.getInstance().getDetailById(employeeId);
+        log.debug("Employee detail result: {}", result);
+        return result;
     }
 }

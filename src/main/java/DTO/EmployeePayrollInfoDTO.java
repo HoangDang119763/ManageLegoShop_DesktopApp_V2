@@ -24,6 +24,78 @@ public class EmployeePayrollInfoDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public Integer getTaxId() {
+        return taxId;
+    }
+
+    public void setTaxId(Integer taxId) {
+        this.taxId = taxId;
+    }
+
+    public Integer getNumDependents() {
+        return numDependents;
+    }
+
+    public void setNumDependents(Integer numDependents) {
+        this.numDependents = numDependents;
+    }
+
+    public String getHealthInsCode() {
+        return healthInsCode;
+    }
+
+    public void setHealthInsCode(String healthInsCode) {
+        this.healthInsCode = healthInsCode;
+    }
+
+    public boolean isSocialInsurance() {
+        return isSocialInsurance;
+    }
+
+    public void setSocialInsurance(boolean socialInsurance) {
+        isSocialInsurance = socialInsurance;
+    }
+
+    public boolean isUnemploymentInsurance() {
+        return isUnemploymentInsurance;
+    }
+
+    public void setUnemploymentInsurance(boolean unemploymentInsurance) {
+        isUnemploymentInsurance = unemploymentInsurance;
+    }
+
+    public boolean isPersonalIncomeTax() {
+        return isPersonalIncomeTax;
+    }
+
+    public void setPersonalIncomeTax(boolean personalIncomeTax) {
+        isPersonalIncomeTax = personalIncomeTax;
+    }
+
+    public boolean isTransportationSupport() {
+        return isTransportationSupport;
+    }
+
+    public void setTransportationSupport(boolean transportationSupport) {
+        isTransportationSupport = transportationSupport;
+    }
+
+    public boolean isAccommodationSupport() {
+        return isAccommodationSupport;
+    }
+
+    public void setAccommodationSupport(boolean accommodationSupport) {
+        isAccommodationSupport = accommodationSupport;
+    }
+
     public boolean isHealthInsurance() {
         return healthInsCode != null && !healthInsCode.isEmpty();
     }

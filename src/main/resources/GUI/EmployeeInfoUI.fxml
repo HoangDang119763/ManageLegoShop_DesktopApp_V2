@@ -262,7 +262,25 @@
                             </content>
                         </Tab>
 
-                        <Tab fx:id="tabAccountSecurity" text="Bảo mật tài khoản">
+                        <Tab text="Trợ cấp">
+                            <content>
+                                <fx:include fx:id="allowanceTab" source="AllowanceTab.fxml" />
+                            </content>
+                        </Tab>
+
+                        <Tab text="Bảo hiểm">
+                            <content>
+                                <fx:include fx:id="deductionTab" source="DeductionTab.fxml" />
+                            </content>
+                        </Tab>
+
+                        <Tab text="Bảng lương">
+                            <content>
+                                <fx:include fx:id="payrollTab" source="PayrollTab.fxml" />
+                            </content>
+                        </Tab>
+
+                        <Tab text="Bảo mật tài khoản">
                             <content>
                                 <VBox alignment="TOP_CENTER">
                                     <padding><Insets bottom="16.0" left="20.0" right="20.0" top="10.0" /></padding>

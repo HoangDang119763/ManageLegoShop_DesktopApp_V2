@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@ToString(callSuper = true)
 public class EmployeeDTO extends BaseInformationDTO {
     private String firstName;
     private String lastName;
@@ -18,6 +17,8 @@ public class EmployeeDTO extends BaseInformationDTO {
     private String gender;
     private Integer accountId; // Dùng Integer để có thể nhận giá trị null
     private String healthInsCode; // Mã BHYT
+    private String socialInsCode;
+    private String unemploymentInsCode;
 
     // Các cờ hiệu bảo hiểm & phụ cấp (tinyint 1 -> boolean)
     private boolean isSocialInsurance;
@@ -51,8 +52,8 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.gender = gender;
         this.accountId = accountId;
         this.healthInsCode = healthInsCode;
-        this.isSocialInsurance = isSocialInsurance;
-        this.isUnemploymentInsurance = isUnemploymentInsurance;
+        this.socialInsCode = isSocialInsurance ? "1" : "0";
+        this.unemploymentInsCode = isUnemploymentInsurance ? "1" : "0";
         this.isPersonalIncomeTax = isPersonalIncomeTax;
         this.isTransportationSupport = isTransportationSupport;
         this.isAccommodationSupport = isAccommodationSupport;
@@ -139,6 +140,139 @@ public class EmployeeDTO extends BaseInformationDTO {
 
     public boolean isHealthInsurance() {
         return healthInsCode != null && !healthInsCode.isEmpty();
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public int getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(int roleId) {
+        this.roleId = roleId;
+    }
+
+    public Integer getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Integer departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public Integer getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Integer accountId) {
+        this.accountId = accountId;
+    }
+
+    public String getHealthInsCode() {
+        return healthInsCode;
+    }
+
+    public void setHealthInsCode(String healthInsCode) {
+        this.healthInsCode = healthInsCode;
+    }
+
+    public String getSocialInsCode() {
+        return socialInsCode;
+    }
+
+    public void setSocialInsCode(String socialInsCode) {
+        this.socialInsCode = socialInsCode;
+    }
+
+    public String getUnemploymentInsCode() {
+        return unemploymentInsCode;
+    }
+
+    public void setUnemploymentInsCode(String unemploymentInsCode) {
+        this.unemploymentInsCode = unemploymentInsCode;
+    }
+
+    public boolean isSocialInsurance() {
+        return isSocialInsurance;
+    }
+
+    public void setSocialInsurance(boolean socialInsurance) {
+        isSocialInsurance = socialInsurance;
+    }
+
+    public boolean isUnemploymentInsurance() {
+        return isUnemploymentInsurance;
+    }
+
+    public void setUnemploymentInsurance(boolean unemploymentInsurance) {
+        isUnemploymentInsurance = unemploymentInsurance;
+    }
+
+    public boolean isPersonalIncomeTax() {
+        return isPersonalIncomeTax;
+    }
+
+    public void setPersonalIncomeTax(boolean personalIncomeTax) {
+        isPersonalIncomeTax = personalIncomeTax;
+    }
+
+    public boolean isTransportationSupport() {
+        return isTransportationSupport;
+    }
+
+    public void setTransportationSupport(boolean transportationSupport) {
+        isTransportationSupport = transportationSupport;
+    }
+
+    public boolean isAccommodationSupport() {
+        return isAccommodationSupport;
+    }
+
+    public void setAccommodationSupport(boolean accommodationSupport) {
+        isAccommodationSupport = accommodationSupport;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @Override
+    public String toString() {
+        return this.getId() + " - " + getFullName();
     }
 
 }

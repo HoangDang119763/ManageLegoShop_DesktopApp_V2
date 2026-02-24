@@ -7,21 +7,28 @@ import BUS.DepartmentBUS;
 import BUS.RoleBUS;
 import BUS.StatusBUS;
 import DTO.EmployeeDTO;
-import DTO.EmployeePersonalInfoDTO;
+import DTO.AccountDTO;
+import DTO.BUSResult;
+import DTO.DepartmentDTO;
 import DTO.EmployeeAccountInfoDTO;
+import DTO.EmployeeDetailDTO;
+import DTO.EmployeeJobHistoryBundle;
 import DTO.EmployeeJobInfoDTO;
 import DTO.EmployeePayrollInfoDTO;
 import DTO.EmployeePersonalInfoBundle;
-import DTO.EmployeeJobHistoryBundle;
+import DTO.EmployeePersonalInfoDTO;
 import DTO.EmploymentHistoryDetailBasicDTO;
 import DTO.PagedResponse;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
+import UTILS.UiUtils;
 import UTILS.ValidationUtils;
+import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -32,6 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.net.URL;
+import java.time.LocalDate;
+import java.io.IOException;
 
 /**
  * Controller quản lý màn hình thông tin nhân viên (Employee Info)
@@ -41,7 +50,6 @@ import java.net.URL;
  */
 @Slf4j
 public class EmployeeInfoController {
-
     // ==================== TAB PANE ====================
     @FXML
     private TabPane tabPaneInfo; // Tab pane chính
@@ -130,6 +138,18 @@ public class EmployeeInfoController {
     @FXML
     private StackPane loadingOverlay;
 
+    // ==================== TAB CONTROLLERS ====================
+    @FXML
+    private AllowanceTabController allowanceTabController;
+    @FXML
+    private DeductionTabController deductionTabController;
+    @FXML
+    private PayrollTabController payrollTabController;
+    @FXML
+    private LeaveRequestTabController leaveRequestTabController;
+    @FXML
+    private AttendanceTabController attendanceTabController;
+
     // ==================== LƯƠNG & CÔNG TÁC TAB (Salary & Work History)
     // ====================
     @FXML
@@ -144,7 +164,6 @@ public class EmployeeInfoController {
     private TableColumn<EmploymentHistoryDetailBasicDTO, String> colCreatedAt; // Cột ngày tạo
     @FXML
     private PaginationController historyPaginationController;
-    // ==================== BUS INSTANCES ====================
     // Gán một lần trong initialize() để tránh gọi getInstance() nhiều lần
     private EmployeeBUS employeeBUS;
     private AccountBUS accountBUS;
@@ -172,7 +191,7 @@ public class EmployeeInfoController {
         setupListeners();
         setupTabLoadingListeners();
 
-        if (sessionManagerService.getRoleId() == 1) {
+        if (sessionManagerService.employeeRoleId() == 1) {
             hideInfo();
             loadTabAccountSecurity();
         } else {
@@ -272,6 +291,7 @@ public class EmployeeInfoController {
                     EmployeeAccountInfoDTO accountInfo = accountInfoResult.getData();
                     displayAccountSecurityInfo(accountInfo);
                 });
+        // loadEmployeeInfo();
     }
 
     // ==================== 🎨 UI SETUP & DATA LOADING ====================
@@ -309,8 +329,37 @@ public class EmployeeInfoController {
         btnChangePassword.setOnAction(e -> handleChangePassword());
         btnClear.setOnAction(e -> handleClear());
         btnUpdateInfo.setOnAction(e -> handleUpdateInfo());
-        setupHistoryPagination();
     }
+
+    /**
+     * Tải thông tin nhân viên từ session và hiển thị
+     * Sử dụng cache để tránh load lại nhiều lần
+     */
+    // private void loadPersonInfo() {
+    // System.out.println("=== loadEmployeeInfo() called ===");
+    // int empId = sessionManagerService.employeeLoginId();
+    // System.out.println("Session employee ID: " + empId);
+
+    // EmployeeDTO employee = employeeBUS.getById(empId);
+    // System.out.println("Got basic EmployeeDTO: " + (employee != null ? "YES" :
+    // "NULL"));
+
+    // if (employee != null) {
+    // System.out.println("Role ID: " + employee.getRoleId());
+    // }
+
+    // if (employee == null) {
+    // System.out.println("ERROR: Employee not found!");
+    // hidePersonalInfo();
+    // NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_NOT_FOUND,
+    // AppMessages.DIALOG_TITLE);
+    // return;
+    // }
+
+    // // Allow all employees to see their own personal info (including IT Admin)
+    // System.out.println("Loading personal info for employee ID: " + empId);
+    // displayEmployeeInfo();
+    // }
 
     /**
      * Ẩn thông tin nhân viên khỏi UI
@@ -426,8 +475,7 @@ public class EmployeeInfoController {
 
                 // 2. Xử lý khi thành công (Chạy trên UI Thread)
                 result -> {
-                    // Reload Tab 1 data after update
-                    loadTabPersonalInfo();
+                    loadTabPersonalInfo(); // Reload personal info tab
                     Stage stage = (Stage) btnUpdateInfo.getScene().getWindow();
                     NotificationUtils.showToast(
                             stage,
@@ -672,7 +720,4 @@ public class EmployeeInfoController {
         }
     }
 
-    /**
-     * Reset button - không có ở EmployeeInfoUI (read-only tab)
-     */
 }

@@ -7,6 +7,8 @@ import javafx.concurrent.Task;
 import javafx.application.Platform;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -17,7 +19,6 @@ import java.util.function.Supplier;
 
 /**
  * TaskUtil - Utility class để quản lý background tasks với Loading overlay
- * 
  * ✅ Xử lý Throwable an toàn
  * ✅ Quản lý thread pool với ExecutorService
  * ✅ Tự động show/hide loading overlay
@@ -26,6 +27,7 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class TaskUtil {
+    private static final Logger log = LoggerFactory.getLogger(TaskUtil.class);
     private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(10, r -> {
         Thread t = new Thread(r, "AppTask-" + System.nanoTime());
         t.setDaemon(false);
