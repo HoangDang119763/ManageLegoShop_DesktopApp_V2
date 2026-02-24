@@ -41,9 +41,10 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 resultSet.getInt("status_id"),
                 resultSet.getString("gender"),
                 resultSet.getObject("account_id") != null ? resultSet.getInt("account_id") : null,
+                resultSet.getString("avatar_url"), // avatarUrl nằm ở vị trí này trong constructor đầy đủ
                 resultSet.getString("health_ins_code"),
-                resultSet.getBoolean("is_social_insurance"),
-                resultSet.getBoolean("is_unemployment_insurance"),
+                resultSet.getString("social_insurance_code"), // Lấy trực tiếp String mã số
+                resultSet.getString("unemployment_insurance_code"), // Lấy trực tiếp String mã số
                 resultSet.getBoolean("is_personal_income_tax"),
                 resultSet.getBoolean("is_transportation_support"),
                 resultSet.getBoolean("is_accommodation_support"),
@@ -52,13 +53,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                         : null,
                 resultSet.getTimestamp("updated_at") != null
                         ? resultSet.getTimestamp("updated_at").toLocalDateTime()
-                        : null,
-                resultSet.getString("avatar_url"));
+                        : null);
     }
 
     @Override
     protected String getInsertQuery() {
-        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, health_ins_code, is_social_insurance, is_unemployment_insurance, is_personal_income_tax, is_transportation_support, is_accommodation_support, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, health_ins_code, social_insurance_code, unemployment_insurance_code, is_personal_income_tax, is_transportation_support, is_accommodation_support, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -74,8 +74,8 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         statement.setString(9, obj.getGender());
         statement.setObject(10, obj.getAccountId());
         statement.setString(11, obj.getHealthInsCode());
-        statement.setBoolean(12, obj.isSocialInsurance());
-        statement.setBoolean(13, obj.isUnemploymentInsurance());
+        statement.setString(12, obj.getSocialInsCode());
+        statement.setString(13, obj.getUnemploymentInsCode());
         statement.setBoolean(14, obj.isPersonalIncomeTax());
         statement.setBoolean(15, obj.isTransportationSupport());
         statement.setBoolean(16, obj.isAccommodationSupport());
@@ -174,13 +174,13 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     public boolean updatePayrollInfo(Connection conn, EmployeeDTO obj) throws SQLException {
-        String sql = "UPDATE employee SET health_ins_code = ?, is_social_insurance = ?, " +
-                "is_unemployment_insurance = ?, is_personal_income_tax = ?, " +
+        String sql = "UPDATE employee SET health_ins_code = ?, social_insurance_code = ?, " +
+                "unemployment_insurance_code = ?, is_personal_income_tax = ?, " +
                 "is_transportation_support = ?, is_accommodation_support = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, obj.getHealthInsCode());
-            ps.setBoolean(2, obj.isSocialInsurance());
-            ps.setBoolean(3, obj.isUnemploymentInsurance());
+            ps.setString(2, obj.getSocialInsCode());
+            ps.setString(3, obj.getUnemploymentInsCode());
             ps.setBoolean(4, obj.isPersonalIncomeTax());
             ps.setBoolean(5, obj.isTransportationSupport());
             ps.setBoolean(6, obj.isAccommodationSupport());
@@ -315,14 +315,21 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, employeeId);
+            System.out.println("DEBUG: Executing query for employee ID: " + employeeId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    return mapResultSetToDetailDTO(resultSet);
+                    System.out.println("DEBUG: Found employee record for ID: " + employeeId);
+                    EmployeeDetailDTO result = mapResultSetToDetailDTO(resultSet);
+                    System.out.println("DEBUG: Mapped EmployeeDetailDTO: " + result);
+                    return result;
+                } else {
+                    System.out.println("DEBUG: No employee record found for ID: " + employeeId);
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error retrieving employee detail: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return null;
@@ -332,58 +339,74 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * Map ResultSet từ getDetailById() → EmployeeDetailDTO
      */
     private EmployeeDetailDTO mapResultSetToDetailDTO(ResultSet rs) throws SQLException {
-        return EmployeeDetailDTO.builder()
-                // Base info
-                .id(rs.getInt("id"))
-                .employeeId(rs.getInt("id"))
-                .firstName(rs.getString("first_name"))
-                .lastName(rs.getString("last_name"))
-                .gender(rs.getString("gender"))
-                .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
-                .phone(rs.getString("phone"))
-                .email(rs.getString("email"))
-                .healthInsCode(rs.getString("health_ins_code"))
+        try {
+            int empId = rs.getInt("id");
+            String firstName = rs.getString("first_name");
+            String lastName = rs.getString("last_name");
+            System.out.println("DEBUG: Mapping employee - ID: " + empId + ", Name: " + firstName + " " + lastName);
 
-                // Department & Role
-                .departmentId(rs.getObject("department_id") != null ? rs.getInt("department_id") : null)
-                .departmentName(rs.getString("department_name"))
-                .roleId(rs.getInt("role_id"))
-                .roleName(rs.getString("role_name"))
+            EmployeeDetailDTO result = EmployeeDetailDTO.builder()
+                    // Base info
+                    .id(empId)
+                    .employeeId(empId)
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .gender(rs.getString("gender"))
+                    .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
+                    .phone(rs.getString("phone"))
+                    .email(rs.getString("email"))
+                    .healthInsCode(rs.getString("health_ins_code"))
 
-                // Account info
-                .accountId(rs.getObject("account_id_mapped") != null ? rs.getInt("account_id_mapped") : 0)
-                .username(rs.getString("username"))
-                .accountStatusId(rs.getObject("account_status_id") != null ? rs.getInt("account_status_id") : 0)
-                .accountStatus(rs.getString("account_status_desc"))
+                    // Department & Role
+                    .departmentId(rs.getObject("department_id") != null ? rs.getInt("department_id") : null)
+                    .departmentName(rs.getString("department_name"))
+                    .roleId(rs.getInt("role_id"))
+                    .roleName(rs.getString("role_name"))
 
-                // Employee status
-                .statusId(rs.getInt("status_id"))
-                .statusDescription(rs.getString("emp_status_desc"))
+                    // Account info
+                    .accountId(rs.getObject("account_id_mapped") != null ? rs.getInt("account_id_mapped") : 0)
+                    .username(rs.getString("username"))
+                    .accountStatusId(rs.getObject("account_status_id") != null ? rs.getInt("account_status_id") : 0)
+                    .accountStatus(rs.getString("account_status_desc"))
 
-                // Salary
-                .salaryId(rs.getObject("salary_base") != null ? 1 : 0) // Dummy ID, actual from role.salary_id
-                .baseSalary(rs.getObject("salary_base") != null ? rs.getBigDecimal("salary_base") : null)
-                .salaryCoefficient(
-                        rs.getObject("salary_coefficient") != null ? rs.getBigDecimal("salary_coefficient") : null)
+                    // Employee status
+                    .statusId(rs.getInt("status_id"))
+                    .statusDescription(rs.getString("emp_status_desc"))
 
-                // Tax
-                .taxId(rs.getObject("tax_id") != null ? rs.getInt("tax_id") : 0)
-                .numDependents(rs.getObject("num_dependents") != null ? rs.getInt("num_dependents") : null)
+                    // Salary
+                    .salaryId(rs.getObject("salary_base") != null ? 1 : 0) // Dummy ID, actual from role.salary_id
+                    .baseSalary(rs.getObject("salary_base") != null ? rs.getBigDecimal("salary_base") : null)
+                    .salaryCoefficient(
+                            rs.getObject("salary_coefficient") != null ? rs.getBigDecimal("salary_coefficient") : null)
 
-                // Insurance & Support flags
-                .isSocialInsurance(rs.getBoolean("is_social_insurance"))
-                .isUnemploymentInsurance(rs.getBoolean("is_unemployment_insurance"))
-                .isPersonalIncomeTax(rs.getBoolean("is_personal_income_tax"))
-                .isTransportationSupport(rs.getBoolean("is_transportation_support"))
-                .isAccommodationSupport(rs.getBoolean("is_accommodation_support"))
+                    // Tax
+                    .taxId(rs.getObject("tax_id") != null ? rs.getInt("tax_id") : 0)
+                    .numDependents(rs.getObject("num_dependents") != null ? rs.getInt("num_dependents") : null)
 
-                // Timestamps
-                .createdAt(
-                        rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
-                .updatedAt(
-                        rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
+                    // Insurance & Support flags
+                    .socialInsCode(rs.getString("social_insurance_code"))
+                    .unemploymentInsCode(rs.getString("unemployment_insurance_code"))
+                    .isPersonalIncomeTax(rs.getBoolean("is_personal_income_tax"))
+                    .isTransportationSupport(rs.getBoolean("is_transportation_support"))
+                    .isAccommodationSupport(rs.getBoolean("is_accommodation_support"))
 
-                .build();
+                    // Timestamps
+                    .createdAt(
+                            rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime()
+                                    : null)
+                    .updatedAt(
+                            rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime()
+                                    : null)
+
+                    .build();
+
+            System.out.println("DEBUG: Built EmployeeDetailDTO: " + result.toString());
+            return result;
+        } catch (SQLException e) {
+            System.err.println("DEBUG: Error mapping ResultSet to EmployeeDetailDTO: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public PagedResponse<EmployeeDisplayDTO> filterEmployeesPagedForManageDisplay(
@@ -719,8 +742,9 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * @return EmployeePayrollInfoDTO hoặc null nếu không tìm thấy
      */
     public EmployeePayrollInfoDTO getPayrollInfo(int employeeId) {
-        String sql = "SELECT e.id, e.health_ins_code, tax.id AS tax_id, tax.num_dependents, " +
-                "e.is_social_insurance, e.is_unemployment_insurance, e.is_personal_income_tax, " +
+        String sql = "SELECT e.id, e.health_ins_code, e.social_insurance_code, e.unemployment_insurance_code, " +
+                "tax.id AS tax_id, tax.num_dependents, " +
+                "e.is_personal_income_tax, " +
                 "e.is_transportation_support, e.is_accommodation_support, e.created_at, e.updated_at " +
                 "FROM employee e " +
                 "LEFT JOIN tax ON tax.employee_id = e.id " +
@@ -736,12 +760,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                     return EmployeePayrollInfoDTO.builder()
                             .id(resultSet.getInt("id"))
                             .healthInsCode(resultSet.getString("health_ins_code"))
+                            .socialInsCode(resultSet.getString("social_insurance_code"))
+                            .unemploymentInsCode(resultSet.getString("unemployment_insurance_code"))
                             .taxId(resultSet.getObject("tax_id") != null ? resultSet.getInt("tax_id") : null)
                             .numDependents(resultSet.getObject("num_dependents") != null
                                     ? resultSet.getInt("num_dependents")
                                     : null)
-                            .isSocialInsurance(resultSet.getBoolean("is_social_insurance"))
-                            .isUnemploymentInsurance(resultSet.getBoolean("is_unemployment_insurance"))
                             .isPersonalIncomeTax(resultSet.getBoolean("is_personal_income_tax"))
                             .isTransportationSupport(resultSet.getBoolean("is_transportation_support"))
                             .isAccommodationSupport(resultSet.getBoolean("is_accommodation_support"))

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class InvoiceDTO {
     private int id;
-    private LocalDateTime createDate;
+    private LocalDateTime createdAt;
     private int employeeId;
     private int customerId;
     private String discountCode;
@@ -16,10 +16,10 @@ public class InvoiceDTO {
     public InvoiceDTO() {
     }
 
-    public InvoiceDTO(int id, LocalDateTime createDate, int employeeId, int customerId, String discountCode,
+    public InvoiceDTO(int id, LocalDateTime createdAt, int employeeId, int customerId, String discountCode,
             BigDecimal discountAmount, BigDecimal totalPrice, int statusId) {
         this.id = id;
-        this.createDate = createDate;
+        this.createdAt = createdAt;
         this.employeeId = employeeId;
         this.customerId = customerId;
         this.discountCode = discountCode;
@@ -30,7 +30,7 @@ public class InvoiceDTO {
 
     public InvoiceDTO(InvoiceDTO other) {
         this.id = other.id;
-        this.createDate = other.createDate;
+        this.createdAt = other.createdAt;
         this.employeeId = other.employeeId;
         this.customerId = other.customerId;
         this.discountCode = other.discountCode;
@@ -47,12 +47,12 @@ public class InvoiceDTO {
         this.id = id;
     }
 
-    public LocalDateTime getCreateDate() {
-        return createDate;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public int getEmployeeId() {

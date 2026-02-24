@@ -3,7 +3,6 @@ package GUI;
 import BUS.DetailInvoiceBUS;
 import BUS.EmployeeBUS;
 import BUS.InvoiceBUS;
-import DTO.BUSResult;
 import DTO.CustomerForInvoiceDTO;
 import DTO.DetailInvoiceDTO;
 import DTO.InvoiceDTO;
@@ -266,7 +265,7 @@ public class ConfirmSellingModalController implements IModalController {
         invoiceDTO.setCustomerId(selectedCustomer.getId());
         invoiceDTO.setTotalPrice(totalPrice);
         invoiceDTO.setDiscountAmount(discountAmount);
-        invoiceDTO.setCreateDate(LocalDateTime.now());
+        invoiceDTO.setCreatedAt(LocalDateTime.now());
 
         if (discountCode != null && !discountCode.isEmpty()) {
             invoiceDTO.setDiscountCode(discountCode);

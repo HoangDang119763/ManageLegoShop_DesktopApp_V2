@@ -4,8 +4,6 @@ package GUI;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
-import com.mysql.cj.Session;
-
 import BUS.DetailImportBUS;
 import BUS.ImportBUS;
 import BUS.StatusBUS;
@@ -135,7 +133,7 @@ public class ImportController implements IController {
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_createDate.setCellValueFactory(
-                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreateDate())));
+                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())));
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_supplierId.setCellValueFactory(new PropertyValueFactory<>("supplierId"));
         tlb_col_totalPrice.setCellValueFactory(
@@ -157,7 +155,7 @@ public class ImportController implements IController {
             return;
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         this.id.setText(String.valueOf(selectedImport.getId()));
-        this.createDate.setText(validationUtils.formatDateTime(selectedImport.getCreateDate()));
+        this.createDate.setText(validationUtils.formatDateTime(selectedImport.getCreatedAt()));
         this.employeeId.setText(String.valueOf(selectedImport.getEmployeeId()));
         this.supplierId.setText(String.valueOf(selectedImport.getSupplierId()));
         this.totalPrice.setText(validationUtils.formatCurrency(selectedImport.getTotalPrice()));

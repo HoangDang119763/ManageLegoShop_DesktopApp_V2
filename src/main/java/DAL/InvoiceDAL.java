@@ -24,8 +24,8 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
     protected InvoiceDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
         return new InvoiceDTO(
                 resultSet.getInt("id"),
-                resultSet.getTimestamp("create_date") != null
-                        ? resultSet.getTimestamp("create_date").toLocalDateTime()
+                resultSet.getTimestamp("created_at") != null
+                        ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 resultSet.getInt("employee_id"),
                 resultSet.getInt("customer_id"),
@@ -50,12 +50,12 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(create_date, employee_id, customer_id, discount_code, discount_amount, total_price, status_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        return "(created_at, employee_id, customer_id, discount_code, discount_amount, total_price, status_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, InvoiceDTO obj) throws SQLException {
-        statement.setTimestamp(1, Timestamp.valueOf(obj.getCreateDate()));
+        statement.setTimestamp(1, Timestamp.valueOf(obj.getCreatedAt()));
         statement.setInt(2, obj.getEmployeeId());
         statement.setInt(3, obj.getCustomerId());
 
@@ -89,7 +89,7 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
 
         // JOIN với status table để lấy statusDescription
         String sql = "SELECT " +
-                "i.id, i.create_date, i.employee_id, i.customer_id, i.discount_code, i.discount_amount, i.total_price, i.status_id, "
+                "i.id, i.created_at, i.employee_id, i.customer_id, i.discount_code, i.discount_amount, i.total_price, i.status_id, "
                 +
                 "s.description as status_description, " +
                 "COUNT(*) OVER() as total_count " +
@@ -128,7 +128,7 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
 
         // JOIN với status table để lấy statusDescription
         String sql = "SELECT " +
-                "i.id, i.create_date, i.employee_id, i.customer_id, i.discount_code, i.discount_amount, i.total_price, i.status_id, "
+                "i.id, i.created_at, i.employee_id, i.customer_id, i.discount_code, i.discount_amount, i.total_price, i.status_id, "
                 +
                 "s.description as status_description, " +
                 "COUNT(*) OVER() as total_count " +
@@ -168,8 +168,8 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
     private InvoiceDisplayDTO mapResultSetToInvoiceDisplay(ResultSet rs) throws SQLException {
         return new InvoiceDisplayDTO(
                 rs.getInt("id"),
-                rs.getTimestamp("create_date") != null
-                        ? rs.getTimestamp("create_date").toLocalDateTime()
+                rs.getTimestamp("created_at") != null
+                        ? rs.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 rs.getInt("employee_id"),
                 rs.getInt("customer_id"),

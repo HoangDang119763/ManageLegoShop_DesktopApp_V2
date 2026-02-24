@@ -3,12 +3,9 @@ package GUI;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
-import BUS.DetailDiscountBUS;
 import BUS.DiscountBUS;
 import DTO.DetailDiscountDTO;
-import DTO.DiscountDTO;
 import DTO.DiscountForInvoiceDTO;
-import DTO.SupplierForImportDTO;
 import ENUM.DiscountType;
 import ENUM.PermissionKey;
 import INTERFACE.IModalController;

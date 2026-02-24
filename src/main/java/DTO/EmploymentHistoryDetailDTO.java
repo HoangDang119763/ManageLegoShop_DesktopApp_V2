@@ -28,4 +28,7 @@ public class EmploymentHistoryDetailDTO {
     private LocalDateTime createdAt;
     private int approverId;
     private String approverName;
+
+    private int statusId;
+    private String statusDescription; // Mô tả trạng thái (nếu cần)
 }

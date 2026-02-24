@@ -62,7 +62,7 @@ public class SessionManagerService {
         return currentSession != null ? currentSession.getRoleName() : "No Role";
     }
 
-    public int getRoleId() {
+    public int employeeRoleId() {
         return currentSession != null ? currentSession.getRoleId() : -1;
     }
 

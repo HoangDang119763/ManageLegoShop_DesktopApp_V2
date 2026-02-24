@@ -143,17 +143,19 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
         int totalItems = 0;
         int offset = pageIndex * pageSize;
 
-        // SQL lấy đầy đủ thông tin: Lý do, Người duyệt, Phòng ban, Chức vụ
+        // SQL lấy đầy đủ thông tin: Lý do, Người duyệt, Phòng ban, Chức vụ, Trạng thái
         String sql = "SELECT " +
                 "eh.employee_id, eh.effective_date, eh.reason, eh.created_at, " +
                 "eh.department_id, d.name as department_name, " +
                 "eh.role_id, r.name as role_name, " +
                 "eh.approver_id, CONCAT(app.first_name, ' ', app.last_name) as approver_name, " +
+                "eh.status_id, s.description as status_description, " +
                 "COUNT(*) OVER() as total_count " +
                 "FROM employment_history eh " +
                 "LEFT JOIN department d ON eh.department_id = d.id " +
                 "LEFT JOIN role r ON eh.role_id = r.id " +
-                "LEFT JOIN employee app ON eh.approver_id = app.id " + // Join lấy tên người duyệt
+                "LEFT JOIN employee app ON eh.approver_id = app.id " +
+                "LEFT JOIN status s ON eh.status_id = s.id " +
                 "WHERE eh.employee_id = ? " +
                 "ORDER BY eh.effective_date DESC " +
                 "LIMIT ?, ?";
@@ -183,7 +185,9 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                             rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime()
                                     : null,
                             rs.getInt("approver_id"),
-                            rs.getString("approver_name"));
+                            rs.getString("approver_name"),
+                            rs.getInt("status_id"),
+                            rs.getString("status_description"));
                     items.add(dto);
                 }
             }
