@@ -647,3 +647,103 @@
     -fx-background-radius: 5;
     -fx-border-color: #1f7d84;
 }
+
+/* Tổng thể thanh tab */
+.tab-pane {
+    -fx-tab-min-width: 120px;
+    -fx-tab-min-height: 30px;
+}
+
+/* Ẩn cái đường kẻ thừa ở phía trên của header */
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+/* Định dạng các tab bình thường */
+.tab {
+    -fx-background-color: #f4f7f6;
+    -fx-background-insets: 0 1 0 1;
+    -fx-background-radius: 5 5 0 0;
+    -fx-cursor: hand;
+}
+
+.tab:hover {
+    -fx-background-color: #e8f2f2;
+}
+
+/* Tab khi được chọn (Active) */
+.tab:selected {
+    -fx-background-color: white;
+    -fx-border-color: #30bac4;
+    -fx-border-width: 3 0 0 0; /* Đường kẻ xanh ở phía trên */
+}
+
+/* Chữ trong tab */
+.tab .tab-label {
+    -fx-text-fill: #7f8c8d;
+    -fx-font-weight: bold;
+}
+
+.tab:selected .tab-label {
+    -fx-text-fill: #1f7d84;
+}
+
+/* Phần nội dung bên dưới Tab */
+.tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+    -fx-border-color: transparent; /* Ẩn cái khung focus chấm chấm gây xấu UI */
+}
+
+.tab-content-area {
+    -fx-background-color: white;
+    -fx-padding: 0;
+}
+
+/* 1. Tạo đường viền cho toàn bộ vùng nội dung bên dưới */
+.tab-pane .tab-content-area {
+    -fx-background-color: white;
+    -fx-border-color: #eee; /* Màu viền xám nhạt cùng tông với Line trong FXML của bạn */
+    -fx-border-width: 1 0 0 0; /* Chỉ kẻ đường viền phía trên để ngăn cách với Tab */
+    -fx-padding: 2; /* Tạo khoảng trống để nội dung không dính sát vào viền */
+}
+
+/* 2. Xử lý phần Header để không có khoảng hở */
+.tab-pane .tab-header-area {
+    -fx-padding: 0 0 -1 0; /* Đẩy header xuống 1px để đè lên viền của content, tạo cảm giác liền mạch */
+}
+
+/* 3. Khi Tab được chọn: làm nổi bật bằng cách đè lên đường viền ngăn cách */
+.tab:selected {
+    -fx-background-color: white;
+    -fx-border-color: #30bac4 #eee white #eee; /* Viền xanh trên, các viền khác xám nhạt, viền dưới trắng để "mở" vào content */
+    -fx-border-width: 3 1 1 1;
+    -fx-background-insets: 0 0 -1 0; /* Tràn xuống 1px để xóa đường kẻ ngang tại vị trí Tab đang mở */
+}
+
+/* 4. Định dạng lại các Tab chưa chọn để chúng nằm "trên" đường viền */
+.tab {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: transparent transparent #eee transparent; /* Chỉ hiện viền dưới để nối liền với đường kẻ ngang */
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Tùy chỉnh thanh cuộn cho TableView */
+.table-view-custom .virtual-flow .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+    -fx-pref-height: 8; /* Làm thanh cuộn mỏng lại */
+}
+
+.table-view-custom .virtual-flow .scroll-bar:horizontal .thumb {
+    -fx-background-color: #ced4da;
+    -fx-background-radius: 10;
+}
+
+.table-view-custom .virtual-flow .scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: #30bac4; /* Hiện màu xanh khi hover */
+}
+
+/* Ẩn các nút bấm mũi tên ở 2 đầu thanh cuộn cho sạch UI */
+.table-view-custom .virtual-flow .scroll-bar:horizontal .increment-button,
+.table-view-custom .virtual-flow .scroll-bar:horizontal .decrement-button {
+    -fx-padding: 0;
+    -fx-shape: "";
+}

@@ -10,7 +10,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
-import UTILS.ValidationUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
