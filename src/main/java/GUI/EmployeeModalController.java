@@ -124,6 +124,8 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private VBox jobHistorySection;
     @FXML
+    private HBox paginationSection;
+    @FXML
     private TableView<EmploymentHistoryDetailDTO> tblJobHistory;
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colEffectiveDate;
@@ -429,6 +431,8 @@ public class EmployeeModalController implements IModalController {
             // Ẩn job history section khi sửa (không cần thiết)
             jobHistorySection.setVisible(false);
             jobHistorySection.setManaged(false);
+            paginationSection.setVisible(false);
+            paginationSection.setManaged(false);
         } else if (typeModal == 2) {
             modalName.setText("Xem thông tin nhân viên");
             setReadOnly();
