@@ -2,6 +2,7 @@ package GUI;
 
 import BUS.DiscountBUS;
 import DTO.DiscountDTO;
+import ENUM.DiscountType;
 import UTILS.NotificationUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 
 public class DiscountAdvanceSearchModalController {
     @FXML
-    private Button saveBtn,closeBtn;
+    private Button saveBtn, closeBtn;
     @FXML
     private TextField txtDiscountName;
     @FXML
@@ -33,6 +34,7 @@ public class DiscountAdvanceSearchModalController {
     private boolean isSaved;
     @Getter
     private ArrayList<DiscountDTO> filteredDiscounts;
+
     @FXML
     public void initialize() {
         loadComboBox();
@@ -40,7 +42,8 @@ public class DiscountAdvanceSearchModalController {
     }
 
     private void loadComboBox() {
-        cbTypeDiscount.getItems().addAll("Phần trăm", "Giảm cứng");
+        cbTypeDiscount.getItems().addAll(DiscountType.PERCENTAGE.getDisplayName(),
+                DiscountType.FIXED_AMOUNT.getDisplayName());
         cbTypeDiscount.getSelectionModel().selectFirst();
     }
 
@@ -51,7 +54,7 @@ public class DiscountAdvanceSearchModalController {
 
     private void handleSave() {
         this.discountName = txtDiscountName.getText();
-        this.type = cbTypeDiscount.getValue().equals("Phần trăm") ? 0 : 1;
+        this.type = DiscountType.fromDisplayName(cbTypeDiscount.getValue()).getCode();
         this.startDate = dpStartDate.getValue();
         this.endDate = dpEndDate.getValue();
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {

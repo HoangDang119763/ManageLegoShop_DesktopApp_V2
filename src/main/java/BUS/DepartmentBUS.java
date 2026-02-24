@@ -2,6 +2,10 @@ package BUS;
 
 import DAL.DepartmentDAL;
 import DTO.DepartmentDTO;
+import DTO.StatusDTO;
+import ENUM.StatusType;
+import ENUM.Status;
+
 import java.util.ArrayList;
 
 public class DepartmentBUS extends BaseBUS<DepartmentDTO, Integer> {
@@ -32,4 +36,12 @@ public class DepartmentBUS extends BaseBUS<DepartmentDTO, Integer> {
         return DepartmentDAL.getInstance().getById(id);
     }
 
+    public boolean isDepartmentActive(int departmentId) {
+        StatusDTO activeStatus = StatusBUS.getInstance().getByTypeAndStatusName(StatusType.DEPARTMENT,
+                Status.Department.ACTIVE);
+        if (activeStatus == null) {
+            return false; // Không tìm thấy trạng thái ACTIVE cho DEPARTMENT
+        }
+        return DepartmentDAL.getInstance().existsByIdAndStatus(departmentId, activeStatus.getId());
+    }
 }

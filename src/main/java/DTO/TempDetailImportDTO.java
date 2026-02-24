@@ -2,92 +2,39 @@ package DTO;
 
 import java.math.BigDecimal;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class TempDetailImportDTO {
-    private int importId;
     private String productId;
     private String name;
     private int quantity;
-    private BigDecimal price;
-    private BigDecimal sellingPrice;
+    private BigDecimal profitPercent;
+    private BigDecimal importPrice;
     private BigDecimal totalPrice;
 
     public TempDetailImportDTO() {
     }
 
-    public TempDetailImportDTO(int importId, String productId, String name, int quantity,
-            BigDecimal price, BigDecimal sellingPrice, BigDecimal totalPrice) {
-        this.importId = importId;
+    public TempDetailImportDTO(String productId, String name, int quantity,
+            BigDecimal profitPercent, BigDecimal importPrice, BigDecimal totalPrice) {
         this.productId = productId;
         this.name = name;
         this.quantity = quantity;
-        this.price = price;
-        this.sellingPrice = sellingPrice;
+        this.profitPercent = profitPercent;
+        this.importPrice = importPrice;
         this.totalPrice = totalPrice;
     }
 
     public TempDetailImportDTO(TempDetailImportDTO other) {
-        this.importId = other.importId;
         this.productId = other.productId;
         this.name = other.name;
         this.quantity = other.quantity;
-        this.price = other.price;
-        this.sellingPrice = other.sellingPrice;
+        this.profitPercent = other.profitPercent;
+        this.importPrice = other.importPrice;
         this.totalPrice = other.totalPrice;
     }
 
-    public int getImportId() {
-        return importId;
-    }
-
-    public void setImportId(int importId) {
-        this.importId = importId;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public BigDecimal getSellingPrice() {
-        return sellingPrice;
-    }
-
-    public void setSellingPrice(BigDecimal sellingPrice) {
-        this.sellingPrice = sellingPrice;
-    }
-
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
-    }
 }

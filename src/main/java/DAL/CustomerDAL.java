@@ -2,6 +2,7 @@ package DAL;
 
 import DTO.CustomerDTO;
 import DTO.CustomerDisplayDTO;
+import DTO.CustomerForInvoiceDTO;
 import DTO.PagedResponse;
 
 import java.sql.*;
@@ -227,6 +228,53 @@ public class CustomerDAL extends BaseDAL<CustomerDTO, Integer> {
                 rs.getInt("status_id"),
                 rs.getString("status_description"),
                 rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
+    }
+
+    public ArrayList<CustomerForInvoiceDTO> filterCustomersByKeywordForInvoice(String keyword, int statusId) {
+        ArrayList<CustomerForInvoiceDTO> list = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, first_name, last_name, phone, address FROM customer WHERE ");
+
+        // Thêm cả LOWER cho first_name đơn lẻ để đảm bảo độ phủ 100%
+        sql.append("(? = -1 OR status_id = ?) AND (? = '' OR (" +
+                "LOWER(CONCAT(first_name, ' ', last_name)) LIKE ? " + // (1) Tìm "Họ Tên"
+                "OR LOWER(first_name) LIKE ? " + // (2) Tìm "Họ"
+                "OR LOWER(last_name) LIKE ? " + // (3) Tìm "Tên"
+                "OR phone LIKE ?))"); // (4) Tìm "SĐT"
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            String searchKey = keyword == null ? "" : keyword.toLowerCase().trim();
+            String pattern = "%" + searchKey + "%";
+
+            // Gán status_id
+            ps.setInt(idx++, statusId);
+            ps.setInt(idx++, statusId);
+
+            // Gán keyword
+            ps.setString(idx++, searchKey); // Kiểm tra rỗng
+            ps.setString(idx++, pattern); // Cho CONCAT
+            ps.setString(idx++, pattern); // Cho first_name
+            ps.setString(idx++, pattern); // Cho last_name
+            ps.setString(idx++, pattern); // Cho phone
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new CustomerForInvoiceDTO(
+                            rs.getInt("id"),
+                            rs.getString("first_name"),
+                            rs.getString("last_name"),
+                            rs.getString("phone"),
+                            rs.getString("address")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error filtering customers for invoice: " + e.getMessage());
+        }
+        return list;
     }
 
 }

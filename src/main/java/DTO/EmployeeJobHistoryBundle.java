@@ -15,4 +15,23 @@ import lombok.Data;
 public class EmployeeJobHistoryBundle {
     private EmployeeJobInfoDTO jobInfo;
     private EmployeePayrollInfoDTO payrollInfo;
+
+    public EmployeeJobHistoryBundle() {
+    }
+
+    public EmployeeJobInfoDTO getJobInfo() {
+        return jobInfo;
+    }
+
+    public void setJobInfo(EmployeeJobInfoDTO jobInfo) {
+        this.jobInfo = jobInfo;
+    }
+
+    public EmployeePayrollInfoDTO getPayrollInfo() {
+        return payrollInfo;
+    }
+
+    public void setPayrollInfo(EmployeePayrollInfoDTO payrollInfo) {
+        this.payrollInfo = payrollInfo;
+    }
 }

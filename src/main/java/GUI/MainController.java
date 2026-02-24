@@ -12,14 +12,16 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-@Slf4j
 public class MainController {
+    private static final Logger log = LoggerFactory.getLogger(MainController.class);
     @FXML
     private Button closeBtn, minimizeBtn, logoutBtn;
     @FXML
@@ -43,7 +45,8 @@ public class MainController {
             Map.entry(7, "/GUI/CategoryUI.fxml"),
             Map.entry(8, "/GUI/DiscountUI.fxml"),
             Map.entry(9, "/GUI/RoleUI.fxml"),
-            Map.entry(10, "/GUI/StatisticUI.fxml"));
+            Map.entry(10, "/GUI/StatisticUI.fxml"),
+            Map.entry(11, "/GUI/HROperationsTab.fxml")); // Quản lý Nhân sự
 
     @FXML
     public void initialize() {
@@ -65,12 +68,23 @@ public class MainController {
         logoutBtn.setOnMouseClicked(e -> {
             if (UiUtils.gI().showConfirmAlert(AppMessages.LOGOUT_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM)) {
                 // Sử dụng forceLogout để dọn dẹp sạch sẽ toàn bộ App
-                SessionManagerService.getInstance().forceLogout();
+                SessionManagerService.getInstance().normalLogout();
             }
         });
 
-        closeBtn.setOnMouseClicked(e -> System.exit(0));
+        closeBtn.setOnMouseClicked(e -> handleClose());
         minimizeBtn.setOnMouseClicked(e -> ((Stage) ((Node) e.getSource()).getScene().getWindow()).setIconified(true));
+    }
+
+    private void handleClose() {
+        UiUtils.gI().openStage(
+                "/GUI/NavigatePermission.fxml",
+                "Danh sách chức năng");
+        if (closeBtn.getScene() != null && closeBtn.getScene().getWindow() != null) {
+            Stage stage = (Stage) closeBtn.getScene().getWindow();
+            stage.close();
+        }
+
     }
 
     record ModuleMetadata(int id, String name, String icon) {
@@ -93,7 +107,8 @@ public class MainController {
                 new ModuleMetadata(5, "Bán hàng", "invoice.png"), // ID 5: Module quan trọng nhất
                 new ModuleMetadata(6, "Nhập hàng", "import.png"), // ID 6
                 new ModuleMetadata(9, "Cơ cấu", "role.png"), // ID 9
-                new ModuleMetadata(10, "Thống kê", "statistical.png") // ID 10
+                new ModuleMetadata(10, "Thống kê", "statistical.png"), // ID 10
+                new ModuleMetadata(11, "Quản lý Nhân sự", "employee.png") // ID 11: HR Operations
         );
 
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session

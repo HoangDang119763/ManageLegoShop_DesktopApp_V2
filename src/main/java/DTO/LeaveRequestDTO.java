@@ -4,7 +4,8 @@ import java.time.LocalDate;
 
 public class LeaveRequestDTO {
     private int id;
-    private String type;
+    private int leaveTypeId;
+    private String leaveTypeName;
     private String content;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -15,10 +16,18 @@ public class LeaveRequestDTO {
     public LeaveRequestDTO() {
     }
 
-    public LeaveRequestDTO(int id, String type, String content, LocalDate startDate, LocalDate endDate, int statusId,
+    // Constructor without leaveTypeName (for BaseDAL getAll when not JOINed)
+    public LeaveRequestDTO(int id, int leaveTypeId, String content, LocalDate startDate, LocalDate endDate, int statusId,
+            int employeeId) {
+        this(id, leaveTypeId, "", content, startDate, endDate, statusId, employeeId);
+    }
+
+    // Constructor with leaveTypeName
+    public LeaveRequestDTO(int id, int leaveTypeId, String leaveTypeName, String content, LocalDate startDate, LocalDate endDate, int statusId,
             int employeeId) {
         this.id = id;
-        this.type = type;
+        this.leaveTypeId = leaveTypeId;
+        this.leaveTypeName = leaveTypeName;
         this.content = content;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -30,7 +39,8 @@ public class LeaveRequestDTO {
     public LeaveRequestDTO(LeaveRequestDTO other) {
         if (other != null) {
             this.id = other.id;
-            this.type = other.type;
+            this.leaveTypeId = other.leaveTypeId;
+            this.leaveTypeName = other.leaveTypeName;
             this.content = other.content;
             this.startDate = other.startDate;
             this.endDate = other.endDate;
@@ -40,6 +50,12 @@ public class LeaveRequestDTO {
     }
 
     // Getters and Setters
+    public int getLeaveTypeId() {
+        return leaveTypeId;
+    }
+    public void setLeaveTypeId(int leaveTypeId) {
+        this.leaveTypeId = leaveTypeId;
+    }
     public int getId() {
         return id;
     }
@@ -48,12 +64,12 @@ public class LeaveRequestDTO {
         this.id = id;
     }
 
-    public String getType() {
-        return type;
+    public String getLeaveTypeName() {
+        return leaveTypeName;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setLeaveTypeName(String leaveTypeName) {
+        this.leaveTypeName = leaveTypeName;
     }
 
     public String getContent() {

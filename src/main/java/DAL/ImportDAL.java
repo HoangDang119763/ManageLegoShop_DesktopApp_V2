@@ -23,8 +23,8 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
     protected ImportDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
         return new ImportDTO(
                 resultSet.getInt("id"),
-                resultSet.getTimestamp("create_date") != null
-                        ? resultSet.getTimestamp("create_date").toLocalDateTime()
+                resultSet.getTimestamp("created_at") != null
+                        ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 resultSet.getInt("employee_id"),
                 resultSet.getInt("supplier_id"),
@@ -46,12 +46,12 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(create_date, employee_id, supplier_id, total_price, status_id) VALUES (?, ?, ?, ?, ?)";
+        return "(created_at, employee_id, supplier_id, total_price, status_id) VALUES (?, ?, ?, ?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, ImportDTO obj) throws SQLException {
-        statement.setTimestamp(1, Timestamp.valueOf(obj.getCreateDate()));
+        statement.setTimestamp(1, Timestamp.valueOf(obj.getCreatedAt()));
         statement.setInt(2, obj.getEmployeeId());
         statement.setInt(3, obj.getSupplierId());
         statement.setBigDecimal(4, obj.getTotalPrice());
@@ -66,8 +66,8 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
     private ImportDisplayDTO mapResultSetToImportDisplay(ResultSet rs) throws SQLException {
         return new ImportDisplayDTO(
                 rs.getInt("id"),
-                rs.getTimestamp("create_date") != null
-                        ? rs.getTimestamp("create_date").toLocalDateTime()
+                rs.getTimestamp("created_at") != null
+                        ? rs.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 rs.getInt("employee_id"),
                 rs.getInt("supplier_id"),
@@ -80,19 +80,20 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
      * [OPTIMIZED] Get imports with filter and pagination for manage display
      */
     public PagedResponse<ImportDisplayDTO> filterImportsPagedForManage(
-            int searchId, int pageIndex, int pageSize) {
+            int searchId, int statusId, int pageIndex, int pageSize) {
         List<ImportDisplayDTO> items = new ArrayList<>();
         int totalItems = 0;
         int offset = pageIndex * pageSize;
 
         // JOIN với status table để lấy statusDescription
         String sql = "SELECT " +
-                "i.id, i.create_date, i.employee_id, i.supplier_id, i.total_price, i.status_id, " +
+                "i.id, i.created_at, i.employee_id, i.supplier_id, i.total_price, i.status_id, " +
                 "s.description as status_description, " +
                 "COUNT(*) OVER() as total_count " +
                 "FROM import i " +
                 "LEFT JOIN status s ON i.status_id = s.id " +
                 "WHERE (? = -1 OR i.id = ?) " +
+                "  AND (? = -1 OR i.status_id = ?) " +
                 "ORDER BY i.id DESC " +
                 "LIMIT ? OFFSET ?";
 
@@ -101,8 +102,10 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
 
             ps.setInt(1, searchId);
             ps.setInt(2, searchId);
-            ps.setInt(3, pageSize);
-            ps.setInt(4, offset);
+            ps.setInt(3, statusId);
+            ps.setInt(4, statusId);
+            ps.setInt(5, pageSize);
+            ps.setInt(6, offset);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -149,6 +152,77 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
             }
         } catch (SQLException e) {
             System.err.println("Error checking import existence: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Insert Import using provided connection (for transaction)
+     * Thêm phiếu nhập sử dụng connection được cung cấp (cho transaction)
+     */
+    public boolean insert(Connection connection, ImportDTO obj) {
+        // SQL: id tự tăng nên không cần chèn, created_at mặc định CURRENT_TIMESTAMP
+        String sql = "INSERT INTO import (employee_id, supplier_id, total_price, status_id) VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            // 1. Set các tham số (Mapping trực tiếp từ DTO sang DB)
+            statement.setInt(1, obj.getEmployeeId());
+            statement.setInt(2, obj.getSupplierId());
+            statement.setBigDecimal(3, obj.getTotalPrice());
+            statement.setInt(4, obj.getStatusId());
+
+            // 2. Thực thi lệnh
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows == 0) {
+                return false;
+            }
+
+            // 3. Lấy ID tự tăng vừa được sinh ra (Cực kỳ quan trọng để lưu Detail)
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    obj.setId(generatedKeys.getInt(1)); // Gán ngược ID vào object DTO
+                } else {
+                    throw new SQLException("Inserting import failed, no ID obtained.");
+                }
+            }
+
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Error inserting into import table: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean updateStatus(Connection conn, int importId, int newStatusId) throws SQLException {
+        String sql = "UPDATE import SET status_id = ? WHERE id = ?";
+
+        // Không dùng try-with-resources cho Connection ở đây vì conn được truyền từ BUS
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newStatusId);
+            ps.setInt(2, importId);
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            // Log lỗi và ném ra ngoài để BUS thực hiện Rollback
+            System.err.println("Error updating import status: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Delete import using provided connection (for transaction)
+     * Xóa phiếu nhập sử dụng connection được cung cấp (cho transaction)
+     */
+    public boolean delete(Connection conn, int importId) {
+        String sql = "DELETE FROM import WHERE id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, importId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting import: " + e.getMessage());
             return false;
         }
     }

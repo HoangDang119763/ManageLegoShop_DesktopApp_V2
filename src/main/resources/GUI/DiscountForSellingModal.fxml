@@ -9,68 +9,76 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="acDiscountContainer" maxWidth="500.0" minWidth="500.0" prefHeight="700.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.DiscountForSellingModalController">
+<AnchorPane fx:id="acDiscountContainer" maxWidth="600.0" minWidth="600.0" prefHeight="550.0" prefWidth="600.0" style="-fx-border-color: #1f7d84; -fx-border-width: 2px;" styleClass="white-bg" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.DiscountForSellingModalController">
    <stylesheets>
       <URL value="@../css/base.css" />
       <URL value="@../css/sellingform.css" />
    </stylesheets>
    <children>
-      <VBox prefHeight="700.0" prefWidth="500.0" style="-fx-border-width: 2px; -fx-border-color: #30bac4;">
+      <VBox prefHeight="550.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <AnchorPane maxHeight="50.0" minHeight="50.0" prefHeight="50.0" prefWidth="488.0" styleClass="top-form" stylesheets="@../css/main.css">
+            <AnchorPane maxHeight="55.0" minHeight="55.0" prefHeight="55.0" style="-fx-background-color: #1f7d84;">
                <children>
-                  <Label layoutX="172.0" layoutY="8.0" text="KHUYẾN MÃI" textFill="WHITE">
-                     <font>
-                        <Font name="System Bold" size="24.0" />
-                     </font>
+                  <Label layoutX="15.0" layoutY="14.0" text="CHỌN MÃ KHUYẾN MÃI" textFill="WHITE" AnchorPane.leftAnchor="15.0">
+                     <font><Font name="System Bold" size="20.0" /></font>
                   </Label>
-                  <Pane fx:id="pBtnExitGetDiscount" layoutX="436.0" layoutY="5.0" prefHeight="50.0" prefWidth="496.0" styleClass="pExitBtnContainer">
-                     <children>
-                        <Button fx:id="btnExitGetDiscount" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="42.0" prefWidth="60.0" styleClass="close" stylesheets="@../css/main.css">
-                           <graphic>
-                              <FontAwesomeIcon glyphName="CLOSE" selectionFill="BLACK" size="1.4em" styleClass="close-icon" />
-                           </graphic>
-                        </Button>
-                     </children></Pane>
+                  <Button fx:id="btnExitGetDiscount" layoutX="550.0" layoutY="10.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="40.0" styleClass="close" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                     <graphic><FontAwesomeIcon fill="WHITE" glyphName="CLOSE" size="1.5em" /></graphic>
+                  </Button>
                </children>
             </AnchorPane>
-            <Pane prefHeight="42.0" prefWidth="500.0">
+
+            <HBox alignment="CENTER_LEFT" spacing="15.0">
+               <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
                <children>
-                  <TextField fx:id="txtSearchDiscount" layoutX="7.0" layoutY="7.0" prefHeight="30.0" prefWidth="148.0" promptText="Tìm kiếm theo mã" styleClass="txtSearchCustomer">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                  </TextField>
-                  <Button fx:id="btnSearchDiscount" layoutX="168.0" layoutY="8.0" mnemonicParsing="false" prefWidth="80.0" styleClass="btnSearchProduct" text="Tìm Kiếm">
-                     <padding>
-                        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
-                     </padding>
+                  <AnchorPane HBox.hgrow="ALWAYS">
+                     <children>
+                        <TextField fx:id="txtSearchDiscount" prefHeight="38.0" promptText="Tìm theo mã hoặc tên khuyến mãi..." style="-fx-padding: 0 10 0 35;" styleClass="textfield" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+                        <FontAwesomeIcon fill="#1f7d84" glyphName="SEARCH" layoutX="12.0" layoutY="25.0" size="1.2em" />
+                     </children>
+                  </AnchorPane>
+                  <Button fx:id="btnSearchDiscount" mnemonicParsing="false" prefHeight="38.0" prefWidth="100.0" styleClass="action-btn" text="LỌC">
+                     <graphic><FontAwesomeIcon fill="WHITE" glyphName="FILTER" /></graphic>
+                     <font><Font name="System Bold" size="12.0" /></font>
                   </Button>
                </children>
-            </Pane>
-            <TableView fx:id="tbvDiscount" editable="true" prefHeight="550.0" prefWidth="450.0">
-               <columns>
-                  <TableColumn fx:id="tbcCode" prefWidth="69.5999755859375" text="Mã KM" />
-                  <TableColumn fx:id="tbcDiscountName" prefWidth="71.20001220703125" text="Tên" />
-                  <TableColumn fx:id="tbcDiscountType" prefWidth="94.0" text="Loại" />
-                  <TableColumn fx:id="tbcStartDate" prefWidth="129.0" text="Ngày bắt đầu" />
-                  <TableColumn fx:id="tbcEndDate" prefWidth="125.0" text="Ngày hết hạn" />
-               </columns>
-            </TableView>
-            <Pane prefHeight="60.0" prefWidth="500.0">
+            </HBox>
+
+            <VBox styleClass="shadow, white-bg" VBox.vgrow="ALWAYS">
+               <VBox.margin><Insets left="15.0" right="15.0" /></VBox.margin>
                <children>
-                  <Button fx:id="btnSubmitDiscount" layoutX="150.0" layoutY="12.0" mnemonicParsing="false" prefWidth="200.0" styleClass="btnSearchProduct" text="Xác Nhận">
-                     <padding>
-                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
-                     </padding>
+                  <TableView fx:id="tbvDiscount" prefHeight="335.0" prefWidth="565.0" VBox.vgrow="ALWAYS">
+                     <columns>
+                        <TableColumn fx:id="tbcCode" minWidth="90.0" prefWidth="100.0" text="Mã KM" />
+                        <TableColumn fx:id="tbcDiscountName" minWidth="150.0" prefWidth="180.0" text="Tên chương trình" />
+                        <TableColumn fx:id="tbcDiscountType" minWidth="80.0" prefWidth="90.0" text="Loại" />
+                     </columns>
+                     <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                     </columnResizePolicy>
+                  </TableView>
+               </children>
+            </VBox>
+
+            <HBox alignment="CENTER_RIGHT" prefHeight="75.0" spacing="15.0">
+               <padding><Insets right="15.0" /></padding>
+               <children>
+                  <Button fx:id="btnRefreshFilter" mnemonicParsing="false" prefHeight="42.0" prefWidth="110.0" styleClass="action-btn" text="LÀM MỚI">
+                     <graphic><FontAwesomeIcon fill="WHITE" glyphName="REFRESH" /></graphic>
+                     <font><Font name="System Bold" size="12.0" /></font>
+                  </Button>
+                  <Button fx:id="btnSubmitDiscount" mnemonicParsing="false" prefHeight="42.0" prefWidth="130.0" styleClass="action-btn" text="XÁC NHẬN">
+                     <font><Font name="System Bold" size="14.0" /></font>
+                     <graphic><FontAwesomeIcon fill="WHITE" glyphName="CHECK_CIRCLE" size="1.3em" /></graphic>
                   </Button>
                </children>
-            </Pane>
+            </HBox>
          </children>
       </VBox>
+      <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
    </children>
 </AnchorPane>

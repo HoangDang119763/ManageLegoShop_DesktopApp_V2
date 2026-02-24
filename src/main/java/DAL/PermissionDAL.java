@@ -108,4 +108,24 @@ public class PermissionDAL extends BaseDAL<PermissionDTO, Integer> {
         }
         return list;
     }
+
+    public boolean isRoleHavePermission(int roleId, String permissionKey) {
+        // Dùng SELECT 1 và rs.next() là cách nhanh nhất để check tồn tại
+        String sql = "SELECT 1 FROM role_permission rp " +
+                "JOIN permission p ON rp.permission_id = p.id " +
+                "WHERE rp.role_id = ? AND p.permission_key = ? LIMIT 1";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, roleId);
+            statement.setString(2, permissionKey);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next(); // Có dòng trả về tức là có quyền
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking role permission: " + e.getMessage());
+        }
+        return false;
+    }
 }

@@ -2,14 +2,12 @@ package GUI;
 
 import BUS.CategoryBUS;
 import BUS.StatusBUS;
-import DTO.BUSResult;
 import DTO.CategoryDisplayDTO;
 import DTO.PagedResponse;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
-import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
@@ -56,6 +54,7 @@ public class CategoryController implements IController {
     private String keyword = "";
     private StatusDTO statusFilter = null;
     private CategoryDisplayDTO selectedCategory;
+    private boolean isResetting = false;
     private CategoryBUS categoryBUS;
     private SessionManagerService session;
     private final int PAGE_SIZE = 15;
@@ -210,7 +209,14 @@ public class CategoryController implements IController {
     // 4️⃣ FILTER & PERMISSION
     // =====================
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
@@ -235,13 +241,18 @@ public class CategoryController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         cbSearchBy.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
         searchBy = "Mã thể loại";
         keyword = "";
         statusFilter = null;
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override
@@ -260,11 +271,11 @@ public class CategoryController implements IController {
         boolean canDelete = session.hasPermission(PermissionKey.CATEGORY_DELETE);
 
         if (!canAdd)
-            UiUtils.gI().setReadOnlyItem(addBtn);
+            UiUtils.gI().setVisibleItem(addBtn);
         if (!canEdit)
-            UiUtils.gI().setReadOnlyItem(editBtn);
+            UiUtils.gI().setVisibleItem(editBtn);
         if (!canDelete)
-            UiUtils.gI().setReadOnlyItem(deleteBtn);
+            UiUtils.gI().setVisibleItem(deleteBtn);
     }
 
     private boolean isNotSelectedCategory() {

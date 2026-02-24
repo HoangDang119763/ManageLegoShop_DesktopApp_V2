@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="GUI.AttendanceModalController"
+      prefHeight="400.0" prefWidth="600.0" spacing="15.0">
+    <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/></padding>
+
+    <children>
+        <!-- Title -->
+        <Label text="THÊM CHẤM CÔNG" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1f7d84;"/>
+        <Separator/>
+
+        <!-- Form -->
+        <VBox spacing="12.0">
+            <children>
+                <!-- Attendance Date -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Ngày *" style="-fx-font-weight: bold;"/>
+                        <DatePicker fx:id="dpAttendanceDate" prefWidth="560.0"/>
+                    </children>
+                </VBox>
+
+                <!-- Check In -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Giờ Vào" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtCheckIn" prefWidth="560.0" promptText="HH:mm (vd: 08:00)"/>
+                    </children>
+                </VBox>
+
+                <!-- Check Out -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Giờ Ra" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtCheckOut" prefWidth="560.0" promptText="HH:mm (vd: 17:00)"/>
+                    </children>
+                </VBox>
+
+                <!-- Overtime Hours -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Giờ Tăng Ca" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtOvertimeHours" prefWidth="560.0" promptText="Nhập số giờ tăng ca"/>
+                    </children>
+                </VBox>
+
+                <!-- Notes -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Ghi Chú" style="-fx-font-weight: bold;"/>
+                        <TextArea fx:id="taNotes" prefHeight="80.0" wrapText="true" promptText="Nhập ghi chú"/>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+
+        <!-- Buttons -->
+        <HBox spacing="10.0" alignment="CENTER_RIGHT">
+            <children>
+                <Button fx:id="btnSave" text="Lưu" style="-fx-padding: 8 20;"/>
+                <Button fx:id="btnCancel" text="Hủy" style="-fx-padding: 8 20;"/>
+            </children>
+        </HBox>
+    </children>
+</VBox>

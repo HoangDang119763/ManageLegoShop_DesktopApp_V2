@@ -54,12 +54,12 @@
                         <VBox prefWidth="380.0" spacing="15.0" HBox.hgrow="SOMETIMES">
                             <children>
                                 <VBox spacing="5.0">
-                                    <Label styleClass="label-s" text="Mã khuyến mãi" textFill="#30bac4"><font><Font name="Arial Bold" size="14.0" /></font></Label>
+                                    <Label styleClass="label-s" text="Mã khuyến mãi*" textFill="#30bac4"><font><Font name="Arial Bold" size="14.0" /></font></Label>
                                     <TextField fx:id="txtDiscountCode" prefHeight="35.0" styleClass="textfield-1" />
                                 </VBox>
 
                                 <VBox spacing="5.0">
-                                    <Label styleClass="label-s" text="Tên chương trình" textFill="#30bac4"><font><Font name="Arial Bold" size="14.0" /></font></Label>
+                                    <Label styleClass="label-s" text="Tên chương trình*" textFill="#30bac4"><font><Font name="Arial Bold" size="14.0" /></font></Label>
                                     <TextField fx:id="txtDiscountName" prefHeight="35.0" styleClass="textfield-1" />
                                 </VBox>
 
@@ -75,11 +75,11 @@
                                     </columnConstraints>
                                     <children>
                                         <VBox spacing="5.0">
-                                            <Label styleClass="label-s" text="Ngày bắt đầu" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                            <Label styleClass="label-s" text="Ngày bắt đầu*" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
                                             <DatePicker fx:id="dpStartDate" prefHeight="35.0" prefWidth="200.0" />
                                         </VBox>
                                         <VBox spacing="5.0" GridPane.columnIndex="1">
-                                            <Label styleClass="label-s" text="Ngày kết thúc" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
+                                            <Label styleClass="label-s" text="Ngày kết thúc*" textFill="#30bac4"><font><Font name="Arial Bold" size="13.0" /></font></Label>
                                             <DatePicker fx:id="dpEndDate" prefHeight="35.0" prefWidth="200.0" />
                                         </VBox>
                                     </children>
@@ -92,7 +92,7 @@
                             <children>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="label-s">
                                     <children>
-                                        <Label styleClass="label-s" text="BẢNG HẠN MỨC CHI TIẾT KM" textFill="#30bac4">
+                                        <Label prefHeight="20.0" prefWidth="245.0" styleClass="label-s" text="BẢNG HẠN MỨC CHI TIẾT KM*" textFill="#30bac4">
                                             <font><Font name="Arial Bold" size="16.0" /></font>
                                         </Label>
                                         <AnchorPane HBox.hgrow="ALWAYS" />

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class ImportDTO {
     private int id;
-    private LocalDateTime createDate;
+    private LocalDateTime createdAt;
     private int employeeId;
     private int supplierId;
     private BigDecimal totalPrice;
@@ -14,10 +14,10 @@ public class ImportDTO {
     public ImportDTO() {
     }
 
-    public ImportDTO(int id, LocalDateTime createDate, int employeeId, int supplierId, BigDecimal totalPrice,
+    public ImportDTO(int id, LocalDateTime createdAt, int employeeId, int supplierId, BigDecimal totalPrice,
             int statusId) {
         this.id = id;
-        this.createDate = createDate;
+        this.createdAt = createdAt;
         this.employeeId = employeeId;
         this.supplierId = supplierId;
         this.totalPrice = totalPrice;
@@ -27,7 +27,7 @@ public class ImportDTO {
     public ImportDTO(ImportDTO other) {
         if (other != null) {
             this.id = other.id;
-            this.createDate = other.createDate;
+            this.createdAt = other.createdAt;
             this.employeeId = other.employeeId;
             this.supplierId = other.supplierId;
             this.totalPrice = other.totalPrice;
@@ -43,12 +43,12 @@ public class ImportDTO {
         this.id = id;
     }
 
-    public LocalDateTime getCreateDate() {
-        return createDate;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public int getEmployeeId() {

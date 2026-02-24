@@ -3,11 +3,11 @@ package DTO;
 import java.math.BigDecimal;
 
 public class TempDetailInvoiceDTO {
-    private int invoiceId;
     private String productId;
     private String name;
     private int quantity;
-    private BigDecimal price;
+    private int stockQuantity;
+    private BigDecimal sellingPrice;
     private BigDecimal totalPrice;
 
     // Constructor không tham số
@@ -15,32 +15,24 @@ public class TempDetailInvoiceDTO {
     }
 
     // Constructor đầy đủ tham số
-    public TempDetailInvoiceDTO(int invoiceId, String productId, String name, int quantity, BigDecimal price, BigDecimal totalPrice) {
-        this.invoiceId = invoiceId;
+    public TempDetailInvoiceDTO(String productId, String name, int quantity, int stockQuantity, BigDecimal sellingPrice,
+            BigDecimal totalPrice) {
         this.productId = productId;
         this.name = name;
         this.quantity = quantity;
-        this.price = price;
+        this.stockQuantity = stockQuantity;
+        this.sellingPrice = sellingPrice;
         this.totalPrice = totalPrice;
     }
 
     // Constructor clone
     public TempDetailInvoiceDTO(TempDetailInvoiceDTO other) {
-        this.invoiceId = other.invoiceId;
         this.productId = other.productId;
         this.name = other.name;
         this.quantity = other.quantity;
-        this.price = other.price;
+        this.stockQuantity = other.stockQuantity;
+        this.sellingPrice = other.sellingPrice;
         this.totalPrice = other.totalPrice;
-    }
-
-    // Getters và Setters
-    public int getInvoiceId() {
-        return invoiceId;
-    }
-
-    public void setInvoiceId(int invoiceId) {
-        this.invoiceId = invoiceId;
     }
 
     public String getProductId() {
@@ -67,12 +59,20 @@ public class TempDetailInvoiceDTO {
         this.quantity = quantity;
     }
 
-    public BigDecimal getPrice() {
-        return price;
+    public int getStockQuantity() {
+        return stockQuantity;
     }
 
-    public void setPrice(BigDecimal price) {
-        this.price = price;
+    public void setStockQuantity(int stockQuantity) {
+        this.stockQuantity = stockQuantity;
+    }
+
+    public BigDecimal getSellingPrice() {
+        return sellingPrice;
+    }
+
+    public void setSellingPrice(BigDecimal sellingPrice) {
+        this.sellingPrice = sellingPrice;
     }
 
     public BigDecimal getTotalPrice() {

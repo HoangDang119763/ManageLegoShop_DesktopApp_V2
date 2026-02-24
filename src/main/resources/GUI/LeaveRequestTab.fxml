@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.LeaveRequestTabController">
+    <padding><Insets bottom="15.0" left="20.0" right="20.0" top="10.0" /></padding>
+    <children>
+        <VBox spacing="12.0" styleClass="white-bg, shadow" VBox.vgrow="ALWAYS">
+            <padding><Insets bottom="15.0" left="15.0" right="30.0" top="15.0" /></padding>
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <FontAwesomeIcon fill="#1f7d84" glyphName="CALENDAR" size="1.8em" />
+                        <Label styleClass="label-header" text="QUẢN LÝ ĐƠN NGHỈ PHÉP" textFill="#1f7d84">
+                            <font><Font name="System Bold" size="20.0" /></font>
+                        </Label>
+                    </children>
+                </HBox>
+                <Line endX="980.0" stroke="#eee" strokeWidth="2.0" />
+
+                <BorderPane prefHeight="500.0" VBox.vgrow="ALWAYS">
+                    <left>
+                        <VBox prefWidth="320.0" spacing="10.0">
+                            <padding><Insets left="10.0" right="10.0" top="10.0" /></padding>
+                            <children>
+                                <Label fx:id="lblEmployeeName" styleClass="label-a" text="Nhân viên:" />
+                                
+                                <Label styleClass="label-a" text="Nội dung:" />
+                                <TextArea fx:id="txtContent" prefRowCount="3" wrapText="true" />
+                                
+                                <Label styleClass="label-a" text="Ngày bắt đầu:" />
+                                <DatePicker fx:id="dpStartDate" prefHeight="32.0" />
+                                
+                                <Label styleClass="label-a" text="Ngày kết thúc:" />
+                                <DatePicker fx:id="dpEndDate" prefHeight="32.0" />
+                                
+                                <Label styleClass="label-a" text="Loại nghỉ:" />
+                                <ComboBox fx:id="cbLeaveType" prefHeight="32.0" />
+                                
+                                <Separator />
+                                <HBox spacing="5.0">
+                                    <children>
+                                        <Button fx:id="btnCreate" prefHeight="34.0" prefWidth="80.0" styleClass="action-btn" text="Tạo mới">
+                                            <graphic><FontAwesomeIcon glyphName="PLUS" /></graphic>
+                                        </Button>
+                                        <Button fx:id="btnApprove" prefHeight="34.0" prefWidth="80.0" styleClass="action-btn" text="Duyệt">
+                                            <graphic><FontAwesomeIcon glyphName="CHECK" /></graphic>
+                                        </Button>
+                                        <Button fx:id="btnReject" prefHeight="34.0" prefWidth="80.0" styleClass="action-btn" text="Từ chối">
+                                            <graphic><FontAwesomeIcon glyphName="TIMES" /></graphic>
+                                        </Button>
+                                        <Button fx:id="btnRefresh" prefHeight="34.0" prefWidth="60.0" styleClass="action-btn" text="F5">
+                                            <graphic><FontAwesomeIcon glyphName="REFRESH" /></graphic>
+                                        </Button>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </left>
+                    <center>
+                        <TableView fx:id="tblLeave" BorderPane.alignment="CENTER">
+                            <columns>
+                                <TableColumn fx:id="colId" prefWidth="50.0" text="ID" />
+                                <TableColumn fx:id="colStartDate" prefWidth="100.0" text="Từ ngày" />
+                                <TableColumn fx:id="colEndDate" prefWidth="100.0" text="Đến ngày" />
+                                <TableColumn fx:id="colType" prefWidth="120.0" text="Loại nghỉ" />
+                                <TableColumn fx:id="colStatus" prefWidth="100.0" text="Trạng thái" />
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                        </TableView>
+                    </center>
+                </BorderPane>
+            </children>
+        </VBox>
+    </children>
+</VBox>

@@ -2,11 +2,13 @@ package GUI;
 
 import BUS.*;
 import DTO.DetailInvoiceDTO;
-import DTO.InvoiceDTO;
 import DTO.InvoiceDisplayDTO;
 import DTO.PagedResponse;
-import java.math.BigDecimal;
+import DTO.StatusDTO;
+import java.util.ArrayList;
+
 import ENUM.PermissionKey;
+import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.PrintService;
 import UTILS.NotificationUtils;
@@ -82,6 +84,8 @@ public class InvoiceController implements IController {
     @FXML
     private TextField txtSearch;
     @FXML
+    private ComboBox<StatusDTO> cbStatusFilter;
+    @FXML
     private PaginationController paginationController;
     @FXML
     private StackPane loadingOverlay;
@@ -91,7 +95,9 @@ public class InvoiceController implements IController {
     private InvoiceBUS invoiceBUS;
     private DetailInvoiceBUS detailInvoiceBUS;
     private StatusBUS statusBUS;
+    private StatusDTO statusFilter = null;
     private static final int PAGE_SIZE = 10;
+    private boolean isResetting = false;
 
     @FXML
     public void initialize() {
@@ -106,6 +112,7 @@ public class InvoiceController implements IController {
         Platform.runLater(() -> tblDetailInvoice.getSelectionModel().clearSelection());
 
         hideButtonWithoutPermission();
+        loadComboBox();
         setupListeners();
 
         loadTable();
@@ -118,7 +125,7 @@ public class InvoiceController implements IController {
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_createDate.setCellValueFactory(
-                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreateDate())));
+                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())));
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_customerId.setCellValueFactory(new PropertyValueFactory<>("customerId"));
         tlb_col_totalPrice.setCellValueFactory(
@@ -128,12 +135,19 @@ public class InvoiceController implements IController {
         UiUtils.gI().addTooltipToColumn(tlb_col_createDate, 10);
     }
 
+    private void loadComboBox() {
+        StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
+        cbStatusFilter.getItems().add(allStatus);
+        cbStatusFilter.getItems().addAll(statusBUS.getAllByType(StatusType.INVOICE));
+        cbStatusFilter.getSelectionModel().selectFirst();
+    }
+
     public void loadSubTable(int invoiceId) {
         if (invoiceId <= 0)
             return;
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         this.id.setText(String.valueOf(selectedInvoice.getId()));
-        this.createDate.setText(validationUtils.formatDateTime(selectedInvoice.getCreateDate()));
+        this.createDate.setText(validationUtils.formatDateTime(selectedInvoice.getCreatedAt()));
         this.employeeId.setText(String.valueOf(selectedInvoice.getEmployeeId()));
         this.customerId.setText(String.valueOf(selectedInvoice.getCustomerId()));
         this.discountCode
@@ -152,10 +166,16 @@ public class InvoiceController implements IController {
         tlb_col_costPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getCostPrice())));
 
-        tblDetailInvoice.setItems(
-                FXCollections.observableArrayList(detailInvoiceBUS.getAllDetailInvoiceByInvoiceId(invoiceId)));
-
-        tblDetailInvoice.getSelectionModel().clearSelection();
+        TaskUtil.executeSecure(null, PermissionKey.DISCOUNT_LIST_VIEW,
+                () -> DetailInvoiceBUS.getInstance().getAllDetailInvoiceByInvoiceId(invoiceId),
+                result -> {
+                    ArrayList<DetailInvoiceDTO> detailInvoices = result.getData();
+                    if (!detailInvoices.isEmpty()) {
+                        tblDetailInvoice.setItems(FXCollections.observableArrayList(detailInvoices));
+                        Stage currentStage = (Stage) tblDetailInvoice.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    }
+                });
     }
 
     private SimpleStringProperty formatCell(String value) {
@@ -173,6 +193,7 @@ public class InvoiceController implements IController {
             }
         });
         UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
+        cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
             Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
@@ -195,7 +216,19 @@ public class InvoiceController implements IController {
     }
 
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
+        applyFilters();
+    }
+
+    private void handleStatusFilterChange() {
+        statusFilter = cbStatusFilter.getValue();
         applyFilters();
     }
 
@@ -207,9 +240,10 @@ public class InvoiceController implements IController {
 
     private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
+        int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
         StackPane overlay = showOverlay ? loadingOverlay : null;
         TaskUtil.executeSecure(overlay, PermissionKey.INVOICE_LIST_VIEW,
-                () -> invoiceBUS.filterInvoicesPagedForManage(keyword, pageIndex, PAGE_SIZE),
+                () -> invoiceBUS.filterInvoicesPagedForManage(keyword, statusId, pageIndex, PAGE_SIZE),
                 result -> {
                     // Lấy dữ liệu InvoiceDisplayDTO đã được JOIN
                     PagedResponse<InvoiceDisplayDTO> res = result.getPagedData();
@@ -236,9 +270,17 @@ public class InvoiceController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         txtSearch.clear();
+        cbStatusFilter.getSelectionModel().selectFirst();
+        keyword = "";
+        statusFilter = null;
         clearSubTable();
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override

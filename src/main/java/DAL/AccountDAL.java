@@ -143,16 +143,18 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
      * @param accountId      Employee ID
      * @param requireRelogin true to force re-login on next action
      */
-    public void setRequireRelogin(int accountId, boolean requireRelogin) {
+    public boolean setRequireRelogin(int accountId, boolean requireRelogin) {
         String query = "UPDATE account SET require_relogin = ? WHERE id = ? LIMIT 1";
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setBoolean(1, requireRelogin);
             statement.setInt(2, accountId);
-            statement.executeUpdate();
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
         } catch (SQLException e) {
             System.err.println("Error setting require_relogin: " + e.getMessage());
         }
+        return false;
     }
 
     public boolean setRequireReloginByRoleId(int roleId, boolean value) {
@@ -174,6 +176,90 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
 
         } catch (SQLException e) {
             System.err.println("Error in Batch Update require_relogin: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean insertWithConn(Connection conn, AccountDTO obj) throws SQLException {
+        String sql = "INSERT INTO account (username, password, status_id) VALUES (?, ?, ?)";
+
+        // Sử dụng Statement.RETURN_GENERATED_KEYS để lấy ID sau khi chèn
+        try (PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            // 1. Gán các tham số (Dùng lại hàm setInsertParameters đã có ở trên)
+            statement.setString(1, obj.getUsername());
+            statement.setString(2, obj.getPassword());
+            statement.setInt(3, obj.getStatusId());
+            // 2. Thực thi
+            int affectedRows = statement.executeUpdate();
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                setGeneratedKey(obj, generatedKeys);
+            }
+            return affectedRows > 0;
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái tài khoản
+     * Update: status_id trong account table
+     * ⚠️ Caller PHẢI kiểm tra quyền EMPLOYEE_ACCOUNT_UPDATE_STATUS trước khi gọi
+     */
+    public boolean updateAccountStatus(int accountId, int statusId) {
+        String query = "UPDATE account SET status_id = ? WHERE id = ? LIMIT 1";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, statusId);
+            statement.setInt(2, accountId);
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating account status: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean updateAccountSecurity(Connection conn, int accountId, boolean relogin, Integer statusId)
+            throws SQLException {
+        // Tự động xây dựng câu SQL tùy theo việc có update status hay không
+        StringBuilder sql = new StringBuilder("UPDATE account SET require_relogin = ?");
+        if (statusId != null)
+            sql.append(", status_id = ?");
+        sql.append(" WHERE id = ?");
+
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setBoolean(idx++, relogin);
+            if (statusId != null)
+                ps.setInt(idx++, statusId);
+            ps.setInt(idx++, accountId);
+
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Reset mật khẩu tài khoản
+     * Update: password ONLY (KHÔNG set require_relogin - để caller gọi
+     * forceLogoutAndSecurityUpdate riêng)
+     * ⚠️ Caller PHẢI gọi forceLogoutAndSecurityUpdate() sau để set require_relogin
+     * 
+     * @param username       Username của account
+     * @param hashedPassword Mật khẩu đã hash
+     * @return true nếu thành công, false nếu thất bại
+     */
+    public boolean resetPassword(String username, String hashedPassword) {
+        String query = "UPDATE account SET password = ? WHERE username = ? LIMIT 1";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, hashedPassword);
+            statement.setString(2, username);
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error resetting password: " + e.getMessage());
             return false;
         }
     }

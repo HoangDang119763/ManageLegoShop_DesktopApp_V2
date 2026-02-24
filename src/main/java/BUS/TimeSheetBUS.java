@@ -73,4 +73,11 @@ public class TimeSheetBUS extends BaseBUS<TimeSheetDTO, Integer> {
         }
         return true;
     }
+
+    public boolean isEmployeeInAnyTimeSheet(int employeeId) {
+        if (employeeId <= 0)
+            return false;
+        return TimeSheetDAL.getInstance().existsByEmployeeId(employeeId);
+    }
+
 }

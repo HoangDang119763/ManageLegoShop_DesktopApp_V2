@@ -7,12 +7,12 @@ import BUS.DepartmentBUS;
 import BUS.RoleBUS;
 import BUS.StatusBUS;
 import DTO.EmployeeDTO;
-import DTO.EmployeePersonalInfoDTO;
 import DTO.EmployeeAccountInfoDTO;
+import DTO.EmployeeJobHistoryBundle;
 import DTO.EmployeeJobInfoDTO;
 import DTO.EmployeePayrollInfoDTO;
 import DTO.EmployeePersonalInfoBundle;
-import DTO.EmployeeJobHistoryBundle;
+import DTO.EmployeePersonalInfoDTO;
 import DTO.EmploymentHistoryDetailBasicDTO;
 import DTO.PagedResponse;
 import UTILS.AppMessages;
@@ -23,10 +23,15 @@ import SERVICE.SessionManagerService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.net.URL;
 
 /**
  * Controller quản lý màn hình thông tin nhân viên (Employee Info)
@@ -36,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class EmployeeInfoController {
-
     // ==================== TAB PANE ====================
     @FXML
     private TabPane tabPaneInfo; // Tab pane chính
@@ -83,11 +87,9 @@ public class EmployeeInfoController {
     private TextField lblNumDependents; // Tên tài khoản --- IGNORE ---
     // Benefits Section
     @FXML
-    private CheckBox cbHealthIns; // Bảo hiểm y tế
+    private TextField txtSocialInsCode; // Mã BHXH
     @FXML
-    private CheckBox cbSocialIns; // Bảo hiểm xã hội
-    @FXML
-    private CheckBox cbUnemploymentIns; // Bảo hiểm thất nghiệp
+    private TextField txtUnemploymentInsCode; // Mã BHTN
     @FXML
     private CheckBox cbIncomeTax; // Thuế TN cá nhân
     @FXML
@@ -119,9 +121,23 @@ public class EmployeeInfoController {
     @FXML
     private VBox vboxPersonalInfo; // Container thông tin cá nhân
     @FXML
+    private ImageView imgAvatar; // Ảnh đại diện nhân viên
+    @FXML
     private Label lblLastLogin;
     @FXML
     private StackPane loadingOverlay;
+
+    // ==================== TAB CONTROLLERS ====================
+    @FXML
+    private AllowanceTabController allowanceTabController;
+    @FXML
+    private DeductionTabController deductionTabController;
+    @FXML
+    private PayrollTabController payrollTabController;
+    @FXML
+    private LeaveRequestTabController leaveRequestTabController;
+    @FXML
+    private AttendanceTabController attendanceTabController;
 
     // ==================== LƯƠNG & CÔNG TÁC TAB (Salary & Work History)
     // ====================
@@ -137,7 +153,6 @@ public class EmployeeInfoController {
     private TableColumn<EmploymentHistoryDetailBasicDTO, String> colCreatedAt; // Cột ngày tạo
     @FXML
     private PaginationController historyPaginationController;
-    // ==================== BUS INSTANCES ====================
     // Gán một lần trong initialize() để tránh gọi getInstance() nhiều lần
     private EmployeeBUS employeeBUS;
     private AccountBUS accountBUS;
@@ -159,11 +174,18 @@ public class EmployeeInfoController {
         statusBUS = StatusBUS.getInstance();
         sessionManagerService = SessionManagerService.getInstance();
 
+        // Set avatar ImageView properties
+        imgAvatar.setPreserveRatio(false);
+
         setupListeners();
         setupTabLoadingListeners();
 
-        // Load data cho tab 1 (Hồ sơ nhân viên) ngay lập tức
-        loadTabPersonalInfo();
+        if (sessionManagerService.employeeRoleId() == 1) {
+            hideInfo();
+            loadTabAccountSecurity();
+        } else {
+            loadTabPersonalInfo();
+        }
     }
 
     /**
@@ -209,7 +231,7 @@ public class EmployeeInfoController {
 
                     // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
                     if (jobInfo.getRoleId() != null && jobInfo.getRoleId() == 1) {
-                        hidePersonalInfo();
+                        hideInfo();
                         return;
                     }
                     displayPersonalInfo(personalInfo, jobInfo, payrollInfo);
@@ -295,15 +317,14 @@ public class EmployeeInfoController {
         btnChangePassword.setOnAction(e -> handleChangePassword());
         btnClear.setOnAction(e -> handleClear());
         btnUpdateInfo.setOnAction(e -> handleUpdateInfo());
-        setupHistoryPagination();
     }
 
     /**
      * Ẩn thông tin nhân viên khỏi UI
      */
-    private void hidePersonalInfo() {
-        vboxPersonalInfo.setVisible(false);
-        vboxPersonalInfo.setManaged(false);
+    private void hideInfo() {
+        tabPaneInfo.getTabs().remove(tabPersonalInfo);
+        tabPaneInfo.getTabs().remove(tabJobHistory);
     }
 
     // Tab 1: Hiển thị thông tin nhân viên
@@ -328,11 +349,14 @@ public class EmployeeInfoController {
         lblPhone.setText(personalInfo.getPhone() != null ? personalInfo.getPhone() : "");
         lblEmail.setText(personalInfo.getEmail() != null ? personalInfo.getEmail() : "");
 
-        // Benefits (CheckBoxes)
+        // Avatar
+        loadEmployeeAvatar(personalInfo.getAvatarUrl());
+
+        // Benefits (TextFields & CheckBoxes)
         if (payrollInfo != null) {
-            cbHealthIns.setSelected(payrollInfo.isHealthInsurance());
-            cbSocialIns.setSelected(payrollInfo.isSocialInsurance());
-            cbUnemploymentIns.setSelected(payrollInfo.isUnemploymentInsurance());
+            txtSocialInsCode.setText(payrollInfo.getSocialInsCode() != null ? payrollInfo.getSocialInsCode() : "");
+            txtUnemploymentInsCode
+                    .setText(payrollInfo.getUnemploymentInsCode() != null ? payrollInfo.getUnemploymentInsCode() : "");
             cbIncomeTax.setSelected(payrollInfo.isPersonalIncomeTax());
             cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
             cbAccommSupport.setSelected(payrollInfo.isAccommodationSupport());
@@ -362,8 +386,7 @@ public class EmployeeInfoController {
                 ? String.valueOf(payrollInfo.getNumDependents())
                 : "0");
 
-        // Load table lịch sử (Hàm bạn đã viết sẵn)
-        loadHistoryData(0);
+        setupHistoryPagination();
     }
 
     private void displayAccountSecurityInfo(EmployeeAccountInfoDTO accountInfo) {
@@ -409,8 +432,7 @@ public class EmployeeInfoController {
 
                 // 2. Xử lý khi thành công (Chạy trên UI Thread)
                 result -> {
-                    // Reload Tab 1 data after update
-                    loadTabPersonalInfo();
+                    loadTabPersonalInfo(); // Reload personal info tab
                     Stage stage = (Stage) btnUpdateInfo.getScene().getWindow();
                     NotificationUtils.showToast(
                             stage,
@@ -623,4 +645,36 @@ public class EmployeeInfoController {
                     historyPaginationController.setPageCount(pageCount > 0 ? pageCount : 1);
                 });
     }
+
+    // ==================== 🖼️ AVATAR LOADER ====================
+    /**
+     * Load và hiển thị ảnh đại diện của nhân viên
+     * Tham khảo logic từ ProductModalController
+     */
+    private void loadEmployeeAvatar(String avatarUrl) {
+        File imageFile = null;
+        Image image = null;
+
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            imageFile = new File(avatarUrl);
+        }
+
+        if (imageFile != null && imageFile.exists()) {
+            image = new Image(imageFile.toURI().toString());
+        } else {
+            URL resource = getClass().getResource("/images/default/default.png");
+            if (resource != null) {
+                image = new Image(resource.toExternalForm());
+            } else {
+                System.err.println("Resource not found: /images/default/default.png");
+            }
+        }
+
+        if (image != null && imgAvatar != null) {
+            imgAvatar.setImage(image);
+            // Force fill ImageView bằng cách reload properties
+            imgAvatar.setPreserveRatio(false);
+        }
+    }
+
 }
