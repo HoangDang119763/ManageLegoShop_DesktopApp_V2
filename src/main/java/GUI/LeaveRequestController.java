@@ -1,22 +1,23 @@
 package GUI;
 
 import BUS.LeaveRequestBUS;
-import BUS.LeaveTypeBUS;
 import DTO.LeaveRequestDTO;
-import DTO.LeaveTypeDTO;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
-import UTILS.UiUtils;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class LeaveRequestController {
-    @FXML private TableView<LeaveRequestDTO> tblLeave;
-    @FXML private TableColumn<LeaveRequestDTO, Integer> colId;
-    @FXML private TableColumn<LeaveRequestDTO, String> colStartDate, colEndDate, colType, colStatus;
-    @FXML private Button btnCreate, btnApprove, btnReject;
+    @FXML
+    private TableView<LeaveRequestDTO> tblLeave;
+    @FXML
+    private TableColumn<LeaveRequestDTO, Integer> colId;
+    @FXML
+    private TableColumn<LeaveRequestDTO, String> colStartDate, colEndDate, colType, colStatus;
+    @FXML
+    private Button btnCreate, btnApprove, btnReject;
 
     private LeaveRequestBUS leaveBUS = LeaveRequestBUS.getInstance();
     private SessionManagerService session = SessionManagerService.getInstance();
@@ -25,7 +26,7 @@ public class LeaveRequestController {
     public void initialize() {
         setupTable();
         loadData();
-        
+
         // Phân quyền: Chỉ Admin mới thấy nút Duyệt/Từ chối
         boolean isAdmin = session.employeeRoleId() == 1; // Giả định Role 1 là Admin
         btnApprove.setVisible(isAdmin);
@@ -44,8 +45,7 @@ public class LeaveRequestController {
         // Nếu là nhân viên thường, chỉ lấy đơn của chính mình
         if (session.employeeRoleId() != 1) {
             tblLeave.setItems(FXCollections.observableArrayList(
-                leaveBUS.getByEmployeeId(session.employeeLoginId())
-            ));
+                    leaveBUS.getByEmployeeId(session.employeeLoginId())));
         } else {
             tblLeave.setItems(FXCollections.observableArrayList(leaveBUS.getAll()));
         }

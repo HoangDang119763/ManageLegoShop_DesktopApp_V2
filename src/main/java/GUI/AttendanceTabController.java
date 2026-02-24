@@ -8,10 +8,8 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import UTILS.NotificationUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -92,11 +90,11 @@ public class AttendanceTabController {
 
     private void loadAttendance() {
         ArrayList<TimeSheetDTO> timesheets = timeSheetBUS.getByEmployeeId(currentEmployeeId);
-        
+
         // Filter by selected month
         YearMonth selectedMonth = cbMonth.getValue();
         ArrayList<TimeSheetDTO> filtered = new ArrayList<>();
-        
+
         for (TimeSheetDTO sheet : timesheets) {
             if (sheet.getCheckIn() != null) {
                 YearMonth sheetMonth = YearMonth.from(sheet.getCheckIn().toLocalDate());
@@ -107,11 +105,11 @@ public class AttendanceTabController {
         }
 
         tblAttendance.setItems(FXCollections.observableArrayList(filtered));
-        
+
         // Calculate statistics
         BigDecimal totalHours = BigDecimal.ZERO;
         BigDecimal totalOTHours = BigDecimal.ZERO;
-        
+
         for (TimeSheetDTO sheet : filtered) {
             if (sheet.getWorkHours() != null) {
                 totalHours = totalHours.add(sheet.getWorkHours());

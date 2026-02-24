@@ -50,15 +50,6 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
         return obj.getId();
     }
 
-    public boolean delete(Integer id, int employee_roleId, ServiceAccessCode codeAccess, int employeeLoginId) {
-        if (codeAccess != ServiceAccessCode.INVOICE_DETAILINVOICE_SERVICE || id == null || id <= 0)
-            return false;
-        if (!InvoiceDAL.getInstance().delete(id)) {
-            return false;
-        }
-        return true;
-    }
-
     private boolean isValidateInvoiceInput(InvoiceDTO obj) {
         if (obj.getEmployeeId() <= 0 || obj.getCustomerId() <= 0)
             return false;

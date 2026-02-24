@@ -3,9 +3,7 @@ package GUI;
 import java.util.ArrayList;
 
 import BUS.CustomerBUS;
-import DTO.CustomerDTO;
 import DTO.CustomerForInvoiceDTO;
-import DTO.SupplierForImportDTO;
 import ENUM.PermissionKey;
 import INTERFACE.IModalController;
 import SERVICE.SessionManagerService;

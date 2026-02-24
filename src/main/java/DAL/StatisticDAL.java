@@ -3,12 +3,10 @@ package DAL;
 import DTO.StatisticDTO;
 import INTERFACE.ConnectionFactory;
 
-import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDate;
 
 public class StatisticDAL {
     public static final StatisticDAL INSTANCE = new StatisticDAL();
@@ -27,23 +25,23 @@ public class StatisticDAL {
         final String query = """
                     SELECT
                          e.id AS employee_id,
-                         COALESCE(SUM(CASE WHEN QUARTER(i.create_date) = 1 THEN i.total_price - i.discount_amount ELSE 0 END), 0) AS quarter1,
-                         COALESCE(SUM(CASE WHEN QUARTER(i.create_date) = 2 THEN i.total_price - i.discount_amount ELSE 0 END), 0) AS quarter2,
-                         COALESCE(SUM(CASE WHEN QUARTER(i.create_date) = 3 THEN i.total_price - i.discount_amount ELSE 0 END), 0) AS quarter3,
-                         COALESCE(SUM(CASE WHEN QUARTER(i.create_date) = 4 THEN i.total_price - i.discount_amount ELSE 0 END), 0) AS quarter4
+                         COALESCE(SUM(CASE WHEN QUARTER(i.created_at) = 1 THEN i.total_price - i.discount_amount ELSE 0 END), 0) AS quarter1,
+                         COALESCE(SUM(CASE WHEN QUARTER(i.created_at) = 2 THEN i.total_price - i.discount_amount ELSE 0 END), 0) AS quarter2,
+                         COALESCE(SUM(CASE WHEN QUARTER(i.created_at) = 3 THEN i.total_price - i.discount_amount ELSE 0 END), 0) AS quarter3,
+                         COALESCE(SUM(CASE WHEN QUARTER(i.created_at) = 4 THEN i.total_price - i.discount_amount ELSE 0 END), 0) AS quarter4
                      FROM
                          employee e
                      LEFT JOIN
-                         invoice i ON e.id = i.employee_id AND YEAR(i.create_date) = ?
+                         invoice i ON e.id = i.employee_id AND YEAR(i.created_at) = ?
                      GROUP BY
-                         e.id;     
+                         e.id;
                 """;
 
         List<StatisticDTO.QuarterlyEmployeeRevenue> list = new ArrayList<>();
 
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-//            System.out.println("Connected to database: " + connection.getCatalog());
+                PreparedStatement statement = connection.prepareStatement(query)) {
+            // System.out.println("Connected to database: " + connection.getCatalog());
             statement.setInt(1, year);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -53,8 +51,7 @@ public class StatisticDAL {
                             resultSet.getBigDecimal("quarter1"),
                             resultSet.getBigDecimal("quarter2"),
                             resultSet.getBigDecimal("quarter3"),
-                            resultSet.getBigDecimal("quarter4")
-                    ));
+                            resultSet.getBigDecimal("quarter4")));
                 }
             }
         } catch (SQLException e) {
@@ -77,7 +74,7 @@ public class StatisticDAL {
                    LEFT JOIN
                        detail_invoice di ON di.product_id = p.id
                    LEFT JOIN
-                       invoice i ON di.invoice_id = i.id AND i.create_date >= ? AND i.create_date < DATE_ADD(?, INTERVAL 1 DAY)
+                       invoice i ON di.invoice_id = i.id AND i.created_at >= ? AND i.created_at < DATE_ADD(?, INTERVAL 1 DAY)
                    GROUP BY
                        p.id, p.name, c.name
                    ORDER BY
@@ -86,7 +83,7 @@ public class StatisticDAL {
 
         List<StatisticDTO.ProductRevenue> list = new ArrayList<>();
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setDate(1, java.sql.Date.valueOf(start));
             statement.setDate(2, java.sql.Date.valueOf(end));
@@ -97,8 +94,7 @@ public class StatisticDAL {
                             resultSet.getString("id"),
                             resultSet.getString("product_name"),
                             resultSet.getString("category_name"),
-                            resultSet.getInt("total_quantity")
-                    ));
+                            resultSet.getInt("total_quantity")));
                 }
             }
         } catch (SQLException e) {

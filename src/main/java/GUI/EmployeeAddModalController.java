@@ -82,12 +82,6 @@ public class EmployeeAddModalController implements IModalController {
 
     // ==================== INSURANCE & BENEFITS ====================
     @FXML
-    private CheckBox cbSocialIns;
-    @FXML
-    private CheckBox cbHealthIns;
-    @FXML
-    private CheckBox cbUnemploymentIns;
-    @FXML
     private CheckBox cbPersonalTax;
     @FXML
     private CheckBox cbTransportSupport;
@@ -97,6 +91,10 @@ public class EmployeeAddModalController implements IModalController {
     private TextField txtNumDependents;
     @FXML
     private TextField txtHealthInsCode;
+    @FXML
+    private TextField txtSocialInsCode;
+    @FXML
+    private TextField txtUnemploymentInsCode;
 
     // ==================== AVATAR & IMAGE ====================
     @FXML
@@ -126,8 +124,7 @@ public class EmployeeAddModalController implements IModalController {
     @Getter
     private String resultMessage = "";
 
-    private ValidationUtils validator = ValidationUtils.getInstance();
-    private EmployeeDTO newEmployee;
+    private final ValidationUtils validator = ValidationUtils.getInstance();
 
     @FXML
     public void initialize() {
@@ -138,7 +135,6 @@ public class EmployeeAddModalController implements IModalController {
         loadComboBoxData();
         generateEmployeeId();
         setupInitialValues();
-        UiUtils.gI().setReadOnlyItem(cbHealthIns);
     }
 
     private void setupListeners() {
@@ -150,21 +146,7 @@ public class EmployeeAddModalController implements IModalController {
         cbRole.setOnAction(e -> updateSalaryInfo());
 
         // Cảnh báo khi chọn phòng ban bị vô hiệu hóa
-        attachDepartmentWarning(-1);
-
-        // Auto-tick Social Insurance khi Health Insurance Code có giá trị hợp lệ
-        txtHealthInsCode.textProperty().addListener((observable, oldValue, newValue) -> {
-            cbHealthIns.setSelected(!newValue.trim().isEmpty());
-        });
-
-        // Alternative: Trigger khi nhập text (real-time)
-        txtHealthInsCode.textProperty().addListener((obs, oldVal, newVal) -> {
-            String trimmed = newVal != null ? newVal.trim() : "";
-            // Auto-tick nếu có giá trị hợp lệ
-            if (!trimmed.isEmpty() && trimmed.length() <= 15) {
-                cbSocialIns.setSelected(true);
-            }
-        });
+        attachDepartmentWarning();
 
         // Avatar button listeners
         choseImg.setOnAction(e -> handleChooseAvatar());
@@ -183,7 +165,7 @@ public class EmployeeAddModalController implements IModalController {
 
         // Load Roles
         ArrayList<RoleDTO> roles = RoleBUS.getInstance().getAll();
-        if (SessionManagerService.getInstance().getRoleId() != 1)
+        if (SessionManagerService.getInstance().employeeRoleId() != 1)
             roles.removeIf(role -> role.getId() == 1); // Nếu không phải admin thì không cho chọn role admin
         cbRole.setItems(FXCollections.observableArrayList(roles));
         cbRole.getSelectionModel().selectFirst();
@@ -227,7 +209,7 @@ public class EmployeeAddModalController implements IModalController {
      * Cảnh báo thông minh khi chọn phòng ban bị vô hiệu hóa
      * (Tương tự attachCategoryWarning trong ProductModalController)
      */
-    private void attachDepartmentWarning(Integer initialDeptStatusId) {
+    private void attachDepartmentWarning() {
         int inactiveDeptId = StatusBUS.getInstance()
                 .getByTypeAndStatusName(StatusType.DEPARTMENT, Status.Department.INACTIVE).getId();
         UiUtils.gI().addSmartInactiveWarningListener(
@@ -235,7 +217,7 @@ public class EmployeeAddModalController implements IModalController {
                 DepartmentDTO::getId,
                 DepartmentDTO::getStatusId,
                 inactiveDeptId,
-                initialDeptStatusId,
+                -1,
                 AppMessages.DEPARTMENT_DELETED_WARNING);
     }
 
@@ -250,17 +232,6 @@ public class EmployeeAddModalController implements IModalController {
         // Lấy ID tiếp theo từ BUS
         int nextId = EmployeeBUS.getInstance().nextId();
         txtEmployeeId.setText(String.valueOf(nextId));
-    }
-
-    private void updateUsername() {
-        String firstName = txtFirstName.getText().trim();
-        String lastName = txtLastName.getText().trim();
-
-        if (!firstName.isEmpty() && !lastName.isEmpty()) {
-            // Username: firstname.lastname
-            String username = firstName.toLowerCase() + "." + lastName.toLowerCase();
-            txtUsername.setText(username.replaceAll("\\s+", ""));
-        }
     }
 
     private void updateSalaryInfo() {
@@ -292,9 +263,9 @@ public class EmployeeAddModalController implements IModalController {
         Integer deptId = cbDepartment.getValue() != null ? cbDepartment.getValue().getId() : null;
         int statusId = cbStatus.getValue().getId();
 
-        // Các trường bảo hiểm từ CheckBox
-        boolean isSocial = cbSocialIns.isSelected();
-        boolean isUnemployment = cbUnemploymentIns.isSelected();
+        // Các trường bảo hiểm từ TextFields và CheckBoxes
+        String socialCode = txtSocialInsCode.getText().trim();
+        String unemploymentCode = txtUnemploymentInsCode.getText().trim();
         boolean isPIT = cbPersonalTax.isSelected();
         boolean isTransport = cbTransportSupport.isSelected();
         boolean isAccommodation = cbAccommodationSupport.isSelected();
@@ -323,16 +294,16 @@ public class EmployeeAddModalController implements IModalController {
                 deptId, // department_id
                 statusId, // status_id
                 gender, // gender
-                null, // account_id (Sẽ được gán sau khi tạo Account thành công)
-                healthCode, // health_ins_code
-                isSocial, // is_social_insurance
-                isUnemployment, // is_unemployment_insurance
-                isPIT, // is_personal_income_tax
-                isTransport, // is_transportation_support
-                isAccommodation, // is_accommodation_support
+                null, // account_id
+                finalAvatarUrl, // avatar_url (Vị trí mới trong constructor)
+                healthCode, // health_ins_code (String)
+                socialCode, // social_insurance_code (String)
+                unemploymentCode, // unemployment_insurance_code (String)
+                isPIT, // is_personal_income_tax (boolean)
+                isTransport, // is_transportation_support (boolean)
+                isAccommodation, // is_accommodation_support (boolean)
                 null, // created_at
-                null, // updated_at
-                finalAvatarUrl // avatar_url
+                null // updated_at
         );
         TaxDTO tempTax = new TaxDTO(-1, -1, Integer.parseInt(txtNumDependents.getText().trim()));
         AccountDTO tempAccount = new AccountDTO(-1, txtUsername.getText().trim(), "",
@@ -436,12 +407,27 @@ public class EmployeeAddModalController implements IModalController {
 
         // 7. Kiểm tra Mã số BHYT (NẾU CÓ NHẬP - Giả sử tối đa 15 ký tự)
         String healthIns = txtHealthInsCode.getText().trim();
-        if (!healthIns.isEmpty() && healthIns.length() > 15) {
+        if (healthIns.length() > 15) {
             NotificationUtils.showErrorAlert("Mã số BHYT không được vượt quá 15 ký tự.", "Thông báo");
             clearAndFocus(txtHealthInsCode);
             return false;
         }
 
+        // 7. Kiểm tra Mã số xã hội (NẾU CÓ NHẬP - Giả sử tối đa 15 ký tự)
+        String socialIns = txtSocialInsCode.getText().trim();
+        if (socialIns.length() > 15) {
+            NotificationUtils.showErrorAlert("Mã số xã hội không được vượt quá 15 ký tự.", "Thông báo");
+            clearAndFocus(txtSocialInsCode);
+            return false;
+        }
+
+        // 7. Kiểm tra Mã số thất nghiệp (NẾU CÓ NHẬP - Giả sử tối đa 15 ký tự)
+        String unemploymentIns = txtUnemploymentInsCode.getText().trim();
+        if (unemploymentIns.length() > 15) {
+            NotificationUtils.showErrorAlert("Mã số thất nghiệp không được vượt quá 15 ký tự.", "Thông báo");
+            clearAndFocus(txtUnemploymentInsCode);
+            return false;
+        }
         // 8. Kiểm tra Username (Bắt buộc)
         String username = txtUsername.getText().trim();
         if (username.isEmpty()) {
@@ -519,33 +505,4 @@ public class EmployeeAddModalController implements IModalController {
         }
     }
 
-    /**
-     * Load và hiển thị ảnh đại diện
-     * (Tham khảo logic từ ProductModalController)
-     */
-    private void loadEmployeeAvatar(String avatarUrlPath) {
-        File imageFile = null;
-        Image image = null;
-
-        if (avatarUrlPath != null && !avatarUrlPath.isEmpty()) {
-            imageFile = new File(avatarUrlPath);
-        }
-
-        if (imageFile != null && imageFile.exists()) {
-            image = new Image(imageFile.toURI().toString());
-        } else {
-            URL resource = getClass().getResource("/images/default/default.png");
-            if (resource != null) {
-                image = new Image(resource.toExternalForm());
-            } else {
-                System.err.println("Resource not found: /images/default/default.png");
-            }
-        }
-
-        if (image != null && imgAvatar != null) {
-            imgAvatar.setImage(image);
-            // Force fill ImageView bằng cách reload properties
-            imgAvatar.setPreserveRatio(false);
-        }
-    }
 }

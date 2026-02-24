@@ -41,9 +41,10 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 resultSet.getInt("status_id"),
                 resultSet.getString("gender"),
                 resultSet.getObject("account_id") != null ? resultSet.getInt("account_id") : null,
+                resultSet.getString("avatar_url"), // avatarUrl nằm ở vị trí này trong constructor đầy đủ
                 resultSet.getString("health_ins_code"),
-                !resultSet.getString("social_insurance_code").equals("0"),
-                !resultSet.getString("unemployment_insurance_code").equals("0"),
+                resultSet.getString("social_insurance_code"), // Lấy trực tiếp String mã số
+                resultSet.getString("unemployment_insurance_code"), // Lấy trực tiếp String mã số
                 resultSet.getBoolean("is_personal_income_tax"),
                 resultSet.getBoolean("is_transportation_support"),
                 resultSet.getBoolean("is_accommodation_support"),
@@ -52,13 +53,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                         : null,
                 resultSet.getTimestamp("updated_at") != null
                         ? resultSet.getTimestamp("updated_at").toLocalDateTime()
-                        : null,
-                resultSet.getString("avatar_url"));
+                        : null);
     }
 
     @Override
     protected String getInsertQuery() {
-        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, health_ins_code, is_social_insurance, is_unemployment_insurance, is_personal_income_tax, is_transportation_support, is_accommodation_support, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, health_ins_code, social_insurance_code, unemployment_insurance_code, is_personal_income_tax, is_transportation_support, is_accommodation_support, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -174,13 +174,13 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     public boolean updatePayrollInfo(Connection conn, EmployeeDTO obj) throws SQLException {
-        String sql = "UPDATE employee SET health_ins_code = ?, is_social_insurance = ?, " +
-                "is_unemployment_insurance = ?, is_personal_income_tax = ?, " +
+        String sql = "UPDATE employee SET health_ins_code = ?, social_insurance_code = ?, " +
+                "unemployment_insurance_code = ?, is_personal_income_tax = ?, " +
                 "is_transportation_support = ?, is_accommodation_support = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, obj.getHealthInsCode());
-            ps.setBoolean(2, obj.isSocialInsurance());
-            ps.setBoolean(3, obj.isUnemploymentInsurance());
+            ps.setString(2, obj.getSocialInsCode());
+            ps.setString(3, obj.getUnemploymentInsCode());
             ps.setBoolean(4, obj.isPersonalIncomeTax());
             ps.setBoolean(5, obj.isTransportationSupport());
             ps.setBoolean(6, obj.isAccommodationSupport());
@@ -384,8 +384,8 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                     .numDependents(rs.getObject("num_dependents") != null ? rs.getInt("num_dependents") : null)
 
                     // Insurance & Support flags
-                    .isSocialInsurance(rs.getBoolean("social_insurance_code"))
-                    .isUnemploymentInsurance(rs.getBoolean("unemployment_insurance_code"))
+                    .socialInsCode(rs.getString("social_insurance_code"))
+                    .unemploymentInsCode(rs.getString("unemployment_insurance_code"))
                     .isPersonalIncomeTax(rs.getBoolean("is_personal_income_tax"))
                     .isTransportationSupport(rs.getBoolean("is_transportation_support"))
                     .isAccommodationSupport(rs.getBoolean("is_accommodation_support"))
@@ -742,8 +742,9 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * @return EmployeePayrollInfoDTO hoặc null nếu không tìm thấy
      */
     public EmployeePayrollInfoDTO getPayrollInfo(int employeeId) {
-        String sql = "SELECT e.id, e.health_ins_code, tax.id AS tax_id, tax.num_dependents, " +
-                "e.is_social_insurance, e.is_unemployment_insurance, e.is_personal_income_tax, " +
+        String sql = "SELECT e.id, e.health_ins_code, e.social_insurance_code, e.unemployment_insurance_code, " +
+                "tax.id AS tax_id, tax.num_dependents, " +
+                "e.is_personal_income_tax, " +
                 "e.is_transportation_support, e.is_accommodation_support, e.created_at, e.updated_at " +
                 "FROM employee e " +
                 "LEFT JOIN tax ON tax.employee_id = e.id " +
@@ -759,12 +760,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                     return EmployeePayrollInfoDTO.builder()
                             .id(resultSet.getInt("id"))
                             .healthInsCode(resultSet.getString("health_ins_code"))
+                            .socialInsCode(resultSet.getString("social_insurance_code"))
+                            .unemploymentInsCode(resultSet.getString("unemployment_insurance_code"))
                             .taxId(resultSet.getObject("tax_id") != null ? resultSet.getInt("tax_id") : null)
                             .numDependents(resultSet.getObject("num_dependents") != null
                                     ? resultSet.getInt("num_dependents")
                                     : null)
-                            .isSocialInsurance(resultSet.getBoolean("is_social_insurance"))
-                            .isUnemploymentInsurance(resultSet.getBoolean("is_unemployment_insurance"))
                             .isPersonalIncomeTax(resultSet.getBoolean("is_personal_income_tax"))
                             .isTransportationSupport(resultSet.getBoolean("is_transportation_support"))
                             .isAccommodationSupport(resultSet.getBoolean("is_accommodation_support"))

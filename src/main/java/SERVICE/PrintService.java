@@ -67,7 +67,7 @@ public class PrintService {
             // Lấy thông tin khách hàng và người lập đơn
             String customerName = customer.getFirstName() + " " + customer.getLastName();
             String employeeName = employee.getFirstName() + " " + employee.getLastName();
-            String invoiceDate = invoice.getCreateDate().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
+            String invoiceDate = invoice.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
 
             Phrase discountPhrase = invoice.getDiscountCode() != null
                     ? new Phrase(invoice.getDiscountCode(), normalFont)

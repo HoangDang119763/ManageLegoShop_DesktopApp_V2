@@ -11,17 +11,11 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 
-/**
- * Controller for Leave Request Modal
- */
-@Slf4j
 public class LeaveRequestModalController {
     private static final Logger log = LoggerFactory.getLogger(LeaveRequestModalController.class);
 
@@ -104,9 +98,8 @@ public class LeaveRequestModalController {
                 taReason.getText() != null ? taReason.getText() : "",
                 dpFromDate.getValue(),
                 dpToDate.getValue(),
-                1,  // Status pending
-                employeeId
-        );
+                1, // Status pending
+                employeeId);
 
         // Save to database
         new Thread(() -> {

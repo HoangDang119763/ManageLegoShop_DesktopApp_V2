@@ -2,7 +2,6 @@ package DTO;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -13,22 +12,21 @@ public class EmployeeDTO extends BaseInformationDTO {
     private String lastName;
     private String email;
     private int roleId;
-    private Integer departmentId; // Phòng ban
+    private Integer departmentId;
     private String gender;
-    private Integer accountId; // Dùng Integer để có thể nhận giá trị null
-    private String healthInsCode; // Mã BHYT
+    private Integer accountId;
+    private String avatarUrl;
+
+    // Định danh bảo hiểm (Lưu String theo DB mới)
+    private String healthInsCode;
     private String socialInsCode;
     private String unemploymentInsCode;
 
-    // Các cờ hiệu bảo hiểm & phụ cấp (tinyint 1 -> boolean)
-    private boolean isSocialInsurance;
-    private boolean isUnemploymentInsurance;
+    // Các cờ hiệu phúc lợi (Dạng boolean khớp với TINYINT 1)
     private boolean isPersonalIncomeTax;
     private boolean isTransportationSupport;
     private boolean isAccommodationSupport;
-    private String avatarUrl; // Đường dẫn ảnh đại diện
 
-    // Thời gian
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -36,78 +34,40 @@ public class EmployeeDTO extends BaseInformationDTO {
         super();
     }
 
-    // Constructor đầy đủ cho việc lấy dữ liệu từ DB
+    // Constructor dùng cho View/List cơ bản
     public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
-            LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
-            String gender, Integer accountId, String healthInsCode,
-            boolean isSocialInsurance, boolean isUnemploymentInsurance,
-            boolean isPersonalIncomeTax, boolean isTransportationSupport,
-            boolean isAccommodationSupport, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        super(id, dateOfBirth, phone, statusId, updatedAt);
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.roleId = roleId;
-        this.departmentId = departmentId;
-        this.gender = gender;
-        this.accountId = accountId;
-        this.healthInsCode = healthInsCode;
-        this.socialInsCode = isSocialInsurance ? "1" : "0";
-        this.unemploymentInsCode = isUnemploymentInsurance ? "1" : "0";
-        this.isPersonalIncomeTax = isPersonalIncomeTax;
-        this.isTransportationSupport = isTransportationSupport;
-        this.isAccommodationSupport = isAccommodationSupport;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    // Constructor đầy đủ với avatarUrl (New)
-    public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
-            LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
-            String gender, Integer accountId, String healthInsCode,
-            boolean isSocialInsurance, boolean isUnemploymentInsurance,
-            boolean isPersonalIncomeTax, boolean isTransportationSupport,
-            boolean isAccommodationSupport, LocalDateTime createdAt, LocalDateTime updatedAt,
-            String avatarUrl) {
-        super(id, dateOfBirth, phone, statusId, updatedAt);
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.roleId = roleId;
-        this.departmentId = departmentId;
-        this.gender = gender;
-        this.accountId = accountId;
-        this.healthInsCode = healthInsCode;
-        this.isSocialInsurance = isSocialInsurance;
-        this.isUnemploymentInsurance = isUnemploymentInsurance;
-        this.isPersonalIncomeTax = isPersonalIncomeTax;
-        this.isTransportationSupport = isTransportationSupport;
-        this.isAccommodationSupport = isAccommodationSupport;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.avatarUrl = avatarUrl;
-    }
-
-    public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
-            LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
-            String gender, Integer accountId, String healthInsCode,
-            boolean isSocialInsurance, boolean isUnemploymentInsurance,
-            boolean isPersonalIncomeTax, boolean isTransportationSupport,
-            boolean isAccommodationSupport) {
+            LocalDate dateOfBirth, int statusId) {
         super(id, dateOfBirth, phone, statusId);
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+    }
+
+    // Constructor đầy đủ nhất để Map dữ liệu từ Database
+    public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
+            LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
+            String gender, Integer accountId, String avatarUrl,
+            String healthInsCode, String socialInsCode, String unemploymentInsCode,
+            boolean isPersonalIncomeTax, boolean isTransportationSupport,
+            boolean isAccommodationSupport, LocalDateTime createdAt, LocalDateTime updatedAt) {
+
+        super(id, dateOfBirth, phone, statusId, updatedAt);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
         this.roleId = roleId;
         this.departmentId = departmentId;
         this.gender = gender;
         this.accountId = accountId;
+        this.avatarUrl = avatarUrl;
         this.healthInsCode = healthInsCode;
-        this.isSocialInsurance = isSocialInsurance;
-        this.isUnemploymentInsurance = isUnemploymentInsurance;
+        this.socialInsCode = socialInsCode;
+        this.unemploymentInsCode = unemploymentInsCode;
         this.isPersonalIncomeTax = isPersonalIncomeTax;
         this.isTransportationSupport = isTransportationSupport;
         this.isAccommodationSupport = isAccommodationSupport;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // Copy Constructor (Clone)
@@ -120,159 +80,41 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.departmentId = other.departmentId;
         this.gender = other.gender;
         this.accountId = other.accountId;
-        this.statusId = other.statusId;
+        this.avatarUrl = other.avatarUrl;
         this.healthInsCode = other.healthInsCode;
-        this.isSocialInsurance = other.isSocialInsurance;
-        this.isUnemploymentInsurance = other.isUnemploymentInsurance;
+        this.socialInsCode = other.socialInsCode;
+        this.unemploymentInsCode = other.unemploymentInsCode;
         this.isPersonalIncomeTax = other.isPersonalIncomeTax;
         this.isTransportationSupport = other.isTransportationSupport;
         this.isAccommodationSupport = other.isAccommodationSupport;
         this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;
-        this.avatarUrl = other.avatarUrl;
-        this.createdAt = other.createdAt;
-        this.updatedAt = other.updatedAt;
     }
+
+    // ==================== HELPER METHODS ====================
 
     public String getFullName() {
         return (this.firstName != null ? this.firstName : "") + " " + (this.lastName != null ? this.lastName : "");
     }
 
+    /**
+     * Kiểm tra có tham gia bảo hiểm hay không (dùng cho UI CheckBox)
+     * Logic: Nếu code khác null và khác "0" thì coi như có tham gia.
+     */
     public boolean isHealthInsurance() {
-        return healthInsCode != null && !healthInsCode.isEmpty();
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public int getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(int roleId) {
-        this.roleId = roleId;
-    }
-
-    public Integer getDepartmentId() {
-        return departmentId;
-    }
-
-    public void setDepartmentId(Integer departmentId) {
-        this.departmentId = departmentId;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public Integer getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Integer accountId) {
-        this.accountId = accountId;
-    }
-
-    public String getHealthInsCode() {
-        return healthInsCode;
-    }
-
-    public void setHealthInsCode(String healthInsCode) {
-        this.healthInsCode = healthInsCode;
-    }
-
-    public String getSocialInsCode() {
-        return socialInsCode;
-    }
-
-    public void setSocialInsCode(String socialInsCode) {
-        this.socialInsCode = socialInsCode;
-    }
-
-    public String getUnemploymentInsCode() {
-        return unemploymentInsCode;
-    }
-
-    public void setUnemploymentInsCode(String unemploymentInsCode) {
-        this.unemploymentInsCode = unemploymentInsCode;
+        return healthInsCode != null && !healthInsCode.trim().isEmpty() && !"0".equals(healthInsCode);
     }
 
     public boolean isSocialInsurance() {
-        return isSocialInsurance;
-    }
-
-    public void setSocialInsurance(boolean socialInsurance) {
-        isSocialInsurance = socialInsurance;
+        return socialInsCode != null && !socialInsCode.trim().isEmpty() && !"0".equals(socialInsCode);
     }
 
     public boolean isUnemploymentInsurance() {
-        return isUnemploymentInsurance;
-    }
-
-    public void setUnemploymentInsurance(boolean unemploymentInsurance) {
-        isUnemploymentInsurance = unemploymentInsurance;
-    }
-
-    public boolean isPersonalIncomeTax() {
-        return isPersonalIncomeTax;
-    }
-
-    public void setPersonalIncomeTax(boolean personalIncomeTax) {
-        isPersonalIncomeTax = personalIncomeTax;
-    }
-
-    public boolean isTransportationSupport() {
-        return isTransportationSupport;
-    }
-
-    public void setTransportationSupport(boolean transportationSupport) {
-        isTransportationSupport = transportationSupport;
-    }
-
-    public boolean isAccommodationSupport() {
-        return isAccommodationSupport;
-    }
-
-    public void setAccommodationSupport(boolean accommodationSupport) {
-        isAccommodationSupport = accommodationSupport;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+        return unemploymentInsCode != null && !unemploymentInsCode.trim().isEmpty() && !"0".equals(unemploymentInsCode);
     }
 
     @Override
     public String toString() {
         return this.getId() + " - " + getFullName();
     }
-
 }

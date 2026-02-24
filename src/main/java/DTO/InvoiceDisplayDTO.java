@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class InvoiceDisplayDTO {
     private int id;
-    private LocalDateTime createDate;
+    private LocalDateTime createdAt;
     private int employeeId;
     private int customerId;
     private String discountCode;
@@ -33,12 +33,12 @@ public class InvoiceDisplayDTO {
         this.id = id;
     }
 
-    public LocalDateTime getCreateDate() {
-        return createDate;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public int getEmployeeId() {

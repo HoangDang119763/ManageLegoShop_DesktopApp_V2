@@ -7,17 +7,12 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/**
- * Controller for Discipline Modal
- */
-@Slf4j
 public class DisciplineModalController {
     private static final Logger log = LoggerFactory.getLogger(DisciplineModalController.class);
 
@@ -64,8 +59,7 @@ public class DisciplineModalController {
                 "Nhắc nhở",
                 "Giáng chức",
                 "Tạm dừng hợp đồng",
-                "Chấm dứt hợp đồng"
-        );
+                "Chấm dứt hợp đồng");
     }
 
     private void saveDiscipline() {

@@ -59,8 +59,8 @@ public class EmployeeDetailDTO {
 
     // Health & Support flags
     private String healthInsCode;
-    private boolean isSocialInsurance;
-    private boolean isUnemploymentInsurance;
+    private String socialInsCode;
+    private String unemploymentInsCode;
     private boolean isPersonalIncomeTax;
     private boolean isTransportationSupport;
     private boolean isAccommodationSupport;
@@ -217,6 +217,38 @@ public class EmployeeDetailDTO {
         this.statusDescription = statusDescription;
     }
 
+    public String getSocialInsCode() {
+        return socialInsCode;
+    }
+
+    public void setSocialInsCode(String socialInsCode) {
+        this.socialInsCode = socialInsCode;
+    }
+
+    public String getUnemploymentInsCode() {
+        return unemploymentInsCode;
+    }
+
+    public void setUnemploymentInsCode(String unemploymentInsCode) {
+        this.unemploymentInsCode = unemploymentInsCode;
+    }
+
+    public boolean isSocialInsurance() {
+        return socialInsCode != null && !socialInsCode.isEmpty() && !"0".equals(socialInsCode);
+    }
+
+    public void setSocialInsurance(boolean socialInsurance) {
+        this.socialInsCode = socialInsurance ? "1" : "0";
+    }
+
+    public boolean isUnemploymentInsurance() {
+        return unemploymentInsCode != null && !unemploymentInsCode.isEmpty() && !"0".equals(unemploymentInsCode);
+    }
+
+    public void setUnemploymentInsurance(boolean unemploymentInsurance) {
+        this.unemploymentInsCode = unemploymentInsurance ? "1" : "0";
+    }
+
     @Override
     public String toString() {
         return "EmployeeDetailDTO{" +
@@ -237,8 +269,8 @@ public class EmployeeDetailDTO {
                 ", statusDescription='" + statusDescription + '\'' +
                 ", numDependents=" + numDependents +
                 ", healthInsCode='" + healthInsCode + '\'' +
-                ", isSocialInsurance=" + isSocialInsurance +
-                ", isUnemploymentInsurance=" + isUnemploymentInsurance +
+                ", socialInsCode='" + socialInsCode + '\'' +
+                ", unemploymentInsCode='" + unemploymentInsCode + '\'' +
                 ", isPersonalIncomeTax=" + isPersonalIncomeTax +
                 ", isTransportationSupport=" + isTransportationSupport +
                 ", isAccommodationSupport=" + isAccommodationSupport +

@@ -23,8 +23,8 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
     protected ImportDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
         return new ImportDTO(
                 resultSet.getInt("id"),
-                resultSet.getTimestamp("create_date") != null
-                        ? resultSet.getTimestamp("create_date").toLocalDateTime()
+                resultSet.getTimestamp("created_at") != null
+                        ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 resultSet.getInt("employee_id"),
                 resultSet.getInt("supplier_id"),
@@ -46,12 +46,12 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(create_date, employee_id, supplier_id, total_price, status_id) VALUES (?, ?, ?, ?, ?)";
+        return "(created_at, employee_id, supplier_id, total_price, status_id) VALUES (?, ?, ?, ?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, ImportDTO obj) throws SQLException {
-        statement.setTimestamp(1, Timestamp.valueOf(obj.getCreateDate()));
+        statement.setTimestamp(1, Timestamp.valueOf(obj.getCreatedAt()));
         statement.setInt(2, obj.getEmployeeId());
         statement.setInt(3, obj.getSupplierId());
         statement.setBigDecimal(4, obj.getTotalPrice());
@@ -66,8 +66,8 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
     private ImportDisplayDTO mapResultSetToImportDisplay(ResultSet rs) throws SQLException {
         return new ImportDisplayDTO(
                 rs.getInt("id"),
-                rs.getTimestamp("create_date") != null
-                        ? rs.getTimestamp("create_date").toLocalDateTime()
+                rs.getTimestamp("created_at") != null
+                        ? rs.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 rs.getInt("employee_id"),
                 rs.getInt("supplier_id"),
@@ -87,7 +87,7 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
 
         // JOIN với status table để lấy statusDescription
         String sql = "SELECT " +
-                "i.id, i.create_date, i.employee_id, i.supplier_id, i.total_price, i.status_id, " +
+                "i.id, i.created_at, i.employee_id, i.supplier_id, i.total_price, i.status_id, " +
                 "s.description as status_description, " +
                 "COUNT(*) OVER() as total_count " +
                 "FROM import i " +
@@ -161,7 +161,7 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
      * Thêm phiếu nhập sử dụng connection được cung cấp (cho transaction)
      */
     public boolean insert(Connection connection, ImportDTO obj) {
-        // SQL: id tự tăng nên không cần chèn, create_date mặc định CURRENT_TIMESTAMP
+        // SQL: id tự tăng nên không cần chèn, created_at mặc định CURRENT_TIMESTAMP
         String sql = "INSERT INTO import (employee_id, supplier_id, total_price, status_id) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {

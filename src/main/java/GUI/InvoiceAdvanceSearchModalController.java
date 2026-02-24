@@ -1,7 +1,6 @@
 
 package GUI;
 
-import BUS.InvoiceBUS;
 import DTO.InvoiceDTO;
 import UTILS.NotificationUtils;
 import javafx.fxml.FXML;
@@ -72,16 +71,19 @@ public class InvoiceAdvanceSearchModalController {
             NotificationUtils.showErrorAlert("Ngày tạo không được lớn hơn ngày kết thúc.", "Thông báo");
             return;
         }
-//        filteredInvoices = InvoiceBUS.getInstance().filterInvoicesAdvance(employeeId, customerId, discountCode,
-//                startCreateDate, endCreateDate, startTotalPrice, endTotalPrice);
-//        int numResult = filteredInvoices.size();
-//        if (numResult != 0) {
-//            NotificationUtils.showErrorAlert("Tìm thấy " + numResult + " kết quả phù hợp.", "Thông báo");
-//            this.isSaved = true;
-//            handleClose();
-//        } else {
-//            NotificationUtils.showErrorAlert("Không tìm thấy kết quả phù hợp.", "Thông báo");
-//        }
+        // filteredInvoices = InvoiceBUS.getInstance().filterInvoicesAdvance(employeeId,
+        // customerId, discountCode,
+        // startCreateDate, endCreateDate, startTotalPrice, endTotalPrice);
+        // int numResult = filteredInvoices.size();
+        // if (numResult != 0) {
+        // NotificationUtils.showErrorAlert("Tìm thấy " + numResult + " kết quả phù
+        // hợp.", "Thông báo");
+        // this.isSaved = true;
+        // handleClose();
+        // } else {
+        // NotificationUtils.showErrorAlert("Không tìm thấy kết quả phù hợp.", "Thông
+        // báo");
+        // }
     }
 
     private void validTotalPrice() {

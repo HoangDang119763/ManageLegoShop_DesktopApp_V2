@@ -1,10 +1,7 @@
 package DTO;
 
-import lombok.ToString;
-
 import java.time.LocalDateTime;
 
-@ToString
 public class RoleDTO {
     private int id;
     private String name;

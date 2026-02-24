@@ -12,7 +12,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-@Slf4j
 public class MainController {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
     @FXML

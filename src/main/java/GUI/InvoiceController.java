@@ -125,7 +125,7 @@ public class InvoiceController implements IController {
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_createDate.setCellValueFactory(
-                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreateDate())));
+                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())));
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_customerId.setCellValueFactory(new PropertyValueFactory<>("customerId"));
         tlb_col_totalPrice.setCellValueFactory(
@@ -147,7 +147,7 @@ public class InvoiceController implements IController {
             return;
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         this.id.setText(String.valueOf(selectedInvoice.getId()));
-        this.createDate.setText(validationUtils.formatDateTime(selectedInvoice.getCreateDate()));
+        this.createDate.setText(validationUtils.formatDateTime(selectedInvoice.getCreatedAt()));
         this.employeeId.setText(String.valueOf(selectedInvoice.getEmployeeId()));
         this.customerId.setText(String.valueOf(selectedInvoice.getCustomerId()));
         this.discountCode

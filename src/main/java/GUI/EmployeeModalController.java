@@ -136,7 +136,9 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colApprover;
     @FXML
-    private TableColumn<EmploymentHistoryDetailDTO, String> colReason1;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colStatus;
+    @FXML
+    private TableColumn<EmploymentHistoryDetailDTO, String> colCreatedAt;
     @FXML
     private Button saveJobBtn;
 
@@ -146,11 +148,9 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TextField txtHealthInsCode;
     @FXML
-    private CheckBox cbSocialIns;
+    private TextField txtSocialInsCode;
     @FXML
-    private CheckBox cbHealthIns;
-    @FXML
-    private CheckBox cbUnemploymentIns;
+    private TextField txtUnemploymentInsCode;
     @FXML
     private CheckBox cbPersonalTax;
     @FXML
@@ -226,7 +226,6 @@ public class EmployeeModalController implements IModalController {
         setupListeners();
         setupHistoryPagination();
         setupTabLoadingListeners();
-        UiUtils.gI().setReadOnlyItem(cbHealthIns);
     }
 
     /**
@@ -343,7 +342,7 @@ public class EmployeeModalController implements IModalController {
 
     private void loadRoleComboBox() {
         ArrayList<RoleDTO> roles = RoleBUS.getInstance().getAll();
-        if (SessionManagerService.getInstance().getRoleId() != 1)
+        if (SessionManagerService.getInstance().employeeRoleId() != 1)
             roles.removeIf(role -> role.getId() == 1);
         cbRole.getItems().addAll(roles);
 
@@ -397,8 +396,13 @@ public class EmployeeModalController implements IModalController {
         colApprover.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getApproverName() != null ? cellData.getValue().getApproverName() : ""));
 
-        colReason1.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getReason() != null ? cellData.getValue().getReason() : ""));
+        colStatus.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getStatusDescription() != null ? cellData.getValue().getStatusDescription() : ""));
+
+        colCreatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getCreatedAt() != null
+                        ? validationUtils.formatDateTime(cellData.getValue().getCreatedAt())
+                        : ""));
     }
 
     private void setupListeners() {
@@ -412,11 +416,6 @@ public class EmployeeModalController implements IModalController {
         // Avatar button listeners
         choseImg.setOnAction(e -> handleChooseAvatar());
         resetImgBtn.setOnAction(e -> handleResetAvatar());
-
-        // Auto-toggle cbHealthIns based on txtHealthInsCode
-        txtHealthInsCode.textProperty().addListener((observable, oldValue, newValue) -> {
-            cbHealthIns.setSelected(!newValue.trim().isEmpty());
-        });
     }
 
     public void setTypeModal(int type) {
@@ -668,10 +667,9 @@ public class EmployeeModalController implements IModalController {
         txtNumDependents
                 .setText(payrollInfo.getNumDependents() != null ? payrollInfo.getNumDependents().toString() : "0");
         txtHealthInsCode.setText(payrollInfo.getHealthInsCode() != null ? payrollInfo.getHealthInsCode() : "");
-
-        cbHealthIns.setSelected(payrollInfo.isHealthInsurance());
-        cbSocialIns.setSelected(payrollInfo.isSocialInsurance());
-        cbUnemploymentIns.setSelected(payrollInfo.isUnemploymentInsurance());
+        txtSocialInsCode.setText(payrollInfo.getSocialInsCode() != null ? payrollInfo.getSocialInsCode() : "");
+        txtUnemploymentInsCode
+                .setText(payrollInfo.getUnemploymentInsCode() != null ? payrollInfo.getUnemploymentInsCode() : "");
         cbPersonalTax.setSelected(payrollInfo.isPersonalIncomeTax());
         cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
         cbAccommodationSupport.setSelected(payrollInfo.isAccommodationSupport());
@@ -683,9 +681,8 @@ public class EmployeeModalController implements IModalController {
         if (!canUpdatePayroll) {
             txtNumDependents.setEditable(false);
             txtHealthInsCode.setEditable(false);
-            cbHealthIns.setDisable(true);
-            cbSocialIns.setDisable(true);
-            cbUnemploymentIns.setDisable(true);
+            txtSocialInsCode.setEditable(false);
+            txtUnemploymentInsCode.setEditable(false);
             cbPersonalTax.setDisable(true);
             cbTransportSupport.setDisable(true);
             cbAccommodationSupport.setDisable(true);
@@ -708,9 +705,9 @@ public class EmployeeModalController implements IModalController {
         UiUtils.gI().setReadOnlyComboBox(cbDepartment);
         UiUtils.gI().setReadOnlyComboBox(cbRole);
         UiUtils.gI().setReadOnlyComboBox(cbStatus);
-        UiUtils.gI().setReadOnlyItem(cbSocialIns);
-        UiUtils.gI().setReadOnlyItem(cbHealthIns);
-        UiUtils.gI().setReadOnlyItem(cbUnemploymentIns);
+        UiUtils.gI().setReadOnlyItem(txtHealthInsCode);
+        UiUtils.gI().setReadOnlyItem(txtSocialInsCode);
+        UiUtils.gI().setReadOnlyItem(txtUnemploymentInsCode);
         UiUtils.gI().setReadOnlyItem(cbPersonalTax);
         UiUtils.gI().setReadOnlyItem(cbTransportSupport);
         UiUtils.gI().setReadOnlyItem(cbAccommodationSupport);
@@ -900,7 +897,8 @@ public class EmployeeModalController implements IModalController {
 
     /**
      * Handle save payroll info (Tab 4)
-     * Cập nhật: healthInsCode, insurance flags (social, unemployment, tax,
+     * Cập nhật: healthInsCode, socialInsCode, unemploymentInsCode, insurance flags
+     * (tax,
      * transport, accommodation)
      */
     private void handleSavePayroll() {
@@ -913,8 +911,8 @@ public class EmployeeModalController implements IModalController {
         EmployeeDTO payrollInfo = new EmployeeDTO();
         payrollInfo.setId(currentEmployeeId);
         payrollInfo.setHealthInsCode(txtHealthInsCode.getText().trim());
-        payrollInfo.setSocialInsurance(cbSocialIns.isSelected());
-        payrollInfo.setUnemploymentInsurance(cbUnemploymentIns.isSelected());
+        payrollInfo.setSocialInsCode(txtSocialInsCode.getText().trim());
+        payrollInfo.setUnemploymentInsCode(txtUnemploymentInsCode.getText().trim());
         payrollInfo.setPersonalIncomeTax(cbPersonalTax.isSelected());
         payrollInfo.setTransportationSupport(cbTransportSupport.isSelected());
         payrollInfo.setAccommodationSupport(cbAccommodationSupport.isSelected());

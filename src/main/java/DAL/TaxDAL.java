@@ -1,6 +1,5 @@
 package DAL;
 
-import DTO.AccountDTO;
 import DTO.TaxDTO;
 import java.sql.*;
 

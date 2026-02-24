@@ -1,8 +1,5 @@
 package DTO;
 
-import lombok.ToString;
-
-@ToString
 public class StatusDTO {
     private int id;
     private String name;

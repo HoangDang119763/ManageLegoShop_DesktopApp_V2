@@ -3,7 +3,6 @@ package GUI;
 import BUS.TimeSheetBUS;
 import BUS.EmployeeBUS;
 import DTO.TimeSheetDTO;
-import DTO.EmployeeDTO;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
@@ -16,7 +15,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +23,6 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 
-/**
- * Nested controller for Attendance within HROperationsTab
- * Displays timesheet records with work hours and overtime hours for selected employee
- */
-@Slf4j
 public class AttendanceTabNestedController {
     private static final Logger log = LoggerFactory.getLogger(AttendanceTabNestedController.class);
 
@@ -121,20 +114,18 @@ public class AttendanceTabNestedController {
      */
     private void setupTable() {
         colDate.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getCheckIn() != null ?
-                        cellData.getValue().getCheckIn().toLocalDate().toString() : ""));
+                cellData.getValue().getCheckIn() != null ? cellData.getValue().getCheckIn().toLocalDate().toString()
+                        : ""));
         colCheckIn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getCheckIn() != null ?
-                        cellData.getValue().getCheckIn().toString() : ""));
+                cellData.getValue().getCheckIn() != null ? cellData.getValue().getCheckIn().toString() : ""));
         colCheckOut.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getCheckOut() != null ?
-                        cellData.getValue().getCheckOut().toString() : ""));
+                cellData.getValue().getCheckOut() != null ? cellData.getValue().getCheckOut().toString() : ""));
         colWorkHours.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getWorkHours() != null ?
-                        String.format("%.2f", cellData.getValue().getWorkHours()) : "0"));
+                cellData.getValue().getWorkHours() != null ? String.format("%.2f", cellData.getValue().getWorkHours())
+                        : "0"));
         colOtHours.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getOtHours() != null ?
-                        String.format("%.2f", cellData.getValue().getOtHours()) : "0"));
+                cellData.getValue().getOtHours() != null ? String.format("%.2f", cellData.getValue().getOtHours())
+                        : "0"));
 
         tblAttendance.setItems(attendanceList);
     }
@@ -152,19 +143,19 @@ public class AttendanceTabNestedController {
             try {
                 // Get all timesheets for employee, then filter by month
                 List<TimeSheetDTO> allTimesheets = timeSheetBUS.getByEmployeeId(employeeId);
-                
+
                 // Parse month string (MM/yyyy)
                 String[] parts = monthStr.split("/");
                 int month = Integer.parseInt(parts[0]);
                 int year = Integer.parseInt(parts[1]);
-                
+
                 // Filter by month and year
                 List<TimeSheetDTO> timesheets = allTimesheets.stream()
                         .filter(ts -> ts.getCheckIn() != null &&
                                 ts.getCheckIn().getMonthValue() == month &&
                                 ts.getCheckIn().getYear() == year)
                         .toList();
-                
+
                 Platform.runLater(() -> {
                     if (timesheets != null && !timesheets.isEmpty()) {
                         attendanceList.setAll(timesheets);
@@ -230,19 +221,19 @@ public class AttendanceTabNestedController {
             try {
                 // Get all timesheets for employee, then filter by month
                 List<TimeSheetDTO> allTimesheets = timeSheetBUS.getByEmployeeId(currentEmployeeId);
-                
+
                 // Parse month string (MM/yyyy)
                 String[] parts = monthStr.split("/");
                 int month = Integer.parseInt(parts[0]);
                 int year = Integer.parseInt(parts[1]);
-                
+
                 // Filter by month and year
                 List<TimeSheetDTO> timesheets = allTimesheets.stream()
                         .filter(ts -> ts.getCheckIn() != null &&
                                 ts.getCheckIn().getMonthValue() == month &&
                                 ts.getCheckIn().getYear() == year)
                         .toList();
-                
+
                 Platform.runLater(() -> {
                     if (timesheets != null && !timesheets.isEmpty()) {
                         attendanceList.setAll(timesheets);

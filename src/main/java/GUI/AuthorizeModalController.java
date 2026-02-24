@@ -4,7 +4,6 @@ import BUS.ModuleBUS;
 import BUS.PermissionBUS;
 import BUS.RolePermissionBUS;
 import DTO.*;
-import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import javafx.fxml.FXML;

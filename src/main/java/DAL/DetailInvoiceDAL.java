@@ -3,7 +3,6 @@ package DAL;
 import DTO.DetailInvoiceDTO;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
 
 /*
 + Remain getAll
