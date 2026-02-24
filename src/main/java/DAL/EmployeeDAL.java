@@ -396,14 +396,21 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, employeeId);
+            System.out.println("DEBUG: Executing query for employee ID: " + employeeId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    return mapResultSetToDetailDTO(resultSet);
+                    System.out.println("DEBUG: Found employee record for ID: " + employeeId);
+                    EmployeeDetailDTO result = mapResultSetToDetailDTO(resultSet);
+                    System.out.println("DEBUG: Mapped EmployeeDetailDTO: " + result);
+                    return result;
+                } else {
+                    System.out.println("DEBUG: No employee record found for ID: " + employeeId);
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error retrieving employee detail: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return null;
@@ -413,58 +420,72 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * Map ResultSet từ getDetailById() → EmployeeDetailDTO
      */
     private EmployeeDetailDTO mapResultSetToDetailDTO(ResultSet rs) throws SQLException {
-        return EmployeeDetailDTO.builder()
-                // Base info
-                .id(rs.getInt("id"))
-                .employeeId(rs.getInt("id"))
-                .firstName(rs.getString("first_name"))
-                .lastName(rs.getString("last_name"))
-                .gender(rs.getString("gender"))
-                .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
-                .phone(rs.getString("phone"))
-                .email(rs.getString("email"))
-                .healthInsCode(rs.getString("health_ins_code"))
+        try {
+            int empId = rs.getInt("id");
+            String firstName = rs.getString("first_name");
+            String lastName = rs.getString("last_name");
+            System.out.println("DEBUG: Mapping employee - ID: " + empId + ", Name: " + firstName + " " + lastName);
+            
+            EmployeeDetailDTO result = EmployeeDetailDTO.builder()
+                    // Base info
+                    .id(empId)
+                    .employeeId(empId)
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .gender(rs.getString("gender"))
+                    .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
+                    .phone(rs.getString("phone"))
+                    .email(rs.getString("email"))
+                    .healthInsCode(rs.getString("health_ins_code"))
 
-                // Department & Role
-                .departmentId(rs.getObject("department_id") != null ? rs.getInt("department_id") : null)
-                .departmentName(rs.getString("department_name"))
-                .roleId(rs.getInt("role_id"))
-                .roleName(rs.getString("role_name"))
+                    // Department & Role
+                    .departmentId(rs.getObject("department_id") != null ? rs.getInt("department_id") : null)
+                    .departmentName(rs.getString("department_name"))
+                    .roleId(rs.getInt("role_id"))
+                    .roleName(rs.getString("role_name"))
 
-                // Account info
-                .accountId(rs.getObject("account_id_mapped") != null ? rs.getInt("account_id_mapped") : 0)
-                .username(rs.getString("username"))
-                .accountStatusId(rs.getObject("account_status_id") != null ? rs.getInt("account_status_id") : 0)
-                .accountStatus(rs.getString("account_status_desc"))
+                    // Account info
+                    .accountId(rs.getObject("account_id_mapped") != null ? rs.getInt("account_id_mapped") : 0)
+                    .username(rs.getString("username"))
+                    .accountStatusId(rs.getObject("account_status_id") != null ? rs.getInt("account_status_id") : 0)
+                    .accountStatus(rs.getString("account_status_desc"))
 
-                // Employee status
-                .statusId(rs.getInt("status_id"))
-                .statusDescription(rs.getString("emp_status_desc"))
+                    // Employee status
+                    .statusId(rs.getInt("status_id"))
+                    .statusDescription(rs.getString("emp_status_desc"))
 
-                // Salary
-                .salaryId(rs.getObject("salary_base") != null ? 1 : 0) // Dummy ID, actual from role.salary_id
-                .baseSalary(rs.getObject("salary_base") != null ? rs.getBigDecimal("salary_base") : null)
-                .salaryCoefficient(
-                        rs.getObject("salary_coefficient") != null ? rs.getBigDecimal("salary_coefficient") : null)
+                    // Salary
+                    .salaryId(rs.getObject("salary_base") != null ? 1 : 0) // Dummy ID, actual from role.salary_id
+                    .baseSalary(rs.getObject("salary_base") != null ? rs.getBigDecimal("salary_base") : null)
+                    .salaryCoefficient(
+                            rs.getObject("salary_coefficient") != null ? rs.getBigDecimal("salary_coefficient") : null)
 
-                // Tax
-                .taxId(rs.getObject("tax_id") != null ? rs.getInt("tax_id") : 0)
-                .numDependents(rs.getObject("num_dependents") != null ? rs.getInt("num_dependents") : null)
+                    // Tax
+                    .taxId(rs.getObject("tax_id") != null ? rs.getInt("tax_id") : 0)
+                    .numDependents(rs.getObject("num_dependents") != null ? rs.getInt("num_dependents") : null)
 
-                // Insurance & Support flags
-                .isSocialInsurance(rs.getBoolean("social_insurance_code"))
-                .isUnemploymentInsurance(rs.getBoolean("unemployment_insurance_code"))
-                .isPersonalIncomeTax(rs.getBoolean("is_personal_income_tax"))
-                .isTransportationSupport(rs.getBoolean("is_transportation_support"))
-                .isAccommodationSupport(rs.getBoolean("is_accommodation_support"))
+                    // Insurance & Support flags
+                    .isSocialInsurance(rs.getBoolean("social_insurance_code"))
+                    .isUnemploymentInsurance(rs.getBoolean("unemployment_insurance_code"))
+                    .isPersonalIncomeTax(rs.getBoolean("is_personal_income_tax"))
+                    .isTransportationSupport(rs.getBoolean("is_transportation_support"))
+                    .isAccommodationSupport(rs.getBoolean("is_accommodation_support"))
 
-                // Timestamps
-                .createdAt(
-                        rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
-                .updatedAt(
-                        rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
+                    // Timestamps
+                    .createdAt(
+                            rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
+                    .updatedAt(
+                            rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
 
-                .build();
+                    .build();
+            
+            System.out.println("DEBUG: Built EmployeeDetailDTO: " + result.toString());
+            return result;
+        } catch (SQLException e) {
+            System.err.println("DEBUG: Error mapping ResultSet to EmployeeDetailDTO: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public PagedResponse<EmployeeDisplayDTO> filterEmployeesPagedForManageDisplay(

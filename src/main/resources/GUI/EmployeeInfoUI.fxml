@@ -235,12 +235,6 @@
                             </content>
                         </Tab>
 
-                        <Tab text="Kỷ luật &amp; Khen thưởng">
-                            <content>
-                                <fx:include fx:id="fineTab" source="FineTab.fxml" />
-                            </content>
-                        </Tab>
-
                         <Tab text="Bảng lương">
                             <content>
                                 <fx:include fx:id="payrollTab" source="PayrollTab.fxml" />

@@ -18,9 +18,12 @@ import ENUM.*;
 import UTILS.AppMessages;
 import UTILS.ValidationUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.math.BigDecimal;
 import java.util.*;
 
+@Slf4j
 public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
     private static final EmployeeBUS INSTANCE = new EmployeeBUS();
 
@@ -553,8 +556,13 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
      * @return EmployeeDetailDTO hoặc null nếu không tìm thấy
      */
     public EmployeeDetailDTO getDetailById(int employeeId) {
-        if (employeeId <= 0)
+        if (employeeId <= 0) {
+            log.debug("Invalid employeeId: {}", employeeId);
             return null;
-        return EmployeeDAL.getInstance().getDetailById(employeeId);
+        }
+        log.debug("Fetching employee detail for ID: {}", employeeId);
+        EmployeeDetailDTO result = EmployeeDAL.getInstance().getDetailById(employeeId);
+        log.debug("Employee detail result: {}", result);
+        return result;
     }
 }

@@ -117,8 +117,6 @@ public class EmployeeInfoController {
     @FXML
     private DeductionTabController deductionTabController;
     @FXML
-    private FineTabController fineTabController;
-    @FXML
     private PayrollTabController payrollTabController;
     @FXML
     private LeaveRequestTabController leaveRequestTabController;
@@ -164,20 +162,26 @@ public class EmployeeInfoController {
      * Sử dụng cache để tránh load lại nhiều lần
      */
     private void loadEmployeeInfo() {
-        EmployeeDTO employee = employeeBUS.getById(sessionManagerService.employeeLoginId());
+        System.out.println("=== loadEmployeeInfo() called ===");
+        int empId = sessionManagerService.employeeLoginId();
+        System.out.println("Session employee ID: " + empId);
+        
+        EmployeeDTO employee = employeeBUS.getById(empId);
+        System.out.println("Got basic EmployeeDTO: " + (employee != null ? "YES" : "NULL"));
+        
+        if (employee != null) {
+            System.out.println("Role ID: " + employee.getRoleId());
+        }
 
         if (employee == null) {
+            System.out.println("ERROR: Employee not found!");
             hidePersonalInfo();
             NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_NOT_FOUND, AppMessages.DIALOG_TITLE);
             return;
         }
 
-        // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
-        if (employee.getRoleId() != -1 && employee.getRoleId() == 1) {
-            hidePersonalInfo();
-            return;
-        }
-
+        // Allow all employees to see their own personal info (including IT Admin)
+        System.out.println("Loading personal info for employee ID: " + empId);
         displayEmployeeInfo();
     }
 
@@ -193,22 +197,35 @@ public class EmployeeInfoController {
      * Hiển thị thông tin nhân viên từ cached data lên UI
      */
     private void displayEmployeeInfo() {
-        EmployeeDetailDTO employee = employeeBUS.getDetailById(sessionManagerService.employeeLoginId());
+        System.out.println("=== displayEmployeeInfo() called ===");
+        int empId = sessionManagerService.employeeLoginId();
+        System.out.println("Session employee ID: " + empId);
+        
+        EmployeeDetailDTO employee = employeeBUS.getDetailById(empId);
+        System.out.println("Got EmployeeDetailDTO: " + (employee != null ? "YES - " + employee.getFirstName() + " " + employee.getLastName() : "NULL"));
+        
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         if (employee != null) {
+            System.out.println("Setting form fields for employee: " + employee.getEmployeeId());
+            
             // === PROFILE INFO SECTION ===
             lblEmployeeId.setText(String.valueOf(employee.getEmployeeId()));
+            System.out.println("Set lblEmployeeId: " + employee.getEmployeeId());
+            
             lblGender.setText(employee.getGender() != null ? employee.getGender() : "");
 
             // Get department name
             if (employee != null && employee.getDepartmentId() != null) {
                 DepartmentDTO department = departmentBUS.getById(employee.getDepartmentId());
                 lblDepartmentName.setText(department != null ? department.getName() : "");
+                System.out.println("Set lblDepartmentName: " + (department != null ? department.getName() : ""));
             } else {
                 lblDepartmentName.setText("");
             }
 
             lblRoleName.setText(employee.getRoleName() != null ? employee.getRoleName() : "");
+            System.out.println("Set lblRoleName: " + employee.getRoleName());
+            
             lblStatus.setText(
                     employee.getStatusDescription() != null ? employee.getStatusDescription()
                             : "");
@@ -218,6 +235,8 @@ public class EmployeeInfoController {
                     .setText(employee.getFirstName() != null ? employee.getFirstName() : "");
             lblLastName.setText(employee.getLastName() != null ? employee.getLastName() : "");
             dpDateOfBirth.setValue(employee != null ? employee.getDateOfBirth() : LocalDate.now());
+            System.out.println("Set name and DOB: " + employee.getFirstName() + " " + employee.getLastName() + ", DOB: " + employee.getDateOfBirth());
+            
             lblPhone.setText(employee.getPhone() != null ? employee.getPhone() : "");
             lblEmail.setText(employee.getEmail() != null ? employee.getEmail() : "");
             lblHealthInsCode.setText(
@@ -233,6 +252,8 @@ public class EmployeeInfoController {
             lblNumDependents.setText(employee.getNumDependents() != null
                     ? String.valueOf(employee.getNumDependents())
                     : "");
+            System.out.println("Set salary: " + employee.getBaseSalary() + ", Coefficient: " + employee.getSalaryCoefficient());
+            
             // === BENEFITS SECTION ===
             cbHealthIns.setSelected(employee.isHealthInsurance());
             cbSocialIns.setSelected(employee.isSocialInsurance());
@@ -240,22 +261,23 @@ public class EmployeeInfoController {
             cbIncomeTax.setSelected(employee.isPersonalIncomeTax());
             cbTransportSupport.setSelected(employee.isTransportationSupport());
             cbAccommSupport.setSelected(employee.isAccommodationSupport());
+            System.out.println("Set checkboxes - Health: " + employee.isHealthInsurance() + ", Social: " + employee.isSocialInsurance());
 
             lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getCreatedAt()));
             lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(employee.getUpdatedAt()));
             // === Account ===
             lblUsername.setText(employee.getUsername() != null ? employee.getUsername() : "");
+            System.out.println("✓ All form fields populated successfully!");
 
             // ===== LOAD TAB CONTROLLERS =====
             int employeeId = employee.getEmployeeId();
+            System.out.println("Loading tab controllers for employee: " + employeeId);
+            
             if (allowanceTabController != null) {
                 allowanceTabController.loadEmployeeAllowances(employeeId);
             }
             if (deductionTabController != null) {
                 deductionTabController.loadEmployeeDeductions(employeeId);
-            }
-            if (fineTabController != null) {
-                fineTabController.loadEmployeeFines(employeeId);
             }
             if (payrollTabController != null) {
                 payrollTabController.loadEmployeePayroll(employeeId);
@@ -267,6 +289,7 @@ public class EmployeeInfoController {
                 attendanceTabController.loadEmployeeAttendance(employeeId);
             }
         } else {
+            System.out.println("✗ ERROR: EmployeeDetailDTO is NULL for employee ID: " + empId);
             NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_DETAIL_LOAD_ERROR,
                     AppMessages.DIALOG_TITLE);
         }
