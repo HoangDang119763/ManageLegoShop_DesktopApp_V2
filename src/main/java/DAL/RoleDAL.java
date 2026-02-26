@@ -26,8 +26,8 @@ public class RoleDAL extends BaseDAL<RoleDTO, Integer> {
                 resultSet.getTimestamp("created_at") != null ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 resultSet.getTimestamp("updated_at") != null ? resultSet.getTimestamp("updated_at").toLocalDateTime()
-                        : null,
-                resultSet.getObject("salary_id") != null ? resultSet.getInt("salary_id") : null);
+                        : null
+        );
     }
 
     // --- CẤU HÌNH INSERT ---
@@ -35,7 +35,7 @@ public class RoleDAL extends BaseDAL<RoleDTO, Integer> {
     @Override
     protected String getInsertQuery() {
         // Bao gồm tất cả các trường để Java nắm quyền kiểm soát thời gian
-        return "(name, description, start_experience, end_experience, created_at, updated_at, salary_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        return "(name, description, start_experience, end_experience, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -49,17 +49,17 @@ public class RoleDAL extends BaseDAL<RoleDTO, Integer> {
         statement.setTimestamp(5, obj.getCreatedAt() != null ? Timestamp.valueOf(obj.getCreatedAt()) : null);
         statement.setTimestamp(6, obj.getUpdatedAt() != null ? Timestamp.valueOf(obj.getUpdatedAt()) : null);
 
-        if (obj.getSalaryId() != null)
-            statement.setInt(7, obj.getSalaryId());
-        else
-            statement.setNull(7, Types.INTEGER);
+        // if (obj.getSalaryId() != null)
+        //     statement.setInt(7, obj.getSalaryId());
+        // else
+        //     statement.setNull(7, Types.INTEGER);
     }
 
     // --- CẤU HÌNH UPDATE ---
 
     @Override
     protected String getUpdateQuery() {
-        return "SET name = ?, description = ?, start_experience = ?, end_experience = ?, updated_at = ?, salary_id = ? WHERE id = ?";
+        return "SET name = ?, description = ?, start_experience = ?, end_experience = ?, updated_at = ? WHERE id = ?";
     }
 
     @Override
@@ -70,12 +70,12 @@ public class RoleDAL extends BaseDAL<RoleDTO, Integer> {
         statement.setInt(4, obj.getEndExperience());
         statement.setTimestamp(5, obj.getUpdatedAt() != null ? Timestamp.valueOf(obj.getUpdatedAt()) : null);
 
-        if (obj.getSalaryId() != null)
-            statement.setInt(6, obj.getSalaryId());
-        else
-            statement.setNull(6, Types.INTEGER);
+        // if (obj.getSalaryId() != null)
+        //     statement.setInt(6, obj.getSalaryId());
+        // else
+        //     statement.setNull(6, Types.INTEGER);
 
-        statement.setInt(7, obj.getId());
+        statement.setInt(6, obj.getId());
     }
 
     // --- CÁC HÀM BỔ SUNG CHO STATELESS BUS ---

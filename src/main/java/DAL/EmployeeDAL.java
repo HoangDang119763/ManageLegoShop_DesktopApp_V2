@@ -422,7 +422,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         int offset = pageIndex * pageSize;
 
         // SQL hỗ trợ tìm kiếm theo ID, Họ, Tên, và cả Họ Tên đầy đủ (CONCAT)
-        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, a.role_id, e.status_id, e.account_id, " +
+        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, acc.role_id, e.status_id, e.account_id, " +
                 "r.name AS roleName, " +
                 "s.description AS statusDescription, " +
                 "pos.wage AS salary, " +
@@ -495,7 +495,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         int offset = pageIndex * pageSize;
 
         // Thêm điều kiện e.id != ? để loại bỏ chính mình
-        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, a.role_id, e.status_id, e.account_id, " +
+        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, acc.role_id, e.status_id, e.account_id, " +
                 "r.name AS roleName, " +
                 "s.description AS statusDescription, " +
                 "pos.wage AS salary, " +
@@ -577,7 +577,6 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 rs.getInt("role_id"),
                 rs.getString("roleName"),
                 rs.getObject("salary") != null ? rs.getBigDecimal("salary") : null,
-                rs.getObject("efficientSalary") != null ? rs.getBigDecimal("efficientSalary") : null,
                 rs.getString("username"),
                 rs.getInt("status_id"),
                 rs.getString("statusDescription"));

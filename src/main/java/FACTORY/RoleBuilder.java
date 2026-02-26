@@ -56,6 +56,6 @@ public class RoleBuilder implements Builder<RoleDTO> {
 
     @Override
     public RoleDTO build() {
-        return new RoleDTO(id, name, description, startExperience, endExperience, createdAt, updatedAt, salaryId);
+        return new RoleDTO(id, name, description, startExperience, endExperience, createdAt, updatedAt);
     }
 }

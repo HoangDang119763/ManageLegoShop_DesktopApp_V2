@@ -15,7 +15,6 @@ public class EmployeeDisplayDTO {
     private Integer roleId;
     private String roleName;
     private BigDecimal salary; // Base salary from role's salary_id
-    private BigDecimal efficientSalary; // Salary coefficient
     private String username; // From account table
     private Integer statusId;
     private String statusDescription;
@@ -66,14 +65,6 @@ public class EmployeeDisplayDTO {
 
     public void setSalary(BigDecimal salary) {
         this.salary = salary;
-    }
-
-    public BigDecimal getEfficientSalary() {
-        return efficientSalary;
-    }
-
-    public void setEfficientSalary(BigDecimal efficientSalary) {
-        this.efficientSalary = efficientSalary;
     }
 
     public String getUsername() {

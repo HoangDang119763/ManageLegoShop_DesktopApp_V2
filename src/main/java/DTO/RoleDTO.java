@@ -16,7 +16,7 @@ public class RoleDTO {
     }
 
     public RoleDTO(int id, String name, String description, int startExperience, int endExperience,
-            LocalDateTime createdAt, LocalDateTime updatedAt, Integer salaryId) {
+            LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -24,7 +24,6 @@ public class RoleDTO {
         this.endExperience = endExperience;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.salaryId = salaryId;
     }
 
     public RoleDTO(int id, String name) {
@@ -41,7 +40,6 @@ public class RoleDTO {
             this.endExperience = other.endExperience;
             this.createdAt = other.createdAt;
             this.updatedAt = other.updatedAt;
-            this.salaryId = other.salaryId;
         }
     }
 

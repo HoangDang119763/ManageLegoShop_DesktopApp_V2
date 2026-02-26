@@ -114,8 +114,8 @@ public class EmployeeController implements IController {
         tlb_col_fullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         tlb_col_baseSalary.setCellValueFactory(cellData -> new SimpleStringProperty(
                 validationUtils.formatCurrency(cellData.getValue().getSalary())));
-        tlb_col_salaryCoefficient.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatCurrency(cellData.getValue().getEfficientSalary())));
+        // tlb_col_salaryCoefficient.setCellValueFactory(cellData -> new SimpleStringProperty(
+        //         validationUtils.formatCurrency(cellData.getValue().getEfficientSalary())));
         tlb_col_username.setCellValueFactory(new PropertyValueFactory<>("username"));
         tlb_col_role.setCellValueFactory(new PropertyValueFactory<>("roleName"));
         tlb_col_gender.setCellValueFactory(new PropertyValueFactory<>("gender"));
