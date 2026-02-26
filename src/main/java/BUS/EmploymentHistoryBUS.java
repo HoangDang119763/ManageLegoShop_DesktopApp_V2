@@ -95,4 +95,33 @@ public class EmploymentHistoryBUS extends BaseBUS<EmploymentHistoryDTO, Integer>
         return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
 
+    /**
+     * Lọc và phân trang lịch sử điều chuyển để hiển thị trong bảng quản lý
+     */
+    public BUSResult filterEmploymentHistoryPagedForManageDisplay(
+            String keyword,
+            Integer employeeId,
+            Integer departmentId,
+            Integer positionId,
+            Integer statusId,
+            int pageIndex,
+            int pageSize) {
+
+        // 1. Xác định PageSize chuẩn
+        int finalPageSize = pageSize <= 0 ? DEFAULT_PAGE_SIZE : pageSize;
+
+        // 2. Validate tham số cơ bản
+        if (pageIndex < 0) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS,
+                    new PagedResponse<>(new ArrayList<>(), 0, pageIndex, finalPageSize));
+        }
+
+        // 3. Gọi DAL để lấy dữ liệu có filter
+        PagedResponse<DTO.EmploymentHistoryDisplayDTO> pagedData = EmploymentHistoryDAL.getInstance()
+                .filterEmploymentHistoryPagedForManageDisplay(keyword, employeeId, departmentId, positionId, statusId,
+                        pageIndex, finalPageSize);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
+    }
+
 }

@@ -7,7 +7,7 @@ public class EmploymentHistoryDTO {
     private int id;
     private int employeeId;
     private int departmentId;
-    private int roleId;
+    private int positionId;
     private LocalDate effectiveDate;
     private Integer approverId; // Nullable
     private int statusId;
@@ -18,13 +18,13 @@ public class EmploymentHistoryDTO {
     public EmploymentHistoryDTO() {
     }
 
-    public EmploymentHistoryDTO(int id, int employeeId, int departmentId, int roleId,
+    public EmploymentHistoryDTO(int id, int employeeId, int departmentId, int positionId,
             LocalDate effectiveDate, Integer approverId, int statusId, String reason,
             LocalDateTime createdAt) {
         this.id = id;
         this.employeeId = employeeId;
         this.departmentId = departmentId;
-        this.roleId = roleId;
+        this.positionId = positionId;
         this.effectiveDate = effectiveDate;
         this.approverId = approverId;
         this.statusId = statusId;
@@ -32,11 +32,11 @@ public class EmploymentHistoryDTO {
         this.createdAt = createdAt;
     }
 
-    public EmploymentHistoryDTO(int employeeId, int departmentId, int roleId,
+    public EmploymentHistoryDTO(int employeeId, int departmentId, int positionId,
             LocalDate effectiveDate, int statusId, String reason) {
         this.employeeId = employeeId;
         this.departmentId = departmentId;
-        this.roleId = roleId;
+        this.positionId = positionId;
         this.effectiveDate = effectiveDate;
         this.statusId = statusId;
         this.reason = reason;
@@ -48,7 +48,7 @@ public class EmploymentHistoryDTO {
             this.id = other.id;
             this.employeeId = other.employeeId;
             this.departmentId = other.departmentId;
-            this.roleId = other.roleId;
+            this.positionId = other.positionId;
             this.effectiveDate = other.effectiveDate;
             this.approverId = other.approverId;
             this.statusId = other.statusId;
@@ -82,12 +82,12 @@ public class EmploymentHistoryDTO {
         this.departmentId = departmentId;
     }
 
-    public int getRoleId() {
-        return roleId;
+    public int getPositionId() {
+        return positionId;
     }
 
-    public void setRoleId(int roleId) {
-        this.roleId = roleId;
+    public void setPositionId(int positionId) {
+        this.positionId = positionId;
     }
 
     public LocalDate getEffectiveDate() {
@@ -136,7 +136,7 @@ public class EmploymentHistoryDTO {
                 "id=" + id +
                 ", employeeId=" + employeeId +
                 ", departmentId=" + departmentId +
-                ", roleId=" + roleId +
+                ", positionId=" + positionId +
                 ", effectiveDate=" + effectiveDate +
                 ", approverId=" + approverId +
                 ", statusId=" + statusId +

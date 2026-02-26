@@ -11,7 +11,6 @@ public class EmployeeDTO extends BaseInformationDTO {
     private String firstName;
     private String lastName;
     private String email;
-    private int roleId;
     private Integer departmentId;
     private String gender;
     private Integer accountId;
@@ -47,7 +46,7 @@ public class EmployeeDTO extends BaseInformationDTO {
 
     // Constructor đầy đủ nhất để Map dữ liệu từ Database
     public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
-            LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
+            LocalDate dateOfBirth, Integer departmentId, int statusId,
             String gender, Integer accountId, String avatarUrl, Integer positionId,
             String healthInsCode, String socialInsCode, String unemploymentInsCode,
             boolean isMealSupport, boolean isTransportationSupport,
@@ -57,7 +56,6 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.roleId = roleId;
         this.departmentId = departmentId;
         this.gender = gender;
         this.accountId = accountId;
@@ -80,7 +78,6 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.firstName = other.firstName;
         this.lastName = other.lastName;
         this.email = other.email;
-        this.roleId = other.roleId;
         this.departmentId = other.departmentId;
         this.gender = other.gender;
         this.accountId = other.accountId;

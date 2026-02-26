@@ -33,9 +33,9 @@ public class InvoiceController implements IController {
     @FXML
     private TableColumn<InvoiceDisplayDTO, String> tlb_col_createDate;
     @FXML
-    private TableColumn<InvoiceDisplayDTO, Integer> tlb_col_employeeId;
+    private TableColumn<InvoiceDisplayDTO, String> tlb_col_employeeName;
     @FXML
-    private TableColumn<InvoiceDisplayDTO, Integer> tlb_col_customerId;
+    private TableColumn<InvoiceDisplayDTO, String> tlb_col_customerName;
     @FXML
     private TableColumn<InvoiceDisplayDTO, String> tlb_col_totalPrice;
     @FXML
@@ -126,8 +126,16 @@ public class InvoiceController implements IController {
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_createDate.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())));
-        tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
-        tlb_col_customerId.setCellValueFactory(new PropertyValueFactory<>("customerId"));
+        // Hiển thị tên nhân viên thay vì ID
+        tlb_col_employeeName
+                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getEmployeeName() != null
+                        ? cellData.getValue().getEmployeeName()
+                        : ""));
+        // Hiển thị tên khách hàng thay vì ID
+        tlb_col_customerName
+                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCustomerName() != null
+                        ? cellData.getValue().getCustomerName()
+                        : ""));
         tlb_col_totalPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));

@@ -268,7 +268,7 @@
                                                           <columns>
                                                               <TableColumn fx:id="colEffectiveDate" prefWidth="200.0" text="Ngày áp dụng" />
                                                               <TableColumn fx:id="colDepartment" prefWidth="250.0" text="Phòng ban" />
-                                                              <TableColumn fx:id="colRole" prefWidth="250.0" text="Chức vụ" />
+                                                              <TableColumn fx:id="colPosition" prefWidth="250.0" text="Vị trí" />
                                                               <TableColumn fx:id="colCreatedAt" prefWidth="240.0" text="Ngày tạo" />
                                                           </columns>
                                                           <columnResizePolicy>

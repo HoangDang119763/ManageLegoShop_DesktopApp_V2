@@ -42,6 +42,12 @@ public enum PermissionKey {
     // === HR TAB: Chức vụ/Vị trí ===
     EMPLOYEE_ROLE_POSITION_UPDATE,
 
+    // === HR TAB: Lịch sử điều chuyển ===
+    EMPLOYMENT_HISTORY_LIST_VIEW,
+    EMPLOYMENT_HISTORY_INSERT,
+    EMPLOYMENT_HISTORY_APPROVE,
+    EMPLOYMENT_HISTORY_DELETE,
+
     // === 👥 MODULE KHÁCH HÀNG ===
     CUSTOMER_LIST_VIEW, CUSTOMER_INSERT, CUSTOMER_UPDATE, CUSTOMER_DELETE,
 

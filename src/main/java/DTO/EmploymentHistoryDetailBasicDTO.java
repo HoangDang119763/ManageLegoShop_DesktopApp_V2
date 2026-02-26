@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 
 /**
  * DTO chứa thông tin cơ bản lịch sử công tác của nhân viên
- * Gồm: departmentId, departmentName, roleId, roleName, effectiveDate, createdAt
+ * Gồm: departmentId, departmentName, positionId, positionName, effectiveDate,
+ * createdAt
  * Dùng cho display trong TableView
  */
 @Data
@@ -18,8 +19,8 @@ import java.time.LocalDateTime;
 public class EmploymentHistoryDetailBasicDTO {
     private Integer departmentId; // ID phòng ban
     private String departmentName; // Tên phòng ban
-    private Integer roleId; // ID chức vụ
-    private String roleName; // Tên chức vụ
+    private Integer positionId; // ID vị trí
+    private String positionName; // Tên vị trí
     private LocalDate effectiveDate; // Ngày áp dụng
     private LocalDateTime createdAt; // Ngày tạo bản ghi
 
@@ -39,20 +40,20 @@ public class EmploymentHistoryDetailBasicDTO {
         this.departmentName = departmentName;
     }
 
-    public Integer getRoleId() {
-        return roleId;
+    public Integer getPositionId() {
+        return positionId;
     }
 
-    public void setRoleId(Integer roleId) {
-        this.roleId = roleId;
+    public void setPositionId(Integer positionId) {
+        this.positionId = positionId;
     }
 
-    public String getRoleName() {
-        return roleName;
+    public String getPositionName() {
+        return positionName;
     }
 
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
+    public void setPositionName(String positionName) {
+        this.positionName = positionName;
     }
 
     public LocalDate getEffectiveDate() {

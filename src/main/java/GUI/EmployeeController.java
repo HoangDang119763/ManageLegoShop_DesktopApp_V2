@@ -3,13 +3,11 @@ package GUI;
 import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
 import BUS.EmploymentHistoryBUS;
-import BUS.RoleBUS;
-import BUS.SalaryBUS;
+import BUS.PositionBUS;
 import BUS.StatusBUS;
-import BUS.TaxBUS;
 import DTO.EmployeeDisplayDTO;
 import DTO.PagedResponse;
-import DTO.RoleDTO;
+import DTO.PositionDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
@@ -60,7 +58,7 @@ public class EmployeeController implements IController {
     @FXML
     private TextField txtSearch;
     @FXML
-    private ComboBox<RoleDTO> cbRoleFilter;
+    private ComboBox<PositionDTO> cbPositionFilter;
     @FXML
     private ComboBox<StatusDTO> cbStatusFilter;
     @FXML
@@ -69,7 +67,7 @@ public class EmployeeController implements IController {
     private StackPane loadingOverlay;
 
     private String keyword = "";
-    private RoleDTO roleFilter = null;
+    private PositionDTO positionFilter = null;
     private StatusDTO statusFilter = null;
     private EmployeeDisplayDTO selectedEmployeeTable;
     private boolean isResetting = false;
@@ -78,10 +76,8 @@ public class EmployeeController implements IController {
 
     // BUS instances
     private EmployeeBUS employeeBUS;
-    private RoleBUS roleBUS;
+    private PositionBUS posBus;
     private StatusBUS statusBUS;
-    private SalaryBUS salaryBUS;
-    private TaxBUS taxBUS;
     private DepartmentBUS departmentBUS;
     private EmploymentHistoryBUS employmentHistoryBUS;
 
@@ -89,10 +85,8 @@ public class EmployeeController implements IController {
     public void initialize() {
         // Gán BUS instance một lần
         employeeBUS = EmployeeBUS.getInstance();
-        roleBUS = RoleBUS.getInstance();
+        posBus = PositionBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
-        salaryBUS = SalaryBUS.getInstance();
-        taxBUS = TaxBUS.getInstance();
         departmentBUS = DepartmentBUS.getInstance();
         employmentHistoryBUS = EmploymentHistoryBUS.getInstance();
 
@@ -113,11 +107,9 @@ public class EmployeeController implements IController {
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_fullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         tlb_col_baseSalary.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatCurrency(cellData.getValue().getSalary())));
-        tlb_col_salaryCoefficient.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatCurrency(cellData.getValue().getEfficientSalary())));
+                validationUtils.formatCurrency(cellData.getValue().getWage())));
         tlb_col_username.setCellValueFactory(new PropertyValueFactory<>("username"));
-        tlb_col_role.setCellValueFactory(new PropertyValueFactory<>("roleName"));
+        tlb_col_role.setCellValueFactory(new PropertyValueFactory<>("positionName"));
         tlb_col_gender.setCellValueFactory(new PropertyValueFactory<>("gender"));
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
         UiUtils.gI().addTooltipToColumn(tlb_col_username, 10);
@@ -133,17 +125,17 @@ public class EmployeeController implements IController {
         cbStatusFilter.getItems().addAll(statusList);
 
         // Load Role ComboBox
-        ArrayList<RoleDTO> roleList = roleBUS.getAll();
-        RoleDTO allRole = new RoleDTO(-1, "Tất cả chức vụ");
-        cbRoleFilter.getItems().add(allRole); // "Tất cả" option
-        cbRoleFilter.getItems().addAll(roleList);
-        cbRoleFilter.getSelectionModel().selectFirst();
+        ArrayList<PositionDTO> posList = posBus.getAll();
+        PositionDTO allPos = new PositionDTO(-1, "Tất cả vị trí");
+        cbPositionFilter.getItems().add(allPos); // "Tất cả" option
+        cbPositionFilter.getItems().addAll(posList);
+        cbPositionFilter.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
     }
 
     @Override
     public void setupListeners() {
-        cbRoleFilter.setOnAction(event -> handleRoleFilterChange());
+        cbPositionFilter.setOnAction(event -> handlePositionFilterChange());
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
         UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
 
@@ -177,8 +169,8 @@ public class EmployeeController implements IController {
         applyFilters();
     }
 
-    private void handleRoleFilterChange() {
-        roleFilter = cbRoleFilter.getValue();
+    private void handlePositionFilterChange() {
+        positionFilter = cbPositionFilter.getValue();
         applyFilters();
     }
 
@@ -200,11 +192,11 @@ public class EmployeeController implements IController {
     public void resetFilters() {
         isResetting = true;
 
-        cbRoleFilter.getSelectionModel().selectFirst();
+        cbPositionFilter.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
         keyword = "";
-        roleFilter = null;
+        positionFilter = null;
         statusFilter = null;
 
         applyFilters();
@@ -220,11 +212,11 @@ public class EmployeeController implements IController {
 
     private void loadPageData(int pageIndex, boolean showOverlay) {
         int statusId = statusFilter == null ? -1 : statusFilter.getId();
-        int roleId = roleFilter == null ? -1 : roleFilter.getId();
+        int posId = positionFilter == null ? -1 : positionFilter.getId();
 
         StackPane overlay = showOverlay ? loadingOverlay : null;
         TaskUtil.executeSecure(overlay, PermissionKey.EMPLOYEE_LIST_VIEW,
-                () -> employeeBUS.filterEmployeesPagedForManageDisplay(keyword, roleId, statusId, pageIndex,
+                () -> employeeBUS.filterEmployeesPagedForManageDisplay(keyword, posId, statusId, pageIndex,
                         PAGE_SIZE),
                 result -> {
                     PagedResponse<EmployeeDisplayDTO> res = result.getPagedData();

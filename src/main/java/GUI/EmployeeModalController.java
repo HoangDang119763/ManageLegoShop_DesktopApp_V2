@@ -5,7 +5,6 @@ import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
 import BUS.EmploymentHistoryBUS;
 import BUS.RoleBUS;
-import BUS.SalaryBUS;
 import BUS.StatusBUS;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDTO;
@@ -16,7 +15,6 @@ import DTO.EmployeeJobInfoDTO;
 import DTO.EmployeePayrollInfoDTO;
 import DTO.PagedResponse;
 import DTO.RoleDTO;
-import DTO.SalaryDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
@@ -181,7 +179,6 @@ public class EmployeeModalController implements IModalController {
     private EmployeeDTO employee;
     private int currentEmployeeId; // Store employee ID for lazy loading
     private RoleBUS roleBUS;
-    private SalaryBUS salaryBUS;
     private StatusBUS statusBUS;
     private DepartmentBUS departmentBUS;
     private EmployeeBUS employeeBUS;
@@ -204,7 +201,6 @@ public class EmployeeModalController implements IModalController {
     public void initialize() {
         // Load BUS instances
         roleBUS = RoleBUS.getInstance();
-        salaryBUS = SalaryBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
         departmentBUS = DepartmentBUS.getInstance();
         employeeBUS = EmployeeBUS.getInstance();
@@ -347,23 +343,6 @@ public class EmployeeModalController implements IModalController {
         if (SessionManagerService.getInstance().employeeRoleId() != 1)
             roles.removeIf(role -> role.getId() == 1);
         cbRole.getItems().addAll(roles);
-
-        // Auto-update salary when role changes
-        cbRole.setOnAction(event -> handleRoleSelectChange());
-    }
-
-    /**
-     * Khi chọn Role, auto-update Lương cơ bản và Hệ số từ Salary table
-     */
-    private void handleRoleSelectChange() {
-        RoleDTO selectedRole = cbRole.getSelectionModel().getSelectedItem();
-        if (selectedRole != null && selectedRole.getSalaryId() != null) {
-            SalaryDTO salary = salaryBUS.getById(selectedRole.getSalaryId());
-            if (salary != null) {
-                txtBaseSalary.setText(salary.getBase() != null ? salary.getBase().toString() : "0");
-                txtCoefficient.setText(salary.getCoefficient() != null ? salary.getCoefficient().toString() : "0");
-            }
-        }
     }
 
     private void loadStatusComboBox() {
@@ -390,7 +369,7 @@ public class EmployeeModalController implements IModalController {
                 cellData.getValue().getDepartmentName() != null ? cellData.getValue().getDepartmentName() : ""));
 
         colRole.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getRoleName() != null ? cellData.getValue().getRoleName() : ""));
+                cellData.getValue().getPositionName() != null ? cellData.getValue().getPositionName() : ""));
 
         colReason.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getReason() != null ? cellData.getValue().getReason() : ""));
@@ -617,15 +596,6 @@ public class EmployeeModalController implements IModalController {
             DepartmentDTO dept = departmentBUS.getById(jobInfo.getDepartmentId());
             if (dept != null) {
                 cbDepartment.getSelectionModel().select(dept);
-            }
-        }
-
-        // Set role and trigger salary update
-        if (jobInfo.getRoleId() != null) {
-            RoleDTO role = roleBUS.getById(jobInfo.getRoleId());
-            if (role != null) {
-                cbRole.getSelectionModel().select(role);
-                handleRoleSelectChange();
             }
         }
 
@@ -886,7 +856,6 @@ public class EmployeeModalController implements IModalController {
         EmployeeDTO jobInfo = new EmployeeDTO();
         jobInfo.setId(currentEmployeeId);
         jobInfo.setDepartmentId(selectedDept.getId());
-        jobInfo.setRoleId(selectedRole.getId());
         jobInfo.setStatusId(selectedStatus.getId());
 
         // Save to database
