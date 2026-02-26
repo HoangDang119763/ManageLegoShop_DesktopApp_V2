@@ -228,6 +228,23 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
         }
     }
 
+    public boolean updateAccountRoleAndStatus(int accountId, int roleId, int statusId) {
+        String query = "UPDATE account SET role_id = ?, status_id = ? WHERE id = ? LIMIT 1";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, roleId);
+            statement.setInt(2, statusId);
+            statement.setInt(3, accountId);
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating account role and status: " + e.getMessage());
+            return false;
+        }
+    }
+
     public boolean updateAccountSecurity(Connection conn, int accountId, boolean relogin, Integer statusId)
             throws SQLException {
         // Tự động xây dựng câu SQL tùy theo việc có update status hay không

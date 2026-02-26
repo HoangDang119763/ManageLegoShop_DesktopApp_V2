@@ -46,8 +46,6 @@ public class EmployeeController implements IController {
     @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_baseSalary;
     @FXML
-    private TableColumn<EmployeeDisplayDTO, String> tlb_col_salaryCoefficient;
-    @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_username;
     @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_status;

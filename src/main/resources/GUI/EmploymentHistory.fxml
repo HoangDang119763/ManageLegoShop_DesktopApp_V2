@@ -41,6 +41,11 @@
                                 <Button fx:id="btnClearFilter" prefHeight="30.0" prefWidth="45.0" styleClass="action-btn">
                                     <graphic><FontAwesomeIcon fill="WHITE" glyphName="REFRESH" /></graphic>
                                 </Button>
+                        <Button fx:id="btnSync" prefHeight="30.0" prefWidth="110.0" styleClass="action-btn" text="Đồng bộ">
+                           <graphic>
+                              <FontAwesomeIcon fill="WHITE" glyphName="EXCHANGE" />
+                           </graphic>
+                        </Button>
                             </children>
                         </HBox>
                     </children>
@@ -53,17 +58,20 @@
                     <children>
                         <VBox maxWidth="650.0" minWidth="650.0" prefWidth="650.0" styleClass="white-bg, shadow" HBox.hgrow="ALWAYS">
                             <children>
-                                <TableView fx:id="tblHistory" tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
+                                <TableView fx:id="tblHistory" styleClass="table-view-custom" tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
+                                    <columnResizePolicy>
+                                        <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
+                                    </columnResizePolicy>
                                     <columns>
                                         <TableColumn fx:id="colId" minWidth="50.0" prefWidth="50.0" text="ID" />
-                                        <TableColumn fx:id="colEmployeeName" minWidth="130.0" prefWidth="130.0" text="Tên nhân viên" />
-                                        <TableColumn fx:id="colDeptName" minWidth="110.0" prefWidth="110.0" text="Phòng ban" />
-                                        <TableColumn fx:id="colPosName" minWidth="120.0" prefWidth="120.0" text="Vị trí mới" />
+                                        <TableColumn fx:id="colEmployeeName" minWidth="150.0" prefWidth="150.0" text="Tên nhân viên" />
+                                        <TableColumn fx:id="colDeptName" minWidth="150.0" prefWidth="150.0" text="Phòng ban" />
+                                        <TableColumn fx:id="colPosName" minWidth="160.0" prefWidth="160.0" text="Vị trí mới" />
                                         <TableColumn fx:id="colEffectiveDate" minWidth="130.0" prefWidth="130.0" text="Ngày HL" />
                                         <TableColumn fx:id="colApproverName" minWidth="130.0" prefWidth="130.0" text="Người lập" />
-                                        <TableColumn fx:id="colStatus" minWidth="100.0" prefWidth="100.0" text="Trạng thái" />
-                                        <TableColumn fx:id="colReason" minWidth="150.0" prefWidth="150.0" text="Lý do" />
-                                        <TableColumn fx:id="colCreatedAt" minWidth="150.0" prefWidth="150.0" text="Ngày tạo" />
+                                        <TableColumn fx:id="colStatus" minWidth="250.0" prefWidth="250.0" text="Trạng thái" />
+                                        <TableColumn fx:id="colReason" minWidth="200.0" prefWidth="200.0" text="Lý do" />
+                                        <TableColumn fx:id="colCreatedAt" minWidth="200.0" prefWidth="200.0" text="Ngày tạo" />
                                     </columns>
                                 </TableView>
 
@@ -113,11 +121,11 @@
                                     </columnConstraints>
                                     <children>
                                         <Label styleClass="label-s" text="Nhân viên*:" />
-                                        <ComboBox fx:id="cbEmployee" maxWidth="Infinity" prefHeight="32.0" GridPane.columnIndex="1" />
+                                        <ComboBox fx:id="cbEmployee" maxWidth="Infinity" prefHeight="32.0" promptText="Chọn nhân viên..." GridPane.columnIndex="1" />
                                         <Label styleClass="label-s" text="Phòng ban mới*:" GridPane.rowIndex="1" />
-                                        <ComboBox fx:id="cbDepartment" maxWidth="Infinity" prefHeight="32.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <ComboBox fx:id="cbDepartment" maxWidth="Infinity" prefHeight="32.0" promptText="Chọn phòng ban mới..." GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                         <Label styleClass="label-s" text="Vị trí mới*:" GridPane.rowIndex="2" />
-                                        <ComboBox fx:id="cbPosition" maxWidth="Infinity" prefHeight="32.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <ComboBox fx:id="cbPosition" maxWidth="Infinity" prefHeight="32.0" promptText="Chọn vị trí mới..." GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                         <Label styleClass="label-s" text="Ngày HL*:" GridPane.rowIndex="3" />
                                         <DatePicker fx:id="dpEffectiveDate" maxWidth="Infinity" prefHeight="32.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                         <Label styleClass="label-s" text="Người lập:" GridPane.rowIndex="4" />
@@ -126,9 +134,10 @@
                                         <TextField fx:id="txtId" editable="false" styleClass="textfield-1, readonly" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                     </children>
                                     <rowConstraints>
+                                        <RowConstraints minHeight="35.0" />
                                         <RowConstraints minHeight="35.0" /><RowConstraints minHeight="35.0" />
                                         <RowConstraints minHeight="35.0" /><RowConstraints minHeight="35.0" />
-                                        <RowConstraints minHeight="35.0" /><RowConstraints minHeight="35.0" />
+                                        <RowConstraints minHeight="35.0" />
                                     </rowConstraints>
                                     <VBox.margin><Insets top="10.0" /></VBox.margin>
                                 </GridPane>
@@ -152,5 +161,7 @@
                 </HBox>
             </center>
         </BorderPane>
+        <fx:include fx:id="loadingOverlay" source="LoadingOverlay.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+        
     </children>
 </AnchorPane>
