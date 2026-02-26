@@ -3,6 +3,7 @@ package DAL;
 import DTO.EmploymentHistoryDTO;
 import DTO.EmploymentHistoryDetailBasicDTO;
 import DTO.EmploymentHistoryDetailDTO;
+import DTO.EmploymentHistoryDisplayDTO;
 import DTO.PagedResponse;
 
 import java.sql.*;
@@ -55,8 +56,10 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
     @Override
     protected void setInsertParameters(PreparedStatement statement, EmploymentHistoryDTO obj) throws SQLException {
         statement.setInt(1, obj.getEmployeeId());
-        statement.setInt(2, obj.getDepartmentId());
-        statement.setInt(3, obj.getPositionId());
+        // Department ID: 0 means use current, so save as NULL
+        statement.setObject(2, obj.getDepartmentId() > 0 ? obj.getDepartmentId() : null);
+        // Position ID: 0 means use current, so save as NULL
+        statement.setObject(3, obj.getPositionId() > 0 ? obj.getPositionId() : null);
         statement.setDate(4, obj.getEffectiveDate() != null ? java.sql.Date.valueOf(obj.getEffectiveDate()) : null);
         statement.setObject(5, obj.getApproverId());
         statement.setInt(6, obj.getStatusId());
@@ -71,8 +74,10 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
     @Override
     protected void setUpdateParameters(PreparedStatement statement, EmploymentHistoryDTO obj) throws SQLException {
         statement.setInt(1, obj.getEmployeeId());
-        statement.setInt(2, obj.getDepartmentId());
-        statement.setInt(3, obj.getPositionId());
+        // Department ID: 0 means use current, so save as NULL
+        statement.setObject(2, obj.getDepartmentId() > 0 ? obj.getDepartmentId() : null);
+        // Position ID: 0 means use current, so save as NULL
+        statement.setObject(3, obj.getPositionId() > 0 ? obj.getPositionId() : null);
         statement.setDate(4, obj.getEffectiveDate() != null ? java.sql.Date.valueOf(obj.getEffectiveDate()) : null);
         statement.setObject(5, obj.getApproverId());
         statement.setInt(6, obj.getStatusId());
@@ -98,11 +103,13 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                 "eh.position_id, " +
                 "p.name as position_name, " +
                 "eh.effective_date, " +
-                "eh.created_at, " +
+                "eh.status_id, " +
+                "s.description as status_description, " + // Lấy mô tả trạng thái từ bảng status
                 "COUNT(*) OVER() as total_count " +
                 "FROM employment_history eh " +
                 "LEFT JOIN department d ON eh.department_id = d.id " +
                 "LEFT JOIN position p ON eh.position_id = p.id " +
+                "LEFT JOIN status s ON eh.status_id = s.id " + // Join thêm bảng status
                 "WHERE eh.employee_id = ? " +
                 "ORDER BY eh.effective_date DESC " +
                 "LIMIT ?, ?";
@@ -120,14 +127,15 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                         totalItems = rs.getInt("total_count");
                     }
 
+                    // KHỚP VỚI 7 TRƯỜNG TRONG DTO CỦA HOÀNG
                     EmploymentHistoryDetailBasicDTO dto = new EmploymentHistoryDetailBasicDTO(
                             rs.getInt("department_id"),
                             rs.getString("department_name"),
                             rs.getInt("position_id"),
                             rs.getString("position_name"),
                             rs.getDate("effective_date") != null ? rs.getDate("effective_date").toLocalDate() : null,
-                            rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime()
-                                    : null);
+                            rs.getInt("status_id"),
+                            rs.getString("status_description"));
                     items.add(dto);
                 }
             }
@@ -205,123 +213,133 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
      * Có thể filter theo keyword (mã NV, mã quyết định), employee, department,
      * position, status
      */
-    public PagedResponse<DTO.EmploymentHistoryDisplayDTO> filterEmploymentHistoryPagedForManageDisplay(
-            String keyword,
-            Integer employeeId,
-            Integer departmentId,
-            Integer positionId,
-            Integer statusId,
-            int pageIndex,
-            int pageSize) {
+    public PagedResponse<EmploymentHistoryDisplayDTO> filterEmploymentHistoryPagedForManageDisplay(
+            String keyword, Integer employeeId, Integer departmentId, Integer positionId,
+            Integer statusId, int pageIndex, int pageSize) {
 
-        List<DTO.EmploymentHistoryDisplayDTO> items = new ArrayList<>();
+        List<EmploymentHistoryDisplayDTO> items = new ArrayList<>();
         int totalItems = 0;
         int offset = pageIndex * pageSize;
 
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT ");
-        sql.append("eh.id, ");
-        sql.append("eh.employee_id, ");
-        sql.append("CONCAT(emp.first_name, ' ', emp.last_name) as employee_name, ");
-        sql.append("eh.department_id, ");
-        sql.append("d.name as department_name, ");
-        sql.append("eh.position_id, ");
-        sql.append("p.name as position_name, ");
-        sql.append("eh.effective_date, ");
-        sql.append("eh.approver_id, ");
-        sql.append("CONCAT(app.first_name, ' ', app.last_name) as approver_name, ");
-        sql.append("eh.status_id, ");
-        sql.append("s.description as status_description, ");
-        sql.append("eh.reason, ");
-        sql.append("eh.created_at, ");
-        sql.append("COUNT(*) OVER() as total_count ");
-        sql.append("FROM employment_history eh ");
-        sql.append("LEFT JOIN employee emp ON eh.employee_id = emp.id ");
-        sql.append("LEFT JOIN department d ON eh.department_id = d.id ");
-        sql.append("LEFT JOIN position p ON eh.position_id = p.id ");
-        sql.append("LEFT JOIN employee app ON eh.approver_id = app.id ");
-        sql.append("LEFT JOIN status s ON eh.status_id = s.id ");
-        sql.append("WHERE 1=1 ");
-
-        List<Object> params = new ArrayList<>();
-
-        // Filter by keyword (search in employee_id or decision id)
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(
-                    "AND (eh.id LIKE ? OR eh.employee_id LIKE ? OR CONCAT(emp.first_name, ' ', emp.last_name) LIKE ?) ");
-            String keywordPattern = "%" + keyword.trim() + "%";
-            params.add(keywordPattern);
-            params.add(keywordPattern);
-            params.add(keywordPattern);
-        }
-
-        // Filter by employee
-        if (employeeId != null && employeeId > 0) {
-            sql.append("AND eh.employee_id = ? ");
-            params.add(employeeId);
-        }
-
-        // Filter by department
-        if (departmentId != null && departmentId > 0) {
-            sql.append("AND eh.department_id = ? ");
-            params.add(departmentId);
-        }
-
-        // Filter by position
-        if (positionId != null && positionId > 0) {
-            sql.append("AND eh.position_id = ? ");
-            params.add(positionId);
-        }
-
-        // Filter by status
-        if (statusId != null && statusId > 0) {
-            sql.append("AND eh.status_id = ? ");
-            params.add(statusId);
-        }
-
-        sql.append("ORDER BY eh.created_at DESC ");
-        sql.append("LIMIT ?, ?");
-        params.add(offset);
-        params.add(pageSize);
+        // Sử dụng SQL tĩnh với các kỹ thuật lọc linh hoạt
+        String sql = "SELECT eh.id, eh.employee_id, " +
+                "IFNULL(CONCAT(emp.first_name, ' ', emp.last_name), 'N/A') as employee_name, " +
+                "eh.department_id, d.name as department_name, " +
+                "eh.position_id, p.name as position_name, eh.effective_date, " +
+                "eh.approver_id, IFNULL(CONCAT(app.first_name, ' ', app.last_name), 'Hệ thống') as approver_name, " +
+                "eh.status_id, s.description as status_description, eh.reason, eh.created_at, " +
+                "COUNT(*) OVER() as total_count " +
+                "FROM employment_history eh " +
+                "LEFT JOIN employee emp ON eh.employee_id = emp.id " +
+                "LEFT JOIN department d ON eh.department_id = d.id " +
+                "LEFT JOIN position p ON eh.position_id = p.id " +
+                "LEFT JOIN employee app ON eh.approver_id = app.id " +
+                "LEFT JOIN status s ON eh.status_id = s.id " +
+                "WHERE (? = '' OR (" + // Keyword filter
+                "   CAST(eh.id AS CHAR) LIKE ? " +
+                "   OR CAST(eh.employee_id AS CHAR) LIKE ? " +
+                "   OR LOWER(emp.first_name) LIKE ? " +
+                "   OR LOWER(emp.last_name) LIKE ? " +
+                "   OR LOWER(CONCAT(emp.first_name, ' ', emp.last_name)) LIKE ?" +
+                ")) " +
+                "AND (? = -1 OR eh.employee_id = ?) " + // Employee filter
+                "AND (? = -1 OR eh.department_id = ?) " + // Department filter
+                "AND (? = -1 OR eh.position_id = ?) " + // Position filter
+                "AND (? = -1 OR eh.status_id = ?) " + // Status filter
+                "ORDER BY eh.created_at DESC " +
+                "LIMIT ?, ?";
 
         try (Connection conn = connectionFactory.newConnection();
-                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Set parameters
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
+            String cleanKeyword = (keyword == null) ? "" : keyword.trim();
+            String searchKey = "%" + cleanKeyword.toLowerCase() + "%";
+
+            int idx = 1;
+            // Bind Keyword params
+            ps.setString(idx++, cleanKeyword);
+            ps.setString(idx++, searchKey);
+            ps.setString(idx++, searchKey);
+            ps.setString(idx++, searchKey);
+            ps.setString(idx++, searchKey);
+            ps.setString(idx++, searchKey);
+
+            // Bind ID filters (Dùng -1 làm giá trị "Tất cả")
+            ps.setInt(idx++, employeeId != null ? employeeId : -1);
+            ps.setInt(idx++, employeeId != null ? employeeId : -1);
+
+            ps.setInt(idx++, departmentId != null ? departmentId : -1);
+            ps.setInt(idx++, departmentId != null ? departmentId : -1);
+
+            ps.setInt(idx++, positionId != null ? positionId : -1);
+            ps.setInt(idx++, positionId != null ? positionId : -1);
+
+            ps.setInt(idx++, statusId != null ? statusId : -1);
+            ps.setInt(idx++, statusId != null ? statusId : -1);
+
+            // Pagination
+            ps.setInt(idx++, offset);
+            ps.setInt(idx++, pageSize);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    if (totalItems == 0) {
+                    if (totalItems == 0)
                         totalItems = rs.getInt("total_count");
-                    }
 
-                    DTO.EmploymentHistoryDisplayDTO dto = new DTO.EmploymentHistoryDisplayDTO(
+                    items.add(new EmploymentHistoryDisplayDTO(
                             rs.getInt("id"),
                             rs.getInt("employee_id"),
                             rs.getString("employee_name"),
-                            rs.getObject("department_id") != null ? rs.getInt("department_id") : null,
+                            (Integer) rs.getObject("department_id"),
                             rs.getString("department_name"),
-                            rs.getObject("position_id") != null ? rs.getInt("position_id") : null,
+                            (Integer) rs.getObject("position_id"),
                             rs.getString("position_name"),
                             rs.getDate("effective_date") != null ? rs.getDate("effective_date").toLocalDate() : null,
-                            rs.getObject("approver_id") != null ? rs.getInt("approver_id") : null,
+                            (Integer) rs.getObject("approver_id"),
                             rs.getString("approver_name"),
                             rs.getInt("status_id"),
                             rs.getString("status_description"),
                             rs.getString("reason"),
                             rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime()
-                                    : null);
-                    items.add(dto);
+                                    : null));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi DAL filter employment history: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Lỗi DAL filter employment history display: " + e.getMessage());
         }
 
         return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
+    }
+
+    /**
+     * Update only the status of employment history
+     * Used for approve/reject operations to avoid updating other fields
+     */
+    public boolean updateStatus(int id, int statusId) {
+        String sql = "UPDATE employment_history SET status_id = ? WHERE id = ?";
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, statusId);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi cập nhật trạng thái công tác: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Gọi stored procedure sp_SyncEmploymentChanges để đồng bộ hóa
+     * thay đổi công tác khi quyết định được phê duyệt khi effective_date đến
+     */
+    public void callSyncEmploymentChanges() throws SQLException {
+        String sql = "{CALL sp_SyncEmploymentChanges()}";
+        try (Connection conn = connectionFactory.newConnection();
+                CallableStatement cs = conn.prepareCall(sql)) {
+            cs.execute();
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi gọi sp_SyncEmploymentChanges: " + e.getMessage());
+            throw e;
+        }
     }
 }

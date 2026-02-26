@@ -5,6 +5,7 @@ import DAL.EmployeeDAL;
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
 import DTO.PagedResponse;
+import DTO.RoleDTO;
 import DTO.EmployeeDetailDTO;
 import DTO.EmployeeDisplayDTO;
 import DTO.EmployeePersonalInfoDTO;
@@ -15,6 +16,7 @@ import DTO.EmployeePersonalInfoBundle;
 import DTO.EmployeeJobHistoryBundle;
 import DTO.BUSResult;
 import DTO.AccountDTO;
+import DTO.StatusDTO;
 import ENUM.*;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
@@ -318,7 +320,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
     public BUSResult updatePersonalInfoByAdmin(EmployeeDTO obj) {
         // 1. Kiểm tra tham số đầu vào cơ bản
-        if (obj == null || obj.getId() <= 0) {
+        if (obj == null || obj.getId() <= 0 || obj.getStatusId() <= 0) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
 
@@ -389,62 +391,46 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
     }
 
     public BUSResult updateJobInfo(EmployeeDTO obj) {
-        // 1. Validate & Security (Giữ nguyên các lớp chặn của bạn)
-        if (obj == null || obj.getId() <= 0)
+        // 1. Validate & Security
+        if (obj == null || obj.getId() <= 0 || obj.getDepartmentId() == null
+                || obj.getDepartmentId() <= 0 || obj.getPositionId() == null || obj.getPositionId() <= 0) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        } // <-- HOÀNG THIẾU DẤU NÀY NÈ
 
         SessionManagerService session = SessionManagerService.getInstance();
+
+        // Chặn update tài khoản hệ thống hoặc tự update chính mình
         if (obj.getId() == 1)
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_CANNOT_UPDATE_SYSTEM);
         if (obj.getId() == session.employeeLoginId())
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_CANNOT_UPDATE_SELF);
 
+        // Kiểm tra nhân viên có tồn tại không
         EmployeeDTO target = getById(obj.getId());
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        // if (session.employeeRoleId() != 1) {
-        // boolean isTargetAdmin =
-        // PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
-        // PermissionKey.EMPLOYEE_JOB_UPDATE);
-        // if (isTargetAdmin)
-        // return new BUSResult(BUSOperationResult.FAIL,
-        // AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
-        // }
-
-        // 2. Validate dữ liệu đầu vào
-        if (obj.getDepartmentId() == null || obj.getDepartmentId() <= 0
-                || obj.getStatusId() <= 0) {
-            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
-        }
-
-        // 3. Thực thi Transaction
+        // 2. Thực thi cập nhật (Tối ưu hóa Transaction)
         try (Connection conn = ConnectApplication.getInstance().getConnectionFactory().newConnection()) {
+            // Vì Hoàng đang làm module điều chuyển, mình khuyên nên giữ Transaction
+            // để sau này nhét thêm bước: Insert vào bảng employment_history
             conn.setAutoCommit(false);
-            try {
-                // A. Cập nhật thông tin công việc
-                if (!EmployeeDAL.getInstance().updateJobInfo(conn, obj))
-                    throw new Exception("UPDATE_JOB_FAIL");
 
-                // B. Xử lý Relogin (Nếu Nghỉ việc)
-                int activeId = StatusBUS.getInstance()
-                        .getByTypeAndStatusName(StatusType.EMPLOYEE, Status.Employee.ACTIVE).getId();
-                Integer accId = target.getAccountId();
-                if (accId != null && accId > 0) {
-                    boolean isInactive = (obj.getStatusId() != activeId);
-                    if (isInactive) {
-                        AccountBUS.getInstance().forceLogoutAndSecurityUpdate(conn, accId, true);
-                    }
+            try {
+                // Bước A: Cập nhật thông tin công việc trong bảng employee
+                if (!EmployeeDAL.getInstance().updateJobInfo(conn, obj)) {
+                    throw new Exception("UPDATE_JOB_FAIL");
                 }
 
                 conn.commit();
                 return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_JOB_UPDATE_SUCCESS);
             } catch (Exception e) {
                 conn.rollback();
-                throw e; // Đẩy ra catch bên ngoài xử lý message
+                System.err.println("Lỗi Transaction: " + e.getMessage());
+                return new BUSResult(BUSOperationResult.FAIL, "Cập nhật thất bại: " + e.getMessage());
             }
         } catch (Exception e) {
-            System.err.println("Lỗi updateJobInfo: " + e.getMessage());
+            System.err.println("Lỗi kết nối DB: " + e.getMessage());
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
     }
@@ -569,6 +555,75 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             }
         } catch (Exception e) {
             System.err.println("Lỗi updateAccountStatus: " + e.getMessage());
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+    }
+
+    public BUSResult updateAccountRoleAndStatus(int employeeId, int roleId, int accountStatusId) {
+        // 1. Validate & Security
+        if (employeeId <= 0 || roleId <= 0 || accountStatusId <= 0) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        }
+
+        SessionManagerService session = SessionManagerService.getInstance();
+        if (employeeId == 1)
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_CANNOT_UPDATE_SYSTEM);
+        if (employeeId == session.employeeLoginId())
+            return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_CANNOT_UPDATE_SELF);
+
+        EmployeeDTO target = getById(employeeId);
+        if (target == null)
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+
+        if (!StatusBUS.getInstance().isValidStatusIdForType(StatusType.ACCOUNT, accountStatusId)) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.STATUS_IDForType_INVALID);
+        }
+
+        // Validate role exists
+        RoleDTO role = RoleBUS.getInstance().getById(roleId);
+        if (role == null) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, "Vai trò không tồn tại");
+        }
+
+        // 2. Kiểm tra Account có tồn tại
+        Integer accId = target.getAccountId();
+        if (accId == null || accId <= 0)
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+
+        AccountDTO currentAcc = AccountBUS.getInstance().getById(accId);
+        if (currentAcc == null)
+            return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
+
+        // Check if no changes
+        if (currentAcc.getRoleId() == roleId && currentAcc.getStatusId() == accountStatusId) {
+            return new BUSResult(BUSOperationResult.NO_CHANGES);
+        }
+
+        // 3. Execute Transaction - Cập nhật role + status + ép relogin
+        try (Connection conn = ConnectApplication.getInstance().getConnectionFactory().newConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // A. Cập nhật role_id và status_id vào account table
+                if (!AccountBUS.getInstance().updateAccountRoleAndStatus(accId, roleId, accountStatusId)) {
+                    throw new Exception("UPDATE_ROLE_STATUS_FAIL");
+                }
+
+                // B. Kiểm tra nếu update sang LOCKED status thì khóa luôn
+                int lockedId = StatusBUS.getInstance()
+                        .getByTypeAndStatusName(StatusType.ACCOUNT, Status.Account.LOCKED).getId();
+                boolean isLockedStatus = (accountStatusId == lockedId);
+
+                // C. Ép relogin + set require_relogin flag
+                AccountBUS.getInstance().forceLogoutAndSecurityUpdate(conn, accId, isLockedStatus);
+
+                conn.commit();
+                return new BUSResult(BUSOperationResult.SUCCESS, "Cập nhật vai trò và trạng thái tài khoản thành công");
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi updateAccountRoleAndStatus: " + e.getMessage());
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
         }
     }
@@ -762,5 +817,17 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         EmployeeDetailDTO result = EmployeeDAL.getInstance().getDetailById(employeeId);
         log.debug("Employee detail result: {}", result);
         return result;
+    }
+
+    /**
+     * Get all employees with ACTIVE status
+     */
+    public ArrayList<EmployeeDTO> getActiveEmployees() {
+        StatusDTO activeStatus = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.EMPLOYEE, Status.Employee.ACTIVE);
+        if (activeStatus == null) {
+            return new ArrayList<>();
+        }
+        return EmployeeDAL.getInstance().getByStatusId(activeStatus.getId());
     }
 }

@@ -44,4 +44,16 @@ public class DepartmentBUS extends BaseBUS<DepartmentDTO, Integer> {
         }
         return DepartmentDAL.getInstance().existsByIdAndStatus(departmentId, activeStatus.getId());
     }
+
+    /**
+     * Get all departments with ACTIVE status
+     */
+    public ArrayList<DepartmentDTO> getActiveDepartments() {
+        StatusDTO activeStatus = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.DEPARTMENT, Status.Department.ACTIVE);
+        if (activeStatus == null) {
+            return new ArrayList<>();
+        }
+        return DepartmentDAL.getInstance().getByStatusId(activeStatus.getId());
+    }
 }

@@ -2,6 +2,7 @@ package DAL;
 
 import DTO.DepartmentDTO;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DepartmentDAL extends BaseDAL<DepartmentDTO, Integer> {
     public static final DepartmentDAL INSTANCE = new DepartmentDAL();
@@ -85,5 +86,27 @@ public class DepartmentDAL extends BaseDAL<DepartmentDTO, Integer> {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * Get all departments with a specific status ID
+     */
+    public ArrayList<DepartmentDTO> getByStatusId(int statusId) {
+        ArrayList<DepartmentDTO> list = new ArrayList<>();
+        String query = "SELECT * FROM department WHERE status_id = ? ORDER BY id";
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setInt(1, statusId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToObject(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting departments by status: " + e.getMessage());
+        }
+        return list;
     }
 }

@@ -241,6 +241,18 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         return AccountDAL.getInstance().updateAccountStatus(accountId, statusId);
     }
 
+    public boolean updateAccountRoleAndStatus(int accountId, int roleId, int statusId) {
+        if (accountId <= 0 || roleId <= 0 || statusId <= 0) {
+            return false;
+        }
+
+        if (accountId == 1) {
+            return false;
+        }
+
+        return AccountDAL.getInstance().updateAccountRoleAndStatus(accountId, roleId, statusId);
+    }
+
     /**
      * Reset mật khẩu tài khoản thành mặc định (123456)
      * ⚠️ Chỉ update password, KHÔNG set require_relogin (gọi
