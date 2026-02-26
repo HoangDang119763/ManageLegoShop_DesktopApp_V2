@@ -24,9 +24,9 @@ public class DiscountDAL extends BaseDAL<DiscountDTO, String> {
     @Override
     protected DiscountDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
         return new DiscountDTO(resultSet.getString("code"), resultSet.getString("name"), resultSet.getInt("type"),
-                resultSet.getDate("startDate") != null ? resultSet.getDate("startDate").toLocalDate().atStartOfDay()
+                resultSet.getDate("startDate") != null ? resultSet.getDate("startDate").toLocalDate()
                         : null,
-                resultSet.getDate("endDate") != null ? resultSet.getDate("endDate").toLocalDate().atStartOfDay()
+                resultSet.getDate("endDate") != null ? resultSet.getDate("endDate").toLocalDate()
                         : null);
     }
 
@@ -41,8 +41,8 @@ public class DiscountDAL extends BaseDAL<DiscountDTO, String> {
         statement.setString(2, obj.getName());
         statement.setInt(3, obj.getType());
         statement.setDate(4,
-                obj.getStartDate() != null ? java.sql.Date.valueOf(obj.getStartDate().toLocalDate()) : null);
-        statement.setDate(5, obj.getEndDate() != null ? java.sql.Date.valueOf(obj.getEndDate().toLocalDate()) : null);
+                obj.getStartDate() != null ? java.sql.Date.valueOf(obj.getStartDate()) : null);
+        statement.setDate(5, obj.getEndDate() != null ? java.sql.Date.valueOf(obj.getEndDate()) : null);
     }
 
     @Override
@@ -55,8 +55,8 @@ public class DiscountDAL extends BaseDAL<DiscountDTO, String> {
         statement.setString(1, obj.getName());
         statement.setInt(2, obj.getType());
         statement.setDate(3,
-                obj.getStartDate() != null ? java.sql.Date.valueOf(obj.getStartDate().toLocalDate()) : null);
-        statement.setDate(4, obj.getEndDate() != null ? java.sql.Date.valueOf(obj.getEndDate().toLocalDate()) : null);
+                obj.getStartDate() != null ? java.sql.Date.valueOf(obj.getStartDate()) : null);
+        statement.setDate(4, obj.getEndDate() != null ? java.sql.Date.valueOf(obj.getEndDate()) : null);
         statement.setString(5, obj.getCode());
     }
 

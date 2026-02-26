@@ -16,6 +16,7 @@ public class EmployeeDTO extends BaseInformationDTO {
     private String gender;
     private Integer accountId;
     private String avatarUrl;
+    private Integer positionId;
 
     // Định danh bảo hiểm (Lưu String theo DB mới)
     private String healthInsCode;
@@ -23,9 +24,10 @@ public class EmployeeDTO extends BaseInformationDTO {
     private String unemploymentInsCode;
 
     // Các cờ hiệu phúc lợi (Dạng boolean khớp với TINYINT 1)
-    private boolean isPersonalIncomeTax;
+    private boolean isMealSupport;
     private boolean isTransportationSupport;
     private boolean isAccommodationSupport;
+    private int numDependents;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -46,10 +48,10 @@ public class EmployeeDTO extends BaseInformationDTO {
     // Constructor đầy đủ nhất để Map dữ liệu từ Database
     public EmployeeDTO(int id, String firstName, String lastName, String phone, String email,
             LocalDate dateOfBirth, int roleId, Integer departmentId, int statusId,
-            String gender, Integer accountId, String avatarUrl,
+            String gender, Integer accountId, String avatarUrl, Integer positionId,
             String healthInsCode, String socialInsCode, String unemploymentInsCode,
-            boolean isPersonalIncomeTax, boolean isTransportationSupport,
-            boolean isAccommodationSupport, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            boolean isMealSupport, boolean isTransportationSupport,
+            boolean isAccommodationSupport, int numDependents, LocalDateTime createdAt, LocalDateTime updatedAt) {
 
         super(id, dateOfBirth, phone, statusId, updatedAt);
         this.firstName = firstName;
@@ -60,12 +62,14 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.gender = gender;
         this.accountId = accountId;
         this.avatarUrl = avatarUrl;
+        this.positionId = positionId;
         this.healthInsCode = healthInsCode;
         this.socialInsCode = socialInsCode;
         this.unemploymentInsCode = unemploymentInsCode;
-        this.isPersonalIncomeTax = isPersonalIncomeTax;
+        this.isMealSupport = isMealSupport;
         this.isTransportationSupport = isTransportationSupport;
         this.isAccommodationSupport = isAccommodationSupport;
+        this.numDependents = numDependents;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -81,12 +85,14 @@ public class EmployeeDTO extends BaseInformationDTO {
         this.gender = other.gender;
         this.accountId = other.accountId;
         this.avatarUrl = other.avatarUrl;
+        this.positionId = other.positionId;
         this.healthInsCode = other.healthInsCode;
         this.socialInsCode = other.socialInsCode;
         this.unemploymentInsCode = other.unemploymentInsCode;
-        this.isPersonalIncomeTax = other.isPersonalIncomeTax;
+        this.isMealSupport = other.isMealSupport;
         this.isTransportationSupport = other.isTransportationSupport;
         this.isAccommodationSupport = other.isAccommodationSupport;
+        this.numDependents = other.numDependents;
         this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;
     }

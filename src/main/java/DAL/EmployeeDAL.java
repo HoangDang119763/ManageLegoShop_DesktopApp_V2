@@ -41,13 +41,15 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 resultSet.getInt("status_id"),
                 resultSet.getString("gender"),
                 resultSet.getObject("account_id") != null ? resultSet.getInt("account_id") : null,
-                resultSet.getString("avatar_url"), // avatarUrl nằm ở vị trí này trong constructor đầy đủ
+                resultSet.getString("avatar_url"),
+                resultSet.getObject("position_id") != null ? resultSet.getInt("position_id") : null,
                 resultSet.getString("health_ins_code"),
-                resultSet.getString("social_insurance_code"), // Lấy trực tiếp String mã số
-                resultSet.getString("unemployment_insurance_code"), // Lấy trực tiếp String mã số
-                resultSet.getBoolean("is_personal_income_tax"),
+                resultSet.getString("social_insurance_code"),
+                resultSet.getString("unemployment_insurance_code"),
+                resultSet.getBoolean("is_meal_support"),
                 resultSet.getBoolean("is_transportation_support"),
                 resultSet.getBoolean("is_accommodation_support"),
+                resultSet.getObject("num_dependents") != null ? resultSet.getInt("num_dependents") : 0,
                 resultSet.getTimestamp("created_at") != null
                         ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null,
@@ -58,7 +60,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, health_ins_code, social_insurance_code, unemployment_insurance_code, is_personal_income_tax, is_transportation_support, is_accommodation_support, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, position_id, health_ins_code, social_insurance_code, unemployment_insurance_code, is_meal_support, is_transportation_support, is_accommodation_support, num_dependents, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -73,13 +75,15 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         statement.setInt(8, obj.getStatusId());
         statement.setString(9, obj.getGender());
         statement.setObject(10, obj.getAccountId());
-        statement.setString(11, obj.getHealthInsCode());
-        statement.setString(12, obj.getSocialInsCode());
-        statement.setString(13, obj.getUnemploymentInsCode());
-        statement.setBoolean(14, obj.isPersonalIncomeTax());
-        statement.setBoolean(15, obj.isTransportationSupport());
-        statement.setBoolean(16, obj.isAccommodationSupport());
-        statement.setString(17, obj.getAvatarUrl());
+        statement.setObject(11, obj.getPositionId());
+        statement.setString(12, obj.getHealthInsCode());
+        statement.setString(13, obj.getSocialInsCode());
+        statement.setString(14, obj.getUnemploymentInsCode());
+        statement.setBoolean(15, obj.isMealSupport());
+        statement.setBoolean(16, obj.isTransportationSupport());
+        statement.setBoolean(17, obj.isAccommodationSupport());
+        statement.setInt(18, obj.getNumDependents());
+        statement.setString(19, obj.getAvatarUrl());
     }
 
     @Override
@@ -175,16 +179,17 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
     public boolean updatePayrollInfo(Connection conn, EmployeeDTO obj) throws SQLException {
         String sql = "UPDATE employee SET health_ins_code = ?, social_insurance_code = ?, " +
-                "unemployment_insurance_code = ?, is_personal_income_tax = ?, " +
-                "is_transportation_support = ?, is_accommodation_support = ? WHERE id = ?";
+                "unemployment_insurance_code = ?, is_meal_support = ?, " +
+                "is_transportation_support = ?, is_accommodation_support = ?, num_dependents = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, obj.getHealthInsCode());
             ps.setString(2, obj.getSocialInsCode());
             ps.setString(3, obj.getUnemploymentInsCode());
-            ps.setBoolean(4, obj.isPersonalIncomeTax());
+            ps.setBoolean(4, obj.isMealSupport());
             ps.setBoolean(5, obj.isTransportationSupport());
             ps.setBoolean(6, obj.isAccommodationSupport());
-            ps.setInt(7, obj.getId());
+            ps.setInt(7, obj.getNumDependents());
+            ps.setInt(8, obj.getId());
             return ps.executeUpdate() > 0;
         }
     }
@@ -214,10 +219,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
     public EmployeeSessionDTO getEmployeeSessionByAccountId(int accountId) {
         String sql = "SELECT a.id as account_id, e.id as employee_id, a.username, " +
-                "e.first_name, e.last_name, r.id as role_id, r.name as role_name " +
+                "e.first_name, e.last_name, r.id as role_id, r.name as role_name, " +
+                "pos.id as position_id, pos.name as position_name " +
                 "FROM account a " +
                 "JOIN employee e ON a.id = e.account_id " +
-                "JOIN role r ON e.role_id = r.id " +
+                "JOIN role r ON a.role_id = r.id " +
+                "JOIN position pos ON e.position_id = pos.id " +
                 "WHERE a.id = ? LIMIT 1";
 
         try (Connection conn = connectionFactory.newConnection();
@@ -232,6 +239,8 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                     session.setFullName(rs.getString("first_name") + " " + rs.getString("last_name"));
                     session.setRoleId(rs.getInt("role_id"));
                     session.setRoleName(rs.getString("role_name"));
+                    session.setPositionId(rs.getInt("position_id"));
+                    session.setPositionName(rs.getString("position_name"));
 
                     return session;
                 }
@@ -295,20 +304,19 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         String sql = "SELECT " +
                 "e.*, " +
                 "r.id AS role_id_mapped, r.name AS role_name, " +
-                "s.base AS salary_base, s.coefficient AS salary_coefficient, " +
+                "pos.wage AS wage, " +
+                "pos.id AS position_id, pos.name AS position_name, " +
                 "st.id AS emp_status_id, st.description AS emp_status_desc, " +
                 "a.id AS account_id_mapped, a.username, a.status_id AS account_status_id, " +
                 "st_acc.description AS account_status_desc, " +
-                "d.name AS department_name, " +
-                "tax.id AS tax_id, tax.num_dependents " +
+                "d.name AS department_name " +
                 "FROM employee e " +
-                "LEFT JOIN role r ON e.role_id = r.id " +
-                "LEFT JOIN salary s ON r.salary_id = s.id " +
-                "LEFT JOIN status st ON e.status_id = st.id " +
                 "LEFT JOIN account a ON e.account_id = a.id " +
+                "LEFT JOIN role r ON a.role_id = r.id " +
+                "LEFT JOIN position pos ON e.position_id = pos.id " +
+                "LEFT JOIN status st ON e.status_id = st.id " +
                 "LEFT JOIN status st_acc ON a.status_id = st_acc.id " +
                 "LEFT JOIN department d ON e.department_id = d.id " +
-                "LEFT JOIN tax ON tax.employee_id = e.id " +
                 "WHERE e.id = ? LIMIT 1";
 
         try (Connection connection = connectionFactory.newConnection();
@@ -374,19 +382,16 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                     .statusDescription(rs.getString("emp_status_desc"))
 
                     // Salary
-                    .salaryId(rs.getObject("salary_base") != null ? 1 : 0) // Dummy ID, actual from role.salary_id
-                    .baseSalary(rs.getObject("salary_base") != null ? rs.getBigDecimal("salary_base") : null)
-                    .salaryCoefficient(
-                            rs.getObject("salary_coefficient") != null ? rs.getBigDecimal("salary_coefficient") : null)
+                    .positionId(rs.getInt("position_id"))
+                    .positionName(rs.getString("position_name"))
+                    .wage(rs.getObject("wage") != null ? rs.getBigDecimal("wage") : null)
 
-                    // Tax
-                    .taxId(rs.getObject("tax_id") != null ? rs.getInt("tax_id") : 0)
                     .numDependents(rs.getObject("num_dependents") != null ? rs.getInt("num_dependents") : null)
 
                     // Insurance & Support flags
                     .socialInsCode(rs.getString("social_insurance_code"))
                     .unemploymentInsCode(rs.getString("unemployment_insurance_code"))
-                    .isPersonalIncomeTax(rs.getBoolean("is_personal_income_tax"))
+                    .isMealSupport(rs.getBoolean("is_meal_support"))
                     .isTransportationSupport(rs.getBoolean("is_transportation_support"))
                     .isAccommodationSupport(rs.getBoolean("is_accommodation_support"))
 
@@ -417,18 +422,17 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         int offset = pageIndex * pageSize;
 
         // SQL hỗ trợ tìm kiếm theo ID, Họ, Tên, và cả Họ Tên đầy đủ (CONCAT)
-        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, e.role_id, e.status_id, e.account_id, " +
+        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, a.role_id, e.status_id, e.account_id, " +
                 "r.name AS roleName, " +
                 "s.description AS statusDescription, " +
-                "sal.base AS salary, " +
-                "sal.coefficient AS efficientSalary, " +
+                "pos.wage AS salary, " +
                 "acc.username, " +
                 "COUNT(*) OVER() AS total_count " +
                 "FROM employee e " +
-                "LEFT JOIN role r ON e.role_id = r.id " +
-                "LEFT JOIN status s ON e.status_id = s.id " +
-                "LEFT JOIN salary sal ON r.salary_id = sal.id " +
                 "LEFT JOIN account acc ON e.account_id = acc.id " +
+                "LEFT JOIN role r ON acc.role_id = r.id " +
+                "LEFT JOIN status s ON e.status_id = s.id " +
+                "LEFT JOIN position pos ON e.position_id = pos.id " +
                 "WHERE e.id != 1 " + // Loại trừ admin hệ thống (ID = 1)
                 "AND (? = '' OR (" +
                 "    CAST(e.id AS CHAR) LIKE ? " +
@@ -436,7 +440,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 "    OR LOWER(e.last_name) LIKE ? " +
                 "    OR LOWER(CONCAT(e.first_name, ' ', e.last_name)) LIKE ?" +
                 ")) " +
-                "AND (? = -1 OR e.role_id = ?) " +
+                "AND (? = -1 OR acc.role_id = ?) " +
                 "AND (? = -1 OR e.status_id = ?) " +
                 "LIMIT ?, ?";
 
@@ -491,18 +495,17 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         int offset = pageIndex * pageSize;
 
         // Thêm điều kiện e.id != ? để loại bỏ chính mình
-        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, e.role_id, e.status_id, e.account_id, " +
+        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, a.role_id, e.status_id, e.account_id, " +
                 "r.name AS roleName, " +
                 "s.description AS statusDescription, " +
-                "sal.base AS salary, " +
-                "sal.coefficient AS efficientSalary, " +
+                "pos.wage AS salary, " +
                 "acc.username, " +
                 "COUNT(*) OVER() AS total_count " +
                 "FROM employee e " +
-                "LEFT JOIN role r ON e.role_id = r.id " +
-                "LEFT JOIN status s ON e.status_id = s.id " +
-                "LEFT JOIN salary sal ON r.salary_id = sal.id " +
                 "LEFT JOIN account acc ON e.account_id = acc.id " +
+                "LEFT JOIN role r ON acc.role_id = r.id " +
+                "LEFT JOIN status s ON e.status_id = s.id " +
+                "LEFT JOIN position pos ON e.position_id = pos.id " +
                 "WHERE e.id != 1 " + // Loại trừ admin hệ thống
                 "AND e.id != ? " + // LOẠI TRỪ CHÍNH MÌNH (Tham số mới)
                 "AND (? = '' OR (" +
@@ -511,7 +514,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 "    OR LOWER(e.last_name) LIKE ? " +
                 "    OR LOWER(CONCAT(e.first_name, ' ', e.last_name)) LIKE ?" +
                 ")) " +
-                "AND (? = -1 OR e.role_id = ?) " +
+                "AND (? = -1 OR acc.role_id = ?) " +
                 "AND (? = -1 OR e.status_id = ?) " +
                 "LIMIT ?, ?";
 
@@ -682,14 +685,19 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * @return EmployeeJobInfoDTO hoặc null nếu không tìm thấy
      */
     public EmployeeJobInfoDTO getJobInfo(int employeeId) {
-        String sql = "SELECT e.department_id, d.name AS department_name, r.id AS role_id, r.name AS role_name, " +
-                "e.status_id, st.description AS status_description, s.id AS salary_id, s.base AS base_salary, " +
-                "s.coefficient AS salary_coefficient, e.created_at, e.updated_at " +
+        // Câu SQL JOIN 5 bảng để lấy đầy đủ Role từ Account và Position từ Employee
+        String sql = "SELECT " +
+                "e.department_id, d.name AS department_name, " +
+                "r.id AS role_id, r.name AS role_name, " +
+                "pos.id AS position_id, pos.name AS position_name, pos.wage, " +
+                "e.status_id, st.description AS status_description, " +
+                "e.created_at, e.updated_at " +
                 "FROM employee e " +
                 "LEFT JOIN department d ON e.department_id = d.id " +
-                "LEFT JOIN role r ON e.role_id = r.id " +
+                "LEFT JOIN account a ON e.account_id = a.id " +
+                "LEFT JOIN role r ON a.role_id = r.id " + // Lấy Role từ Account
                 "LEFT JOIN status st ON e.status_id = st.id " +
-                "LEFT JOIN salary s ON r.salary_id = s.id " +
+                "LEFT JOIN position pos ON e.position_id = pos.id " + // Lấy Position từ Employee
                 "WHERE e.id = ? LIMIT 1";
 
         try (Connection connection = connectionFactory.newConnection();
@@ -700,25 +708,24 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     return EmployeeJobInfoDTO.builder()
-                            .departmentId(resultSet.getObject("department_id") != null
-                                    ? resultSet.getInt("department_id")
-                                    : null)
+                            .departmentId(
+                                    resultSet.getObject("department_id") != null ? resultSet.getInt("department_id")
+                                            : null)
                             .departmentName(resultSet.getString("department_name"))
-                            .roleId(resultSet.getObject("role_id") != null
-                                    ? resultSet.getInt("role_id")
-                                    : null)
+
+                            // Lấy thông tin Role (Quyền hệ thống)
+                            .roleId(resultSet.getObject("role_id") != null ? resultSet.getInt("role_id") : null)
                             .roleName(resultSet.getString("role_name"))
-                            .statusId(resultSet.getObject("status_id") != null
-                                    ? resultSet.getInt("status_id")
-                                    : null)
+
+                            // Lấy thông tin Position (Vị trí công việc & Lương)
+                            .positionId(
+                                    resultSet.getObject("position_id") != null ? resultSet.getInt("position_id") : null)
+                            .positionName(resultSet.getString("position_name"))
+                            .wage(resultSet.getBigDecimal("wage"))
+
+                            .statusId(resultSet.getObject("status_id") != null ? resultSet.getInt("status_id") : null)
                             .statusDescription(resultSet.getString("status_description"))
-                            .salaryId(resultSet.getObject("salary_id") != null ? resultSet.getInt("salary_id") : null)
-                            .baseSalary(resultSet.getObject("base_salary") != null
-                                    ? resultSet.getBigDecimal("base_salary")
-                                    : null)
-                            .salaryCoefficient(resultSet.getObject("salary_coefficient") != null
-                                    ? resultSet.getBigDecimal("salary_coefficient")
-                                    : null)
+
                             .createdAt(resultSet.getTimestamp("created_at") != null
                                     ? resultSet.getTimestamp("created_at").toLocalDateTime()
                                     : null)
@@ -731,7 +738,6 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         } catch (SQLException e) {
             System.err.println("Error retrieving employee job info: " + e.getMessage());
         }
-
         return null;
     }
 
@@ -742,12 +748,11 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * @return EmployeePayrollInfoDTO hoặc null nếu không tìm thấy
      */
     public EmployeePayrollInfoDTO getPayrollInfo(int employeeId) {
-        String sql = "SELECT e.id, e.health_ins_code, e.social_insurance_code, e.unemployment_insurance_code, " +
-                "tax.id AS tax_id, tax.num_dependents, " +
-                "e.is_personal_income_tax, " +
+        String sql = "SELECT e.id, e.num_dependents, e.health_insurance_code, e.social_insurance_code, " +
+                "e.unemployment_insurance_code, " +
+                "e.is_meal_support, " +
                 "e.is_transportation_support, e.is_accommodation_support, e.created_at, e.updated_at " +
                 "FROM employee e " +
-                "LEFT JOIN tax ON tax.employee_id = e.id " +
                 "WHERE e.id = ? LIMIT 1";
 
         try (Connection connection = connectionFactory.newConnection();
@@ -759,14 +764,14 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 if (resultSet.next()) {
                     return EmployeePayrollInfoDTO.builder()
                             .id(resultSet.getInt("id"))
-                            .healthInsCode(resultSet.getString("health_ins_code"))
+                            .healthInsCode(resultSet.getString("health_insurance_code"))
                             .socialInsCode(resultSet.getString("social_insurance_code"))
                             .unemploymentInsCode(resultSet.getString("unemployment_insurance_code"))
-                            .taxId(resultSet.getObject("tax_id") != null ? resultSet.getInt("tax_id") : null)
+                            .taxId(null)
                             .numDependents(resultSet.getObject("num_dependents") != null
                                     ? resultSet.getInt("num_dependents")
                                     : null)
-                            .isPersonalIncomeTax(resultSet.getBoolean("is_personal_income_tax"))
+                            .isMealSupport(resultSet.getBoolean("is_meal_support"))
                             .isTransportationSupport(resultSet.getBoolean("is_transportation_support"))
                             .isAccommodationSupport(resultSet.getBoolean("is_accommodation_support"))
                             .createdAt(resultSet.getTimestamp("created_at") != null

@@ -284,26 +284,26 @@ public class EmployeeAddModalController implements IModalController {
 
         // Khởi tạo Object dùng constructor với avatarUrl
         EmployeeDTO tempEmployee = new EmployeeDTO(
-                0, // id
-                firstName, // first_name
-                lastName, // last_name
-                phone, // phone
-                email, // email
-                dob, // date_of_birth
-                roleId, // role_id
-                deptId, // department_id
-                statusId, // status_id
-                gender, // gender
-                null, // account_id
-                finalAvatarUrl, // avatar_url (Vị trí mới trong constructor)
-                healthCode, // health_ins_code (String)
-                socialCode, // social_insurance_code (String)
-                unemploymentCode, // unemployment_insurance_code (String)
-                isPIT, // is_personal_income_tax (boolean)
-                isTransport, // is_transportation_support (boolean)
-                isAccommodation, // is_accommodation_support (boolean)
-                null, // created_at
-                null // updated_at
+        // 0, // id
+        // firstName, // first_name
+        // lastName, // last_name
+        // phone, // phone
+        // email, // email
+        // dob, // date_of_birth
+        // roleId, // role_id
+        // deptId, // department_id
+        // statusId, // status_id
+        // gender, // gender
+        // null, // account_id
+        // finalAvatarUrl, // avatar_url (Vị trí mới trong constructor)
+        // healthCode, // health_ins_code (String)
+        // socialCode, // social_insurance_code (String)
+        // unemploymentCode, // unemployment_insurance_code (String)
+        // isPIT, // is_personal_income_tax (boolean)
+        // isTransport, // is_transportation_support (boolean)
+        // isAccommodation, // is_accommodation_support (boolean)
+        // null, // created_at
+        // null // updated_at
         );
         TaxDTO tempTax = new TaxDTO(-1, -1, Integer.parseInt(txtNumDependents.getText().trim()));
         AccountDTO tempAccount = new AccountDTO(-1, txtUsername.getText().trim(), "",

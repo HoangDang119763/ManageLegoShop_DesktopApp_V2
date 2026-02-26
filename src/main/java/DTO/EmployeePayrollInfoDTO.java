@@ -18,7 +18,7 @@ public class EmployeePayrollInfoDTO {
     private String healthInsCode;
     private String socialInsCode;
     private String unemploymentInsCode;
-    private boolean isPersonalIncomeTax;
+    private boolean isMealSupport;
     private boolean isTransportationSupport;
     private boolean isAccommodationSupport;
     private LocalDateTime createdAt;
@@ -88,12 +88,12 @@ public class EmployeePayrollInfoDTO {
         this.unemploymentInsCode = unemploymentInsurance ? "1" : "0";
     }
 
-    public boolean isPersonalIncomeTax() {
-        return isPersonalIncomeTax;
+    public boolean isMealSupport() {
+        return isMealSupport;
     }
 
-    public void setPersonalIncomeTax(boolean personalIncomeTax) {
-        isPersonalIncomeTax = personalIncomeTax;
+    public void setMealSupport(boolean mealSupport) {
+        isMealSupport = mealSupport;
     }
 
     public boolean isTransportationSupport() {
@@ -125,7 +125,7 @@ public class EmployeePayrollInfoDTO {
                 ", healthInsCode='" + healthInsCode + '\'' +
                 ", socialInsCode='" + socialInsCode + '\'' +
                 ", unemploymentInsCode='" + unemploymentInsCode + '\'' +
-                ", isPersonalIncomeTax=" + isPersonalIncomeTax +
+                ", isMealSupport=" + isMealSupport +
                 ", isTransportationSupport=" + isTransportationSupport +
                 ", isAccommodationSupport=" + isAccommodationSupport +
                 ", createdAt=" + createdAt +

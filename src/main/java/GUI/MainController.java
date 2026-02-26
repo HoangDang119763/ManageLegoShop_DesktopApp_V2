@@ -60,7 +60,7 @@ public class MainController {
         SessionManagerService session = SessionManagerService.getInstance();
         if (session != null) {
             employeeLoginFullName.setText(session.getLoggedName());
-            employeeRoleName.setText(session.getRoleName());
+            employeeRoleName.setText(session.getPositionName());
         }
     }
 

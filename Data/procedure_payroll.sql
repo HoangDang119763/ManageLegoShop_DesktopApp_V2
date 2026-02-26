@@ -105,13 +105,24 @@ BEGIN
     -- Thu nhập tính thuế (Sau giảm trừ)
     SET v_tax_calc_basis = GREATEST(0, v_taxable_income - v_total_insurance - (11000000 + v_dependents * 4400000));
 
-    -- Biểu thuế lũy tiến
+    -- Biểu thuế lũy tiến TNCN (Cập nhật đầy đủ 7 bậc)
     IF v_tax_calc_basis > 0 THEN
-        IF v_tax_calc_basis <= 5000000 THEN SET v_tax_amount = v_tax_calc_basis * 0.05;
-        ELSEIF v_tax_calc_basis <= 10000000 THEN SET v_tax_amount = (v_tax_calc_basis * 0.1) - 250000;
-        ELSEIF v_tax_calc_basis <= 18000000 THEN SET v_tax_amount = (v_tax_calc_basis * 0.15) - 750000;
-        ELSEIF v_tax_calc_basis <= 32000000 THEN SET v_tax_amount = (v_tax_calc_basis * 0.2) - 1650000;
-        ELSE SET v_tax_amount = (v_tax_calc_basis * 0.25) - 3250000;
+        IF v_tax_calc_basis <= 5000000 THEN 
+            SET v_tax_amount = v_tax_calc_basis * 0.05;
+        ELSEIF v_tax_calc_basis <= 10000000 THEN 
+            SET v_tax_amount = (v_tax_calc_basis * 0.1) - 250000;
+        ELSEIF v_tax_calc_basis <= 18000000 THEN 
+            SET v_tax_amount = (v_tax_calc_basis * 0.15) - 750000;
+        ELSEIF v_tax_calc_basis <= 32000000 THEN 
+            SET v_tax_amount = (v_tax_calc_basis * 0.2) - 1650000;
+        ELSEIF v_tax_calc_basis <= 52000000 THEN 
+            SET v_tax_amount = (v_tax_calc_basis * 0.25) - 3250000;
+        -- Thêm nấc 6: Từ trên 52tr đến 80tr
+        ELSEIF v_tax_calc_basis <= 80000000 THEN 
+            SET v_tax_amount = (v_tax_calc_basis * 0.3) - 5850000;
+        -- Thêm nấc 7: Trên 80tr
+        ELSE 
+            SET v_tax_amount = (v_tax_calc_basis * 0.35) - 9850000;
         END IF;
     END IF;
 

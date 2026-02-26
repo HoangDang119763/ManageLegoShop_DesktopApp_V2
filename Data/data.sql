@@ -21,7 +21,21 @@
 
 LOCK TABLES `account` WRITE;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
-INSERT INTO `account` VALUES (1,'admin','$2a$12$QIBl3fm0aG.SDhGTldUk5eTFgClKWp1HjNP06Er4utLo/kG1dNpCG','2026-02-24 22:00:04','2026-02-25 21:06:02',4,0),(2,'huyhoang119763','$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy','2026-02-24 22:00:04',NULL,4,0),(3,'vuithii','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(4,'lyvan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(5,'nguyenthanh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(6,'trinhvan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(7,'tanthien','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(8,'lethib','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(9,'phamminh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(10,'nguyenthi','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(11,'ngominh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(12,'buithiph','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0),(13,'dovan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,0);
+INSERT INTO `account` VALUES 
+(1,'admin','$2a$12$QIBl3fm0aG.SDhGTldUk5eTFgClKWp1HjNP06Er4utLo/kG1dNpCG','2026-02-24 22:00:04','2026-02-25 21:06:02',4,1,0),
+(2,'huyhoang119763','$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy','2026-02-24 22:00:04',NULL,4,2,0),
+(3,'vuithii','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,2,0),
+(4,'lyvan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,2,0),
+(5,'nguyenthanh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,3,0),
+(6,'trinhvan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,3,0),
+(7,'tanthien','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,4,0),
+(8,'lethib','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,3,0),
+(9,'phamminh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,4,0),
+(10,'nguyenthi','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,4,0),
+(11,'ngominh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,6,0),
+(12,'buithiph','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,6,0),
+(13,'dovan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,7,0);
+
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -109,7 +123,25 @@ UNLOCK TABLES;
 
 LOCK TABLES `employee` WRITE;
 /*!40000 ALTER TABLE `employee` DISABLE KEYS */;
-INSERT INTO `employee` VALUES (1,'ID','ADMIN','','admin@company.com',NULL,'Nam',1,0,1,1,NULL,1,'HI-000000','SI-000000','UI-000000',1,1,1,5,'2026-02-26 01:00:25','2026-02-24 22:00:03'),(2,'Đặng Huy','Hoàng','0123456789','hoang.dh@company.com','2004-06-11','Nam',2,1,1,2,NULL,1,'HI-2026001','SI-2026001','UI-2026001',1,1,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(3,'Vũ Thị','Iến','0900123456','ien.vt@company.com','1994-09-25','Nữ',2,1,1,3,NULL,1,'HI-2026011','SI-2026011','UI-2026011',1,1,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(4,'Lý Văn','Nam','0911234567','nam.lv@company.com','1996-10-30','Nam',2,1,1,4,NULL,1,'HI-2026012','SI-2026012','UI-2026012',1,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(5,'Nguyễn Thành','Long','0987654321','long.nt@company.com','2003-04-11','Nam',3,2,1,5,NULL,1,'HI-2026002','SI-2026002','UI-2026002',1,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(6,'Trịnh Văn','Hùng','0999012345','hung.tv@company.com','1989-08-20','Nam',3,2,1,6,NULL,1,'HI-2026010','SI-2026010','UI-2026010',1,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(7,'Tần Thiên','Lang','0912345678','lang.tt@company.com','2000-01-15','Nam',4,3,1,7,NULL,1,'HI-2026003','SI-2026003','UI-2026003',0,1,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(8,'Lê Thị','Bích','0933456789','bich.lt@company.com','1988-02-20','Nữ',3,4,1,8,NULL,1,'HI-2026004','0','UI-2026004',1,0,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(9,'Phạm Minh','Chính','0944567890','chinh.pm@company.com','1985-03-25','Nam',4,3,1,9,NULL,1,'HI-2026005','SI-2026005','0',1,1,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(10,'Nguyễn Thị','Diệu','0955678901','dieu.nt@company.com','1992-04-30','Nữ',4,3,1,10,NULL,1,'HI-2026006','0','0',1,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(11,'Ngô Minh','Giàu','0988901234','giau.nm@company.com','1991-07-15','Nam',6,3,1,11,NULL,1,'HI-2026009','SI-2026009','UI-2026009',0,1,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(12,'Bùi Thị','Phượng','0977890123','phuong.bt@company.com','1993-06-10','Nữ',6,3,1,12,NULL,1,'HI-2026008','SI-2026008','UI-2026008',1,1,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),(13,'Đỗ Văn','Em','0966789012','em.dv@company.com','1995-05-05','Nam',7,4,1,13,NULL,1,'HI-2026007','SI-2026007','UI-2026007',0,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03');
+INSERT INTO `employee` (
+    `id`, `first_name`, `last_name`, `phone`, `email`, 
+    `date_of_birth`, `gender`, `department_id`, `status_id`, `account_id`, 
+    `avatar_url`, `position_id`, `health_insurance_code`, `social_insurance_code`, `unemployment_insurance_code`, 
+    `is_meal_support`, `is_transportation_support`, `is_accommodation_support`, `num_dependents`, `updated_at`, `created_at`
+) VALUES 
+(1,'ID','ADMIN','','admin@company.com',NULL,'Nam',0,1,1,NULL,1,'HI-000000','SI-000000','UI-000000',1,1,1,5,'2026-02-26 01:00:25','2026-02-24 22:00:03'),
+(2,'Đặng Huy','Hoàng','0123456789','hoang.dh@company.com','2004-06-11','Nam',1,1,2,NULL,1,'HI-2026001','SI-2026001','UI-2026001',1,1,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(3,'Vũ Thị','Iến','0900123456','ien.vt@company.com','1994-09-25','Nữ',1,1,3,NULL,1,'HI-2026011','SI-2026011','UI-2026011',1,1,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(4,'Lý Văn','Nam','0911234567','nam.lv@company.com','1996-10-30','Nam',1,1,4,NULL,1,'HI-2026012','SI-2026012','UI-2026012',1,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(5,'Nguyễn Thành','Long','0987654321','long.nt@company.com','2003-04-11','Nam',2,1,5,NULL,1,'HI-2026002','SI-2026002','UI-2026002',1,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(6,'Trịnh Văn','Hùng','0999012345','hung.tv@company.com','1989-08-20','Nam',2,1,6,NULL,1,'HI-2026010','SI-2026010','UI-2026010',1,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(7,'Tần Thiên','Lang','0912345678','lang.tt@company.com','2000-01-15','Nam',3,1,7,NULL,1,'HI-2026003','SI-2026003','UI-2026003',0,1,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(8,'Lê Thị','Bích','0933456789','bich.lt@company.com','1988-02-20','Nữ',4,1,8,NULL,1,'HI-2026004','0','UI-2026004',1,0,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(9,'Phạm Minh','Chính','0944567890','chinh.pm@company.com','1985-03-25','Nam',3,1,9,NULL,1,'HI-2026005','SI-2026005','0',1,1,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(10,'Nguyễn Thị','Diệu','0955678901','dieu.nt@company.com','1992-04-30','Nữ',3,1,10,NULL,1,'HI-2026006','0','0',1,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(11,'Ngô Minh','Giàu','0988901234','giau.nm@company.com','1991-07-15','Nam',3,1,11,NULL,1,'HI-2026009','SI-2026009','UI-2026009',0,1,1,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(12,'Bùi Thị','Phượng','0977890123','phuong.bt@company.com','1993-06-10','Nữ',3,1,12,NULL,1,'HI-2026008','SI-2026008','UI-2026008',1,1,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03'),
+(13,'Đỗ Văn','Em','0966789012','em.dv@company.com','1995-05-05','Nam',4,1,13,NULL,1,'HI-2026007','SI-2026007','UI-2026007',0,0,0,0,'2026-02-26 00:10:51','2026-02-24 22:00:03');
 /*!40000 ALTER TABLE `employee` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -262,7 +294,16 @@ UNLOCK TABLES;
 
 LOCK TABLES `role` WRITE;
 /*!40000 ALTER TABLE `role` DISABLE KEYS */;
-INSERT INTO `role` VALUES (1,'IT Admin','Quản trị hệ thống toàn quyền',0,0,'2026-02-24 22:00:03','2026-02-24 22:00:03',1),(2,'Tổng giám đốc','Chủ cửa hàng/Điều hành cao cấp',10,30,'2026-02-24 22:00:03','2026-02-24 22:00:03',1),(3,'Quản lý cửa hàng','Điều hành toàn diện hoạt động cửa hàng',4,15,'2026-02-24 22:00:03','2026-02-24 22:00:03',8),(4,'Trưởng nhóm bán hàng','Giám sát ca làm việc và hỗ trợ thanh toán phức tạp',2,4,'2026-02-24 22:00:03','2026-02-24 22:00:03',10),(5,'Nhân viên bán hàng (Bậc 3)','Nhân viên nòng cốt, hỗ trợ đào tạo người mới',3,5,'2026-02-24 22:00:03','2026-02-24 22:00:03',11),(6,'Nhân viên bán hàng (Bậc 2)','Nhân viên kinh nghiệm, tư vấn chuyên sâu',1,3,'2026-02-24 22:00:03','2026-02-24 22:00:03',12),(7,'Nhân viên bán hàng (Bậc 1)','Nhân viên mới',0,1,'2026-02-24 22:00:03','2026-02-24 22:00:03',13),(8,'Nhân viên kho (Bậc 2)','Quản lý nhập xuất kho',2,5,'2026-02-24 22:00:03','2026-02-24 22:00:03',8),(9,'Nhân viên kho (Bậc 1)','Sắp xếp và kiểm kê kho',0,2,'2026-02-24 22:00:03','2026-02-24 22:00:03',9);
+INSERT INTO `role` (`id`, `name`, `description`, `start_experience`, `end_experience`, `created_at`, `updated_at`) VALUES 
+(1,'IT Admin','Quản trị hệ thống toàn quyền',0,0,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
+(2,'Tổng giám đốc','Chủ cửa hàng/Điều hành cao cấp',10,30,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
+(3,'Quản lý cửa hàng','Điều hành toàn diện hoạt động cửa hàng',4,15,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
+(4,'Trưởng nhóm bán hàng','Giám sát ca làm việc và hỗ trợ thanh toán phức tạp',2,4,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
+(5,'Nhân viên bán hàng (Bậc 3)','Nhân viên nòng cốt, hỗ trợ đào tạo người mới',3,5,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
+(6,'Nhân viên bán hàng (Bậc 2)','Nhân viên kinh nghiệm, tư vấn chuyên sâu',1,3,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
+(7,'Nhân viên bán hàng (Bậc 1)','Nhân viên mới',0,1,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
+(8,'Nhân viên kho (Bậc 2)','Quản lý nhập xuất kho',2,5,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
+(9,'Nhân viên kho (Bậc 1)','Sắp xếp và kiểm kê kho',0,2,'2026-02-24 22:00:03','2026-02-24 22:00:03');
 /*!40000 ALTER TABLE `role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -274,16 +315,6 @@ LOCK TABLES `role_permission` WRITE;
 /*!40000 ALTER TABLE `role_permission` DISABLE KEYS */;
 INSERT INTO `role_permission` VALUES (1,1),(2,1),(3,1),(1,2),(2,2),(3,2),(1,3),(2,3),(1,4),(2,4),(3,4),(1,5),(2,5),(1,6),(2,6),(1,7),(2,7),(1,8),(2,8),(1,9),(2,9),(1,10),(2,10),(1,11),(2,11),(1,12),(2,12),(1,13),(2,13),(3,13),(4,13),(5,13),(6,13),(7,13),(1,14),(2,14),(1,15),(2,15),(1,16),(2,16),(1,17),(2,17),(3,17),(4,17),(5,17),(6,17),(7,17),(8,17),(9,17),(1,18),(2,18),(1,19),(2,19),(3,19),(8,19),(9,19),(1,20),(2,20),(1,21),(2,21),(1,22),(2,22),(1,23),(2,23),(1,24),(2,24),(1,25),(2,25),(3,25),(1,26),(2,26),(4,26),(5,26),(6,26),(7,26),(1,27),(2,27),(8,27),(9,27),(1,28),(2,28),(8,28),(9,28),(1,29),(2,29),(1,30),(2,30),(1,31),(2,31),(1,32),(2,32),(1,33),(2,33),(1,34),(2,34),(1,35),(2,35),(1,36),(2,36),(1,37),(2,37),(1,38),(2,38),(1,39),(2,39),(1,40),(2,40),(1,41),(2,41),(1,42),(2,42),(1,43),(2,43),(1,44),(2,44),(3,44),(1,45),(2,45),(3,45),(4,45),(5,45),(6,45),(7,45),(8,45),(9,45),(1,46),(2,46),(5,46),(6,46),(7,46),(8,46),(9,46),(1,47),(2,47),(3,47),(1,48),(2,48),(3,48),(4,48),(1,49),(2,49),(3,49),(1,50),(2,50),(3,50),(4,50),(5,50),(6,50),(7,50),(8,50),(9,50),(1,51),(2,51),(3,51),(1,52),(2,52),(3,52);
 /*!40000 ALTER TABLE `role_permission` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `salary`
---
-
-LOCK TABLES `salary` WRITE;
-/*!40000 ALTER TABLE `salary` DISABLE KEYS */;
-INSERT INTO `salary` VALUES (1,30200000.00,2.95,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(2,25200000.00,2.65,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(3,24200000.00,2.45,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(4,19200000.00,2.15,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(5,18200000.00,2.15,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(6,14200000.00,1.65,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(7,15200000.00,1.75,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(8,9200000.00,1.35,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(9,10200000.00,1.40,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(10,11200000.00,1.45,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(11,6700000.00,1.20,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(12,7200000.00,1.25,'2026-02-24 22:00:03','2026-02-24 22:00:03'),(13,5400000.00,1.10,'2026-02-24 22:00:03','2026-02-24 22:00:03');
-/*!40000 ALTER TABLE `salary` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -304,15 +335,6 @@ LOCK TABLES `supplier` WRITE;
 /*!40000 ALTER TABLE `supplier` DISABLE KEYS */;
 INSERT INTO `supplier` VALUES (1,'Nhà cung cấp A','0903344554','99 An Dương Vương, Phường 16, Quận 8, TP Hồ Chí Minh','supplierA@example.com',11),(2,'Nhà cung cấp B','0903344556','04 Tôn Đức Thắng, Phường Bến Nghé, Quận 1, TP Hồ Chí Minh','supplierB@example.com',11),(3,'Nhà cung cấp C','0903344557','123 Nguyễn Thị Minh Khai, Quận 3, TP Hồ Chí Minh','supplierC@example.com',11),(4,'Nhà cung cấp D','0903344558','456 Lê Lợi, Quận 1, TP Hồ Chí Minh','supplierD@example.com',11),(5,'Nhà cung cấp E','0903344559','789 Trường Chinh, Quận Tân Bình, TP Hồ Chí Minh','supplierE@example.com',11),(6,'Nhà cung cấp F','0903344560','101 Nguyễn Văn Cừ, Quận 5, TP Hồ Chí Minh','supplierF@example.com',11),(7,'Nhà cung cấp G','0903344561','202 Phan Văn Trị, Quận Bình Thạnh, TP Hồ Chí Minh','supplierG@example.com',11),(8,'Nhà cung cấp H','0903344562','303 Nguyễn Huệ, Quận 1, TP Hồ Chí Minh','supplierH@example.com',11),(9,'Nhà cung cấp I','0903344563','404 Lê Văn Sỹ, Quận 3, TP Hồ Chí Minh','supplierI@example.com',11),(10,'Nhà cung cấp J','0903344564','505 Bến Vân Đồn, Quận 4, TP Hồ Chí Minh','supplierJ@example.com',11),(11,'Nhà cung cấp K','0903344565','606 Đinh Tiên Hoàng, Quận Bình Thạnh, TP Hồ Chí Minh','supplierK@example.com',11),(12,'Nhà cung cấp L','0903344566','707 Trần Hưng Đạo, Quận 1, TP Hồ Chí Minh','supplierL@example.com',11),(13,'Nhà cung cấp M','0903344567','808 Hoàng Văn Thụ, Quận Tân Bình, TP Hồ Chí Minh','supplierM@example.com',11),(14,'Nhà cung cấp N','0903344568','909 Nguyễn Thái Sơn, Quận Gò Vấp, TP Hồ Chí Minh','supplierN@example.com',11),(15,'Nhà cung cấp O','0903344569','1001 Lạc Long Quân, Quận 11, TP Hồ Chí Minh','supplierO@example.com',11),(16,'Nhà cung cấp P','0903344570','1102 Âu Cơ, Quận Tân Phú, TP Hồ Chí Minh','supplierP@example.com',11),(17,'Nhà cung cấp Q','0903344571','1203 Trần Quốc Toản, Quận 3, TP Hồ Chí Minh','supplierQ@example.com',11),(18,'Nhà cung cấp R','0903344572','1304 Ngô Quyền, Quận 10, TP Hồ Chí Minh','supplierR@example.com',11),(19,'Nhà cung cấp S','0903344573','1405 Đinh Bộ Lĩnh, Quận Bình Thạnh, TP Hồ Chí Minh','supplierS@example.com',11),(20,'Nhà cung cấp T','0903344574','1506 Huỳnh Tấn Phát, Quận 7, TP Hồ Chí Minh','supplierT@example.com',11);
 /*!40000 ALTER TABLE `supplier` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `tax`
---
-
-LOCK TABLES `tax` WRITE;
-/*!40000 ALTER TABLE `tax` DISABLE KEYS */;
-/*!40000 ALTER TABLE `tax` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
