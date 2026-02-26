@@ -637,10 +637,13 @@ public class EmployeeModalController implements IModalController {
             }
         }
 
-        // Display base salary and coefficient
-        txtBaseSalary.setText(jobInfo.getBaseSalary() != null ? jobInfo.getBaseSalary().toString() : "0");
-        txtCoefficient
-                .setText(jobInfo.getSalaryCoefficient() != null ? jobInfo.getSalaryCoefficient().toString() : "0");
+        // // Display position name
+        // txtPositionName.setText(jobInfo.getPositionName() != null ?
+        // jobInfo.getPositionName() : "");
+
+        // // Display base salary
+        // txtBaseSalary.setText(jobInfo.getWage() != null ?
+        // jobInfo.getWage().toString() : "0");
 
         // Set created/updated time
         lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(jobInfo.getCreatedAt()));
@@ -674,7 +677,7 @@ public class EmployeeModalController implements IModalController {
         txtSocialInsCode.setText(payrollInfo.getSocialInsCode() != null ? payrollInfo.getSocialInsCode() : "");
         txtUnemploymentInsCode
                 .setText(payrollInfo.getUnemploymentInsCode() != null ? payrollInfo.getUnemploymentInsCode() : "");
-        cbPersonalTax.setSelected(payrollInfo.isPersonalIncomeTax());
+        cbPersonalTax.setSelected(payrollInfo.isMealSupport());
         cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
         cbAccommodationSupport.setSelected(payrollInfo.isAccommodationSupport());
 
@@ -917,7 +920,7 @@ public class EmployeeModalController implements IModalController {
         payrollInfo.setHealthInsCode(txtHealthInsCode.getText().trim());
         payrollInfo.setSocialInsCode(txtSocialInsCode.getText().trim());
         payrollInfo.setUnemploymentInsCode(txtUnemploymentInsCode.getText().trim());
-        payrollInfo.setPersonalIncomeTax(cbPersonalTax.isSelected());
+        payrollInfo.setMealSupport(cbPersonalTax.isSelected());
         payrollInfo.setTransportationSupport(cbTransportSupport.isSelected());
         payrollInfo.setAccommodationSupport(cbAccommodationSupport.isSelected());
         int numDependents = txtNumDependents.getText().trim().isEmpty() ? 0

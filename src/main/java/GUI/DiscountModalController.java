@@ -24,7 +24,6 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class DiscountModalController implements IModalController {
@@ -93,11 +92,11 @@ public class DiscountModalController implements IModalController {
         txtDiscountCode.setText(discount.getCode());
         txtDiscountName.setText(discount.getName());
         cbTypeDiscount.getSelectionModel().select(DiscountType.fromCode(discount.getType()).getDisplayName());
-        LocalDateTime startDate = discount.getStartDate();
-        LocalDateTime endDate = discount.getEndDate();
+        LocalDate startDate = discount.getStartDate();
+        LocalDate endDate = discount.getEndDate();
 
-        dpStartDate.setValue(startDate != null ? startDate.toLocalDate() : null);
-        dpEndDate.setValue(endDate != null ? endDate.toLocalDate() : null);
+        dpStartDate.setValue(startDate != null ? startDate : null);
+        dpEndDate.setValue(endDate != null ? endDate : null);
         if (typeModal == 1) {
             TaskUtil.executeSecure(null, PermissionKey.DISCOUNT_UPDATE,
                     () -> DetailDiscountBUS.getInstance().getAllDetailDiscountByDiscountId(discount.getCode()),
@@ -234,8 +233,8 @@ public class DiscountModalController implements IModalController {
                 txtDiscountCode.getText().trim(),
                 txtDiscountName.getText().trim(),
                 DiscountType.fromDisplayName(cbTypeDiscount.getValue()).getCode(),
-                dpStartDate.getValue().atStartOfDay(),
-                dpEndDate.getValue().atStartOfDay());
+                dpStartDate.getValue(),
+                dpEndDate.getValue());
         // Copy danh sách detail để gửi đi
         ArrayList<DetailDiscountDTO> list = new ArrayList<>(arrDetailDiscount);
 
@@ -268,8 +267,8 @@ public class DiscountModalController implements IModalController {
                 txtDiscountCode.getText().trim(),
                 txtDiscountName.getText().trim(),
                 DiscountType.fromDisplayName(cbTypeDiscount.getValue()).getCode(),
-                dpStartDate.getValue().atStartOfDay(),
-                dpEndDate.getValue().atStartOfDay());
+                dpStartDate.getValue(),
+                dpEndDate.getValue());
 
         // Copy danh sách detail để gửi đi
         ArrayList<DetailDiscountDTO> list = new ArrayList<>(arrDetailDiscount);

@@ -64,6 +64,8 @@ public class EmployeeInfoController {
     private TextField lblRoleName; // Vai trò (readonly)
     @FXML
     private TextField lblStatus; // Trạng thái (readonly)
+    @FXML
+    private TextField lblPositionName; // Tên vị trí (readonly)
 
     // Contact Info Section
     @FXML
@@ -80,9 +82,7 @@ public class EmployeeInfoController {
     private TextField lblHealthInsCode; // Mã BHYT
     // Role + Department Section
     @FXML
-    private TextField lblBaseSalary; // Lương cơ bản
-    @FXML
-    private TextField lblSalaryCoefficient; // Hệ số lương --- IGNORE ---\
+    private TextField lblWage; // Lương
     @FXML
     private TextField lblNumDependents; // Tên tài khoản --- IGNORE ---
     // Benefits Section
@@ -91,7 +91,7 @@ public class EmployeeInfoController {
     @FXML
     private TextField txtUnemploymentInsCode; // Mã BHTN
     @FXML
-    private CheckBox cbIncomeTax; // Thuế TN cá nhân
+    private CheckBox cbMealSupport; // Hỗ trợ bữa ăn
     @FXML
     private CheckBox cbTransportSupport; // Hỗ trợ đi lại
     @FXML
@@ -337,6 +337,7 @@ public class EmployeeInfoController {
         lblEmployeeId.setText(String.valueOf(personalInfo.getEmployeeId()));
         lblGender.setText(personalInfo.getGender() != null ? personalInfo.getGender() : "");
         lblDepartmentName.setText(jobInfo != null ? jobInfo.getDepartmentName() : "");
+        lblPositionName.setText(jobInfo != null ? jobInfo.getPositionName() : "");
         lblRoleName.setText(jobInfo.getRoleName() != null ? jobInfo.getRoleName() : "");
         lblStatus.setText(jobInfo.getStatusDescription() != null ? jobInfo.getStatusDescription() : "");
         lblHealthInsCode.setText(payrollInfo != null ? payrollInfo.getHealthInsCode() : "");
@@ -357,7 +358,7 @@ public class EmployeeInfoController {
             txtSocialInsCode.setText(payrollInfo.getSocialInsCode() != null ? payrollInfo.getSocialInsCode() : "");
             txtUnemploymentInsCode
                     .setText(payrollInfo.getUnemploymentInsCode() != null ? payrollInfo.getUnemploymentInsCode() : "");
-            cbIncomeTax.setSelected(payrollInfo.isPersonalIncomeTax());
+            cbMealSupport.setSelected(payrollInfo.isMealSupport());
             cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
             cbAccommSupport.setSelected(payrollInfo.isAccommodationSupport());
         }
@@ -374,12 +375,8 @@ public class EmployeeInfoController {
         ValidationUtils vu = ValidationUtils.getInstance();
 
         // Salary Info
-        lblBaseSalary.setText(jobInfo.getBaseSalary() != null
-                ? vu.formatCurrency(jobInfo.getBaseSalary())
-                : "");
-
-        lblSalaryCoefficient.setText(jobInfo.getSalaryCoefficient() != null
-                ? String.valueOf(jobInfo.getSalaryCoefficient())
+        lblWage.setText(jobInfo.getWage() != null
+                ? vu.formatCurrency(jobInfo.getWage())
                 : "");
 
         lblNumDependents.setText(payrollInfo != null && payrollInfo.getNumDependents() != null
@@ -479,7 +476,7 @@ public class EmployeeInfoController {
         // 4. Kiểm tra Điện thoại
         String phone = lblPhone.getText().trim();
         if (phone.isEmpty()) {
-            focus(lblBaseSalary);
+            focus(lblPhone);
             return "Số điện thoại không được để trống.";
         }
         if (!phone.isEmpty() && !validator.validateVietnamesePhoneNumber(phone)) {

@@ -50,6 +50,22 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
 
+        // Validate roleId
+        if (obj.getRoleId() <= 0) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        }
+
+        RoleBUS roleBUS = RoleBUS.getInstance();
+        if (roleBUS.getById(obj.getRoleId()) == null) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        }
+
+        // Validate statusId
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.ACCOUNT, obj.getStatusId())) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        }
+
         // Kiểm tra trùng username trực tiếp dưới DB
         if (AccountDAL.getInstance().getByUsername(obj.getUsername()) != null) {
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.ACCOUNT_USERNAME_DUPLICATE);

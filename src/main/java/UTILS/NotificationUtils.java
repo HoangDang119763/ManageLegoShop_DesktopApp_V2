@@ -1,24 +1,14 @@
 package UTILS;
 
-import DTO.TempDetailImportDTO;
-import DTO.TempDetailInvoiceDTO;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
-
-import org.apache.poi.ss.formula.functions.T;
-
-import java.util.ArrayList;
-import java.util.Optional;
 
 public class NotificationUtils {
     public static void showErrorAlert(String message, String title) {

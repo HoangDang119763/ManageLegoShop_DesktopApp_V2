@@ -1,4 +1,3 @@
-
 package BUS;
 
 import DAL.ConnectApplication;
@@ -669,6 +668,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (data == null) {
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
         }
+        // Ensure positionName is included in the result
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_JOB_INFO_LOAD_SUCCESS, data);
     }
 

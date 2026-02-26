@@ -14,6 +14,7 @@ public class AccountDTO {
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
     private int statusId;
+    private int roleId;
     private boolean requireRelogin;
 
     // Constructors
@@ -21,13 +22,14 @@ public class AccountDTO {
     }
 
     public AccountDTO(int id, String username, String password, LocalDateTime createdAt,
-            LocalDateTime lastLogin, int statusId) {
+            LocalDateTime lastLogin, int statusId, int roleId) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.createdAt = createdAt;
         this.lastLogin = lastLogin;
         this.statusId = statusId;
+        this.roleId = roleId;
     }
 
     public AccountDTO(int id, String username, String password, int statusId) {
@@ -48,6 +50,7 @@ public class AccountDTO {
         if (other != null) {
             this.id = other.id;
             this.username = other.username;
+            this.roleId = other.roleId;
             this.password = other.password;
             this.createdAt = other.createdAt;
             this.lastLogin = other.lastLogin;
@@ -105,6 +108,14 @@ public class AccountDTO {
 
     public void setStatusId(int statusId) {
         this.statusId = statusId;
+    }
+
+    public int getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(int roleId) {
+        this.roleId = roleId;
     }
 
     public boolean isRequireRelogin() {

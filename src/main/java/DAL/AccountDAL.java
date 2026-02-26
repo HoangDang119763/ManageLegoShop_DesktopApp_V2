@@ -17,8 +17,10 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
     @Override
     protected AccountDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
         int statusId = resultSet.getInt("status_id");
+        int roleId = resultSet.getInt("role_id");
+        boolean requireRelogin = resultSet.getBoolean("require_relogin");
 
-        return new AccountDTO(
+        AccountDTO account = new AccountDTO(
                 resultSet.getInt("id"),
                 resultSet.getString("username"),
                 resultSet.getString("password"),
@@ -26,7 +28,10 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
                         : null,
                 resultSet.getTimestamp("last_login") != null ? resultSet.getTimestamp("last_login").toLocalDateTime()
                         : null,
-                statusId);
+                statusId,
+                roleId);
+        account.setRequireRelogin(requireRelogin);
+        return account;
     }
 
     @Override
@@ -43,7 +48,7 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(username, password, created_at, last_login, status_id) VALUES (?, ?, ?, ?, ?)";
+        return "(username, password, created_at, last_login, status_id, role_id, require_relogin) VALUES (?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -53,11 +58,13 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
         statement.setObject(3, obj.getCreatedAt());
         statement.setObject(4, obj.getLastLogin());
         statement.setInt(5, obj.getStatusId());
+        statement.setInt(6, obj.getRoleId());
+        statement.setBoolean(7, obj.isRequireRelogin());
     }
 
     @Override
     protected String getUpdateQuery() {
-        return "(username, password, last_login, status_id) VALUES (?, ?, ?, ?)";
+        return "SET username = ?, password = ?, last_login = ?, status_id = ?, role_id = ?, require_relogin = ? WHERE id = ?";
     }
 
     public boolean updatePasswordAndForceRelogin(String username, String hashedNewPassword) {
@@ -115,7 +122,7 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
     }
 
     public AccountDTO getByUsername(String username) {
-        String query = "SELECT id, username, password, status_id, require_relogin FROM account WHERE LOWER(username) = LOWER(?) LIMIT 1";
+        String query = "SELECT id, username, password, status_id, role_id, require_relogin FROM account WHERE LOWER(username) = LOWER(?) LIMIT 1";
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
 
@@ -127,6 +134,7 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
                     acc.setUsername(resultSet.getString("username"));
                     acc.setPassword(resultSet.getString("password")); // Hash lưu trong DB
                     acc.setStatusId(resultSet.getInt("status_id"));
+                    acc.setRoleId(resultSet.getInt("role_id"));
                     acc.setRequireRelogin(resultSet.getBoolean("require_relogin"));
                     return acc;
                 }

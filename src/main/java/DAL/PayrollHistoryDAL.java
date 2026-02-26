@@ -22,15 +22,23 @@ public class PayrollHistoryDAL extends BaseDAL<PayrollHistoryDTO, Integer> {
                 resultSet.getDate("salary_period") != null
                         ? resultSet.getDate("salary_period").toLocalDate()
                         : null,
-                resultSet.getBigDecimal("temporary_salary"),
-                resultSet.getBigDecimal("overtime_amount"),
+                resultSet.getBigDecimal("base_salary"),
+                resultSet.getInt("standard_work_days"),
+                resultSet.getBigDecimal("actual_work_days"),
+                resultSet.getBigDecimal("bhxh_amount"),
+                resultSet.getBigDecimal("bhyt_amount"),
+                resultSet.getBigDecimal("bhtn_amount"),
+                resultSet.getBigDecimal("total_insurance"),
+                resultSet.getBigDecimal("violation_amount"),
+                resultSet.getBigDecimal("reward_amount"),
                 resultSet.getBigDecimal("total_allowance"),
-                resultSet.getBigDecimal("total_bonus"),
-                resultSet.getBigDecimal("total_deduction"),
-                resultSet.getBigDecimal("total_fine"),
+                resultSet.getBigDecimal("overtime_amount"),
+                resultSet.getBigDecimal("taxable_income"),
+                resultSet.getBigDecimal("tax_percent"),
+                resultSet.getBigDecimal("tax_amount"),
                 resultSet.getBigDecimal("net_salary"),
-                resultSet.getTimestamp("paid_date") != null
-                        ? resultSet.getTimestamp("paid_date").toLocalDateTime()
+                resultSet.getTimestamp("created_at") != null
+                        ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null);
     }
 
@@ -48,40 +56,56 @@ public class PayrollHistoryDAL extends BaseDAL<PayrollHistoryDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(employee_id, salary_period, temporary_salary, overtime_amount, total_allowance, total_bonus, total_deduction, total_fine, net_salary, paid_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(employee_id, salary_period, base_salary, standard_work_days, actual_work_days, bhxh_amount, bhyt_amount, bhtn_amount, total_insurance, violation_amount, reward_amount, total_allowance, overtime_amount, taxable_income, tax_percent, tax_amount, net_salary, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, PayrollHistoryDTO obj) throws SQLException {
         statement.setInt(1, obj.getEmployeeId());
         statement.setObject(2, obj.getSalaryPeriod());
-        statement.setObject(3, obj.getTemporarySalary());
-        statement.setObject(4, obj.getOvertimeAmount());
-        statement.setObject(5, obj.getTotalAllowance());
-        statement.setObject(6, obj.getTotalBonus());
-        statement.setObject(7, obj.getTotalDeduction());
-        statement.setObject(8, obj.getTotalFine());
-        statement.setObject(9, obj.getNetSalary());
-        statement.setObject(10, obj.getPaidDate());
+        statement.setObject(3, obj.getBaseSalary());
+        statement.setInt(4, obj.getStandardWorkDays());
+        statement.setObject(5, obj.getActualWorkDays());
+        statement.setObject(6, obj.getBhxhAmount());
+        statement.setObject(7, obj.getBhytAmount());
+        statement.setObject(8, obj.getBhtnAmount());
+        statement.setObject(9, obj.getTotalInsurance());
+        statement.setObject(10, obj.getViolationAmount());
+        statement.setObject(11, obj.getRewardAmount());
+        statement.setObject(12, obj.getTotalAllowance());
+        statement.setObject(13, obj.getOvertimeAmount());
+        statement.setObject(14, obj.getTaxableIncome());
+        statement.setObject(15, obj.getTaxPercent());
+        statement.setObject(16, obj.getTaxAmount());
+        statement.setObject(17, obj.getNetSalary());
+        statement.setObject(18, obj.getCreatedAt());
     }
 
     @Override
     protected String getUpdateQuery() {
-        return "SET employee_id = ?, salary_period = ?, temporary_salary = ?, overtime_amount = ?, total_allowance = ?, total_bonus = ?, total_deduction = ?, total_fine = ?, net_salary = ?, paid_date = ? WHERE id = ?";
+        return "SET employee_id = ?, salary_period = ?, base_salary = ?, standard_work_days = ?, actual_work_days = ?, bhxh_amount = ?, bhyt_amount = ?, bhtn_amount = ?, total_insurance = ?, violation_amount = ?, reward_amount = ?, total_allowance = ?, overtime_amount = ?, taxable_income = ?, tax_percent = ?, tax_amount = ?, net_salary = ?, created_at = ? WHERE id = ?";
     }
 
     @Override
     protected void setUpdateParameters(PreparedStatement statement, PayrollHistoryDTO obj) throws SQLException {
         statement.setInt(1, obj.getEmployeeId());
         statement.setObject(2, obj.getSalaryPeriod());
-        statement.setObject(3, obj.getTemporarySalary());
-        statement.setObject(4, obj.getOvertimeAmount());
-        statement.setObject(5, obj.getTotalAllowance());
-        statement.setObject(6, obj.getTotalBonus());
-        statement.setObject(7, obj.getTotalDeduction());
-        statement.setObject(8, obj.getTotalFine());
-        statement.setObject(9, obj.getNetSalary());
-        statement.setObject(10, obj.getPaidDate());
-        statement.setInt(11, obj.getId());
+        statement.setObject(3, obj.getBaseSalary());
+        statement.setInt(4, obj.getStandardWorkDays());
+        statement.setObject(5, obj.getActualWorkDays());
+        statement.setObject(6, obj.getBhxhAmount());
+        statement.setObject(7, obj.getBhytAmount());
+        statement.setObject(8, obj.getBhtnAmount());
+        statement.setObject(9, obj.getTotalInsurance());
+        statement.setObject(10, obj.getViolationAmount());
+        statement.setObject(11, obj.getRewardAmount());
+        statement.setObject(12, obj.getTotalAllowance());
+        statement.setObject(13, obj.getOvertimeAmount());
+        statement.setObject(14, obj.getTaxableIncome());
+        statement.setObject(15, obj.getTaxPercent());
+        statement.setObject(16, obj.getTaxAmount());
+        statement.setObject(17, obj.getNetSalary());
+        statement.setObject(18, obj.getCreatedAt());
+        statement.setInt(19, obj.getId());
     }
 }

@@ -269,7 +269,7 @@ public class DiscountController implements IController {
             return;
         }
 
-        if (selectedDiscount.getEndDate().toLocalDate().isBefore(LocalDate.now())) {
+        if (selectedDiscount.getEndDate().isBefore(LocalDate.now())) {
             NotificationUtils.showErrorAlert("Khuyến mãi đã hết hạn, không thể sửa.",
                     "Thông báo");
             return;

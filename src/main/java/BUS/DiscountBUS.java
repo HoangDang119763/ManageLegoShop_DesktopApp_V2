@@ -223,7 +223,7 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
 
         // Kiểm tra khóa ngày bắt đầu
         if (InvoiceBUS.getInstance().isDiscountInAnyInvoice(obj.getCode())) {
-            if (!obj.getStartDate().toLocalDate().equals(oldObj.getStartDate().toLocalDate())) {
+            if (!obj.getStartDate().equals(oldObj.getStartDate())) {
                 System.err.println(
                         "[DEBUG] Update blocked: Discount already used in invoices. StartDate cannot be changed.");
                 return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.DISCOUNT_LOCK_START_DATE);
@@ -231,7 +231,7 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
         }
 
         // Kiểm tra khuyến mãi đã kết thúc trong quá khứ (không cho sửa KM đã hết hạn)
-        if (oldObj.getEndDate().toLocalDate().isBefore(LocalDate.now())) {
+        if (oldObj.getEndDate().isBefore(LocalDate.now())) {
             System.err.println("[DEBUG] Update blocked: Cannot edit an expired discount.");
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.DISCOUNT_LOCK_OUTDATE);
         }
@@ -354,8 +354,8 @@ public class DiscountBUS extends BaseBUS<DiscountDTO, String> {
         }
 
         LocalDate today = LocalDate.now();
-        LocalDate start = obj.getStartDate().toLocalDate();
-        LocalDate end = obj.getEndDate().toLocalDate();
+        LocalDate start = obj.getStartDate();
+        LocalDate end = obj.getEndDate();
 
         // 3. Logic thời gian chung cho cả Add/Edit
         if (end.isBefore(start))
