@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane fx:id="acPermissionRoot" maxHeight="280.0" minHeight="280.0" prefHeight="280.0" prefWidth="620.0" styleClass="acPermissionRoot" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.NavigatePermissionController">
+<AnchorPane fx:id="acPermissionRoot" maxHeight="280.0" minHeight="280.0" prefHeight="280.0" prefWidth="620.0" styleClass="acPermissionRoot" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.NavigatePermissionController">
    <stylesheets>
       <URL value="@../css/base.css" />
       <URL value="@../css/navpermission.css" />
@@ -60,11 +60,11 @@
                               <Cursor fx:constant="HAND" />
                            </cursor>
                         </Pane>
-                        <Pane fx:id="pItemPermissionImporting" prefHeight="200.0" prefWidth="200.0" styleClass="pPermissionItemWrapper" GridPane.columnIndex="2">
+                        <Pane fx:id="pItemPermissionHrManage" prefHeight="200.0" prefWidth="200.0" styleClass="pPermissionItemWrapper" GridPane.columnIndex="2">
                            <children>
-                              <ImageView fx:id="imgImporting" fitHeight="190.0" fitWidth="190.0" layoutX="2.0" layoutY="9.0" pickOnBounds="true" preserveRatio="true" styleClass="imgPermission">
+                              <ImageView fx:id="imgHrManage" fitHeight="190.0" fitWidth="190.0" layoutX="2.0" layoutY="9.0" pickOnBounds="true" preserveRatio="true" styleClass="imgPermission">
                                  <image>
-                                    <Image url="@../images/icons/import-icon.png" />
+                                    <Image url="@../images/icons/hr-icon.png" />
                                  </image>
                               </ImageView>
                            </children>

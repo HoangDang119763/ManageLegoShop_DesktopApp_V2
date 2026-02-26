@@ -16,8 +16,6 @@ import lombok.*;
 public class EmployeeJobInfoDTO {
     private Integer departmentId;
     private String departmentName;
-    private Integer roleId;
-    private String roleName;
     private Integer positionId;
     private String positionName;
     private BigDecimal wage;
@@ -31,8 +29,6 @@ public class EmployeeJobInfoDTO {
         return "EmployeeJobInfoDTO{" +
                 ", departmentId=" + departmentId +
                 ", departmentName='" + departmentName + '\'' +
-                ", roleId=" + roleId +
-                ", roleName='" + roleName + '\'' +
                 ", positionId=" + positionId +
                 ", positionName='" + positionName + '\'' +
                 ", wage=" + wage +

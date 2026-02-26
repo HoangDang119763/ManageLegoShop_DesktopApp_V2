@@ -1,4 +1,5 @@
 USE java_sql;
+SET GLOBAL event_scheduler = ON;
 DROP PROCEDURE IF EXISTS sp_CalculateMonthlyPayroll;
 DELIMITER $$
 
@@ -189,5 +190,60 @@ ON SCHEDULE EVERY 1 MONTH
 STARTS DATE_FORMAT(NOW() + INTERVAL 1 MONTH, '%Y-%m-05 08:00:00')
 DO
   CALL sp_RunAllPayroll()$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_SyncEmploymentChanges;
+CREATE PROCEDURE sp_SyncEmploymentChanges()
+BEGIN
+    DECLARE v_status_approved INT;
+    DECLARE v_status_effective INT;
+
+    -- Lấy ID trạng thái dựa trên Name và Type để tránh hard-code con số
+    SELECT id INTO v_status_approved 
+    FROM status 
+    WHERE name = 'Approved' AND type = 'EMPLOYMENT_HISTORY' LIMIT 1;
+    
+    SELECT id INTO v_status_effective 
+    FROM status 
+    WHERE name = 'Effective' AND type = 'EMPLOYMENT_HISTORY' LIMIT 1;
+
+    -- Chỉ chạy nếu tìm thấy ID trạng thái hợp lệ
+    IF v_status_approved IS NOT NULL AND v_status_effective IS NOT NULL THEN
+        
+        -- 1. Cập nhật Position và Phòng ban cho Employee
+        UPDATE employee e
+        INNER JOIN employment_history h ON e.id = h.employee_id
+        SET 
+            e.department_id = h.department_id,
+            e.position_id = h.position_id,
+            e.updated_at = NOW()
+        WHERE h.status_id = v_status_approved 
+          AND h.effective_date <= CURDATE();
+
+        -- 3. Chuyển trạng thái lịch sử sang 'Effective'
+        UPDATE employment_history 
+        SET status_id = v_status_effective 
+        WHERE status_id = v_status_approved 
+          AND effective_date <= CURDATE();
+          
+    END IF;
+
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP EVENT IF EXISTS evt_DailyEmploymentSync;
+CREATE EVENT evt_DailyEmploymentSync
+ON SCHEDULE EVERY 1 DAY -- Quét mỗi ngày một lần
+STARTS CURRENT_TIMESTAMP -- Bắt đầu ngay bây giờ
+DO
+BEGIN
+    CALL sp_SyncEmploymentChanges();
+END$$
 
 DELIMITER ;

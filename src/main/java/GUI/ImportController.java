@@ -38,9 +38,9 @@ public class ImportController implements IController {
     @FXML
     private TableColumn<ImportDisplayDTO, String> tlb_col_createDate;
     @FXML
-    private TableColumn<ImportDisplayDTO, Integer> tlb_col_employeeId;
+    private TableColumn<ImportDisplayDTO, String> tlb_col_employeeName;
     @FXML
-    private TableColumn<ImportDisplayDTO, Integer> tlb_col_supplierId;
+    private TableColumn<ImportDisplayDTO, String> tlb_col_supplierName;
     @FXML
     private TableColumn<ImportDisplayDTO, String> tlb_col_totalPrice;
     @FXML
@@ -134,8 +134,8 @@ public class ImportController implements IController {
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_createDate.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())));
-        tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
-        tlb_col_supplierId.setCellValueFactory(new PropertyValueFactory<>("supplierId"));
+        tlb_col_employeeName.setCellValueFactory(new PropertyValueFactory<>("employeeName"));
+        tlb_col_supplierName.setCellValueFactory(new PropertyValueFactory<>("supplierName"));
         tlb_col_totalPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));

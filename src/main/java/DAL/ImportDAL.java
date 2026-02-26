@@ -70,7 +70,9 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
                         ? rs.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 rs.getInt("employee_id"),
+                rs.getString("employee_name"),
                 rs.getInt("supplier_id"),
+                rs.getString("supplier_name"),
                 rs.getBigDecimal("total_price"),
                 rs.getInt("status_id"),
                 rs.getString("status_description"));
@@ -85,13 +87,18 @@ public class ImportDAL extends BaseDAL<ImportDTO, Integer> {
         int totalItems = 0;
         int offset = pageIndex * pageSize;
 
-        // JOIN với status table để lấy statusDescription
+        // JOIN với status, employee, supplier tables để lấy statusDescription,
+        // employeeName, supplierName
         String sql = "SELECT " +
                 "i.id, i.created_at, i.employee_id, i.supplier_id, i.total_price, i.status_id, " +
                 "s.description as status_description, " +
+                "CONCAT(e.first_name, ' ', e.last_name) as employee_name, " +
+                "sup.name as supplier_name, " +
                 "COUNT(*) OVER() as total_count " +
                 "FROM import i " +
                 "LEFT JOIN status s ON i.status_id = s.id " +
+                "LEFT JOIN employee e ON i.employee_id = e.id " +
+                "LEFT JOIN supplier sup ON i.supplier_id = sup.id " +
                 "WHERE (? = -1 OR i.id = ?) " +
                 "  AND (? = -1 OR i.status_id = ?) " +
                 "ORDER BY i.id DESC " +

@@ -89,7 +89,8 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         StatusBUS statusBus = StatusBUS.getInstance();
         if (!statusBus.isValidStatusIdForType(StatusType.ACCOUNT, obj.getStatusId()))
             return false;
-
+        if (obj.getRoleId() <= 0)
+            return false;
         // Logic nghiệp vụ đặc trưng của Account
         obj.setUsername(obj.getUsername().toLowerCase().trim());
         obj.setPassword(PasswordUtils.getInstance().hashPassword("123456"));

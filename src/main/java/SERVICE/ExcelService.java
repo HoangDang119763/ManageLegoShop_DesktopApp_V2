@@ -1,10 +1,12 @@
 
 package SERVICE;
 
+import BUS.AccountBUS;
 import BUS.CategoryBUS;
 import BUS.EmployeeBUS;
 import BUS.ProductBUS;
 import BUS.RoleBUS;
+import DTO.AccountDTO;
 import DTO.EmployeeDTO;
 import DTO.ProductDTO;
 import DTO.RoleDTO;
@@ -83,6 +85,7 @@ public class ExcelService {
 
         List<EmployeeDTO> employees = EmployeeBUS.getInstance().getAll();
         RoleBUS roleBUS = RoleBUS.getInstance();
+        AccountBUS accountBUS = AccountBUS.getInstance();
         ValidationUtils validate = ValidationUtils.getInstance();
 
         List<String> headers = Arrays.asList(
@@ -93,7 +96,14 @@ public class ExcelService {
                 headers,
                 employees,
                 (row, emp) -> {
-                    RoleDTO role = roleBUS.getById(emp.getRoleId());
+                    // Get role from account, not from employee
+                    RoleDTO role = null;
+                    if (emp.getAccountId() != null && emp.getAccountId() > 0) {
+                        AccountDTO account = accountBUS.getById(emp.getAccountId());
+                        if (account != null && account.getRoleId() > 0) {
+                            role = roleBUS.getById(account.getRoleId());
+                        }
+                    }
                     row.createCell(0).setCellValue(emp.getId());
                     row.createCell(1).setCellValue(emp.getFirstName());
                     row.createCell(2).setCellValue(emp.getLastName());

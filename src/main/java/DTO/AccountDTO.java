@@ -40,6 +40,15 @@ public class AccountDTO {
         this.statusId = statusId;
     }
 
+    public AccountDTO(int id, String username, String password, int statusId, int roleId) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.lastLogin = null;
+        this.statusId = statusId;
+        this.roleId = roleId;
+    }
+
     public AccountDTO(String username, String password) {
         this.username = username;
         this.password = password;

@@ -15,7 +15,6 @@ import DTO.EmployeePersonalInfoBundle;
 import DTO.EmployeeJobHistoryBundle;
 import DTO.BUSResult;
 import DTO.AccountDTO;
-import DTO.TaxDTO;
 import ENUM.*;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
@@ -78,7 +77,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
         SessionManagerService session = SessionManagerService.getInstance();
         int currentLoginId = session.employeeLoginId();
-        int currentUserRoleId = session.employeeRoleId();
+        // int currentUserRoleId = session.employeeRoleId();
         // 1. Không cho tự xóa chính mình
         if (currentLoginId == id)
             return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_CANNOT_DELETE_SELF);
@@ -90,17 +89,18 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         EmployeeDTO targetEmployee = getById(id);
         if (targetEmployee == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
-        if (currentUserRoleId != 1) {
-            // Kiểm tra xem đối tượng bị xóa (target) có quyền xóa nhân viên hay không
-            // Nếu target cũng có quyền xóa => Coi như ngang quyền => Chặn
-            boolean targetHasDeletePermission = PermissionBUS.getInstance()
-                    .isRoleHavePermission(targetEmployee.getRoleId(), PermissionKey.EMPLOYEE_DELETE);
+        // if (currentUserRoleId != 1) {
+        // // Kiểm tra xem đối tượng bị xóa (target) có quyền xóa nhân viên hay không
+        // // Nếu target cũng có quyền xóa => Coi như ngang quyền => Chặn
+        // boolean targetHasDeletePermission = PermissionBUS.getInstance()
+        // .isRoleHavePermission(targetEmployee.getRoleId(),
+        // PermissionKey.EMPLOYEE_DELETE);
 
-            if (targetHasDeletePermission) {
-                return new BUSResult(BUSOperationResult.FAIL,
-                        AppMessages.EMPLOYEE_ERROR_DELETE_SAME_AUTHORITY);
-            }
-        }
+        // if (targetHasDeletePermission) {
+        // return new BUSResult(BUSOperationResult.FAIL,
+        // AppMessages.EMPLOYEE_ERROR_DELETE_SAME_AUTHORITY);
+        // }
+        // }
         int inactiveId = StatusBUS.getInstance()
                 .getByTypeAndStatusName(StatusType.EMPLOYEE, Status.Employee.INACTIVE).getId();
 
@@ -120,12 +120,18 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_DELETE_SUCCESS);
     }
 
-    public BUSResult insertEmployeeFull(EmployeeDTO employee, AccountDTO account, TaxDTO tax) {
+    /**
+     * Insert employee full với AccountDTO (không dùng TaxDTO nữa vì numDependents
+     * đã nằm trong EmployeeDTO)
+     */
+    public BUSResult insertEmployeeFull(EmployeeDTO employee, AccountDTO account) {
         // 1. Validate tham số đầu vào
-        if (employee == null || account == null || tax == null) {
+        if (employee == null || account == null) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
-        if (SessionManagerService.getInstance().employeeRoleId() != 1 && employee.getRoleId() == 1) {
+        // Kiểm tra quyền: Nếu người dùng không phải admin thì không cho tạo account với
+        // role admin
+        if (SessionManagerService.getInstance().employeeRoleId() != 1 && account.getRoleId() == 1) {
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
         }
         // 2. Chuẩn hóa dữ liệu
@@ -135,12 +141,11 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         employee.setLastName(validate.normalizeWhiteSpace(employee.getLastName()));
         employee.setPhone(validate.normalizeWhiteSpace(employee.getPhone()));
 
-        // 3. Validate logic nghiệp vụ (Master/Account/Tax)
+        // 3. Validate logic nghiệp vụ
         if (!isValidEmployeeInputForInsert(employee))
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
 
-        // 4. Kiểm tra ràng buộc hệ thống (Status, Dept, Username) trước khi mở
-        // Connection
+        // 4. Kiểm tra ràng buộc hệ thống
         if (!StatusBUS.getInstance().isValidStatusIdForType(StatusType.EMPLOYEE, employee.getStatusId()))
             return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.STATUS_IDForType_INVALID);
 
@@ -157,8 +162,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             conn = ConnectApplication.getInstance().getConnectionFactory().newConnection();
             conn.setAutoCommit(false);
 
-            // Bước A: Insert Account trước để lấy account_id (vì employee phụ thuộc vào
-            // account_id)
+            // Bước A: Insert Account trước để lấy account_id
             if (!AccountBUS.getInstance().insertWithConn(conn, account)) {
                 throw new Exception("ACCOUNT_FAIL");
             }
@@ -167,12 +171,6 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             employee.setAccountId(account.getId());
             if (!EmployeeDAL.getInstance().insertWithConn(conn, employee)) {
                 throw new Exception("EMPLOYEE_FAIL");
-            }
-
-            // Bước C: Gán ID nhân viên vừa tạo cho bản ghi thuế và Insert Tax
-            tax.setEmployeeId(employee.getId());
-            if (!TaxBUS.getInstance().insertWithConn(conn, tax)) {
-                throw new Exception("TAX_FAIL");
             }
 
             conn.commit();
@@ -187,9 +185,9 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
                 }
             }
 
-            // Phân loại lỗi trả về đồng bộ với phong cách Discount
+            // Phân loại lỗi
             String errorMsg = e.getMessage();
-            if ("ACCOUNT_FAIL".equals(errorMsg) || "EMPLOYEE_FAIL".equals(errorMsg) || "TAX_FAIL".equals(errorMsg)) {
+            if ("ACCOUNT_FAIL".equals(errorMsg) || "EMPLOYEE_FAIL".equals(errorMsg)) {
                 finalResult = new BUSResult(BUSOperationResult.FAIL, AppMessages.UNKNOWN_ERROR);
             } else {
                 finalResult = new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
@@ -260,18 +258,19 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         return true;
     }
 
-    public BUSResult filterEmployeesPagedForManageDisplay(String keyword, int roleIdFilter, int statusFilter,
+    public BUSResult filterEmployeesPagedForManageDisplay(String keyword, int pos, int statusFilter,
             int pageIndex, int pageSize) {
         String cleanKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
-        int finalRoleId = (roleIdFilter <= 0) ? -1 : roleIdFilter;
+        int finalPos = (pos <= 0) ? -1 : pos;
         int finalStatusId = (statusFilter <= 0) ? -1 : statusFilter;
         int finalPageIndex = Math.max(0, pageIndex);
         int finalPageSize = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
+        int roleId = SessionManagerService.getInstance().employeeRoleId();
         int employeeId = SessionManagerService.getInstance().employeeLoginId();
         // Gọi DAL với JOIN để lấy dữ liệu hoàn chỉnh
         PagedResponse<EmployeeDisplayDTO> pagedData = EmployeeDAL.getInstance()
-                .filterEmployeesPagedForManageDisplay(cleanKeyword, finalRoleId, finalStatusId, finalPageIndex,
-                        finalPageSize, employeeId);
+                .filterEmployeesPagedForManageDisplay(cleanKeyword, finalPos, finalStatusId, finalPageIndex,
+                        finalPageSize, employeeId, roleId);
 
         return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
     }
@@ -325,7 +324,7 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
         SessionManagerService session = SessionManagerService.getInstance();
         int currentLoginId = session.employeeLoginId();
-        int currentUserRoleId = session.employeeRoleId();
+        // int currentUserRoleId = session.employeeRoleId();
 
         // 2. Kiểm tra đối tượng đặc biệt
         if (obj.getId() == 1) { // Bảo vệ IT Admin hệ thống
@@ -343,15 +342,16 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         }
 
         // 4. CHECK QUYỀN NGANG HÀNG (Logic của bạn)
-        if (currentUserRoleId != 1) {
-            boolean targetHasAdminPermission = PermissionBUS.getInstance()
-                    .isRoleHavePermission(targetEmployee.getRoleId(), PermissionKey.EMPLOYEE_PERSONAL_UPDATE);
+        // if (currentUserRoleId != 1) {
+        // boolean targetHasAdminPermission = PermissionBUS.getInstance()
+        // .isRoleHavePermission(targetEmployee.getRoleId(),
+        // PermissionKey.EMPLOYEE_PERSONAL_UPDATE);
 
-            if (targetHasAdminPermission) {
-                return new BUSResult(BUSOperationResult.FAIL,
-                        AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
-            }
-        }
+        // if (targetHasAdminPermission) {
+        // return new BUSResult(BUSOperationResult.FAIL,
+        // AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
+        // }
+        // }
 
         // 5. Validate logic "Bắt buộc điền" (Đã đồng bộ)
         ValidationUtils validator = ValidationUtils.getInstance();
@@ -403,15 +403,17 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        if (session.employeeRoleId() != 1) {
-            boolean isTargetAdmin = PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
-                    PermissionKey.EMPLOYEE_JOB_UPDATE);
-            if (isTargetAdmin)
-                return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
-        }
+        // if (session.employeeRoleId() != 1) {
+        // boolean isTargetAdmin =
+        // PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
+        // PermissionKey.EMPLOYEE_JOB_UPDATE);
+        // if (isTargetAdmin)
+        // return new BUSResult(BUSOperationResult.FAIL,
+        // AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
+        // }
 
         // 2. Validate dữ liệu đầu vào
-        if (obj.getDepartmentId() == null || obj.getDepartmentId() <= 0 || obj.getRoleId() <= 0
+        if (obj.getDepartmentId() == null || obj.getDepartmentId() <= 0
                 || obj.getStatusId() <= 0) {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
@@ -424,15 +426,14 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
                 if (!EmployeeDAL.getInstance().updateJobInfo(conn, obj))
                     throw new Exception("UPDATE_JOB_FAIL");
 
-                // B. Xử lý Relogin (Nếu đổi Role hoặc Nghỉ việc)
+                // B. Xử lý Relogin (Nếu Nghỉ việc)
                 int activeId = StatusBUS.getInstance()
                         .getByTypeAndStatusName(StatusType.EMPLOYEE, Status.Employee.ACTIVE).getId();
                 Integer accId = target.getAccountId();
                 if (accId != null && accId > 0) {
-                    boolean isChanged = (obj.getRoleId() != target.getRoleId()) || (obj.getStatusId() != activeId);
-                    if (isChanged) {
-                        AccountBUS.getInstance().forceLogoutAndSecurityUpdate(conn, accId,
-                                obj.getStatusId() != activeId);
+                    boolean isInactive = (obj.getStatusId() != activeId);
+                    if (isInactive) {
+                        AccountBUS.getInstance().forceLogoutAndSecurityUpdate(conn, accId, true);
                     }
                 }
 
@@ -471,40 +472,28 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        if (session.employeeRoleId() != 1) {
-            boolean isTargetAdmin = PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
-                    PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE);
-            if (isTargetAdmin)
-                return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
-        }
+        // if (session.employeeRoleId() != 1) {
+        // boolean isTargetAdmin =
+        // PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
+        // PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE);
+        // if (isTargetAdmin)
+        // return new BUSResult(BUSOperationResult.FAIL,
+        // AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
+        // }
 
         // 2. Thực thi Transaction
         try (Connection conn = ConnectApplication.getInstance().getConnectionFactory().newConnection()) {
             conn.setAutoCommit(false);
             try {
-                // A. Cập nhật các cờ bảo hiểm tại Employee
+                // Cập nhật các cờ bảo hiểm và số người phụ thuộc tại Employee
                 if (!EmployeeDAL.getInstance().updatePayrollInfo(conn, employee))
                     throw new Exception("EMPLOYEE_PAYROLL_FAIL");
-
-                // B. Cập nhật số người phụ thuộc tại Tax
-                TaxDTO tax = new TaxDTO();
-                tax.setEmployeeId(employee.getId());
-                tax.setNumDependents(numDependent);
-
-                // Sử dụng hàm updateNumDependents có truyền Connection
-                if (!TaxBUS.getInstance().updateNumDependents(conn, tax))
-                    throw new Exception("TAX_UPDATE_FAIL");
 
                 conn.commit();
                 return new BUSResult(BUSOperationResult.SUCCESS,
                         AppMessages.EMPLOYEE_PAYROLL_INFO_UPDATE_STATUS_SUCCESS);
             } catch (Exception e) {
                 conn.rollback();
-                // Phân loại lỗi cụ thể nếu cần
-                if ("TAX_UPDATE_FAIL".equals(e.getMessage())) {
-                    return new BUSResult(BUSOperationResult.FAIL,
-                            "Không thể cập nhật thông tin thuế. Vui lòng kiểm tra lại.");
-                }
                 throw e;
             }
         } catch (Exception e) {
@@ -529,12 +518,14 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
 
-        if (session.employeeRoleId() != 1) {
-            boolean isTargetAdmin = PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
-                    PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS);
-            if (isTargetAdmin)
-                return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
-        }
+        // if (session.employeeRoleId() != 1) {
+        // boolean isTargetAdmin =
+        // PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
+        // PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS);
+        // if (isTargetAdmin)
+        // return new BUSResult(BUSOperationResult.FAIL,
+        // AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
+        // }
 
         if (!StatusBUS.getInstance().isValidStatusIdForType(StatusType.ACCOUNT, accountStatusId)) {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.STATUS_IDForType_INVALID);
@@ -602,12 +593,14 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
 
         // Kiểm tra quyền ngang hàng
-        if (session.employeeRoleId() != 1) {
-            boolean isTargetAdmin = PermissionBUS.getInstance().isRoleHavePermission(existing.getRoleId(),
-                    PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD);
-            if (isTargetAdmin)
-                return new BUSResult(BUSOperationResult.FAIL, AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
-        }
+        // if (session.employeeRoleId() != 1) {
+        // boolean isTargetAdmin =
+        // PermissionBUS.getInstance().isRoleHavePermission(existing.getRoleId(),
+        // PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD);
+        // if (isTargetAdmin)
+        // return new BUSResult(BUSOperationResult.FAIL,
+        // AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
+        // }
 
         // 2. Execute Transaction - Reset password + ép relogin
         try (Connection conn = ConnectApplication.getInstance().getConnectionFactory().newConnection()) {

@@ -21,13 +21,10 @@ public class RoleDAL extends BaseDAL<RoleDTO, Integer> {
                 resultSet.getInt("id"),
                 resultSet.getString("name"),
                 resultSet.getString("description"),
-                resultSet.getInt("start_experience"),
-                resultSet.getInt("end_experience"),
                 resultSet.getTimestamp("created_at") != null ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 resultSet.getTimestamp("updated_at") != null ? resultSet.getTimestamp("updated_at").toLocalDateTime()
-                        : null,
-                resultSet.getObject("salary_id") != null ? resultSet.getInt("salary_id") : null);
+                        : null);
     }
 
     // --- CẤU HÌNH INSERT ---
@@ -35,47 +32,32 @@ public class RoleDAL extends BaseDAL<RoleDTO, Integer> {
     @Override
     protected String getInsertQuery() {
         // Bao gồm tất cả các trường để Java nắm quyền kiểm soát thời gian
-        return "(name, description, start_experience, end_experience, created_at, updated_at, salary_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        return "(name, description, created_at, updated_at) VALUES (?, ?, ?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, RoleDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setString(2, obj.getDescription());
-        statement.setInt(3, obj.getStartExperience());
-        statement.setInt(4, obj.getEndExperience());
 
         // Chuyển đổi LocalDateTime sang Timestamp để SQL hiểu
-        statement.setTimestamp(5, obj.getCreatedAt() != null ? Timestamp.valueOf(obj.getCreatedAt()) : null);
-        statement.setTimestamp(6, obj.getUpdatedAt() != null ? Timestamp.valueOf(obj.getUpdatedAt()) : null);
-
-        if (obj.getSalaryId() != null)
-            statement.setInt(7, obj.getSalaryId());
-        else
-            statement.setNull(7, Types.INTEGER);
+        statement.setTimestamp(3, obj.getCreatedAt() != null ? Timestamp.valueOf(obj.getCreatedAt()) : null);
+        statement.setTimestamp(4, obj.getUpdatedAt() != null ? Timestamp.valueOf(obj.getUpdatedAt()) : null);
     }
 
     // --- CẤU HÌNH UPDATE ---
 
     @Override
     protected String getUpdateQuery() {
-        return "SET name = ?, description = ?, start_experience = ?, end_experience = ?, updated_at = ?, salary_id = ? WHERE id = ?";
+        return "SET name = ?, description = ?, updated_at = ? WHERE id = ?";
     }
 
     @Override
     protected void setUpdateParameters(PreparedStatement statement, RoleDTO obj) throws SQLException {
         statement.setString(1, obj.getName());
         statement.setString(2, obj.getDescription());
-        statement.setInt(3, obj.getStartExperience());
-        statement.setInt(4, obj.getEndExperience());
-        statement.setTimestamp(5, obj.getUpdatedAt() != null ? Timestamp.valueOf(obj.getUpdatedAt()) : null);
-
-        if (obj.getSalaryId() != null)
-            statement.setInt(6, obj.getSalaryId());
-        else
-            statement.setNull(6, Types.INTEGER);
-
-        statement.setInt(7, obj.getId());
+        statement.setTimestamp(3, obj.getUpdatedAt() != null ? Timestamp.valueOf(obj.getUpdatedAt()) : null);
+        statement.setInt(4, obj.getId());
     }
 
     // --- CÁC HÀM BỔ SUNG CHO STATELESS BUS ---

@@ -60,8 +60,8 @@
                                             <columns>
                                                 <TableColumn fx:id="tlb_col_id" prefWidth="70.0" text="Mã HĐ" />
                                                 <TableColumn fx:id="tlb_col_createDate" prefWidth="100.0" text="Ngày tạo" />
-                                                <TableColumn fx:id="tlb_col_employeeId" prefWidth="80.0" text="Mã NV" />
-                                                <TableColumn fx:id="tlb_col_customerId" prefWidth="80.0" text="Mã KH" />
+                                                <TableColumn fx:id="tlb_col_employeeName" prefWidth="80.0" text="Tên NV" />
+                                                <TableColumn fx:id="tlb_col_customerName" prefWidth="80.0" text="Tên KH" />
                                                 <TableColumn fx:id="tlb_col_totalPrice" prefWidth="140.800048828125" text="Tổng tiền" />
                                                 <TableColumn fx:id="tlb_col_status" prefWidth="154.39999389648438" text="Trạng thái" />
                                             </columns>

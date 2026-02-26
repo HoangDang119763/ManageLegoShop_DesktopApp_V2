@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 /**
  * DTO để hiển thị thông tin lịch sử công tác chi tiết
- * Transform từ EmploymentHistoryDTO + lookup Department và Role name
+ * Transform từ EmploymentHistoryDTO + lookup Department và Position name
  */
 @Data
 @AllArgsConstructor
@@ -19,9 +19,9 @@ public class EmploymentHistoryDetailDTO {
     private Integer departmentId;
     private String departmentName;
 
-    // Role lookup
-    private Integer roleId;
-    private String roleName;
+    // Position lookup
+    private Integer positionId;
+    private String positionName;
 
     // Additional info
     private String reason;
