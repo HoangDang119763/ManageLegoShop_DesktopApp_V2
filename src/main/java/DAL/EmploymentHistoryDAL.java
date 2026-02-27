@@ -227,7 +227,7 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                 "eh.department_id, d.name as department_name, " +
                 "eh.position_id, p.name as position_name, eh.effective_date, " +
                 "eh.approver_id, IFNULL(CONCAT(app.first_name, ' ', app.last_name), 'Hệ thống') as approver_name, " +
-                "eh.status_id, s.description as status_description, eh.reason, eh.created_at, " +
+                "eh.status_id, s.name as status_name, s.description as status_description, eh.reason, eh.created_at, " +
                 "COUNT(*) OVER() as total_count " +
                 "FROM employment_history eh " +
                 "LEFT JOIN employee emp ON eh.employee_id = emp.id " +
@@ -298,6 +298,7 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                             (Integer) rs.getObject("approver_id"),
                             rs.getString("approver_name"),
                             rs.getInt("status_id"),
+                            rs.getString("status_name"),
                             rs.getString("status_description"),
                             rs.getString("reason"),
                             rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime()

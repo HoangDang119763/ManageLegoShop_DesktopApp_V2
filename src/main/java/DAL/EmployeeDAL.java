@@ -9,6 +9,7 @@ import DTO.EmployeePersonalInfoDTO;
 import DTO.EmployeeAccountInfoDTO;
 import DTO.EmployeeJobInfoDTO;
 import DTO.EmployeePayrollInfoDTO;
+import DTO.EmployeeExcelDTO;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -786,6 +787,64 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             }
         } catch (SQLException e) {
             System.err.println("Error getting employees by status: " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Lấy danh sách nhân viên với thông tin đầy đủ để export Excel
+     * JOINs: Position, Department, Account, Status
+     */
+    public ArrayList<EmployeeExcelDTO> getAllEmployeesForExcel() {
+        ArrayList<EmployeeExcelDTO> list = new ArrayList<>();
+        String query = "SELECT " +
+                "e.id, CONCAT(e.first_name, ' ', e.last_name) as full_name, e.gender, " +
+                "COALESCE(p.name, 'N/A') as position_name, " +
+                "e.health_insurance_code, e.social_insurance_code, e.unemployment_insurance_code, " +
+                "e.is_meal_support, e.is_transportation_support, e.is_accommodation_support, e.num_dependents, " +
+                "COALESCE(d.name, 'N/A') as department_name, " +
+                "COALESCE(a.username, 'N/A') as username, " +
+                "COALESCE(s.description, 'N/A') as status_description, " +
+                "COALESCE(p.wage, 0) as wage " +
+                "FROM employee e " +
+                "LEFT JOIN position p ON e.position_id = p.id " +
+                "LEFT JOIN department d ON e.department_id = d.id " +
+                "LEFT JOIN account a ON e.account_id = a.id " +
+                "LEFT JOIN status s ON e.status_id = s.id " +
+                "ORDER BY e.id";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                EmployeeExcelDTO emp = new EmployeeExcelDTO();
+                emp.setId(rs.getInt("id"));
+                emp.setFullName(rs.getString("full_name"));
+                emp.setGender(rs.getString("gender"));
+                emp.setPositionName(rs.getString("position_name"));
+                emp.setDepartmentName(rs.getString("department_name"));
+                emp.setHealthInsCode(rs.getString("health_insurance_code"));
+                emp.setSocialInsCode(rs.getString("social_insurance_code"));
+                emp.setUnemploymentInsCode(rs.getString("unemployment_insurance_code"));
+                emp.setMealSupport(rs.getBoolean("is_meal_support"));
+                emp.setTransportationSupport(rs.getBoolean("is_transportation_support"));
+                emp.setAccommodationSupport(rs.getBoolean("is_accommodation_support"));
+                emp.setNumDependents(rs.getInt("num_dependents"));
+                emp.setUsername(rs.getString("username"));
+                emp.setStatusDescription(rs.getString("status_description"));
+
+                Object wage = rs.getObject("wage");
+                if (wage != null) {
+                    emp.setWage(rs.getBigDecimal("wage"));
+                } else {
+                    emp.setWage(java.math.BigDecimal.ZERO);
+                }
+
+                list.add(emp);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi DAL getallEmployeesForExcel: " + e.getMessage());
         }
         return list;
     }

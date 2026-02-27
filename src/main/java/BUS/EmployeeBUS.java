@@ -12,6 +12,7 @@ import DTO.EmployeePersonalInfoDTO;
 import DTO.EmployeeAccountInfoDTO;
 import DTO.EmployeeJobInfoDTO;
 import DTO.EmployeePayrollInfoDTO;
+import DTO.EmployeeExcelDTO;
 import DTO.EmployeePersonalInfoBundle;
 import DTO.EmployeeJobHistoryBundle;
 import DTO.BUSResult;
@@ -829,5 +830,12 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
             return new ArrayList<>();
         }
         return EmployeeDAL.getInstance().getByStatusId(activeStatus.getId());
+    }
+
+    /**
+     * Lấy danh sách nhân viên cho Export Excel
+     */
+    public ArrayList<EmployeeExcelDTO> getAllEmployeesForExcel() {
+        return EmployeeDAL.getInstance().getAllEmployeesForExcel();
     }
 }

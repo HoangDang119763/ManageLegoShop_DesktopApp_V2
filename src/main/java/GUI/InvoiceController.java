@@ -93,19 +93,15 @@ public class InvoiceController implements IController {
     private String keyword = "";
     private InvoiceDisplayDTO selectedInvoice;
     private InvoiceBUS invoiceBUS;
-    private DetailInvoiceBUS detailInvoiceBUS;
     private StatusBUS statusBUS;
-    private StatusDTO statusFilter = null;
+    private int statusFilter = -1;
     private static final int PAGE_SIZE = 10;
     private boolean isResetting = false;
 
     @FXML
     public void initialize() {
         invoiceBUS = InvoiceBUS.getInstance();
-        detailInvoiceBUS = DetailInvoiceBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
-        // [STATELESS] No pre-load needed - InvoiceBUS, DetailInvoiceBUS, StatusBUS load
-        // on-demand
 
         tblInvoice.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         Platform.runLater(() -> tblInvoice.getSelectionModel().clearSelection());
@@ -200,7 +196,7 @@ public class InvoiceController implements IController {
                 tblDetailInvoice.getItems().clear();
             }
         });
-        UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
+        UiUtils.gI().applySearchDebounce(txtSearch, 500, this::handleKeywordChange);
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
@@ -236,19 +232,17 @@ public class InvoiceController implements IController {
     }
 
     private void handleStatusFilterChange() {
-        statusFilter = cbStatusFilter.getValue();
+        statusFilter = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
         applyFilters();
     }
 
     private void setupPagination() {
-        paginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadPageData(pageIndex, true);
-        });
+        paginationController.init(0, PAGE_SIZE, pageIndex -> loadPageData(pageIndex, true));
     }
 
     private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
-        int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
+        int statusId = statusFilter;
         StackPane overlay = showOverlay ? loadingOverlay : null;
         TaskUtil.executeSecure(overlay, PermissionKey.INVOICE_LIST_VIEW,
                 () -> invoiceBUS.filterInvoicesPagedForManage(keyword, statusId, pageIndex, PAGE_SIZE),
@@ -283,7 +277,7 @@ public class InvoiceController implements IController {
         txtSearch.clear();
         cbStatusFilter.getSelectionModel().selectFirst();
         keyword = "";
-        statusFilter = null;
+        statusFilter = -1;
         clearSubTable();
 
         applyFilters();
@@ -314,7 +308,17 @@ public class InvoiceController implements IController {
             NotificationUtils.showErrorAlert("Vui lòng chọn hóa đơn.", "Thông báo");
             return;
         }
-        PrintService.getInstance().printInvoiceForm(selectedInvoice.getId());
+
+        TaskUtil.executePublic(loadingOverlay,
+                () -> PrintService.getInstance().printInvoiceForm(selectedInvoice.getId()),
+                result -> {
+                    Stage currentStage = (Stage) exportPdf.getScene().getWindow();
+                    if (result.isSuccess()) {
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), "Lỗi");
+                    }
+                });
     }
 
     private boolean isSelectedInvoice() {

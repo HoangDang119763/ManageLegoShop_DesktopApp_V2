@@ -2,6 +2,7 @@ package GUI;
 
 import BUS.*;
 import DTO.*;
+import SERVICE.PrintService;
 import SERVICE.SessionManagerService;
 import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
@@ -685,11 +686,20 @@ public class SellingProductController {
                 .open();
 
         if (modalController != null && modalController.isSaved()) {
-            Stage currentStage = (Stage) btnSubmitInvoice.getScene().getWindow();
-            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
             handleClearAllData();
             applyFilters();
             updateInvoiceId();
+            InvoiceDTO selectedInvoice = modalController.getInvoiceDTO();
+            TaskUtil.executePublic(loadingOverlay,
+                    () -> PrintService.getInstance().printInvoiceForm(selectedInvoice.getId()),
+                    result -> {
+                        Stage currentStage = (Stage) btnSubmitInvoice.getScene().getWindow();
+                        if (result.isSuccess()) {
+                            NotificationUtils.showToast(currentStage, result.getMessage());
+                        } else {
+                            NotificationUtils.showErrorAlert(result.getMessage(), "Lỗi");
+                        }
+                    });
         }
 
     }
