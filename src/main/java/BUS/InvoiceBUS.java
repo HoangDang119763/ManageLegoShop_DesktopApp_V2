@@ -12,6 +12,7 @@ import DTO.DetailInvoiceDTO;
 import DTO.DetailPushedInfoDTO;
 import DTO.InvoiceDTO;
 import DTO.InvoiceDisplayDTO;
+import DTO.InvoicePDFDTO;
 import DTO.PagedResponse;
 import DTO.PriceUpdateInfoDTO;
 import DTO.ProductStockPriceInfoDTO;
@@ -426,5 +427,12 @@ public class InvoiceBUS extends BaseBUS<InvoiceDTO, Integer> {
         }
 
         return finalResult;
+    }
+
+    /**
+     * Lấy dữ liệu hóa đơn để in PDF
+     */
+    public InvoicePDFDTO getInvoiceForPDF(int invoiceId) {
+        return InvoiceDAL.getInstance().getInvoiceForPDF(invoiceId);
     }
 }

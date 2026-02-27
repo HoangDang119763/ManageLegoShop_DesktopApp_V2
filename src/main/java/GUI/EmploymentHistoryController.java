@@ -194,7 +194,7 @@ public class EmploymentHistoryController implements IController {
             }
             return new SimpleStringProperty("");
         });
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("statusName"));
         colReason.setCellValueFactory(new PropertyValueFactory<>("reason"));
 
         colCreatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
@@ -291,6 +291,20 @@ public class EmploymentHistoryController implements IController {
         StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
         cbFilterStatus.getItems().add(allStatus);
         cbFilterStatus.getItems().addAll(StatusBUS.getInstance().getAllByType(StatusType.EMPLOYMENT_HISTORY));
+        cbFilterStatus.setConverter(new javafx.util.StringConverter<StatusDTO>() {
+            @Override
+            public String toString(StatusDTO status) {
+                return status == null ? ""
+                        : status.getId() == -1 ? "Tất cả trạng thái"
+                                : (status.getName() != null ? status.getName() + " - " + status.getDescription()
+                                        : status.getDescription());
+            }
+
+            @Override
+            public StatusDTO fromString(String string) {
+                return null;
+            }
+        });
         cbFilterStatus.getSelectionModel().selectFirst();
 
         // Load form comboboxes (only active employees)

@@ -1,208 +1,227 @@
 package SERVICE;
 
-import BUS.*;
-import DTO.*;
-import UTILS.ValidationUtils;
+import BUS.InvoiceBUS;
+import DTO.BUSResult;
+import ENUM.BUSOperationResult;
+import DTO.DetailInvoicePDFDTO;
+import DTO.InvoicePDFDTO;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.awt.Desktop;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 
 public class PrintService {
     private static final PrintService INSTANCE = new PrintService();
+    private static final String FONT_PATH = "src/main/resources/fonts/arial-unicode-ms.ttf";
+    private static final BaseColor PRIMARY_COLOR = new BaseColor(31, 125, 132); // Màu #1f7d84
 
     private PrintService() {
-
     }
 
     public static PrintService getInstance() {
         return INSTANCE;
     }
 
-    public void printInvoiceForm(int invoiceId) {
-        InvoiceBUS invBus = InvoiceBUS.getInstance();
-        InvoiceDTO invoice = invBus.getById(invoiceId);
-        if (invoice == null)
-            return;
-
-        DetailInvoiceBUS dinvBus = DetailInvoiceBUS.getInstance();
-        ArrayList<DetailInvoiceDTO> arrDetailInvoice = new ArrayList<>();
-        if (arrDetailInvoice.isEmpty())
-            return;
-
-        ProductBUS proBus = ProductBUS.getInstance();
-
-        EmployeeBUS emBus = EmployeeBUS.getInstance();
-        EmployeeDTO employee = emBus.getById(invoice.getEmployeeId());
-
-        CustomerBUS cusBus = CustomerBUS.getInstance();
-        CustomerDTO customer = cusBus.getById(invoice.getCustomerId());
-
-        String dest = "invoice.pdf";
-        String fontPath = "src/main/resources/fonts/arial-unicode-ms.ttf"; // Đường dẫn tương đối
+    public BUSResult printInvoiceForm(int invoiceId) {
         try {
-            Document document = new Document();
-            PdfWriter.getInstance(document, new FileOutputStream(dest));
+            InvoiceBUS invBus = InvoiceBUS.getInstance();
+            InvoicePDFDTO invoice = invBus.getInvoiceForPDF(invoiceId);
+
+            if (invoice == null) {
+                return new BUSResult(BUSOperationResult.FAIL, "Không tìm thấy hóa đơn hoặc chưa hoàn thành!");
+            }
+
+            String folderName = "pdf";
+            File folder = new File(folderName);
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss"));
+            String filePath = folderName + File.separator + "invoice_" + "ID" + invoice.getId() + "_" + timestamp
+                    + ".pdf";
+
+            createInvoicePDF(invoice, filePath);
+
+            return new BUSResult(BUSOperationResult.SUCCESS, "Xuất PDF thành công!");
+        } catch (Exception e) {
+            System.err.println("Lỗi khi in hóa đơn: " + e.getMessage());
+            e.printStackTrace();
+            return new BUSResult(BUSOperationResult.FAIL, "Lỗi khi in hóa đơn: " + e.getMessage());
+        }
+    }
+
+    private void createInvoicePDF(InvoicePDFDTO invoice, String filePath) {
+        try {
+            Document document = new Document(PageSize.A4);
+            PdfWriter.getInstance(document, new FileOutputStream(filePath));
             document.open();
 
-            // Nhúng font Arial Unicode MS để hỗ trợ tiếng Việt
-            BaseFont baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-            Font normalFont = new Font(baseFont, 12, Font.NORMAL);
+            // 1. Khởi tạo Font
+            BaseFont baseFont = BaseFont.createFont(FONT_PATH, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            Font titleFont = new Font(baseFont, 26, Font.BOLD, PRIMARY_COLOR);
+            Font headerFont = new Font(baseFont, 12, Font.BOLD, BaseColor.WHITE);
             Font boldFont = new Font(baseFont, 12, Font.BOLD);
-            Font titleFont = new Font(baseFont, 14, Font.BOLD);
-            Font italicFont = new Font(baseFont, 12, Font.ITALIC);
+            Font normalFont = new Font(baseFont, 12, Font.NORMAL);
+            Font labelFont = new Font(baseFont, 12, Font.BOLD, new BaseColor(51, 51, 51));
 
-            // Tiêu đề
-            Paragraph title = new Paragraph("HÓA ĐƠN BÁN HÀNG", titleFont);
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
+            // ========== HEADER SECTION ==========
+            PdfPTable headerTable = new PdfPTable(2);
+            headerTable.setWidthPercentage(100);
+            headerTable.setWidths(new float[] { 70, 30 });
+
+            PdfPCell titleCell = new PdfPCell(new Phrase("HÓA ĐƠN BÁN HÀNG", titleFont));
+            titleCell.setBorder(Rectangle.NO_BORDER);
+            titleCell.setVerticalAlignment(Element.ALIGN_BOTTOM);
+            titleCell.setPaddingBottom(10f);
+            headerTable.addCell(titleCell);
+
+            PdfPCell invoiceIdCell = new PdfPCell(new Phrase("Mã số: #" + invoice.getId(), boldFont));
+            invoiceIdCell.setBorder(Rectangle.NO_BORDER);
+            invoiceIdCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            invoiceIdCell.setVerticalAlignment(Element.ALIGN_BOTTOM);
+            invoiceIdCell.setPaddingBottom(10f);
+            headerTable.addCell(invoiceIdCell);
+            document.add(headerTable);
+
+            // Đường kẻ ngang màu chủ đạo
+            PdfPTable line = new PdfPTable(1);
+            line.setWidthPercentage(100);
+            PdfPCell lineCell = new PdfPCell();
+            lineCell.setBorder(Rectangle.BOTTOM);
+            lineCell.setBorderColorBottom(PRIMARY_COLOR);
+            lineCell.setBorderWidthBottom(2.5f);
+            lineCell.setPaddingTop(30f);
+            line.addCell(lineCell);
+            document.add(line);
 
             document.add(new Paragraph("\n"));
 
-            // Lấy thông tin khách hàng và người lập đơn
-            String customerName = customer.getFirstName() + " " + customer.getLastName();
-            String employeeName = employee.getFirstName() + " " + employee.getLastName();
-            String invoiceDate = invoice.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
-
-            Phrase discountPhrase = invoice.getDiscountCode() != null
-                    ? new Phrase(invoice.getDiscountCode(), normalFont)
-                    : new Phrase("Không có", italicFont);
-
-            // Thông tin hóa đơn
+            // ========== INFO SECTION ==========
             PdfPTable infoTable = new PdfPTable(4);
             infoTable.setWidthPercentage(100);
-            infoTable.setWidths(new float[] { 25, 25, 25, 25 });
+            infoTable.setWidths(new float[] { 18, 32, 20, 30 });
 
-            String[][] invoiceInfo = {
-                    { "Mã hóa đơn:", String.valueOf(invoiceId), "Người lập đơn:", employeeName },
-                    { "Ngày tạo:", invoiceDate, "Tên khách hàng:", customerName },
-            };
+            addInfoCell(infoTable, "Khách hàng:", labelFont);
+            addInfoCell(infoTable, invoice.getCustomerName(), normalFont);
+            addInfoCell(infoTable, "Người lập:", labelFont);
+            addInfoCell(infoTable, invoice.getEmployeeName(), normalFont);
 
-            // Thêm dữ liệu bình thường
-            for (String[] row : invoiceInfo) {
-                for (String cell : row) {
-                    PdfPCell pdfCell = new PdfPCell(new Phrase(cell, cell.endsWith(":") ? boldFont : normalFont));
-                    pdfCell.setBorder(Rectangle.NO_BORDER);
-                    pdfCell.setPadding(5);
-                    infoTable.addCell(pdfCell);
-                }
-            }
+            addInfoCell(infoTable, "Ngày tạo:", labelFont);
+            addInfoCell(infoTable, invoice.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
+                    normalFont);
 
-            // Hàng "Khuyến mãi" (Merge 2 cột phải)
-            PdfPCell promoLabelCell = new PdfPCell(new Phrase("Khuyến mãi:", boldFont));
-            promoLabelCell.setBorder(Rectangle.NO_BORDER);
-            promoLabelCell.setPadding(5);
-            infoTable.addCell(promoLabelCell);
-
-            PdfPCell promoValueCell = new PdfPCell(discountPhrase);
-            promoValueCell.setBorder(Rectangle.NO_BORDER);
-            promoValueCell.setPadding(5);
-            promoValueCell.setColspan(3); // Merge 3 ô còn lại
-            infoTable.addCell(promoValueCell);
+            String discountStr = (invoice.getDiscountCode() != null)
+                    ? invoice.getDiscountCode() + " (-" + formatCurrency(invoice.getDiscountAmount()) + ")"
+                    : "Không có";
+            addInfoCell(infoTable, "Khuyến mãi:", labelFont);
+            addInfoCell(infoTable, discountStr, normalFont);
 
             document.add(infoTable);
-
             document.add(new Paragraph("\n"));
 
-            // Bảng sản phẩm
+            // ========== DATA TABLE SECTION ==========
+            PdfPTable dataTable = new PdfPTable(5);
+            dataTable.setWidthPercentage(100);
+            // STT: 8%, Tên: 42%, SL: 10%, Đơn giá: 20%, Thành tiền: 20%
+            dataTable.setWidths(new float[] { 8, 42, 10, 20, 20 });
+
+            String[] headers = { "STT", "Sản phẩm", "SL", "Đơn giá", "Thành tiền" };
+            for (String h : headers) {
+                PdfPCell hCell = new PdfPCell(new Phrase(h, headerFont));
+                hCell.setBackgroundColor(PRIMARY_COLOR);
+                hCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                hCell.setPadding(8f);
+                hCell.setBorder(Rectangle.NO_BORDER);
+                dataTable.addCell(hCell);
+            }
+
             int index = 1;
-            PdfPTable table = new PdfPTable(5);
-            table.setWidthPercentage(100);
-            String[] headers = { "STT", "TÊN SẢN PHẨM", "SỐ LƯỢNG", "ĐƠN GIÁ", "THÀNH TIỀN" };
-            for (String header : headers) {
-                PdfPCell headerCell = new PdfPCell(new Phrase(header, boldFont));
-                headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                headerCell.setPadding(5);
-                headerCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
-                table.addCell(headerCell);
+            for (DetailInvoicePDFDTO d : invoice.getDetails()) {
+                addDataCell(dataTable, String.valueOf(index++), normalFont, Element.ALIGN_CENTER);
+                addDataCell(dataTable, d.getProductName(), normalFont, Element.ALIGN_LEFT);
+                addDataCell(dataTable, String.valueOf(d.getQuantity()), normalFont, Element.ALIGN_CENTER);
+                addDataCell(dataTable, formatCurrency(d.getPrice()), normalFont, Element.ALIGN_RIGHT);
+                addDataCell(dataTable, formatCurrency(d.getTotalPrice()), normalFont, Element.ALIGN_RIGHT);
             }
+            document.add(dataTable);
 
-            for (DetailInvoiceDTO detail : arrDetailInvoice) {
-                int quantity = detail.getQuantity(); // Số lượng sản phẩm
-                BigDecimal price = detail.getPrice(); // Giá của một sản phẩm
-                BigDecimal totalPrice = price.multiply(BigDecimal.valueOf(quantity)); // Tổng tiền của sản phẩm này
-                String productName = proBus.getById(detail.getProductId()).getName();
-
-                // Tạo các ô của bảng
-                PdfPCell[] cells = {
-                        new PdfPCell(new Phrase(String.valueOf(index++), normalFont)),
-                        new PdfPCell(new Phrase(productName, normalFont)),
-                        new PdfPCell(new Phrase(String.valueOf(quantity), normalFont)),
-                        new PdfPCell(new Phrase(ValidationUtils.getInstance().formatCurrency(price), normalFont)),
-                        new PdfPCell(new Phrase(ValidationUtils.getInstance().formatCurrency(totalPrice), normalFont))
-                };
-
-                // Đặt căn giữa và chiều cao tối thiểu cho tất cả ô
-                for (PdfPCell cell : cells) {
-                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-                    cell.setMinimumHeight(25f);
-                    table.addCell(cell);
-                }
-
-            }
-            document.add(table);
-
+            // ========== SUMMARY SECTION ==========
             document.add(new Paragraph("\n"));
+            PdfPTable footerWrapper = new PdfPTable(2);
+            footerWrapper.setWidthPercentage(100);
+            footerWrapper.setWidths(new float[] { 60, 40 });
 
-            // Tổng kết hóa đơn căn phải
-            PdfPTable summaryWrapper = new PdfPTable(2);
-            summaryWrapper.setWidthPercentage(100);
-            summaryWrapper.setWidths(new float[] { 50, 50 }); // Cột đầu chiếm 50%, cột sau chứa bảng tổng kết
+            PdfPCell noteCell = new PdfPCell(
+                    new Phrase("Cảm ơn quý khách đã mua sắm!", new Font(baseFont, 11, Font.ITALIC, BaseColor.GRAY)));
+            noteCell.setBorder(Rectangle.NO_BORDER);
+            footerWrapper.addCell(noteCell);
 
-            // Cột trống bên trái
-            PdfPCell emptyCell = new PdfPCell(new Phrase(""));
-            emptyCell.setBorder(Rectangle.NO_BORDER);
-            summaryWrapper.addCell(emptyCell);
+            PdfPTable summaryTable = new PdfPTable(2);
+            addSummaryRow(summaryTable, "Tổng cộng:", formatCurrency(invoice.getTotalPrice()), normalFont, false);
+            addSummaryRow(summaryTable, "Giảm giá:", "-" + formatCurrency(invoice.getDiscountAmount()), normalFont,
+                    false);
 
-            // Bảng tổng kết hóa đơn
-            PdfPTable summaryTable = new PdfPTable(3);
-            summaryTable.setWidthPercentage(100);
-            summaryTable.setWidths(new float[] { 2f, 1f, 1f });
-            String[][] summaryData = {
-                    { "Tổng tiền:", ValidationUtils.getInstance().formatCurrency(invoice.getTotalPrice()), "đ" },
-                    { "Số tiền giảm:", ValidationUtils.getInstance().formatCurrency(invoice.getDiscountAmount()), "đ" },
-                    { "Thành tiền:", ValidationUtils.getInstance().formatCurrency(
-                            invoice.getTotalPrice().subtract(invoice.getDiscountAmount()).max(BigDecimal.ZERO)), "đ" }
-            };
-            for (String[] row : summaryData) {
-                PdfPCell labelCell = new PdfPCell(new Phrase(row[0], boldFont));
-                labelCell.setBorder(Rectangle.NO_BORDER);
-                labelCell.setPadding(5);
-                summaryTable.addCell(labelCell);
+            BigDecimal finalAmt = invoice.getTotalPrice().subtract(invoice.getDiscountAmount()).max(BigDecimal.ZERO);
+            addSummaryRow(summaryTable, "Thành tiền:", formatCurrency(finalAmt),
+                    new Font(baseFont, 16, Font.BOLD, PRIMARY_COLOR), true);
 
-                PdfPCell valueCell = new PdfPCell(new Phrase(row[1], normalFont));
-                valueCell.setBorder(Rectangle.NO_BORDER);
-                valueCell.setPadding(5);
-                summaryTable.addCell(valueCell);
-
-                PdfPCell valueCell1 = new PdfPCell(new Phrase(row[2], normalFont));
-                valueCell1.setBorder(Rectangle.NO_BORDER);
-                valueCell1.setPadding(5);
-                summaryTable.addCell(valueCell1);
-            }
-
-            // Cột chứa bảng tổng kết
             PdfPCell summaryCell = new PdfPCell(summaryTable);
-            summaryCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             summaryCell.setBorder(Rectangle.NO_BORDER);
-            summaryWrapper.addCell(summaryCell);
+            footerWrapper.addCell(summaryCell);
 
-            document.add(summaryWrapper);
+            document.add(footerWrapper);
 
             document.close();
-            System.out.println("Hóa đơn PDF đã được tạo thành công!");
-            File file = new File(dest);
-            if (file.exists()) {
-                Desktop.getDesktop().open(file);
+
+            // Mở file tự động
+            File pdfFile = new File(filePath);
+            if (pdfFile.exists() && Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(pdfFile);
             }
-        } catch (DocumentException | IOException e) {
+
+        } catch (Exception e) {
+            System.err.println("Lỗi xử lý PDF: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void addInfoCell(PdfPTable table, String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPaddingBottom(8f);
+        table.addCell(cell);
+    }
+
+    private void addDataCell(PdfPTable table, String text, Font font, int align) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setHorizontalAlignment(align);
+        cell.setPadding(8f);
+        cell.setBorder(Rectangle.BOTTOM); // Chỉ kẻ dòng dưới cho hiện đại
+        cell.setBorderColor(new BaseColor(230, 230, 230));
+        table.addCell(cell);
+    }
+
+    private void addSummaryRow(PdfPTable table, String label, String value, Font valFont, boolean isTotal) {
+        PdfPCell lCell = new PdfPCell(new Phrase(label, isTotal ? new Font(valFont.getBaseFont(), 12, Font.BOLD)
+                : new Font(valFont.getBaseFont(), 12, Font.NORMAL)));
+        lCell.setBorder(Rectangle.NO_BORDER);
+        lCell.setPadding(5f);
+        table.addCell(lCell);
+
+        PdfPCell vCell = new PdfPCell(new Phrase(value, valFont));
+        vCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        vCell.setBorder(Rectangle.NO_BORDER);
+        vCell.setPadding(5f);
+        table.addCell(vCell);
+    }
+
+    private String formatCurrency(BigDecimal amount) {
+        return (amount == null) ? "0đ" : String.format("%,.0f", amount.doubleValue()) + "đ";
     }
 }

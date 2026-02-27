@@ -36,6 +36,7 @@ public class EmploymentHistoryDisplayDTO {
     private String approverName; // Tên người lập
 
     private int statusId; // ID trạng thái
+    private String statusName; // Tên trạng thái
     private String statusDescription; // Mô tả trạng thái
 
     private String reason; // Lý do điều chuyển
