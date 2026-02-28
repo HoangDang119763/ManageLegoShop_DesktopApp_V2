@@ -9,7 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import UTILS.NotificationUtils;
-import UTILS.ValidationUtils;
+import UTILS.UiUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -106,14 +106,14 @@ public class AllowanceTabController {
     private void loadSelectedAllowance() {
         AllowanceDTO selected = tblAllowance.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            txtAttendanceBonus.setText(selected.getAttendanceBonus() != null ? 
-                selected.getAttendanceBonus().toString() : "0");
-            txtLeaveDays.setText(selected.getAnnualLeaveDays() != null ? 
-                selected.getAnnualLeaveDays().toString() : "0");
-            txtTransport.setText(selected.getTransportationSupport() != null ? 
-                selected.getTransportationSupport().toString() : "0");
-            txtAccommodation.setText(selected.getAccommodationSupport() != null ? 
-                selected.getAccommodationSupport().toString() : "0");
+            txtAttendanceBonus
+                    .setText(selected.getAttendanceBonus() != null ? selected.getAttendanceBonus().toString() : "0");
+            txtLeaveDays
+                    .setText(selected.getAnnualLeaveDays() != null ? selected.getAnnualLeaveDays().toString() : "0");
+            txtTransport.setText(
+                    selected.getTransportationSupport() != null ? selected.getTransportationSupport().toString() : "0");
+            txtAccommodation.setText(
+                    selected.getAccommodationSupport() != null ? selected.getAccommodationSupport().toString() : "0");
         }
     }
 
@@ -127,10 +127,13 @@ public class AllowanceTabController {
         AllowanceDTO allowance = new AllowanceDTO();
         allowance.setEmployeeId(currentEmployeeId);
         allowance.setSalaryPeriod(cbPeriod.getValue().atDay(1));
-        allowance.setAttendanceBonus(new BigDecimal(txtAttendanceBonus.getText().isEmpty() ? "0" : txtAttendanceBonus.getText()));
+        allowance.setAttendanceBonus(
+                new BigDecimal(txtAttendanceBonus.getText().isEmpty() ? "0" : txtAttendanceBonus.getText()));
         allowance.setAnnualLeaveDays(new BigDecimal(txtLeaveDays.getText().isEmpty() ? "0" : txtLeaveDays.getText()));
-        allowance.setTransportationSupport(new BigDecimal(txtTransport.getText().isEmpty() ? "0" : txtTransport.getText()));
-        allowance.setAccommodationSupport(new BigDecimal(txtAccommodation.getText().isEmpty() ? "0" : txtAccommodation.getText()));
+        allowance.setTransportationSupport(
+                new BigDecimal(txtTransport.getText().isEmpty() ? "0" : txtTransport.getText()));
+        allowance.setAccommodationSupport(
+                new BigDecimal(txtAccommodation.getText().isEmpty() ? "0" : txtAccommodation.getText()));
 
         if (allowanceBUS.insert(allowance, 1, 1)) {
             NotificationUtils.showInfoAlert("Thêm trợ cấp thành công", "Thành công");
@@ -149,10 +152,13 @@ public class AllowanceTabController {
             return;
         }
 
-        selected.setAttendanceBonus(new BigDecimal(txtAttendanceBonus.getText().isEmpty() ? "0" : txtAttendanceBonus.getText()));
+        selected.setAttendanceBonus(
+                new BigDecimal(txtAttendanceBonus.getText().isEmpty() ? "0" : txtAttendanceBonus.getText()));
         selected.setAnnualLeaveDays(new BigDecimal(txtLeaveDays.getText().isEmpty() ? "0" : txtLeaveDays.getText()));
-        selected.setTransportationSupport(new BigDecimal(txtTransport.getText().isEmpty() ? "0" : txtTransport.getText()));
-        selected.setAccommodationSupport(new BigDecimal(txtAccommodation.getText().isEmpty() ? "0" : txtAccommodation.getText()));
+        selected.setTransportationSupport(
+                new BigDecimal(txtTransport.getText().isEmpty() ? "0" : txtTransport.getText()));
+        selected.setAccommodationSupport(
+                new BigDecimal(txtAccommodation.getText().isEmpty() ? "0" : txtAccommodation.getText()));
 
         if (allowanceBUS.update(selected, 1, 1)) {
             NotificationUtils.showInfoAlert("Cập nhật trợ cấp thành công", "Thành công");
@@ -171,7 +177,7 @@ public class AllowanceTabController {
             return;
         }
 
-        boolean confirmed = NotificationUtils.showConfirmAlert("Xóa trợ cấp này?", new ArrayList<>(), "Xác nhận xóa", "");
+        boolean confirmed = UiUtils.gI().showConfirmAlert("Xóa trợ cấp này?", "Xác nhận xóa");
         if (confirmed) {
             if (allowanceBUS.delete(selected.getId(), 1, 1)) {
                 NotificationUtils.showInfoAlert("Xóa trợ cấp thành công", "Thành công");
@@ -182,12 +188,12 @@ public class AllowanceTabController {
     }
 
     private boolean validateInputs() {
-        ValidationUtils validator = ValidationUtils.getInstance();
-        
+
         if (!txtAttendanceBonus.getText().isEmpty()) {
             try {
                 BigDecimal val = new BigDecimal(txtAttendanceBonus.getText());
-                if (val.signum() < 0) return false;
+                if (val.signum() < 0)
+                    return false;
             } catch (NumberFormatException e) {
                 return false;
             }
@@ -196,7 +202,8 @@ public class AllowanceTabController {
         if (!txtLeaveDays.getText().isEmpty()) {
             try {
                 BigDecimal val = new BigDecimal(txtLeaveDays.getText());
-                if (val.signum() < 0) return false;
+                if (val.signum() < 0)
+                    return false;
             } catch (NumberFormatException e) {
                 return false;
             }

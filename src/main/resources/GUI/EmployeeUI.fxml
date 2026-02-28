@@ -27,7 +27,7 @@
                                 
                                 <HBox alignment="CENTER_LEFT" layoutX="210.0" layoutY="3.0" prefHeight="46.0" spacing="10.0" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="3.0">
                                     <children>
-                                        <ComboBox fx:id="cbRoleFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
+                                        <ComboBox fx:id="cbPositionFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
                                         <ComboBox fx:id="cbStatusFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
                                     </children>
                                 </HBox>
@@ -51,9 +51,8 @@
                                         <TableColumn fx:id="tlb_col_employeeId" prefWidth="90.0" text="Mã nhân viên" />
                                         <TableColumn fx:id="tlb_col_fullName" prefWidth="130.0" text="Họ và tên" />
                                         <TableColumn fx:id="tlb_col_gender" prefWidth="80.0" text="Giới tính" />
-                                        <TableColumn fx:id="tlb_col_role" prefWidth="110.0" text="Chức vụ" />
-                                        <TableColumn fx:id="tlb_col_baseSalary" prefWidth="183.99996948242188" text="Lương cơ bản" />
-                                        <TableColumn fx:id="tlb_col_salaryCoefficient" prefWidth="106.39996337890625" text="Hệ số lương" />
+                                        <TableColumn fx:id="tlb_col_role" prefWidth="110.0" text="Vị trí" />
+                                        <TableColumn fx:id="tlb_col_baseSalary" prefWidth="183.99996948242188" text="Lương" />
                                         <TableColumn fx:id="tlb_col_username" prefWidth="128.800048828125" text="Tài khoản" />
                                         <TableColumn fx:id="tlb_col_status" prefWidth="152.0" text="Trạng thái" />
                                     </columns>
@@ -73,14 +72,6 @@
                      <children>
                         <HBox alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0">
                            <children>
-                              <Button fx:id="detailBtn" layoutX="10.0" layoutY="17.0" mnemonicParsing="false" prefHeight="34.0" prefWidth="94.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Chi tiết">
-                                 <graphic>
-                                    <FontAwesomeIcon glyphName="EYE" size="1.2em" styleClass="action-icon" />
-                                 </graphic>
-                                 <font>
-                                    <Font size="14.0" />
-                                 </font>
-                              </Button>
                               <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Thêm">
                                  <graphic>
                                     <FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" />

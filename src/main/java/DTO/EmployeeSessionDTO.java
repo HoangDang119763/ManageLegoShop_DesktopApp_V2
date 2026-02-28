@@ -15,6 +15,8 @@ public class EmployeeSessionDTO {
     private String fullName;
     private int roleId;
     private String roleName;
+    private int positionId;
+    private String positionName;
     private List<String> permissions; // Danh sách các Permission Key (ví dụ: "PRODUCT_INSERT")
     private Set<Integer> allowedModuleIds; // Danh sách các Module ID mà nhân viên có quyền truy cập
 

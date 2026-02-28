@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import UTILS.NotificationUtils;
+import UTILS.UiUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -149,7 +150,7 @@ public class FineTabController {
             return;
         }
 
-        boolean confirmed = NotificationUtils.showConfirmAlert("Xóa phạt/thưởng này?", new ArrayList<>(), "Xác nhận xóa", "");
+        boolean confirmed = UiUtils.gI().showConfirmAlert("Xóa phạt/thưởng này?", "Xác nhận xóa");
         if (confirmed) {
             if (fineBUS.delete(selected.getId(), 1, 1)) {
                 NotificationUtils.showInfoAlert("Xóa phạt/thưởng thành công", "Thành công");
@@ -160,9 +161,11 @@ public class FineTabController {
     }
 
     private boolean validateInputs() {
-        if (txtReason.getText().isEmpty()) return false;
-        if (cbLevel.getValue() == null) return false;
-        
+        if (txtReason.getText().isEmpty())
+            return false;
+        if (cbLevel.getValue() == null)
+            return false;
+
         try {
             BigDecimal val = new BigDecimal(txtAmount.getText());
             return val.signum() != 0; // Khác 0 mới hợp lệ

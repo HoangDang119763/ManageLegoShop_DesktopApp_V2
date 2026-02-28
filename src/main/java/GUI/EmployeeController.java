@@ -3,15 +3,11 @@ package GUI;
 import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
 import BUS.EmploymentHistoryBUS;
-import BUS.RoleBUS;
-import BUS.SalaryBUS;
+import BUS.PositionBUS;
 import BUS.StatusBUS;
-import BUS.TaxBUS;
-import DTO.EmployeeDetailDTO;
 import DTO.EmployeeDisplayDTO;
 import DTO.PagedResponse;
-import DTO.ProductDisplayDTO;
-import DTO.RoleDTO;
+import DTO.PositionDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
@@ -34,7 +30,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class EmployeeController implements IController {
@@ -51,19 +46,17 @@ public class EmployeeController implements IController {
     @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_baseSalary;
     @FXML
-    private TableColumn<EmployeeDisplayDTO, String> tlb_col_salaryCoefficient;
-    @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_username;
     @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_status;
     @FXML
-    private Button addBtn, editBtn, deleteBtn, refreshBtn, detailBtn, exportExcel;
+    private Button addBtn, editBtn, deleteBtn, refreshBtn, exportExcel;
     @FXML
     private AnchorPane mainContent;
     @FXML
     private TextField txtSearch;
     @FXML
-    private ComboBox<RoleDTO> cbRoleFilter;
+    private ComboBox<PositionDTO> cbPositionFilter;
     @FXML
     private ComboBox<StatusDTO> cbStatusFilter;
     @FXML
@@ -72,18 +65,17 @@ public class EmployeeController implements IController {
     private StackPane loadingOverlay;
 
     private String keyword = "";
-    private RoleDTO roleFilter = null;
+    private PositionDTO positionFilter = null;
     private StatusDTO statusFilter = null;
     private EmployeeDisplayDTO selectedEmployeeTable;
+    private boolean isResetting = false;
 
     private static final int PAGE_SIZE = 14;
 
     // BUS instances
     private EmployeeBUS employeeBUS;
-    private RoleBUS roleBUS;
+    private PositionBUS posBus;
     private StatusBUS statusBUS;
-    private SalaryBUS salaryBUS;
-    private TaxBUS taxBUS;
     private DepartmentBUS departmentBUS;
     private EmploymentHistoryBUS employmentHistoryBUS;
 
@@ -91,10 +83,8 @@ public class EmployeeController implements IController {
     public void initialize() {
         // Gán BUS instance một lần
         employeeBUS = EmployeeBUS.getInstance();
-        roleBUS = RoleBUS.getInstance();
+        posBus = PositionBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
-        salaryBUS = SalaryBUS.getInstance();
-        taxBUS = TaxBUS.getInstance();
         departmentBUS = DepartmentBUS.getInstance();
         employmentHistoryBUS = EmploymentHistoryBUS.getInstance();
 
@@ -115,11 +105,9 @@ public class EmployeeController implements IController {
         tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         tlb_col_fullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         tlb_col_baseSalary.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatCurrency(cellData.getValue().getSalary())));
-        tlb_col_salaryCoefficient.setCellValueFactory(cellData -> new SimpleStringProperty(
-                validationUtils.formatCurrency(cellData.getValue().getEfficientSalary())));
+                validationUtils.formatCurrency(cellData.getValue().getWage())));
         tlb_col_username.setCellValueFactory(new PropertyValueFactory<>("username"));
-        tlb_col_role.setCellValueFactory(new PropertyValueFactory<>("roleName"));
+        tlb_col_role.setCellValueFactory(new PropertyValueFactory<>("positionName"));
         tlb_col_gender.setCellValueFactory(new PropertyValueFactory<>("gender"));
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
         UiUtils.gI().addTooltipToColumn(tlb_col_username, 10);
@@ -135,17 +123,17 @@ public class EmployeeController implements IController {
         cbStatusFilter.getItems().addAll(statusList);
 
         // Load Role ComboBox
-        ArrayList<RoleDTO> roleList = roleBUS.getAll();
-        RoleDTO allRole = new RoleDTO(-1, "Tất cả chức vụ");
-        cbRoleFilter.getItems().add(allRole); // "Tất cả" option
-        cbRoleFilter.getItems().addAll(roleList);
-        cbRoleFilter.getSelectionModel().selectFirst();
+        ArrayList<PositionDTO> posList = posBus.getAll();
+        PositionDTO allPos = new PositionDTO(-1, "Tất cả vị trí");
+        cbPositionFilter.getItems().add(allPos); // "Tất cả" option
+        cbPositionFilter.getItems().addAll(posList);
+        cbPositionFilter.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
     }
 
     @Override
     public void setupListeners() {
-        cbRoleFilter.setOnAction(event -> handleRoleFilterChange());
+        cbPositionFilter.setOnAction(event -> handlePositionFilterChange());
         cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
         UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
 
@@ -155,26 +143,26 @@ public class EmployeeController implements IController {
             NotificationUtils.showToast(currentStage, "Làm mới thành công");
         });
 
-        detailBtn.setOnAction(event -> handleDetailView());
         addBtn.setOnAction(event -> handleAddBtn());
         deleteBtn.setOnAction(e -> handleDeleteBtn());
         editBtn.setOnAction(e -> handleEditBtn());
-        exportExcel.setOnAction(e -> {
-            try {
-                handleExportExcel();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
+        exportExcel.setOnAction(e -> handleExportExcel());
     }
 
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
-    private void handleRoleFilterChange() {
-        roleFilter = cbRoleFilter.getValue();
+    private void handlePositionFilterChange() {
+        positionFilter = cbPositionFilter.getValue();
         applyFilters();
     }
 
@@ -194,14 +182,18 @@ public class EmployeeController implements IController {
 
     @Override
     public void resetFilters() {
-        cbRoleFilter.getSelectionModel().selectFirst();
+        isResetting = true;
+
+        cbPositionFilter.getSelectionModel().selectFirst();
         cbStatusFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
-
         keyword = "";
-        roleFilter = null;
+        positionFilter = null;
         statusFilter = null;
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     private void setupPagination() {
@@ -212,15 +204,14 @@ public class EmployeeController implements IController {
 
     private void loadPageData(int pageIndex, boolean showOverlay) {
         int statusId = statusFilter == null ? -1 : statusFilter.getId();
-        int roleId = roleFilter == null ? -1 : roleFilter.getId();
+        int posId = positionFilter == null ? -1 : positionFilter.getId();
 
         StackPane overlay = showOverlay ? loadingOverlay : null;
         TaskUtil.executeSecure(overlay, PermissionKey.EMPLOYEE_LIST_VIEW,
-                () -> employeeBUS.filterEmployeesPagedForManageDisplay(keyword, roleId, statusId, pageIndex,
+                () -> employeeBUS.filterEmployeesPagedForManageDisplay(keyword, posId, statusId, pageIndex,
                         PAGE_SIZE),
                 result -> {
                     PagedResponse<EmployeeDisplayDTO> res = result.getPagedData();
-
                     tblEmployee.setItems(FXCollections.observableArrayList(res.getItems()));
 
                     // Cập nhật tổng số trang dựa trên COUNT(*) từ DB
@@ -257,8 +248,18 @@ public class EmployeeController implements IController {
         boolean canEdit = canUpdatePersonal || canUpdateJob || canUpdatePayrollInfo || canUpdateAccountStatus
                 || canResetAccountPassword;
 
-        if (!canViewDetail)
-            UiUtils.gI().setVisibleItem(detailBtn);
+        if (canViewDetail)
+            tblEmployee.setRowFactory(tv -> {
+                TableRow<EmployeeDisplayDTO> row = new TableRow<>();
+                row.setOnMouseClicked(event -> {
+                    if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                        selectedEmployeeTable = row.getItem();
+                        handleDetailView();
+                    }
+                });
+                return row;
+            });
+
         if (!canAdd)
             UiUtils.gI().setVisibleItem(addBtn);
         if (!canEdit)
@@ -268,108 +269,56 @@ public class EmployeeController implements IController {
     }
 
     public void handleAddBtn() {
-        EmployeeModalController modalController = new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
-                EmployeeModalController.class)
-                .setTitle("Thêm nhân viên")
-                .modeAdd()
+        EmployeeAddModalController modalController = new ModalBuilder<EmployeeAddModalController>(
+                "/GUI/EmployeeAddModal.fxml",
+                EmployeeAddModalController.class)
                 .open();
         if (modalController != null && modalController.isSaved()) {
             Stage currentStage = (Stage) addBtn.getScene().getWindow();
             NotificationUtils.showToast(currentStage, modalController.getResultMessage());
-            resetFilters();
+            loadPageData(paginationController.getCurrentPage(), false);
         }
     }
 
     public void handleDeleteBtn() {
-        // if (isNotSelectedEmployee()) {
-        // NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên",
-        // AppMessages.DIALOG_TITLE);
-        // return;
-        // }
-        //
-        // // Lấy thông tin đầy đủ của nhân viên
-        // EmployeeDTO employee =
-        // employeeBUS.getByIdLocal(selectedEmployeeTable.getEmployeeId());
-        //
-        // if (employee == null) {
-        // NotificationUtils.showErrorAlert("Không tìm thấy thông tin nhân viên",
-        // AppMessages.DIALOG_TITLE);
-        // return;
-        // }
-        //
-        // SessionManagerService session = SessionManagerService.getInstance();
-        // if (employee.getId() == session.employeeLoginId()) {
-        // NotificationUtils.showErrorAlert("Bạn không thể xóa thông tin của chính
-        // mình", AppMessages.DIALOG_TITLE);
-        // return;
-        // }
-        //
-        // if (employee.getId() == 1) {
-        // NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc",
-        // AppMessages.DIALOG_TITLE);
-        // return;
-        // }
-        //
-        // int deleteResult = employeeBUS.delete(employee.getId(),
-        // session.employeeRoleId(), session.employeeLoginId());
-        //
-        // switch (deleteResult) {
-        // case 1 -> {
-        // NotificationUtils.showInfoAlert("Xóa nhân viên thành công",
-        // AppMessages.DIALOG_TITLE);
-        // resetFilters();
-        // }
-        // case 2 -> NotificationUtils.showErrorAlert("Có lỗi khi xóa nhân viên",
-        // AppMessages.DIALOG_TITLE);
-        // case 3 ->
-        // NotificationUtils.showErrorAlert("Không thể xóa thông tin của chính mình",
-        // AppMessages.DIALOG_TITLE);
-        // case 4 -> NotificationUtils.showErrorAlert("Bạn không có quyền xóa nhân
-        // viên", AppMessages.DIALOG_TITLE);
-        // case 5 ->
-        // NotificationUtils.showErrorAlert("Bạn không thể xóa nhân viên ngang quyền",
-        // AppMessages.DIALOG_TITLE);
-        // case 6 -> NotificationUtils.showErrorAlert("Xóa nhân viên thất bại",
-        // AppMessages.DIALOG_TITLE);
-        // case 7 ->
-        // NotificationUtils.showErrorAlert("Nhân viên không hợp lệ hoặc đã bị xóa",
-        // AppMessages.DIALOG_TITLE);
-        // case 8 -> NotificationUtils.showErrorAlert("Không thể xóa nhân viên gốc",
-        // AppMessages.DIALOG_TITLE);
-        // default -> NotificationUtils.showErrorAlert("Lỗi không xác định",
-        // AppMessages.DIALOG_TITLE);
-        // }
-    }
-
-    public void handleEditBtn() {
         if (isNotSelectedEmployee()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên", AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        // EmployeeModalController modalController = new
-        // ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
-        // EmployeeModalController.class)
-        // .setTitle("Sửa nhân viên")
-        // .modeEdit()
-        // .configure(c -> c.setEmployee(selectedEmployeeTable.getEmployeeId()))
-        // .open();
-
-        // if (modalController != null && modalController.isSaved()) {
-        // Stage currentStage = (Stage) editBtn.getScene().getWindow();
-        // NotificationUtils.showToast(currentStage,
-        // modalController.getResultMessage());
-        // resetFilters();
-        // }
-    }
-
-    private void handleDetailView() {
-        if (isNotSelectedEmployee()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn nhân viên",
+            NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_NO_SELECTION,
                     AppMessages.DIALOG_TITLE);
             return;
         }
 
+        if (!UiUtils.gI().showConfirmAlert(AppMessages.EMPLOYEE_DELETE_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM)) {
+            return;
+        }
+
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_DELETE,
+                () -> EmployeeBUS.getInstance().delete(selectedEmployeeTable.getEmployeeId()),
+                result -> {
+                    Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
+                    NotificationUtils.showToast(currentStage, result.getMessage());
+                    loadPageData(paginationController.getCurrentPage(), false);
+                });
+
+    }
+
+    public void handleEditBtn() {
+        if (isNotSelectedEmployee()) {
+            NotificationUtils.showErrorAlert(AppMessages.EMPLOYEE_NO_SELECTION,
+                    AppMessages.DIALOG_TITLE);
+            return;
+        }
+        EmployeeModalController modalController = new ModalBuilder<EmployeeModalController>(
+                "/GUI/EmployeeModal.fxml",
+                EmployeeModalController.class)
+                .modeEdit()
+                .configure(c -> c.setData(selectedEmployeeTable.getEmployeeId()))
+                .open();
+        if (modalController != null) {
+            loadPageData(paginationController.getCurrentPage(), false);
+        }
+    }
+
+    private void handleDetailView() {
         new ModalBuilder<EmployeeModalController>("/GUI/EmployeeModal.fxml",
                 EmployeeModalController.class)
                 .setTitle("Xem thông tin nhân viên")
@@ -379,12 +328,17 @@ public class EmployeeController implements IController {
 
     }
 
-    private void handleExportExcel() throws IOException {
-        try {
-            ExcelService.getInstance().exportToFileExcel("employee");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void handleExportExcel() {
+        TaskUtil.executePublic(loadingOverlay,
+                () -> ExcelService.getInstance().exportEmployeeToFileExcel(),
+                result -> {
+                    Stage currentStage = (Stage) exportExcel.getScene().getWindow();
+                    if (result.isSuccess()) {
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), "Lỗi");
+                    }
+                });
     }
 
     private boolean isNotSelectedEmployee() {

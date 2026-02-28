@@ -3,7 +3,6 @@ package GUI;
 import BUS.FineBUS;
 import BUS.EmployeeBUS;
 import DTO.FineDTO;
-import DTO.EmployeeDTO;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
 import SERVICE.SessionManagerService;
@@ -17,18 +16,12 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Nested controller for Discipline/Reward within HROperationsTab
- * Displays discipline records and rewards for a selected employee
- */
-@Slf4j
 public class DisciplineTabNestedController {
     private static final Logger log = LoggerFactory.getLogger(DisciplineTabNestedController.class);
 
@@ -85,7 +78,6 @@ public class DisciplineTabNestedController {
         setupTable();
         setupButtons();
     }
-
 
     /**
      * Setup table columns
@@ -183,7 +175,8 @@ public class DisciplineTabNestedController {
      * Show discipline record details
      */
     private void showDisciplineDetails(FineDTO fine) {
-        if (fine == null) return;
+        if (fine == null)
+            return;
 
         String details = String.format("ID: %d\nMức Độ: %s\nNgày: %s\nSố tiền: %s\nLý do: %s",
                 fine.getId(),
@@ -192,14 +185,16 @@ public class DisciplineTabNestedController {
                 validationUtils.formatCurrency(fine.getAmount()),
                 fine.getReason() != null ? fine.getReason() : "Không có");
 
-        NotificationUtils.showInfoAlert("Chi tiết " + (fine.getFineLevel() != null ? fine.getFineLevel() : ""), details);
+        NotificationUtils.showInfoAlert("Chi tiết " + (fine.getFineLevel() != null ? fine.getFineLevel() : ""),
+                details);
     }
 
     /**
      * Delete discipline record
      */
     private void deleteDiscipline(FineDTO fine) {
-        if (fine == null) return;
+        if (fine == null)
+            return;
 
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDialog.setTitle("Xác nhận xóa");
@@ -209,7 +204,8 @@ public class DisciplineTabNestedController {
         if (confirmDialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             new Thread(() -> {
                 try {
-                    if (fineBUS.delete(fine.getId(), sessionManager.employeeRoleId(), sessionManager.employeeLoginId())) {
+                    if (fineBUS.delete(fine.getId(), sessionManager.employeeRoleId(),
+                            sessionManager.employeeLoginId())) {
                         Platform.runLater(() -> {
                             NotificationUtils.showInfoAlert("Thành công", "Xóa thành công");
                             loadEmployeeDiscipline(currentEmployeeId);

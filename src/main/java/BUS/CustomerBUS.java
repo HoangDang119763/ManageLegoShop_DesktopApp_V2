@@ -4,6 +4,7 @@ import DAL.CustomerDAL;
 import DTO.BUSResult;
 import DTO.CustomerDTO;
 import DTO.CustomerDisplayDTO;
+import DTO.CustomerForInvoiceDTO;
 import DTO.PagedResponse;
 import ENUM.*;
 import UTILS.AppMessages;
@@ -215,5 +216,28 @@ public class CustomerBUS extends BaseBUS<CustomerDTO, Integer> {
                 .filterCustomersPagedForManageDisplay(cleanKeyword, finalStatusId, finalPageIndex, finalPageSize);
 
         return new BUSResult(BUSOperationResult.SUCCESS, null, pagedData);
+    }
+
+    /**
+     * Filter customers by keyword for invoice form (no pagination)
+     * Returns restricted DTO with only: id, firstName, lastName, fullName, phone,
+     * address
+     * Không expose: dateOfBirth, statusId, updatedAt
+     * 
+     * @param keyword Search by firstName, lastName, or phone
+     * @return ArrayList of CustomerForInvoiceDTO
+     */
+    public BUSResult filterCustomersByKeywordForInvoice(String keyword) {
+        String cleanKeyword = (keyword == null) ? "" : keyword.trim();
+        int activeStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.CUSTOMER, Status.Customer.ACTIVE).getId();
+        ArrayList<CustomerForInvoiceDTO> customers = CustomerDAL.getInstance()
+                .filterCustomersByKeywordForInvoice(cleanKeyword, activeStatusId);
+        if (customers == null) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+
+        }
+        // Delegate to DAL with ACTIVE statusId only
+        return new BUSResult(BUSOperationResult.SUCCESS, null, customers);
     }
 }

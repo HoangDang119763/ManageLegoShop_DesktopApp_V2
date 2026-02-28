@@ -3,7 +3,6 @@ package DAL;
 import DTO.LeaveRequestDTO;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
 
 public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
     public static final LeaveRequestDAL INSTANCE = new LeaveRequestDAL();
@@ -22,12 +21,13 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
         String leaveTypeName = "";
         try {
             leaveTypeName = resultSet.getString("leave_type_name");
-            if (leaveTypeName == null) leaveTypeName = "";
+            if (leaveTypeName == null)
+                leaveTypeName = "";
         } catch (SQLException e) {
             // Column doesn't exist - normal for simple SELECT *
             leaveTypeName = "";
         }
-        
+
         return new LeaveRequestDTO(
                 resultSet.getInt("id"),
                 resultSet.getInt("leave_type_id"),
@@ -92,12 +92,13 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
                 "FROM leave_request lr " +
                 "LEFT JOIN leave_type lt ON lr.leave_type_id = lt.id " +
                 "ORDER BY lr.id DESC";
-        
+
         ArrayList<LeaveRequestDTO> list = new ArrayList<>();
         try (Connection connection = connectionFactory.newConnection();
-             Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-             ResultSet resultSet = statement.executeQuery(query)) {
-            
+                Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY);
+                ResultSet resultSet = statement.executeQuery(query)) {
+
             while (resultSet.next()) {
                 list.add(mapResultSetToObject(resultSet));
             }
@@ -117,12 +118,12 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
                 "LEFT JOIN leave_type lt ON lr.leave_type_id = lt.id " +
                 "WHERE lr.employee_id = ? " +
                 "ORDER BY lr.start_date DESC";
-        
+
         ArrayList<LeaveRequestDTO> list = new ArrayList<>();
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query,
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-            
+                PreparedStatement statement = connection.prepareStatement(query,
+                        ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+
             statement.setInt(1, employeeId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {

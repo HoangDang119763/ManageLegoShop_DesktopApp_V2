@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NavigatePermissionController {
     @FXML
-    private Pane pItemPermissionSelling, pItemPermissionImporting, pItemPermissionAuth;
+    private Pane pItemPermissionSelling, pItemPermissionHrManage, pItemPermissionAuth;
     @FXML
     private Button closeBtn;
 
@@ -36,7 +36,7 @@ public class NavigatePermissionController {
             animation.play();
         });
         pItemPermissionSelling.setOnMouseClicked(e -> openSelling());
-        pItemPermissionImporting.setOnMouseClicked(e -> openImporting());
+        pItemPermissionHrManage.setOnMouseClicked(e -> openHrManage());
         pItemPermissionAuth.setOnMouseClicked(e -> openManage());
 
     }
@@ -52,8 +52,8 @@ public class NavigatePermissionController {
     }
 
     @FXML
-    private void openImporting() {
-        UiUtils.gI().openStage("/GUI/ImportProduct.fxml", "Nhập hàng");
+    private void openHrManage() {
+        UiUtils.gI().openStage("/GUI/HrMainUI.fxml", "Quản lý nhân sự");
         handleClose();
     }
 

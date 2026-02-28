@@ -2,7 +2,9 @@ package DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,11 +16,15 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class InvoiceDisplayDTO {
     private int id;
-    private LocalDateTime createDate;
+    private LocalDateTime createdAt;
     private int employeeId;
+    private String employeeName; // JOIN từ Employee table
     private int customerId;
+    private String customerName; // JOIN từ Customer table
     private String discountCode;
     private BigDecimal discountAmount;
     private BigDecimal totalPrice;
@@ -33,12 +39,12 @@ public class InvoiceDisplayDTO {
         this.id = id;
     }
 
-    public LocalDateTime getCreateDate() {
-        return createDate;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public int getEmployeeId() {

@@ -23,6 +23,7 @@ public class FineDAL extends BaseDAL<FineDTO, Integer> {
                         ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 resultSet.getString("fine_level"),
+                resultSet.getString("type") != null ? resultSet.getString("type") : "DISCIPLINE",
                 resultSet.getBigDecimal("amount"),
                 resultSet.getBigDecimal("fine_pay"),
                 resultSet.getInt("employee_id"));
@@ -42,7 +43,7 @@ public class FineDAL extends BaseDAL<FineDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(reason, created_at, fine_level, amount, fine_pay, employee_id) VALUES (?, ?, ?, ?, ?, ?)";
+        return "(reason, created_at, fine_level, type, amount, fine_pay, employee_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -50,14 +51,15 @@ public class FineDAL extends BaseDAL<FineDTO, Integer> {
         statement.setString(1, obj.getReason());
         statement.setObject(2, obj.getCreatedAt());
         statement.setString(3, obj.getFineLevel());
-        statement.setObject(4, obj.getAmount());
-        statement.setObject(5, obj.getFinePay());
-        statement.setInt(6, obj.getEmployeeId());
+        statement.setString(4, obj.getType());
+        statement.setObject(5, obj.getAmount());
+        statement.setObject(6, obj.getFinePay());
+        statement.setInt(7, obj.getEmployeeId());
     }
 
     @Override
     protected String getUpdateQuery() {
-        return "SET reason = ?, created_at = ?, fine_level = ?, amount = ?, fine_pay = ?, employee_id = ? WHERE id = ?";
+        return "SET reason = ?, created_at = ?, fine_level = ?, type = ?, amount = ?, fine_pay = ?, employee_id = ? WHERE id = ?";
     }
 
     @Override
@@ -65,10 +67,11 @@ public class FineDAL extends BaseDAL<FineDTO, Integer> {
         statement.setString(1, obj.getReason());
         statement.setObject(2, obj.getCreatedAt());
         statement.setString(3, obj.getFineLevel());
-        statement.setObject(4, obj.getAmount());
-        statement.setObject(5, obj.getFinePay());
-        statement.setInt(6, obj.getEmployeeId());
-        statement.setInt(7, obj.getId());
+        statement.setString(4, obj.getType());
+        statement.setObject(5, obj.getAmount());
+        statement.setObject(6, obj.getFinePay());
+        statement.setInt(7, obj.getEmployeeId());
+        statement.setInt(8, obj.getId());
     }
 
 }

@@ -1,11 +1,10 @@
 package DAL;
 
 import DTO.DetailDiscountDTO;
-import DTO.DetailImportDTO;
-import DTO.RolePermissionDTO;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 /*
 + Remain getAll
@@ -32,8 +31,7 @@ public class DetailDiscountDAL extends BaseDAL<DetailDiscountDTO, String> {
         return new DetailDiscountDTO(
                 resultSet.getString("discount_code"),
                 resultSet.getBigDecimal("total_price_invoice"),
-                resultSet.getBigDecimal("discount_amount")
-        );
+                resultSet.getBigDecimal("discount_amount"));
     }
 
     @Override
@@ -59,45 +57,37 @@ public class DetailDiscountDAL extends BaseDAL<DetailDiscountDTO, String> {
         statement.setBigDecimal(2, obj.getDiscountAmount());
         statement.setString(3, obj.getDiscountCode());
     }
-    public boolean insertAllDetailDiscountByDiscountCode(String discountCode, ArrayList<DetailDiscountDTO> list) {
+
+    public boolean insertAllDetailDiscount(Connection conn, List<DetailDiscountDTO> list) {
         final String query = "INSERT INTO detail_discount (discount_code, total_price_invoice, discount_amount) VALUES (?, ?, ?)";
 
-        try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+        // Kiểm tra đầu vào sớm
+        if (list == null || list.isEmpty()) return true;
 
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
             for (DetailDiscountDTO obj : list) {
-                statement.setString(1, discountCode);
+                statement.setString(1, obj.getDiscountCode()); // Lấy code trực tiếp từ DTO
                 statement.setBigDecimal(2, obj.getTotalPriceInvoice());
                 statement.setBigDecimal(3, obj.getDiscountAmount());
                 statement.addBatch();
             }
-
             int[] results = statement.executeBatch();
-
-            for (int result : results) {
-                if (result < 0) {
-                    return false;
-                }
+            if (results == null) return false;
+            for (int res : results) {
+                if (res == Statement.EXECUTE_FAILED) return false;
             }
-
             return true;
-
         } catch (SQLException e) {
-            System.err.println("Error inserting detail discount: " + e.getMessage());
+            System.err.println("Error inserting detail discount batch: " + e.getMessage());
             return false;
         }
     }
 
-    public boolean deleteAllDetailDiscountByDiscountCode(String discountCode) {
-        final String query = "DELETE FROM detail_discount WHERE discount_code = ?";
-        try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
+    public boolean deleteByDiscountCode(Connection conn, String discountCode) throws SQLException {
+        String query = "DELETE FROM detail_discount WHERE discount_code = ?";
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
             statement.setString(1, discountCode);
-            return statement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error deleting from " + table + ": " + e.getMessage());
-            return false;
+            return statement.executeUpdate() >= 0; // Trả về true kể cả khi không có dòng nào để xóa
         }
     }
 
@@ -106,7 +96,7 @@ public class DetailDiscountDAL extends BaseDAL<DetailDiscountDTO, String> {
         ArrayList<DetailDiscountDTO> list = new ArrayList<>();
 
         try (Connection connection = connectionFactory.newConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setString(1, discountCode);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -119,5 +109,4 @@ public class DetailDiscountDAL extends BaseDAL<DetailDiscountDTO, String> {
         }
         return list;
     }
-
 }

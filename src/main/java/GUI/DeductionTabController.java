@@ -9,7 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import UTILS.NotificationUtils;
-import UTILS.ValidationUtils;
+import UTILS.UiUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -102,28 +102,29 @@ public class DeductionTabController {
 
     private void displayInsuranceCodeStatus(EmployeeDTO emp) {
         StringBuilder status = new StringBuilder("Mã bảo hiểm: ");
-        
+
         // Health Insurance
-        if (emp.getHealthInsCode() != null && !emp.getHealthInsCode().isEmpty() && !emp.getHealthInsCode().equals("0")) {
+        if (emp.getHealthInsCode() != null && !emp.getHealthInsCode().isEmpty()
+                && !emp.getHealthInsCode().equals("0")) {
             status.append("BHYT: ").append(emp.getHealthInsCode()).append(" ✓ | ");
         } else {
             status.append("BHYT: Chưa tham gia | ");
         }
-        
+
         // Social Insurance
         if (emp.isSocialInsurance()) {
             status.append("BHXH: ").append(emp.getSocialInsCode()).append(" ✓ | ");
         } else {
             status.append("BHXH: Chưa tham gia | ");
         }
-        
+
         // Unemployment Insurance
         if (emp.isUnemploymentInsurance()) {
             status.append("BHTN: ").append(emp.getUnemploymentInsCode()).append(" ✓");
         } else {
             status.append("BHTN: Chưa tham gia");
         }
-        
+
         // Display in UI - create a tooltip or label
         lblEmployeeName.setTooltip(new Tooltip(status.toString()));
     }
@@ -136,14 +137,20 @@ public class DeductionTabController {
     private void loadSelectedDeduction() {
         DeductionDTO selected = tblDeduction.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            txtHealthIns.setText(selected.getHealthInsurance() != null && selected.getHealthInsurance().signum() != 0 ? 
-                selected.getHealthInsurance().toString() : "0");
-            txtSocialIns.setText(selected.getSocialInsurance() != null && selected.getSocialInsurance().signum() != 0 ? 
-                selected.getSocialInsurance().toString() : "0");
-            txtUnemploymentIns.setText(selected.getUnemploymentInsurance() != null && selected.getUnemploymentInsurance().signum() != 0 ? 
-                selected.getUnemploymentInsurance().toString() : "0");
-            txtPersonalIncomeTax.setText(selected.getPersonalIncomeTax() != null && selected.getPersonalIncomeTax().signum() != 0 ? 
-                selected.getPersonalIncomeTax().toString() : "0");
+            txtHealthIns.setText(selected.getHealthInsurance() != null && selected.getHealthInsurance().signum() != 0
+                    ? selected.getHealthInsurance().toString()
+                    : "0");
+            txtSocialIns.setText(selected.getSocialInsurance() != null && selected.getSocialInsurance().signum() != 0
+                    ? selected.getSocialInsurance().toString()
+                    : "0");
+            txtUnemploymentIns.setText(
+                    selected.getUnemploymentInsurance() != null && selected.getUnemploymentInsurance().signum() != 0
+                            ? selected.getUnemploymentInsurance().toString()
+                            : "0");
+            txtPersonalIncomeTax
+                    .setText(selected.getPersonalIncomeTax() != null && selected.getPersonalIncomeTax().signum() != 0
+                            ? selected.getPersonalIncomeTax().toString()
+                            : "0");
         }
     }
 
@@ -157,7 +164,7 @@ public class DeductionTabController {
         DeductionDTO deduction = new DeductionDTO();
         deduction.setEmployeeId(currentEmployeeId);
         deduction.setSalaryPeriod(cbPeriod.getValue().atDay(1));
-        
+
         // Chỉ set khi khác 0 (tham gia bảo hiểm)
         deduction.setHealthInsurance(getValueOrZero(txtHealthIns));
         deduction.setSocialInsurance(getValueOrZero(txtSocialIns));
@@ -203,7 +210,7 @@ public class DeductionTabController {
             return;
         }
 
-        boolean confirmed = NotificationUtils.showConfirmAlert("Xóa bảo hiểm này?", new ArrayList<>(), "Xác nhận xóa", "");
+        boolean confirmed = UiUtils.gI().showConfirmAlert("Xóa bảo hiểm này?", "Xác nhận xóa");
         if (confirmed) {
             if (deductionBUS.delete(selected.getId(), 1, 1)) {
                 NotificationUtils.showInfoAlert("Xóa bảo hiểm thành công", "Thành công");
@@ -228,19 +235,23 @@ public class DeductionTabController {
         try {
             if (!txtHealthIns.getText().isEmpty()) {
                 BigDecimal val = new BigDecimal(txtHealthIns.getText());
-                if (val.signum() < 0) return false;
+                if (val.signum() < 0)
+                    return false;
             }
             if (!txtSocialIns.getText().isEmpty()) {
                 BigDecimal val = new BigDecimal(txtSocialIns.getText());
-                if (val.signum() < 0) return false;
+                if (val.signum() < 0)
+                    return false;
             }
             if (!txtUnemploymentIns.getText().isEmpty()) {
                 BigDecimal val = new BigDecimal(txtUnemploymentIns.getText());
-                if (val.signum() < 0) return false;
+                if (val.signum() < 0)
+                    return false;
             }
             if (!txtPersonalIncomeTax.getText().isEmpty()) {
                 BigDecimal val = new BigDecimal(txtPersonalIncomeTax.getText());
-                if (val.signum() < 0) return false;
+                if (val.signum() < 0)
+                    return false;
             }
             return true;
         } catch (NumberFormatException e) {

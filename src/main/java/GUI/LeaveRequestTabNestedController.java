@@ -3,7 +3,6 @@ package GUI;
 import BUS.LeaveRequestBUS;
 import BUS.EmployeeBUS;
 import DTO.LeaveRequestDTO;
-import DTO.EmployeeDTO;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
@@ -19,7 +18,6 @@ import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -87,14 +85,13 @@ public class LeaveRequestTabNestedController {
         colId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
                 String.valueOf(cellData.getValue().getId())));
         colLeaveType.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getLeaveTypeName() != null && !cellData.getValue().getLeaveTypeName().isEmpty() ?
-                        cellData.getValue().getLeaveTypeName() : ""));
+                cellData.getValue().getLeaveTypeName() != null && !cellData.getValue().getLeaveTypeName().isEmpty()
+                        ? cellData.getValue().getLeaveTypeName()
+                        : ""));
         colFromDate.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getStartDate() != null ?
-                        cellData.getValue().getStartDate().toString() : ""));
+                cellData.getValue().getStartDate() != null ? cellData.getValue().getStartDate().toString() : ""));
         colToDate.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getEndDate() != null ?
-                        cellData.getValue().getEndDate().toString() : ""));
+                cellData.getValue().getEndDate() != null ? cellData.getValue().getEndDate().toString() : ""));
         colReason.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
                 cellData.getValue().getContent() != null ? cellData.getValue().getContent() : ""));
         colStatus.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
@@ -177,7 +174,8 @@ public class LeaveRequestTabNestedController {
      * Show leave request details
      */
     private void showLeaveDetails(LeaveRequestDTO leave) {
-        if (leave == null) return;
+        if (leave == null)
+            return;
 
         String details = String.format("ID: %d\nNgày bắt đầu: %s\nNgày kết thúc: %s\nLý do: %s\nTrạng thái: %d",
                 leave.getId(),
@@ -193,7 +191,8 @@ public class LeaveRequestTabNestedController {
      * Delete leave request
      */
     private void deleteLeave(LeaveRequestDTO leave) {
-        if (leave == null) return;
+        if (leave == null)
+            return;
 
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDialog.setTitle("Xác nhận xóa");

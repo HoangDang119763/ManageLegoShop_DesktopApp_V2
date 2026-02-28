@@ -4,7 +4,6 @@ import DTO.BUSResult;
 import ENUM.BUSOperationResult;
 import ENUM.PermissionKey;
 import UTILS.AppMessages;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,14 +11,6 @@ import java.util.function.Supplier;
 
 import BUS.AccountBUS;
 
-/**
- * SecureExecutor - Centralized permission checking + security flag validation
- * 
- * ✅ Phase 1: Permission check (role-based)
- * ✅ Phase 2: Security flag check (require_relogin)
- * ✅ Phase 3: Execute business logic
- */
-@Slf4j
 public class SecureExecutor {
     private static final Logger log = LoggerFactory.getLogger(SecureExecutor.class);
 
@@ -111,6 +102,7 @@ public class SecureExecutor {
         if (isSessionInvalid()) {
             log.warn("Session invalidated for user {}. Relogin required.",
                     SessionManagerService.getInstance().employeeLoginId());
+            SessionManagerService.getInstance().normalLogout();
             return new BUSResult(BUSOperationResult.REQUIRE_RELOGIN,
                     AppMessages.FORCE_RELOGIN);
         }

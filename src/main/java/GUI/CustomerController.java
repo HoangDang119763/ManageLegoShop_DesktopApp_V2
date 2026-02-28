@@ -2,18 +2,14 @@ package GUI;
 
 import java.util.ArrayList;
 
-import BUS.CategoryBUS;
 import BUS.CustomerBUS;
 import BUS.StatusBUS;
-import DTO.BUSResult;
 import DTO.CustomerDisplayDTO;
 import DTO.PagedResponse;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
-import SERVICE.ExcelService;
-import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
@@ -66,6 +62,7 @@ public class CustomerController implements IController {
     private String keyword = "";
     private StatusDTO statusFilter = null;
     private CustomerDisplayDTO selectedCustomer;
+    private boolean isResetting = false;
 
     // BUS instances - initialized once
     private CustomerBUS customerBUS;
@@ -168,10 +165,6 @@ public class CustomerController implements IController {
         addBtn.setOnAction(e -> handleAdd());
         editBtn.setOnAction(e -> handleEdit());
         deleteBtn.setOnAction(e -> handleDelete());
-        tblCustomer.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2)
-                handleDetail();
-        });
         exportExcel.setOnAction(event -> {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             handleExportExcel(stage);
@@ -213,18 +206,6 @@ public class CustomerController implements IController {
         }
     }
 
-    private void handleDetail() {
-        if (isNotSelectedCustomer()) {
-            NotificationUtils.showErrorAlert(AppMessages.CUSTOMER_NO_SELECTION, AppMessages.DIALOG_TITLE);
-            return;
-        }
-        new ModalBuilder<CustomerModalController>("/GUI/CustomerModal.fxml", CustomerModalController.class)
-                .setTitle("Xem chi tiết khách hàng")
-                .modeDetail()
-                .configure(c -> c.setCustomer(selectedCustomer.getId()))
-                .open();
-    }
-
     private void handleDelete() {
         if (isNotSelectedCustomer()) {
             NotificationUtils.showErrorAlert(AppMessages.CUSTOMER_NO_SELECTION, AppMessages.DIALOG_TITLE);
@@ -248,7 +229,14 @@ public class CustomerController implements IController {
     // 4️⃣ FILTER HANDLERS
     // =====================
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
@@ -271,11 +259,16 @@ public class CustomerController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         cbStatusFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
         keyword = "";
         statusFilter = null;
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override

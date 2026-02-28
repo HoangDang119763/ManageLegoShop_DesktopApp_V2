@@ -2,6 +2,7 @@
 package GUI;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 
 import BUS.DetailImportBUS;
 import BUS.ImportBUS;
@@ -9,8 +10,12 @@ import BUS.StatusBUS;
 import DTO.DetailImportDTO;
 import DTO.ImportDisplayDTO;
 import DTO.PagedResponse;
+import DTO.StatusDTO;
 import ENUM.PermissionKey;
+import ENUM.StatusType;
 import INTERFACE.IController;
+import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
 import UTILS.UiUtils;
@@ -33,9 +38,9 @@ public class ImportController implements IController {
     @FXML
     private TableColumn<ImportDisplayDTO, String> tlb_col_createDate;
     @FXML
-    private TableColumn<ImportDisplayDTO, Integer> tlb_col_employeeId;
+    private TableColumn<ImportDisplayDTO, String> tlb_col_employeeName;
     @FXML
-    private TableColumn<ImportDisplayDTO, Integer> tlb_col_supplierId;
+    private TableColumn<ImportDisplayDTO, String> tlb_col_supplierName;
     @FXML
     private TableColumn<ImportDisplayDTO, String> tlb_col_totalPrice;
     @FXML
@@ -78,11 +83,17 @@ public class ImportController implements IController {
     @FXML
     private Button exportPdf;
     @FXML
+    private Button approveImportBtn;
+    @FXML
+    private Button deleteImportBtn;
+    @FXML
     private Button refreshBtn;
     @FXML
     private Button advanceSearchBtn;
     @FXML
     private TextField txtSearch;
+    @FXML
+    private ComboBox<StatusDTO> cbStatusFilter;
     @FXML
     private PaginationController paginationController;
     @FXML
@@ -93,7 +104,10 @@ public class ImportController implements IController {
     private StatusBUS statusBUS;
     private ImportBUS importBUS;
     private DetailImportBUS detailImportBUS;
+    private StatusDTO statusFilter = null;
     private static final int PAGE_SIZE = 10;
+    private boolean isResetting = false;
+    private SessionManagerService sessionManagerService = SessionManagerService.getInstance();
 
     @FXML
     public void initialize() {
@@ -106,6 +120,7 @@ public class ImportController implements IController {
         Platform.runLater(() -> tblDetailImport.getSelectionModel().clearSelection());
 
         hideButtonWithoutPermission();
+        loadComboBox();
         setupListeners();
 
         loadTable();
@@ -118,9 +133,9 @@ public class ImportController implements IController {
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         tlb_col_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tlb_col_createDate.setCellValueFactory(
-                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreateDate())));
-        tlb_col_employeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
-        tlb_col_supplierId.setCellValueFactory(new PropertyValueFactory<>("supplierId"));
+                cellData -> formatCell(validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())));
+        tlb_col_employeeName.setCellValueFactory(new PropertyValueFactory<>("employeeName"));
+        tlb_col_supplierName.setCellValueFactory(new PropertyValueFactory<>("supplierName"));
         tlb_col_totalPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getTotalPrice())));
         tlb_col_status.setCellValueFactory(new PropertyValueFactory<>("statusDescription"));
@@ -128,12 +143,19 @@ public class ImportController implements IController {
         tblImport.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
     }
 
+    private void loadComboBox() {
+        StatusDTO allStatus = new StatusDTO(-1, "Tất cả trạng thái");
+        cbStatusFilter.getItems().add(allStatus);
+        cbStatusFilter.getItems().addAll(statusBUS.getAllByType(StatusType.IMPORT));
+        cbStatusFilter.getSelectionModel().selectFirst();
+    }
+
     public void loadSubTable(int importId) {
         if (importId <= 0)
             return;
         ValidationUtils validationUtils = ValidationUtils.getInstance();
         this.id.setText(String.valueOf(selectedImport.getId()));
-        this.createDate.setText(validationUtils.formatDateTime(selectedImport.getCreateDate()));
+        this.createDate.setText(validationUtils.formatDateTime(selectedImport.getCreatedAt()));
         this.employeeId.setText(String.valueOf(selectedImport.getEmployeeId()));
         this.supplierId.setText(String.valueOf(selectedImport.getSupplierId()));
         this.totalPrice.setText(validationUtils.formatCurrency(selectedImport.getTotalPrice()));
@@ -151,10 +173,16 @@ public class ImportController implements IController {
                 validationUtils.formatPercent(
                         cellData.getValue().getProfitPercent() != null ? cellData.getValue().getProfitPercent()
                                 : BigDecimal.ZERO)));
-        tblDetailImport.setItems(FXCollections
-                .observableArrayList(detailImportBUS.getAllDetailImportByImportId(importId)));
-
-        tblDetailImport.getSelectionModel().clearSelection();
+        TaskUtil.executeSecure(null, PermissionKey.DISCOUNT_LIST_VIEW,
+                () -> DetailImportBUS.getInstance().getAllDetailImportByImportId(importId),
+                result -> {
+                    ArrayList<DetailImportDTO> detailImports = result.getData();
+                    if (!detailImports.isEmpty()) {
+                        tblDetailImport.setItems(FXCollections.observableArrayList(detailImports));
+                        Stage currentStage = (Stage) tblDetailImport.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    }
+                });
     }
 
     private SimpleStringProperty formatCell(String value) {
@@ -172,11 +200,14 @@ public class ImportController implements IController {
             }
         });
         UiUtils.gI().applySearchDebounce(txtSearch, 500, () -> handleKeywordChange());
+        cbStatusFilter.setOnAction(event -> handleStatusFilterChange());
         refreshBtn.setOnAction(event -> {
             resetFilters();
             Stage currentStage = (Stage) refreshBtn.getScene().getWindow();
             NotificationUtils.showToast(currentStage, "Làm mới thành công");
         });
+        approveImportBtn.setOnAction(event -> handleApproveImport());
+        deleteImportBtn.setOnAction(event -> handleDeleteImport());
         addImportBtn.setOnAction(event -> handleAddImportBtn());
     }
 
@@ -188,9 +219,10 @@ public class ImportController implements IController {
 
     private void loadPageData(int pageIndex, boolean showOverlay) {
         String keyword = txtSearch.getText().trim();
+        int statusId = (cbStatusFilter.getValue() == null) ? -1 : cbStatusFilter.getValue().getId();
         StackPane overlay = showOverlay ? loadingOverlay : null;
         TaskUtil.executeSecure(overlay, PermissionKey.IMPORT_LIST_VIEW,
-                () -> importBUS.filterImportsPagedForManage(keyword, pageIndex, PAGE_SIZE),
+                () -> importBUS.filterImportsPagedForManage(keyword, statusId, pageIndex, PAGE_SIZE),
                 result -> {
                     // Lấy dữ liệu ImportDisplayDTO đã được JOIN
                     PagedResponse<ImportDisplayDTO> res = result.getPagedData();
@@ -206,8 +238,12 @@ public class ImportController implements IController {
     }
 
     private void handleAddImportBtn() {
-        // Will be implemented similar to EmployeeController
-        // Shows modal for adding new import
+        // Lấy stage hiện tại (MainUI) từ button
+        Stage currentStage = (Stage) addImportBtn.getScene().getWindow();
+        currentStage.close();
+
+        // Mở ImportProduct mới
+        UiUtils.gI().openStage("/GUI/ImportProduct.fxml", "Nhập hàng");
     }
 
     private void clearSubTable() {
@@ -221,7 +257,19 @@ public class ImportController implements IController {
     }
 
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
+        applyFilters();
+    }
+
+    private void handleStatusFilterChange() {
+        statusFilter = cbStatusFilter.getValue();
         applyFilters();
     }
 
@@ -237,18 +285,76 @@ public class ImportController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         txtSearch.clear();
+        cbStatusFilter.getSelectionModel().selectFirst();
+        keyword = "";
+        statusFilter = null;
         clearSubTable();
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override
     public void hideButtonWithoutPermission() {
-
+        boolean canApprove = sessionManagerService.hasPermission(PermissionKey.IMPORT_APPROVE);
+        if (!canApprove) {
+            UiUtils.gI().setVisibleItem(approveImportBtn);
+            UiUtils.gI().setVisibleItem(deleteImportBtn);
+        }
     }
 
     private boolean isSelectedImport() {
         selectedImport = tblImport.getSelectionModel().getSelectedItem();
         return selectedImport != null;
+    }
+
+    private void handleApproveImport() {
+        if (!isSelectedImport()) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn một phiếu nhập để duyệt!", AppMessages.DIALOG_TITLE);
+            return;
+        }
+        if (!UiUtils.gI().showConfirmAlert("Bạn có chắc chắn muốn duyệt phiếu nhập này không?\n" +
+                "(Hành động này sẽ cập nhật tồn kho và giá sản phẩm)", AppMessages.DIALOG_TITLE_CONFIRM)) {
+            return;
+        }
+
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.IMPORT_APPROVE,
+                () -> importBUS.approveImport(selectedImport.getId()),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) approveImportBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                        applyFilters();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
+
+    private void handleDeleteImport() {
+        if (!isSelectedImport()) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn một phiếu nhập để xóa!", AppMessages.DIALOG_TITLE);
+            return;
+        }
+        if (!UiUtils.gI().showConfirmAlert("Bạn có chắc chắn muốn xóa phiếu nhập này không?\n" +
+                "(Chỉ có thể xóa phiếu nhập ở trạng thái DRAFT)", AppMessages.DIALOG_TITLE_CONFIRM)) {
+            return;
+        }
+
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.IMPORT_APPROVE,
+                () -> importBUS.deleteImport(selectedImport.getId()),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) deleteImportBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                        applyFilters();
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 }

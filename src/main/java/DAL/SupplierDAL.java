@@ -2,6 +2,7 @@ package DAL;
 
 import DTO.SupplierDTO;
 import DTO.SupplierDisplayDTO;
+import DTO.SupplierForImportDTO;
 import DTO.PagedResponse;
 
 import java.sql.*;
@@ -198,4 +199,46 @@ public class SupplierDAL extends BaseDAL<SupplierDTO, Integer> {
         return false;
     }
 
+    public ArrayList<SupplierForImportDTO> filterSuppliersByKeywordForImport(String keyword, int statusId) {
+        ArrayList<SupplierForImportDTO> result = new ArrayList<>();
+
+        String sql = "SELECT id, name, phone, address FROM supplier " +
+                "WHERE (? = -1 OR status_id = ?) " +
+                "AND (? = '' OR (" +
+                "    LOWER(name) LIKE ? " +
+                "    OR phone LIKE ?" +
+                "))";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String cleanKeyword = (keyword == null) ? "" : keyword.trim();
+            String searchKey = "%" + cleanKeyword.toLowerCase() + "%";
+
+            int idx = 1;
+
+            // 1. Filter Status
+            ps.setInt(idx++, statusId);
+            ps.setInt(idx++, statusId);
+
+            // 2. Search Keyword
+            ps.setString(idx++, cleanKeyword);
+            ps.setString(idx++, searchKey);
+            ps.setString(idx++, searchKey);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new SupplierForImportDTO(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("phone"),
+                            rs.getString("address")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error filtering suppliers by keyword for import: " + e.getMessage());
+        }
+
+        return result;
+    }
 }

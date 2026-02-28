@@ -66,6 +66,14 @@ public class SessionManagerService {
         return currentSession != null ? currentSession.getRoleId() : -1;
     }
 
+    public int employeePositionId() {
+        return currentSession != null ? currentSession.getPositionId() : -1;
+    }
+
+    public String getPositionName() {
+        return currentSession != null ? currentSession.getPositionName() : "No Position";
+    }
+
     public void forceLogout(String customMessage) {
         Platform.runLater(() -> {
             // 1. Xóa dữ liệu phiên trước
@@ -89,8 +97,37 @@ public class SessionManagerService {
 
             // 5. Mở màn hình Login
             try {
-                UiUtils.gI().openStage("/GUI/LoginUI.fxml", "Đăng nhập hệ thống");
-                System.out.println(">>> Force Logout thành công.");
+                Stage login = UiUtils.gI().openStage1("/GUI/LoginUI.fxml", "Đăng nhập hệ thống");
+                if (login != null) {
+                    NotificationUtils.showToast(login, AppMessages.LOGOUT_SUCCESS);
+                }
+
+            } catch (Exception e) {
+                System.out.println("Lỗi khi quay về màn hình Login: " + e.getMessage());
+            }
+        });
+    }
+
+    public void normalLogout() {
+        Platform.runLater(() -> {
+            // 1. Xóa dữ liệu phiên trước
+            logout();
+
+            // 4. Dọn dẹp toàn bộ cửa sổ cũ
+            List<Window> windows = new ArrayList<>(Window.getWindows());
+            for (Window window : windows) {
+                if (window instanceof Stage stage) {
+                    stage.close();
+                }
+            }
+
+            // 5. Mở màn hình Login
+            try {
+                Stage login = UiUtils.gI().openStage1("/GUI/LoginUI.fxml", "Đăng nhập hệ thống");
+                if (login != null) {
+                    NotificationUtils.showToast(login, AppMessages.LOGOUT_SUCCESS);
+                }
+
             } catch (Exception e) {
                 System.out.println("Lỗi khi quay về màn hình Login: " + e.getMessage());
             }

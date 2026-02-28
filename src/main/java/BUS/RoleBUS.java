@@ -121,8 +121,7 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
     private boolean isDataUnchanged(RoleDTO obj, RoleDTO existing) {
         ValidationUtils v = ValidationUtils.getInstance();
         return Objects.equals(existing.getName(), v.normalizeWhiteSpace(obj.getName())) &&
-                Objects.equals(existing.getDescription(), v.normalizeWhiteSpace(obj.getDescription())) &&
-                Objects.equals(existing.getSalaryId(), obj.getSalaryId());
+                Objects.equals(existing.getDescription(), v.normalizeWhiteSpace(obj.getDescription()));
     }
 
     @Override

@@ -8,7 +8,6 @@ import DTO.PagedResponse;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
-import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
@@ -59,6 +58,7 @@ public class SupplierController implements IController {
     private String keyword = "";
     private StatusDTO statusFilter = null;
     private SupplierDisplayDTO selectedSupplier;
+    private boolean isResetting = false;
 
     // BUS instances - initialized once
     private SupplierBUS supplierBUS;
@@ -220,7 +220,14 @@ public class SupplierController implements IController {
     }
 
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
@@ -235,11 +242,16 @@ public class SupplierController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         cbStatusFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
         keyword = "";
         statusFilter = null;
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override

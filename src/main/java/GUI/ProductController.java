@@ -8,7 +8,6 @@ import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.ExcelService;
-import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
@@ -74,6 +73,7 @@ public class ProductController implements IController {
     private BigDecimal startPrice = null;
     private BigDecimal endPrice = null;
     private ProductDisplayDTO selectedProduct;
+    private boolean isResetting = false;
 
     // BUS instances - initialized once
     private ProductBUS productBUS;
@@ -203,10 +203,10 @@ public class ProductController implements IController {
             if (event.getClickCount() == 2)
                 handleDetail();
         });
-        btnImportExcel.setOnMouseClicked(event -> {
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            importProductExcel(stage);
-        });
+//        btnImportExcel.setOnMouseClicked(event -> {
+//            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+//            importProductExcel(stage);
+//        });
     }
 
     // =====================
@@ -291,7 +291,14 @@ public class ProductController implements IController {
     }
 
     private void handleKeywordChange() {
-        keyword = txtSearch.getText().trim();
+        if (isResetting)
+            return;
+
+        String newKeyword = txtSearch.getText().trim();
+        if (newKeyword.equals(keyword))
+            return;
+
+        keyword = newKeyword;
         applyFilters();
     }
 
@@ -319,18 +326,22 @@ public class ProductController implements IController {
 
     @Override
     public void resetFilters() {
+        isResetting = true;
+
         cbStatusFilter.getSelectionModel().selectFirst();
         cbCategoryFilter.getSelectionModel().selectFirst();
         txtSearch.clear();
         txtStartPrice.clear();
         txtEndPrice.clear();
-
         keyword = "";
         categoryFilter = null;
         statusFilter = null;
         startPrice = null;
         endPrice = null;
+
         applyFilters();
+
+        javafx.application.Platform.runLater(() -> isResetting = false);
     }
 
     @Override
@@ -366,13 +377,13 @@ public class ProductController implements IController {
         return selectedProduct == null;
     }
 
-    public void importProductExcel(Stage stage) {
-        try {
-            ExcelService.getInstance().ImportSheet("products", stage);
-            applyFilters();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void importProductExcel(Stage stage) {
+//        try {
+//            ExcelService.getInstance().ImportSheet("products", stage);
+//            applyFilters();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 }

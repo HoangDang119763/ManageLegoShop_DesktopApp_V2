@@ -10,6 +10,8 @@ import UTILS.AppMessages;
 import UTILS.PasswordUtils;
 import UTILS.ValidationUtils;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
@@ -44,7 +46,23 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
     // ============================================================
 
     public BUSResult insert(AccountDTO obj) {
-        if (obj == null || isInvalidAccountInput(obj)) {
+        if (obj == null || !isValidUsername(obj.getUsername()) || !isValidPassword(obj.getPassword())) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        }
+
+        // Validate roleId
+        if (obj.getRoleId() <= 0) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        }
+
+        RoleBUS roleBUS = RoleBUS.getInstance();
+        if (roleBUS.getById(obj.getRoleId()) == null) {
+            return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
+        }
+
+        // Validate statusId
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.ACCOUNT, obj.getStatusId())) {
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
         }
 
@@ -63,6 +81,21 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
         }
 
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.ACCOUNT_ADD_SUCCESS);
+    }
+
+    public boolean insertWithConn(Connection conn, AccountDTO obj) throws SQLException {
+        if (obj == null || !isValidUsername(obj.getUsername()))
+            return false;
+        StatusBUS statusBus = StatusBUS.getInstance();
+        if (!statusBus.isValidStatusIdForType(StatusType.ACCOUNT, obj.getStatusId()))
+            return false;
+        if (obj.getRoleId() <= 0)
+            return false;
+        // Logic nghiệp vụ đặc trưng của Account
+        obj.setUsername(obj.getUsername().toLowerCase().trim());
+        obj.setPassword(PasswordUtils.getInstance().hashPassword("123456"));
+
+        return AccountDAL.getInstance().insertWithConn(conn, obj);
     }
 
     public BUSResult delete(Integer id, int currentLoginId) {
@@ -114,7 +147,8 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
                     RolePermissionBUS.getInstance().getAllowedModuleIdsByRoleId(session.getRoleId()));
         }
         SessionManagerService.getInstance().login(session);
-        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.LOGIN_SUCCESS);
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.LOGIN_SUCCESS + " - Chào "
+                + SessionManagerService.getInstance().getLoggedName());
     }
 
     public BUSResult changePasswordBySelf(String username, String oldPassword, String newPassword) {
@@ -152,13 +186,104 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
      * Dùng khi Manager thay đổi phân quyền của Role đó.
      */
     public boolean setRequireReloginByRoleId(int roleId, boolean requireRelogin) {
+        if (roleId <= 0)
+            return false;
         return AccountDAL.getInstance().setRequireReloginByRoleId(roleId, requireRelogin);
     }
 
-    private boolean isInvalidAccountInput(AccountDTO obj) {
-        ValidationUtils validator = ValidationUtils.getInstance();
-        return obj.getUsername() == null || obj.getPassword() == null ||
-                !validator.validateUsername(obj.getUsername(), 4, 50) ||
-                !validator.validatePassword(obj.getPassword(), 6, 255);
+    public boolean setRequireRelogin(int accountId, boolean requireRelogin) {
+        if (accountId <= 0)
+            return false;
+        return AccountDAL.getInstance().setRequireRelogin(accountId, requireRelogin);
     }
+
+    /**
+     * Kiểm tra username có tồn tại hay không
+     *
+     * @param username Username cần kiểm tra
+     * @return true nếu username đã tồn tại, false nếu chưa
+     */
+    public boolean existsByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+        return AccountDAL.getInstance().getByUsername(username) != null;
+    }
+
+    private boolean isValidUsername(String username) {
+        ValidationUtils validator = ValidationUtils.getInstance();
+        return username != null && validator.validateUsername(username, 4, 50);
+    }
+
+    private boolean isValidPassword(String password) {
+        ValidationUtils validator = ValidationUtils.getInstance();
+        return password != null && validator.validatePassword(password, 6, 255);
+    }
+
+    /**
+     * Cập nhật trạng thái tài khoản (TAB 2: ACCOUNT INFO)
+     * Update: status_id
+     * ⚠️ Caller PHẢI kiểm tra quyền EMPLOYEE_ACCOUNT_UPDATE_STATUS trước khi gọi
+     * 
+     * @param accountId ID của tài khoản
+     * @param statusId  ID trạng thái mới
+     * @return true nếu thành công, false nếu thất bại
+     */
+    public boolean updateAccountStatus(int accountId, int statusId) {
+        if (accountId <= 0 || statusId <= 0) {
+            return false;
+        }
+
+        if (accountId == 1) {
+            return false;
+        }
+
+        return AccountDAL.getInstance().updateAccountStatus(accountId, statusId);
+    }
+
+    public boolean updateAccountRoleAndStatus(int accountId, int roleId, int statusId) {
+        if (accountId <= 0 || roleId <= 0 || statusId <= 0) {
+            return false;
+        }
+
+        if (accountId == 1) {
+            return false;
+        }
+
+        return AccountDAL.getInstance().updateAccountRoleAndStatus(accountId, roleId, statusId);
+    }
+
+    /**
+     * Reset mật khẩu tài khoản thành mặc định (123456)
+     * ⚠️ Chỉ update password, KHÔNG set require_relogin (gọi
+     * forceLogoutAndSecurityUpdate riêng)
+     * 
+     * @param username Username của tài khoản
+     * @return true nếu thành công, false nếu thất bại
+     */
+    public boolean resetPassword(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+
+        // Hash mật khẩu mặc định
+        String defaultPassword = "123456";
+        String hashedPassword = PasswordUtils.getInstance().hashPassword(defaultPassword);
+
+        // Chỉ update password, KHÔNG set require_relogin
+        return AccountDAL.getInstance().resetPassword(username, hashedPassword);
+    }
+
+    public boolean forceLogoutAndSecurityUpdate(Connection conn, int accountId, boolean isDeactivate)
+            throws SQLException {
+        if (isDeactivate) {
+            // Nếu là nghỉ việc: Văng ra + Khóa luôn Account
+            int lockedId = StatusBUS.getInstance()
+                    .getByTypeAndStatusName(StatusType.ACCOUNT, Status.Account.LOCKED).getId();
+            return AccountDAL.getInstance().updateAccountSecurity(conn, accountId, true, lockedId);
+        }
+        // Nếu chỉ đổi quyền: Chỉ văng ra để nạp lại session
+        return AccountDAL.getInstance().updateAccountSecurity(conn, accountId, true, null);
+    }
+
 }

@@ -20,6 +20,9 @@ public class EmployeePersonalInfoDTO {
     private String gender;
     private String phone;
     private String email;
+    private Integer statusId; // Trạng thái nhân viên
+    private String statusName;
+    private String avatarUrl; // Đường dẫn ảnh đại diện
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -79,6 +82,22 @@ public class EmployeePersonalInfoDTO {
         this.email = email;
     }
 
+    public Integer getStatusId() {
+        return statusId;
+    }
+
+    public void setStatusId(Integer statusId) {
+        this.statusId = statusId;
+    }
+
+    public String getStatusName() {
+        return statusName;
+    }
+
+    public void setStatusName(String statusName) {
+        this.statusName = statusName;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -109,6 +128,9 @@ public class EmployeePersonalInfoDTO {
                 ", gender='" + gender + '\'' +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +
+                ", statusId=" + statusId +
+                ", statusName='" + statusName + '\'' +
+                ", avatarUrl='" + avatarUrl + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

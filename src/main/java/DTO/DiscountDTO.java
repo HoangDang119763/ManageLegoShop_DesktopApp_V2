@@ -1,22 +1,26 @@
 package DTO;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @ToString
+@Getter
+@Setter
 public class DiscountDTO {
     private String code;
     private String name;
     private int type;
-    private LocalDateTime startDate;
-    private LocalDateTime  endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     // Constructors
     public DiscountDTO() {
     }
 
-    public DiscountDTO(String code, String name, int type, LocalDateTime  startDate, LocalDateTime  endDate) {
+    public DiscountDTO(String code, String name, int type, LocalDate startDate, LocalDate endDate) {
         this.code = code;
         this.name = name;
         this.type = type;
@@ -32,44 +36,4 @@ public class DiscountDTO {
         this.endDate = discountDTO.endDate;
     }
 
-    // Getters and Setters
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    public LocalDateTime  getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDateTime  startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDateTime  getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDateTime  endDate) {
-        this.endDate = endDate;
-    }
 }

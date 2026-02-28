@@ -12,7 +12,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-@Slf4j
 public class MainController {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
     @FXML
@@ -61,7 +60,7 @@ public class MainController {
         SessionManagerService session = SessionManagerService.getInstance();
         if (session != null) {
             employeeLoginFullName.setText(session.getLoggedName());
-            employeeRoleName.setText(session.getRoleName());
+            employeeRoleName.setText(session.getPositionName());
         }
     }
 
@@ -69,12 +68,23 @@ public class MainController {
         logoutBtn.setOnMouseClicked(e -> {
             if (UiUtils.gI().showConfirmAlert(AppMessages.LOGOUT_CONFIRM, AppMessages.DIALOG_TITLE_CONFIRM)) {
                 // Sử dụng forceLogout để dọn dẹp sạch sẽ toàn bộ App
-                SessionManagerService.getInstance().forceLogout();
+                SessionManagerService.getInstance().normalLogout();
             }
         });
 
-        closeBtn.setOnMouseClicked(e -> System.exit(0));
+        closeBtn.setOnMouseClicked(e -> handleClose());
         minimizeBtn.setOnMouseClicked(e -> ((Stage) ((Node) e.getSource()).getScene().getWindow()).setIconified(true));
+    }
+
+    private void handleClose() {
+        UiUtils.gI().openStage(
+                "/GUI/NavigatePermission.fxml",
+                "Danh sách chức năng");
+        if (closeBtn.getScene() != null && closeBtn.getScene().getWindow() != null) {
+            Stage stage = (Stage) closeBtn.getScene().getWindow();
+            stage.close();
+        }
+
     }
 
     record ModuleMetadata(int id, String name, String icon) {

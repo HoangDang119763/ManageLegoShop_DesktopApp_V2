@@ -2,7 +2,9 @@ package DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,11 +16,15 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class ImportDisplayDTO {
     private int id;
-    private LocalDateTime createDate;
+    private LocalDateTime createdAt;
     private int employeeId;
+    private String employeeName; // Tên nhân viên (JOIN từ employee table)
     private int supplierId;
+    private String supplierName; // Tên nhà cung cấp (JOIN từ supplier table)
     private BigDecimal totalPrice;
     private int statusId;
     private String statusDescription; // Mô tả trạng thái (JOIN từ status table)
@@ -31,12 +37,12 @@ public class ImportDisplayDTO {
         this.id = id;
     }
 
-    public LocalDateTime getCreateDate() {
-        return createDate;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public int getEmployeeId() {

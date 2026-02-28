@@ -8,46 +8,73 @@ public class PayrollHistoryDTO {
     private int id;
     private int employeeId;
     private LocalDate salaryPeriod;
-    private BigDecimal temporarySalary;
-    private BigDecimal overtimeAmount;
+    private BigDecimal baseSalary;
+    private int standardWorkDays;
+    private BigDecimal actualWorkDays;
+    private BigDecimal bhxhAmount;
+    private BigDecimal bhytAmount;
+    private BigDecimal bhtnAmount;
+    private BigDecimal totalInsurance;
+    private BigDecimal violationAmount;
+    private BigDecimal rewardAmount;
     private BigDecimal totalAllowance;
-    private BigDecimal totalBonus;
-    private BigDecimal totalDeduction;
-    private BigDecimal totalFine;
+    private BigDecimal overtimeAmount;
+    private BigDecimal taxableIncome;
+    private BigDecimal taxPercent;
+    private BigDecimal taxAmount;
     private BigDecimal netSalary;
-    private LocalDateTime paidDate;
+    private LocalDateTime createdAt;
 
     public PayrollHistoryDTO() {
     }
 
-    public PayrollHistoryDTO(int id, int employeeId, LocalDate salaryPeriod, BigDecimal temporarySalary,
-            BigDecimal overtimeAmount, BigDecimal totalAllowance, BigDecimal totalBonus,
-            BigDecimal totalDeduction, BigDecimal totalFine, BigDecimal netSalary, LocalDateTime paidDate) {
+    public PayrollHistoryDTO(int id, int employeeId, LocalDate salaryPeriod, BigDecimal baseSalary,
+            int standardWorkDays, BigDecimal actualWorkDays, BigDecimal bhxhAmount,
+            BigDecimal bhytAmount, BigDecimal bhtnAmount, BigDecimal totalInsurance,
+            BigDecimal violationAmount, BigDecimal rewardAmount, BigDecimal totalAllowance,
+            BigDecimal overtimeAmount, BigDecimal taxableIncome, BigDecimal taxPercent,
+            BigDecimal taxAmount, BigDecimal netSalary, LocalDateTime createdAt) {
         this.id = id;
         this.employeeId = employeeId;
         this.salaryPeriod = salaryPeriod;
-        this.temporarySalary = temporarySalary;
-        this.overtimeAmount = overtimeAmount;
+        this.baseSalary = baseSalary;
+        this.standardWorkDays = standardWorkDays;
+        this.actualWorkDays = actualWorkDays;
+        this.bhxhAmount = bhxhAmount;
+        this.bhytAmount = bhytAmount;
+        this.bhtnAmount = bhtnAmount;
+        this.totalInsurance = totalInsurance;
+        this.violationAmount = violationAmount;
+        this.rewardAmount = rewardAmount;
         this.totalAllowance = totalAllowance;
-        this.totalBonus = totalBonus;
-        this.totalDeduction = totalDeduction;
-        this.totalFine = totalFine;
+        this.overtimeAmount = overtimeAmount;
+        this.taxableIncome = taxableIncome;
+        this.taxPercent = taxPercent;
+        this.taxAmount = taxAmount;
         this.netSalary = netSalary;
-        this.paidDate = paidDate;
+        this.createdAt = createdAt;
     }
 
     public PayrollHistoryDTO(PayrollHistoryDTO other) {
         this.id = other.id;
         this.employeeId = other.employeeId;
         this.salaryPeriod = other.salaryPeriod;
-        this.temporarySalary = other.temporarySalary;
-        this.overtimeAmount = other.overtimeAmount;
+        this.baseSalary = other.baseSalary;
+        this.standardWorkDays = other.standardWorkDays;
+        this.actualWorkDays = other.actualWorkDays;
+        this.bhxhAmount = other.bhxhAmount;
+        this.bhytAmount = other.bhytAmount;
+        this.bhtnAmount = other.bhtnAmount;
+        this.totalInsurance = other.totalInsurance;
+        this.violationAmount = other.violationAmount;
+        this.rewardAmount = other.rewardAmount;
         this.totalAllowance = other.totalAllowance;
-        this.totalBonus = other.totalBonus;
-        this.totalDeduction = other.totalDeduction;
-        this.totalFine = other.totalFine;
+        this.overtimeAmount = other.overtimeAmount;
+        this.taxableIncome = other.taxableIncome;
+        this.taxPercent = other.taxPercent;
+        this.taxAmount = other.taxAmount;
         this.netSalary = other.netSalary;
-        this.paidDate = other.paidDate;
+        this.createdAt = other.createdAt;
     }
 
     public int getId() {
@@ -75,19 +102,83 @@ public class PayrollHistoryDTO {
     }
 
     public BigDecimal getTemporarySalary() {
-        return temporarySalary;
+        return baseSalary;
     }
 
-    public void setTemporarySalary(BigDecimal temporarySalary) {
-        this.temporarySalary = temporarySalary;
+    public void setTemporarySalary(BigDecimal baseSalary) {
+        this.baseSalary = baseSalary;
     }
 
-    public BigDecimal getOvertimeAmount() {
-        return overtimeAmount;
+    public BigDecimal getBaseSalary() {
+        return baseSalary;
     }
 
-    public void setOvertimeAmount(BigDecimal overtimeAmount) {
-        this.overtimeAmount = overtimeAmount;
+    public void setBaseSalary(BigDecimal baseSalary) {
+        this.baseSalary = baseSalary;
+    }
+
+    public int getStandardWorkDays() {
+        return standardWorkDays;
+    }
+
+    public void setStandardWorkDays(int standardWorkDays) {
+        this.standardWorkDays = standardWorkDays;
+    }
+
+    public BigDecimal getActualWorkDays() {
+        return actualWorkDays;
+    }
+
+    public void setActualWorkDays(BigDecimal actualWorkDays) {
+        this.actualWorkDays = actualWorkDays;
+    }
+
+    public BigDecimal getBhxhAmount() {
+        return bhxhAmount;
+    }
+
+    public void setBhxhAmount(BigDecimal bhxhAmount) {
+        this.bhxhAmount = bhxhAmount;
+    }
+
+    public BigDecimal getBhytAmount() {
+        return bhytAmount;
+    }
+
+    public void setBhytAmount(BigDecimal bhytAmount) {
+        this.bhytAmount = bhytAmount;
+    }
+
+    public BigDecimal getBhtnAmount() {
+        return bhtnAmount;
+    }
+
+    public void setBhtnAmount(BigDecimal bhtnAmount) {
+        this.bhtnAmount = bhtnAmount;
+    }
+
+    public BigDecimal getTotalInsurance() {
+        return totalInsurance;
+    }
+
+    public void setTotalInsurance(BigDecimal totalInsurance) {
+        this.totalInsurance = totalInsurance;
+    }
+
+    public BigDecimal getViolationAmount() {
+        return violationAmount;
+    }
+
+    public void setViolationAmount(BigDecimal violationAmount) {
+        this.violationAmount = violationAmount;
+    }
+
+    public BigDecimal getRewardAmount() {
+        return rewardAmount;
+    }
+
+    public void setRewardAmount(BigDecimal rewardAmount) {
+        this.rewardAmount = rewardAmount;
     }
 
     public BigDecimal getTotalAllowance() {
@@ -98,28 +189,36 @@ public class PayrollHistoryDTO {
         this.totalAllowance = totalAllowance;
     }
 
-    public BigDecimal getTotalBonus() {
-        return totalBonus;
+    public BigDecimal getOvertimeAmount() {
+        return overtimeAmount;
     }
 
-    public void setTotalBonus(BigDecimal totalBonus) {
-        this.totalBonus = totalBonus;
+    public void setOvertimeAmount(BigDecimal overtimeAmount) {
+        this.overtimeAmount = overtimeAmount;
     }
 
-    public BigDecimal getTotalDeduction() {
-        return totalDeduction;
+    public BigDecimal getTaxableIncome() {
+        return taxableIncome;
     }
 
-    public void setTotalDeduction(BigDecimal totalDeduction) {
-        this.totalDeduction = totalDeduction;
+    public void setTaxableIncome(BigDecimal taxableIncome) {
+        this.taxableIncome = taxableIncome;
     }
 
-    public BigDecimal getTotalFine() {
-        return totalFine;
+    public BigDecimal getTaxPercent() {
+        return taxPercent;
     }
 
-    public void setTotalFine(BigDecimal totalFine) {
-        this.totalFine = totalFine;
+    public void setTaxPercent(BigDecimal taxPercent) {
+        this.taxPercent = taxPercent;
+    }
+
+    public BigDecimal getTaxAmount() {
+        return taxAmount;
+    }
+
+    public void setTaxAmount(BigDecimal taxAmount) {
+        this.taxAmount = taxAmount;
     }
 
     public BigDecimal getNetSalary() {
@@ -130,12 +229,12 @@ public class PayrollHistoryDTO {
         this.netSalary = netSalary;
     }
 
-    public LocalDateTime getPaidDate() {
-        return paidDate;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setPaidDate(LocalDateTime paidDate) {
-        this.paidDate = paidDate;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     @Override

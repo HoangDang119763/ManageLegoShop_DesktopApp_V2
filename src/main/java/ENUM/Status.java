@@ -38,7 +38,7 @@ public class Status {
 
     // Enum cho Phiếu nhập
     public enum Import {
-        COMPLETED, CANCELED, INCOMPLETED
+        COMPLETED, DRAFT, INCOMPLETED
     }
 
     // Enum cho Loại nghỉ phép
@@ -138,6 +138,6 @@ public class Status {
 
     // Enum cho Lịch công tác
     public enum EmploymentHistory {
-        PENDING, APPROVED, EFFECTIVE, REJECTED, CANCELLED
+        PENDING, APPROVED, EFFECTIVE, CANCELLED
     }
 }

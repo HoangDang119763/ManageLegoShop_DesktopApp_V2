@@ -4,8 +4,8 @@ import BUS.AccountBUS;
 import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
 import BUS.EmploymentHistoryBUS;
+import BUS.PositionBUS;
 import BUS.RoleBUS;
-import BUS.SalaryBUS;
 import BUS.StatusBUS;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDTO;
@@ -15,8 +15,8 @@ import DTO.EmployeeAccountInfoDTO;
 import DTO.EmployeeJobInfoDTO;
 import DTO.EmployeePayrollInfoDTO;
 import DTO.PagedResponse;
+import DTO.PositionDTO;
 import DTO.RoleDTO;
-import DTO.SalaryDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
@@ -24,6 +24,7 @@ import ENUM.Gender;
 import ENUM.Status;
 import INTERFACE.IModalController;
 import SERVICE.SessionManagerService;
+import SERVICE.ImageService;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
@@ -33,11 +34,18 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 
 /**
@@ -65,6 +73,8 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TextField txtEmployeeId;
     @FXML
+    private ComboBox<StatusDTO> cbStatus;
+    @FXML
     private TextField txtFirstName;
     @FXML
     private TextField txtLastName;
@@ -79,9 +89,20 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private Button savePersonalBtn;
 
+    // ==================== TAB 1: AVATAR ====================
+    @FXML
+    private ImageView imgAvatar; // Ảnh đại diện nhân viên
+    @FXML
+    private Button choseImg; // Nút chọn ảnh
+    @FXML
+    private Button resetImgBtn; // Nút reset ảnh
+    private String avatarUrl = null; // Đường dẫn ảnh tạm thời
+
     // ==================== TAB 2: ACCOUNT INFO ====================
     @FXML
     private TextField txtUsername;
+    @FXML
+    private ComboBox<RoleDTO> cbRole;
     @FXML
     private ComboBox<StatusDTO> cbAccountStatus;
     @FXML
@@ -97,13 +118,11 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private ComboBox<DepartmentDTO> cbDepartment;
     @FXML
-    private ComboBox<RoleDTO> cbRole;
+    private ComboBox<PositionDTO> cbPosition;
     @FXML
-    private ComboBox<StatusDTO> cbStatus;
+    private TextField txtWage;
     @FXML
-    private TextField txtBaseSalary;
-    @FXML
-    private TextField txtCoefficient;
+    private VBox jobHistorySection;
     @FXML
     private TableView<EmploymentHistoryDetailDTO> tblJobHistory;
     @FXML
@@ -111,13 +130,15 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colDepartment;
     @FXML
-    private TableColumn<EmploymentHistoryDetailDTO, String> colRole;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colPosition;
     @FXML
-    private TableColumn<EmploymentHistoryDetailDTO, String> colReason;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colStatus;
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colApprover;
     @FXML
-    private TableColumn<EmploymentHistoryDetailDTO, String> colReason1;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colReason;
+    @FXML
+    private TableColumn<EmploymentHistoryDetailDTO, String> colCreatedAt;
     @FXML
     private Button saveJobBtn;
 
@@ -127,13 +148,11 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TextField txtHealthInsCode;
     @FXML
-    private CheckBox cbSocialIns;
+    private TextField txtSocialInsCode;
     @FXML
-    private CheckBox cbHealthIns;
+    private TextField txtUnemploymentInsCode;
     @FXML
-    private CheckBox cbUnemploymentIns;
-    @FXML
-    private CheckBox cbPersonalTax;
+    private CheckBox cbMealSupport;
     @FXML
     private CheckBox cbTransportSupport;
     @FXML
@@ -152,19 +171,19 @@ public class EmployeeModalController implements IModalController {
     private StackPane loadingOverlay;
     @FXML
     private PaginationController historyPaginationController;
+    @FXML
+    private HBox paginationSection;
     private static final int PAGE_SIZE = 10;
 
-    @Getter
-    private boolean isSaved = false;
     @Getter
     private String resultMessage = "";
     private int typeModal; // 0=Add, 1=Edit, 2=View
     private EmployeeDTO employee;
     private int currentEmployeeId; // Store employee ID for lazy loading
     private RoleBUS roleBUS;
-    private SalaryBUS salaryBUS;
     private StatusBUS statusBUS;
     private DepartmentBUS departmentBUS;
+    private PositionBUS positionBUS;
     private EmployeeBUS employeeBUS;
     private SessionManagerService session;
     private EmploymentHistoryBUS employmentHistoryBUS;
@@ -185,17 +204,22 @@ public class EmployeeModalController implements IModalController {
     public void initialize() {
         // Load BUS instances
         roleBUS = RoleBUS.getInstance();
-        salaryBUS = SalaryBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
         departmentBUS = DepartmentBUS.getInstance();
+        positionBUS = PositionBUS.getInstance();
         employeeBUS = EmployeeBUS.getInstance();
         session = SessionManagerService.getInstance();
         employmentHistoryBUS = EmploymentHistoryBUS.getInstance();
         validationUtils = ValidationUtils.getInstance();
         accountBUS = AccountBUS.getInstance();
+
+        // Set avatar ImageView properties
+        imgAvatar.setPreserveRatio(false);
+
         // Load initial data
         loadGenderComboBox();
         setupDepartmentComboBox();
+        setupPositionComboBox();
         loadRoleComboBox();
         loadStatusComboBox();
         loadAccountStatusComboBox();
@@ -319,25 +343,19 @@ public class EmployeeModalController implements IModalController {
                 AppMessages.DEPARTMENT_DELETED_WARNING);
     }
 
-    private void loadRoleComboBox() {
-        cbRole.getItems().addAll(roleBUS.getAll());
-
-        // Auto-update salary when role changes
-        cbRole.setOnAction(event -> handleRoleSelectChange());
+    /**
+     * Setup Position ComboBox
+     */
+    private void setupPositionComboBox() {
+        ArrayList<PositionDTO> positions = positionBUS.getAll();
+        cbPosition.setItems(FXCollections.observableArrayList(positions));
     }
 
-    /**
-     * Khi chọn Role, auto-update Lương cơ bản và Hệ số từ Salary table
-     */
-    private void handleRoleSelectChange() {
-        RoleDTO selectedRole = cbRole.getSelectionModel().getSelectedItem();
-        if (selectedRole != null && selectedRole.getSalaryId() != null) {
-            SalaryDTO salary = salaryBUS.getById(selectedRole.getSalaryId());
-            if (salary != null) {
-                txtBaseSalary.setText(salary.getBase() != null ? salary.getBase().toString() : "0");
-                txtCoefficient.setText(salary.getCoefficient() != null ? salary.getCoefficient().toString() : "0");
-            }
-        }
+    private void loadRoleComboBox() {
+        ArrayList<RoleDTO> roles = RoleBUS.getInstance().getAll();
+        if (SessionManagerService.getInstance().employeeRoleId() != 1)
+            roles.removeIf(role -> role.getId() == 1);
+        cbRole.getItems().addAll(roles);
     }
 
     private void loadStatusComboBox() {
@@ -354,34 +372,48 @@ public class EmployeeModalController implements IModalController {
      * Setup job history table columns
      */
     private void setupJobHistoryTable() {
-
+        ValidationUtils validationUtils = ValidationUtils.getInstance();
+        // 1. Ngày áp dụng
         colEffectiveDate.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getEffectiveDate() != null
-                        ? validationUtils.formatDateTime(cellData.getValue().getEffectiveDate())
-                        : ""));
-
+                validationUtils.formatDateTime(cellData.getValue().getEffectiveDate())));
+        UiUtils.gI().addTooltipToColumn(colEffectiveDate, 20);
+        // 2. Phòng ban
         colDepartment.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getDepartmentName() != null ? cellData.getValue().getDepartmentName() : ""));
-
-        colRole.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getRoleName() != null ? cellData.getValue().getRoleName() : ""));
-
-        colReason.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getReason() != null ? cellData.getValue().getReason() : ""));
-
+        UiUtils.gI().addTooltipToColumn(colDepartment, 20);
+        // 3. Vị trí (MỚI)
+        colPosition.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getPositionName() != null ? cellData.getValue().getPositionName() : ""));
+        UiUtils.gI().addTooltipToColumn(colPosition, 20);
+        // 4. Người duyệt (MỚI)
         colApprover.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getApproverName() != null ? cellData.getValue().getApproverName() : ""));
-
-        colReason1.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getReason() != null ? cellData.getValue().getReason() : ""));
+                cellData.getValue().getApproverName() != null ? cellData.getValue().getApproverName() : "Hệ thống"));
+        UiUtils.gI().addTooltipToColumn(colApprover, 20);
+        // 5. Trạng thái
+        colStatus.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getStatusDescription() != null ? cellData.getValue().getStatusDescription() : ""));
+        UiUtils.gI().addTooltipToColumn(colStatus, 20);
+        // 6. Lý do điều chuyển (MỚI)
+        colReason.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getReason() != null ? cellData.getValue().getReason() : "---"));
+        UiUtils.gI().addTooltipToColumn(colReason, 20);
+        // 7. Ngày tạo lệnh (MỚI)
+        colCreatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
+                validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())));
+        UiUtils.gI().addTooltipToColumn(colCreatedAt, 20);
     }
 
     private void setupListeners() {
-        savePersonalBtn.setOnAction(e -> handleSave());
-        saveAccountBtn.setOnAction(e -> handleSave());
-        saveJobBtn.setOnAction(e -> handleSave());
-        savePayrollBtn.setOnAction(e -> handleSave());
+        savePersonalBtn.setOnAction(e -> handleSavePersonal());
+        saveAccountBtn.setOnAction(e -> handleSaveAccount());
+        saveJobBtn.setOnAction(e -> handleSaveJob());
+        savePayrollBtn.setOnAction(e -> handleSavePayroll());
+        btnResetPassword.setOnAction(e -> handleResetPassword());
         closeBtn.setOnAction(e -> handleClose());
+
+        // Avatar button listeners
+        choseImg.setOnAction(e -> handleChooseAvatar());
+        resetImgBtn.setOnAction(e -> handleResetAvatar());
     }
 
     public void setTypeModal(int type) {
@@ -392,6 +424,11 @@ public class EmployeeModalController implements IModalController {
             txtEmployeeId.setText("Hệ thống tự tạo");
         } else if (typeModal == 1) {
             modalName.setText("Sửa nhân viên");
+            // Ẩn job history section khi sửa (không cần thiết)
+            jobHistorySection.setVisible(false);
+            jobHistorySection.setManaged(false);
+            paginationSection.setVisible(false);
+            paginationSection.setManaged(false);
         } else if (typeModal == 2) {
             modalName.setText("Xem thông tin nhân viên");
             setReadOnly();
@@ -399,19 +436,26 @@ public class EmployeeModalController implements IModalController {
     }
 
     /**
-     * Set employee ID and load initial tab (Tab 1: Personal)
+     * Set employee ID and select initial tab dựa vào quyền
+     * Ưu tiên: Tab 1 (Personal) > Tab 2 (Account) > Tab 3 (Job) > Tab 4 (Payroll)
      */
     public void setData(int empId) {
         currentEmployeeId = empId;
-        // Có quyền nào thì load tab đó đầu tiên, ưu tiên Tab 1 > Tab 2 > Tab 3 > Tab 4
-        if (canViewPersonal)
+
+        // Chọn tab đầu tiên mà user có quyền xem
+        if (canViewPersonal) {
+            tabPaneEmployee.getSelectionModel().select(tabPersonal);
             loadTabPersonal();
-        else if (canViewAccount)
+        } else if (canViewAccount) {
+            tabPaneEmployee.getSelectionModel().select(tabAccount);
             loadTabAccount();
-        else if (canViewJob)
+        } else if (canViewJob) {
+            tabPaneEmployee.getSelectionModel().select(tabJob);
             loadTabJob();
-        else if (canViewPayroll)
+        } else if (canViewPayroll) {
+            tabPaneEmployee.getSelectionModel().select(tabPayroll);
             loadTabPayroll();
+        }
     }
 
     /**
@@ -497,6 +541,23 @@ public class EmployeeModalController implements IModalController {
         txtPhone.setText(personalInfo.getPhone() != null ? personalInfo.getPhone() : "");
         txtEmail.setText(personalInfo.getEmail() != null ? personalInfo.getEmail() : "");
 
+        // Load status
+        if (personalInfo.getStatusId() != null) {
+            for (StatusDTO status : cbStatus.getItems()) {
+                if (status.getId() == personalInfo.getStatusId()) {
+                    cbStatus.getSelectionModel().select(status);
+                    break;
+                }
+            }
+        }
+
+        // Load avatar
+        avatarUrl = personalInfo.getAvatarUrl();
+        loadEmployeeAvatar(avatarUrl);
+
+        lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(personalInfo.getCreatedAt()));
+        lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(personalInfo.getUpdatedAt()));
+
         if (!canUpdatePersonal) {
             txtFirstName.setEditable(false);
             txtLastName.setEditable(false);
@@ -504,7 +565,14 @@ public class EmployeeModalController implements IModalController {
             cbGender.setDisable(true);
             txtPhone.setEditable(false);
             txtEmail.setEditable(false);
+            cbStatus.setDisable(true);
             savePersonalBtn.setDisable(true);
+            choseImg.setDisable(true);
+            resetImgBtn.setDisable(true);
+        } else if (typeModal != 1) {
+            // Chỉ cho sửa avatar khi typeModal = 1 (Edit)
+            choseImg.setDisable(true);
+            resetImgBtn.setDisable(true);
         }
     }
 
@@ -520,6 +588,16 @@ public class EmployeeModalController implements IModalController {
                 ? validationUtils.formatDateTimeWithHour(accountInfo.getLastLogin())
                 : "Chưa có lần đăng nhập");
 
+        // Set role
+        if (accountInfo.getRoleId() != null && accountInfo.getRoleId() > 0) {
+            for (RoleDTO role : cbRole.getItems()) {
+                if (role.getId() == accountInfo.getRoleId()) {
+                    cbRole.getSelectionModel().select(role);
+                    break;
+                }
+            }
+        }
+
         // Set account status
         if (accountInfo.getAccountStatusId() != null && accountInfo.getAccountStatusId() > 0) {
             StatusDTO accountStatus = statusBUS.getById(accountInfo.getAccountStatusId());
@@ -528,7 +606,12 @@ public class EmployeeModalController implements IModalController {
             }
         }
 
+        // Set created/updated time
+        lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(accountInfo.getCreatedAt()));
+        lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(accountInfo.getUpdatedAt()));
+
         if (!canUpdateAccount && !canResetPassword) {
+            cbRole.setDisable(true);
             cbAccountStatus.setDisable(true);
             btnResetPassword.setDisable(true);
             saveAccountBtn.setDisable(true);
@@ -555,36 +638,35 @@ public class EmployeeModalController implements IModalController {
             }
         }
 
-        // Set role and trigger salary update
-        if (jobInfo.getRoleId() != null) {
-            RoleDTO role = roleBUS.getById(jobInfo.getRoleId());
-            if (role != null) {
-                cbRole.getSelectionModel().select(role);
-                handleRoleSelectChange();
+        // Set position
+        if (jobInfo.getPositionId() != null) {
+            PositionDTO position = positionBUS.getById(jobInfo.getPositionId());
+            if (position != null) {
+                cbPosition.getSelectionModel().select(position);
             }
         }
 
-        // Set status
-        if (jobInfo.getStatusId() != null) {
-            StatusDTO status = statusBUS.getById(jobInfo.getStatusId());
-            if (status != null) {
-                cbStatus.getSelectionModel().select(status);
-            }
+        // Display wage
+        if (jobInfo.getWage() != null) {
+            txtWage.setText(validationUtils.formatCurrency(jobInfo.getWage()));
+        } else {
+            txtWage.setText("0");
         }
 
-        // Display base salary and coefficient
-        txtBaseSalary.setText(jobInfo.getBaseSalary() != null ? jobInfo.getBaseSalary().toString() : "0");
-        txtCoefficient
-                .setText(jobInfo.getSalaryCoefficient() != null ? jobInfo.getSalaryCoefficient().toString() : "0");
+        // Set created/updated time
+        lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(jobInfo.getCreatedAt()));
+        lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(jobInfo.getUpdatedAt()));
 
-        // Setup job history table and load separately
-        setupJobHistoryTable();
-        loadEmploymentHistory(0);
+        // Setup job history table chỉ khi ở chế độ thêm mới (typeModal = 0)
+        // Khi edit (typeModal = 1) hoặc view (typeModal = 2) không load history
+        if (typeModal == 2) {
+            setupJobHistoryTable();
+            loadEmploymentHistory(0);
+        }
 
         if (!canUpdateJob) {
             cbDepartment.setDisable(true);
-            cbRole.setDisable(true);
-            cbStatus.setDisable(true);
+            cbPosition.setDisable(true);
             saveJobBtn.setDisable(true);
         }
     }
@@ -599,21 +681,23 @@ public class EmployeeModalController implements IModalController {
         txtNumDependents
                 .setText(payrollInfo.getNumDependents() != null ? payrollInfo.getNumDependents().toString() : "0");
         txtHealthInsCode.setText(payrollInfo.getHealthInsCode() != null ? payrollInfo.getHealthInsCode() : "");
-
-        cbHealthIns.setSelected(payrollInfo.isHealthInsurance());
-        cbSocialIns.setSelected(payrollInfo.isSocialInsurance());
-        cbUnemploymentIns.setSelected(payrollInfo.isUnemploymentInsurance());
-        cbPersonalTax.setSelected(payrollInfo.isPersonalIncomeTax());
+        txtSocialInsCode.setText(payrollInfo.getSocialInsCode() != null ? payrollInfo.getSocialInsCode() : "");
+        txtUnemploymentInsCode
+                .setText(payrollInfo.getUnemploymentInsCode() != null ? payrollInfo.getUnemploymentInsCode() : "");
+        cbMealSupport.setSelected(payrollInfo.isMealSupport());
         cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
         cbAccommodationSupport.setSelected(payrollInfo.isAccommodationSupport());
+
+        // Set created/updated time
+        lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(payrollInfo.getCreatedAt()));
+        lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(payrollInfo.getUpdatedAt()));
 
         if (!canUpdatePayroll) {
             txtNumDependents.setEditable(false);
             txtHealthInsCode.setEditable(false);
-            cbHealthIns.setDisable(true);
-            cbSocialIns.setDisable(true);
-            cbUnemploymentIns.setDisable(true);
-            cbPersonalTax.setDisable(true);
+            txtSocialInsCode.setEditable(false);
+            txtUnemploymentInsCode.setEditable(false);
+            cbMealSupport.setDisable(true);
             cbTransportSupport.setDisable(true);
             cbAccommodationSupport.setDisable(true);
             savePayrollBtn.setDisable(true);
@@ -633,12 +717,13 @@ public class EmployeeModalController implements IModalController {
         UiUtils.gI().setReadOnlyItem(dpDateOfBirth);
         UiUtils.gI().setReadOnlyComboBox(cbGender);
         UiUtils.gI().setReadOnlyComboBox(cbDepartment);
+        UiUtils.gI().setReadOnlyComboBox(cbPosition);
         UiUtils.gI().setReadOnlyComboBox(cbRole);
         UiUtils.gI().setReadOnlyComboBox(cbStatus);
-        UiUtils.gI().setReadOnlyItem(cbSocialIns);
-        UiUtils.gI().setReadOnlyItem(cbHealthIns);
-        UiUtils.gI().setReadOnlyItem(cbUnemploymentIns);
-        UiUtils.gI().setReadOnlyItem(cbPersonalTax);
+        UiUtils.gI().setReadOnlyItem(txtHealthInsCode);
+        UiUtils.gI().setReadOnlyItem(txtSocialInsCode);
+        UiUtils.gI().setReadOnlyItem(txtUnemploymentInsCode);
+        UiUtils.gI().setReadOnlyItem(cbMealSupport);
         UiUtils.gI().setReadOnlyItem(cbTransportSupport);
         UiUtils.gI().setReadOnlyItem(cbAccommodationSupport);
         UiUtils.gI().setVisibleItem(detailPassword);
@@ -648,6 +733,8 @@ public class EmployeeModalController implements IModalController {
         UiUtils.gI().setReadOnlyItem(saveJobBtn);
         UiUtils.gI().setReadOnlyItem(savePayrollBtn);
         UiUtils.gI().setReadOnlyItem(btnResetPassword);
+        choseImg.setVisible(false);
+        resetImgBtn.setVisible(false);
     }
 
     private void setupHistoryPagination() {
@@ -683,15 +770,29 @@ public class EmployeeModalController implements IModalController {
 
     }
 
-    private void handleSave() {
+    /**
+     * Handle save personal info (Tab 1)
+     * Cập nhật: firstName, lastName, dateOfBirth, gender, phone, email
+     */
+    private void handleSavePersonal() {
         // Validation
         if (txtFirstName.getText().trim().isEmpty() || txtLastName.getText().trim().isEmpty()) {
             NotificationUtils.showErrorAlert("Họ tên không được để trống", AppMessages.DIALOG_TITLE);
             return;
         }
 
-        if (cbRole.getSelectionModel().getSelectedItem() == null) {
-            NotificationUtils.showErrorAlert("Chức vụ không được để trống", AppMessages.DIALOG_TITLE);
+        if (dpDateOfBirth.getValue() == null) {
+            NotificationUtils.showErrorAlert("Ngày sinh không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        if (cbGender.getSelectionModel().getSelectedItem() == null) {
+            NotificationUtils.showErrorAlert("Giới tính không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        if (txtPhone.getText().trim().isEmpty()) {
+            NotificationUtils.showErrorAlert("Số điện thoại không được để trống", AppMessages.DIALOG_TITLE);
             return;
         }
 
@@ -700,76 +801,264 @@ public class EmployeeModalController implements IModalController {
             return;
         }
 
-        // Update employee
-        if (employee == null) {
-            employee = new EmployeeDTO();
+        // Xử lý Avatar (tùy chọn - không bắt buộc)
+        String finalAvatarUrl = null;
+        if (typeModal == 1 && avatarUrl != null && !avatarUrl.trim().isEmpty()) {
+            try {
+                // Nếu avatarUrl khác với đường dẫn cũ (có chọn ảnh mới)
+                if (!avatarUrl.equals(txtEmployeeId.getText()) && !avatarUrl.startsWith("images/")) {
+                    finalAvatarUrl = ImageService.gI().saveEmployeeAvatar(String.valueOf(currentEmployeeId), avatarUrl);
+                } else {
+                    // Giữ nguyên avatar cũ hoặc reset thành null
+                    finalAvatarUrl = avatarUrl.startsWith("images/") ? avatarUrl : null;
+                }
+            } catch (IOException ex) {
+                NotificationUtils.showErrorAlert("Lỗi lưu ảnh: " + ex.getMessage(), AppMessages.DIALOG_TITLE);
+                return;
+            }
         }
 
-        employee.setFirstName(txtFirstName.getText().trim());
-        employee.setLastName(txtLastName.getText().trim());
-        employee.setDateOfBirth(dpDateOfBirth.getValue());
-        employee.setGender(cbGender.getValue());
-        employee.setPhone(txtPhone.getText().trim());
-        employee.setEmail(txtEmail.getText().trim());
+        // Build EmployeeDTO with personal info
+        EmployeeDTO personal = new EmployeeDTO();
+        personal.setId(currentEmployeeId);
+        personal.setFirstName(txtFirstName.getText().trim());
+        personal.setLastName(txtLastName.getText().trim());
+        personal.setDateOfBirth(dpDateOfBirth.getValue());
+        personal.setGender(cbGender.getValue());
+        personal.setPhone(txtPhone.getText().trim());
+        personal.setEmail(txtEmail.getText().trim());
+        personal.setStatusId(cbStatus.getSelectionModel().getSelectedItem().getId());
+        personal.setAvatarUrl(finalAvatarUrl);
 
-        DepartmentDTO dept = cbDepartment.getSelectionModel().getSelectedItem();
-        if (dept != null) {
-            employee.setDepartmentId(dept.getId());
+        // Save to database
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_PERSONAL_UPDATE,
+                () -> employeeBUS.updatePersonalInfoByAdmin(personal),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) savePersonalBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
+
+    /**
+     * Handle save account info (Tab 2)
+     * Cập nhật: role, account status
+     */
+    private void handleSaveAccount() {
+        if (currentEmployeeId <= 0) {
+            NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ", AppMessages.DIALOG_TITLE);
+            return;
         }
 
-        RoleDTO role = cbRole.getSelectionModel().getSelectedItem();
-        if (role != null) {
-            employee.setRoleId(role.getId());
+        RoleDTO selectedRole = cbRole.getSelectionModel().getSelectedItem();
+        if (selectedRole == null) {
+            NotificationUtils.showErrorAlert("Vai trò hệ thống không được để trống", AppMessages.DIALOG_TITLE);
+            return;
         }
 
-        StatusDTO status = cbStatus.getSelectionModel().getSelectedItem();
-        if (status != null) {
-            employee.setStatusId(status.getId());
+        StatusDTO selectedStatus = cbAccountStatus.getSelectionModel().getSelectedItem();
+        if (selectedStatus == null) {
+            NotificationUtils.showErrorAlert("Trạng thái tài khoản không được để trống", AppMessages.DIALOG_TITLE);
+            return;
         }
 
-        employee.setHealthInsCode(txtHealthInsCode.getText().trim());
-        employee.setSocialInsurance(cbSocialIns.isSelected());
-        employee.setUnemploymentInsurance(cbUnemploymentIns.isSelected());
-        employee.setPersonalIncomeTax(cbPersonalTax.isSelected());
-        employee.setTransportationSupport(cbTransportSupport.isSelected());
-        employee.setAccommodationSupport(cbAccommodationSupport.isSelected());
+        // Update account role and status
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS,
+                () -> employeeBUS.updateAccountRoleAndStatus(currentEmployeeId, selectedRole.getId(),
+                        selectedStatus.getId()),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) saveAccountBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
 
-        // Save to database with loading overlay
-        if (typeModal == 0) {
-            // Insert new employee
-            // TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_INSERT, () -> {
-            // var result = employeeBUS.insert(employee);
-            // return result;
-            // }, result -> {
-            // if (result.isSuccess()) {
-            // resultMessage = result.getMessage();
-            // isSaved = true;
-            // handleClose();
-            // } else {
-            // NotificationUtils.showErrorAlert(result.getMessage(),
-            // AppMessages.DIALOG_TITLE);
-            // }
-            // });
-        } else if (typeModal == 1) {
-            // // Update existing employee
-            // TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_UPDATE, () -> {
-            // var result = employeeBUS.update(employee);
-            // return result;
-            // }, result -> {
-            // if (result.isSuccess()) {
-            // resultMessage = result.getMessage();
-            // isSaved = true;
-            // handleClose();
-            // } else {
-            // NotificationUtils.showErrorAlert(result.getMessage(),
-            // AppMessages.DIALOG_TITLE);
-            // }
-            // });
+    /**
+     * Handle save job info (Tab 3)
+     * Cập nhật: department
+     */
+    private void handleSaveJob() {
+        // Validation
+        DepartmentDTO selectedDept = cbDepartment.getSelectionModel().getSelectedItem();
+        if (selectedDept == null) {
+            NotificationUtils.showErrorAlert("Phòng ban không được để trống", AppMessages.DIALOG_TITLE);
+            return;
         }
+
+        PositionDTO selectedPosition = cbPosition.getSelectionModel().getSelectedItem();
+        if (selectedPosition == null) {
+            NotificationUtils.showErrorAlert("Vị trí không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        // Build EmployeeDTO with job info
+        EmployeeDTO jobInfo = new EmployeeDTO();
+        jobInfo.setId(currentEmployeeId);
+        jobInfo.setDepartmentId(selectedDept.getId());
+        jobInfo.setPositionId(selectedPosition.getId());
+
+        // Save to database
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_JOB_UPDATE,
+                () -> employeeBUS.updateJobInfo(jobInfo),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) saveJobBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
+
+    /**
+     * Handle save payroll info (Tab 4)
+     * Cập nhật: healthInsCode, socialInsCode, unemploymentInsCode, insurance flags
+     * (tax,
+     * transport, accommodation)
+     */
+    private void handleSavePayroll() {
+        if (currentEmployeeId <= 0) {
+            NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        // Build EmployeeDTO with payroll info
+        EmployeeDTO payrollInfo = new EmployeeDTO();
+        payrollInfo.setId(currentEmployeeId);
+        payrollInfo.setHealthInsCode(txtHealthInsCode.getText().trim());
+        payrollInfo.setSocialInsCode(txtSocialInsCode.getText().trim());
+        payrollInfo.setUnemploymentInsCode(txtUnemploymentInsCode.getText().trim());
+        payrollInfo.setMealSupport(cbMealSupport.isSelected());
+        payrollInfo.setTransportationSupport(cbTransportSupport.isSelected());
+        payrollInfo.setAccommodationSupport(cbAccommodationSupport.isSelected());
+        int numDependents = txtNumDependents.getText().trim().isEmpty() ? 0
+                : Integer.parseInt(txtNumDependents.getText().trim());
+        // Save to database
+        TaskUtil.executeSecure(loadingOverlay,
+                PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE,
+                () -> employeeBUS.updatePayrollInfo(payrollInfo, numDependents),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) savePayrollBtn.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
+    }
+
+    /**
+     * Handle reset password (Button on Tab 2)
+     * Reset mật khẩu thành 123456 và ép user phải đăng nhập lại
+     */
+    private void handleResetPassword() {
+        if (currentEmployeeId <= 0) {
+            NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        // Confirm before reset
+        boolean confirmed = UiUtils.gI().showConfirmAlert(
+                "Bạn chắc chắn muốn reset mật khẩu nhân viên này? - Mật khẩu sẽ được reset về 123456",
+                AppMessages.DIALOG_TITLE);
+
+        if (!confirmed)
+            return;
+
+        // Reset password
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD,
+                () -> employeeBUS.resetAccountPassword(currentEmployeeId),
+                result -> {
+                    if (result.isSuccess()) {
+                        Stage currentStage = (Stage) btnResetPassword.getScene().getWindow();
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
+                });
     }
 
     private void handleClose() {
         Stage stage = (Stage) closeBtn.getScene().getWindow();
         stage.close();
+    }
+
+    // ==================== 🖼️ AVATAR HANDLERS ====================
+    /**
+     * Chọn ảnh đại diện từ hệ thống tệp
+     */
+    private void handleChooseAvatar() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters()
+                .add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"));
+
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            Image image = new Image(file.toURI().toString());
+            imgAvatar.setImage(image);
+            // Force fill ImageView bằng cách reload properties
+            imgAvatar.setPreserveRatio(false);
+            avatarUrl = file.toURI().toString();
+        }
+    }
+
+    /**
+     * Reset ảnh đại diện về mặc định
+     */
+    private void handleResetAvatar() {
+        if (!UiUtils.gI().showConfirmAlert("Bạn có chắc muốn xóa ảnh đại diện?", AppMessages.DIALOG_TITLE_CONFIRM)) {
+            return;
+        }
+
+        Image image = null;
+        URL resource = getClass().getResource("/images/default/default.png");
+        if (resource != null) {
+            image = new Image(resource.toExternalForm());
+        } else {
+            System.err.println("Resource not found: /images/default/default.png");
+        }
+
+        if (image != null) {
+            imgAvatar.setImage(image);
+            // Force fill ImageView bằng cách reload properties
+            imgAvatar.setPreserveRatio(false);
+            avatarUrl = null; // Set null để xóa avatar
+            NotificationUtils.showInfoAlert("Ảnh đại diện đã được xóa", AppMessages.DIALOG_TITLE);
+        }
+    }
+
+    /**
+     * Load và hiển thị ảnh đại diện
+     */
+    private void loadEmployeeAvatar(String avatarUrlPath) {
+        File imageFile = null;
+        Image image = null;
+
+        if (avatarUrlPath != null && !avatarUrlPath.isEmpty()) {
+            imageFile = new File(avatarUrlPath);
+        }
+
+        if (imageFile != null && imageFile.exists()) {
+            image = new Image(imageFile.toURI().toString());
+        } else {
+            URL resource = getClass().getResource("/images/default/default.png");
+            if (resource != null) {
+                image = new Image(resource.toExternalForm());
+            } else {
+                System.err.println("Resource not found: /images/default/default.png");
+            }
+        }
+
+        if (image != null && imgAvatar != null) {
+            imgAvatar.setImage(image);
+            // Force fill ImageView bằng cách reload properties
+            imgAvatar.setPreserveRatio(false);
+        }
     }
 }
