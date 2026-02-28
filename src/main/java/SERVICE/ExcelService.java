@@ -162,182 +162,6 @@ public class ExcelService {
                 });
     }
 
-    // ========== IMPORT METHODS ==========
-
-    // public void ImportSheet(String importData, Stage stage) throws IOException {
-    // FileChooser fileChooser = new FileChooser();
-    // fileChooser.setTitle("Chọn file Excel để nhập dữ liệu");
-    // fileChooser.getExtensionFilters().add(
-    // new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
-
-    // File file = fileChooser.showOpenDialog(stage);
-
-    // if (file == null) {
-    // return; // Người dùng không chọn file
-    // }
-
-    // // Kiểm tra đúng định dạng
-    // if (!file.getName().toLowerCase().endsWith(".xlsx")) {
-    // NotificationUtils.showErrorAlert("Vui lòng chọn file Excel (.xlsx)", "Thông
-    // báo");
-    // return;
-    // }
-
-    // try (FileInputStream fis = new FileInputStream(file);
-    // Workbook workbook = new XSSFWorkbook(fis)) {
-
-    // Sheet sheet = workbook.getSheetAt(0);
-
-    // if (importData.equalsIgnoreCase("products")) {
-    // importToProducts(sheet);
-    // }
-
-    // } catch (Exception e) {
-    // e.printStackTrace();
-    // NotificationUtils.showErrorAlert("Không thể mở file Excel: " +
-    // e.getMessage(), "Lỗi");
-    // }
-    // }
-
-    // private void importToProducts(Sheet sheet) {
-    // ArrayList<ProductDTO> list = returnListProduct(sheet, new ArrayList<>());
-
-    // if (list.isEmpty()) {
-    // return;
-    // }
-
-    // if (UiUtils.gI().showConfirmAlert("Bạn chắc chắn muốn thêm sản phẩm bằng
-    // Excel?", "Thông báo")) {
-    // int deleteResult = ProductBUS.getInstance().insertListProductExcel(list);
-    // switch (deleteResult) {
-    // case 1 -> NotificationUtils.showInfoAlert("Thêm sản phẩm thành công.", "Thông
-    // báo");
-    // case 2 -> NotificationUtils.showErrorAlert("Danh sách rỗng.", "Thông báo");
-    // case 3 -> NotificationUtils.showErrorAlert("Dữ liệu đầu vào không hợp lệ.",
-    // "Thông báo");
-    // case 4 -> NotificationUtils.showErrorAlert("Thể loại không hợp lệ hoặc đã bị
-    // xóa.", "Thông báo");
-    // case 5 -> NotificationUtils.showErrorAlert("Tên sản phẩm trong hệ thống đã
-    // tồn tại.", "Thông báo");
-    // case 6 ->
-    // NotificationUtils.showErrorAlert("Có lỗi khi thêm danh sách sản phẩm qua
-    // Excel.", "Thông báo");
-    // case 7 -> NotificationUtils.showErrorAlert("Lỗi cơ sở dữ liệu khi insert.",
-    // "Thông báo");
-    // default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử
-    // lại sau.", "Thông báo");
-    // }
-    // }
-    // }
-
-    // // VALIDATE ON PRODUCT BUS
-    // private ArrayList<ProductDTO> returnListProduct(Sheet sheet,
-    // ArrayList<ProductDTO> list) {
-    // if (list == null)
-    // return new ArrayList<>();
-    // list.clear(); // Clear luôn nếu không null
-
-    // ArrayList<ProductDTO> tempList = new ArrayList<>();
-    // StringBuilder errorMessages = new StringBuilder();
-    // int errorCount = 0;
-
-    // for (Row row : sheet) {
-    // if (row.getRowNum() == 0)
-    // continue; // Bỏ qua tiêu đề
-    // if (isRowEmpty(row))
-    // continue; // Bỏ qua dòng trống
-
-    // try {
-    // Cell nameCell = row.getCell(1);
-    // Cell descCell = row.getCell(2);
-    // Cell categoryCell = row.getCell(3);
-    // Cell statusCell = row.getCell(4);
-
-    // String name = (nameCell != null) ? nameCell.getStringCellValue().trim() : "";
-    // String description = (descCell != null) ?
-    // descCell.getStringCellValue().trim() : "";
-
-    // if (name.isEmpty()) {
-    // if (handleError(errorMessages, row.getRowNum(), "Tên sản phẩm không được để
-    // trống.", ++errorCount))
-    // break;
-    // continue;
-    // }
-    // if (name.length() > 148) {
-    // if (handleError(errorMessages, row.getRowNum(), "Tên sản phẩm không được quá
-    // 148 ký tự.",
-    // ++errorCount))
-    // break;
-    // continue;
-    // }
-    // if (description.length() > 65400) {
-    // if (handleError(errorMessages, row.getRowNum(), "Mô tả không được quá 65k4 ký
-    // tự.", ++errorCount))
-    // break;
-    // continue;
-    // }
-
-    // int categoryId;
-    // try {
-    // categoryId = (int) categoryCell.getNumericCellValue();
-    // } catch (Exception e) {
-    // if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ (phải
-    // là số).",
-    // ++errorCount))
-    // break;
-    // continue;
-    // }
-    // // if (categoryId < 0 ||
-    // !CategoryBUS.getInstance().isValidCategory(categoryId))
-    // // {
-    // // if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ
-    // hoặc
-    // // đã bị xóa.",
-    // // ++errorCount))
-    // // break;
-    // // continue;
-    // // }
-
-    // int statusInt;
-    // try {
-    // statusInt = (int) statusCell.getNumericCellValue();
-    // } catch (Exception e) {
-    // if (handleError(errorMessages, row.getRowNum(), "Trạng thái không hợp lệ
-    // (phải là 0 hoặc 1).",
-    // ++errorCount))
-    // break;
-    // continue;
-    // }
-    // if (statusInt != 0 && statusInt != 1) {
-    // if (handleError(errorMessages, row.getRowNum(), "Trạng thái chỉ được là 0
-    // hoặc 1.", ++errorCount))
-    // break;
-    // continue;
-    // }
-
-    // // tempList.add(new ProductDTO(null, name, 0, null, statusInt == 1,
-    // description,
-    // // null, categoryId));
-
-    // } catch (Exception e) {
-    // if (handleError(errorMessages, row.getRowNum(), "Lỗi không xác định: " +
-    // e.getMessage(), ++errorCount))
-    // break;
-    // }
-    // }
-
-    // if (errorMessages.length() > 0) {
-    // if (errorCount > 20) {
-    // errorMessages.append("Và một số lỗi khác không thể hiển thị.\n");
-    // }
-    // NotificationUtils.showErrorAlert(errorMessages.toString(), "Thông báo");
-    // return new ArrayList<>();
-    // }
-
-    // list.addAll(tempList);
-    // return list;
-    // }
-
     private boolean isRowEmpty(Row row) {
         for (Cell cell : row) {
             if (cell != null && cell.getCellType() != CellType.BLANK &&
@@ -461,6 +285,121 @@ public class ExcelService {
 
         String fileName = "ThongKe_LegoStore_TK_Employee_" + timestamp + ".xlsx";
         fileHandler.saveAndOpenFile(fileName, workbook);
+    }
+
+    /**
+     * Read import data from Excel file
+     * Expected columns: ProductId, Quantity, ImportPrice, ProfitPercent
+     * 
+     * @param file Excel file to read
+     * @return List of TempDetailImportDTO with data from Excel
+     */
+    public List<DTO.TempDetailImportDTO> readImportDataFromExcel(File file) throws IOException {
+        List<DTO.TempDetailImportDTO> importList = new ArrayList<>();
+        ProductBUS productBUS = ProductBUS.getInstance();
+
+        try (FileInputStream fis = new FileInputStream(file);
+                XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            if (sheet == null) {
+                throw new IOException("File Excel không có sheet nào!");
+            }
+
+            // Row 0 là header, bắt đầu từ row 1
+            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null)
+                    continue;
+
+                try {
+                    // Column 0: ProductId
+                    String productId = getCellStringValue(row, 0).trim();
+                    if (productId.isEmpty())
+                        continue; // Skip rows without product ID
+
+                    // Column 1: Quantity
+                    int quantity = (int) getCellNumericValue(row, 1);
+                    if (quantity <= 0)
+                        throw new Exception("Số lượng phải > 0");
+
+                    // Column 2: ImportPrice
+                    BigDecimal importPrice = BigDecimal.valueOf(getCellNumericValue(row, 2));
+                    if (importPrice.compareTo(BigDecimal.ZERO) <= 0)
+                        throw new Exception("Giá nhập phải > 0");
+
+                    // Column 3: ProfitPercent
+                    BigDecimal profitPercent = BigDecimal.valueOf(getCellNumericValue(row, 3));
+                    if (profitPercent.compareTo(BigDecimal.ZERO) < 0)
+                        throw new Exception("Tỷ lệ lợi nhuận không nên < 0");
+
+                    // Get product name from database
+                    ProductDTO product = productBUS.getById(productId);
+                    if (product == null)
+                        throw new Exception("Sản phẩm '" + productId + "' không tồn tại");
+
+                    // Create TempDetailImportDTO
+                    DTO.TempDetailImportDTO detail = new DTO.TempDetailImportDTO();
+                    detail.setProductId(productId);
+                    detail.setName(product.getName());
+                    detail.setQuantity(quantity);
+                    detail.setImportPrice(importPrice);
+                    detail.setProfitPercent(profitPercent);
+
+                    // Calculate total price
+                    detail.setTotalPrice(importPrice.multiply(BigDecimal.valueOf(quantity)));
+
+                    importList.add(detail);
+
+                } catch (Exception e) {
+                    System.err.println("Lỗi ở dòng " + (rowIndex + 1) + ": " + e.getMessage());
+                    throw new IOException("Lỗi ở dòng " + (rowIndex + 1) + ": " + e.getMessage());
+                }
+            }
+
+            if (importList.isEmpty()) {
+                throw new IOException("File Excel không chứa dữ liệu hợp lệ!");
+            }
+
+        }
+
+        return importList;
+    }
+
+    /**
+     * Helper method to get String value from cell
+     */
+    private String getCellStringValue(Row row, int cellIndex) {
+        Cell cell = row.getCell(cellIndex);
+        if (cell == null)
+            return "";
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                return String.valueOf((int) cell.getNumericCellValue());
+            default:
+                return "";
+        }
+    }
+
+    /**
+     * Helper method to get numeric value from cell
+     */
+    private double getCellNumericValue(Row row, int cellIndex) throws Exception {
+        Cell cell = row.getCell(cellIndex);
+        if (cell == null)
+            throw new Exception("Giá trị rỗng");
+        if (cell.getCellType() == CellType.NUMERIC) {
+            return cell.getNumericCellValue();
+        } else if (cell.getCellType() == CellType.STRING) {
+            try {
+                return Double.parseDouble(cell.getStringCellValue());
+            } catch (NumberFormatException e) {
+                throw new Exception("Giá trị không phải số");
+            }
+        }
+        throw new Exception("Định dạng giá trị không hợp lệ");
     }
 
 }

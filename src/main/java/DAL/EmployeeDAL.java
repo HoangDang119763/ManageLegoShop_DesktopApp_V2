@@ -169,7 +169,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             statement.setInt(2, obj.getPositionId());
             statement.setInt(3, obj.getId());
 
-            return statement.executeUpdate() > 0;
+            return statement.executeUpdate() >= 0;
         } catch (SQLException e) {
             System.err.println("Error updating job info in DAL: " + e.getMessage());
             return false;
@@ -189,7 +189,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             ps.setBoolean(6, obj.isAccommodationSupport());
             ps.setInt(7, obj.getNumDependents());
             ps.setInt(8, obj.getId());
-            return ps.executeUpdate() > 0;
+            return ps.executeUpdate() >= 0;
         }
     }
 
@@ -251,27 +251,6 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             e.printStackTrace();
         }
         return null;
-    }
-
-    /**
-     * Cập nhật TAB 4: Tài khoản hệ thống
-     * Update: accountId
-     */
-    public boolean updateSystemAccount(EmployeeDTO obj) {
-        String query = "UPDATE employee SET account_id = ?, updated_at = ? WHERE id = ?";
-
-        try (Connection connection = connectionFactory.newConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setObject(1, obj.getAccountId());
-            statement.setObject(2, obj.getUpdatedAt());
-            statement.setInt(3, obj.getId());
-
-            return statement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating system account: " + e.getMessage());
-            return false;
-        }
     }
 
     public int countByRoleId(int roleId) {
@@ -847,5 +826,50 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             System.err.println("Lỗi DAL getallEmployeesForExcel: " + e.getMessage());
         }
         return list;
+    }
+
+    /**
+     * Insert batch employees in single transaction
+     * Tạo batch nhân viên 1 lượt (đã có account_id được set sẵn)
+     *
+     * @param conn      Database connection (from BUS transaction)
+     * @param employees List of EmployeeDTO to insert
+     * @return Number of successfully inserted employees
+     * @throws SQLException
+     */
+    public int insertBatchWithConn(Connection conn, java.util.List<EmployeeDTO> employees) throws SQLException {
+        if (employees == null || employees.isEmpty()) {
+            return 0;
+        }
+
+        String sql = "INSERT INTO employee " + getInsertQuery();
+        int successCount = 0;
+
+        try (PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            // Add all employees to batch
+            for (EmployeeDTO emp : employees) {
+                setInsertParameters(statement, emp);
+                statement.addBatch();
+            }
+
+            // Execute batch
+            int[] results = statement.executeBatch();
+
+            // Get generated keys and assign to objects
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                int index = 0;
+                while (generatedKeys.next() && index < employees.size()) {
+                    employees.get(index).setId(generatedKeys.getInt(1));
+                    index++;
+                    successCount++;
+                }
+            }
+
+            return successCount;
+        } catch (SQLException e) {
+            System.err.println("Lỗi DAL insertBatchWithConn: " + e.getMessage());
+            throw e;
+        }
     }
 }
