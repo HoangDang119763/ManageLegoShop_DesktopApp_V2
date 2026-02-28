@@ -21,21 +21,25 @@
 
 LOCK TABLES `account` WRITE;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
-INSERT INTO `account` VALUES 
-(1,'admin','$2a$12$QIBl3fm0aG.SDhGTldUk5eTFgClKWp1HjNP06Er4utLo/kG1dNpCG','2026-02-24 22:00:04','2026-02-25 21:06:02',4,1,0),
-(2,'huyhoang119763','$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy','2026-02-24 22:00:04',NULL,4,2,0),
-(3,'vuithii','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,2,0),
-(4,'lyvan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,2,0),
-(5,'nguyenthanh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,3,0),
-(6,'trinhvan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,3,0),
-(7,'tanthien','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,4,0),
-(8,'lethib','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,3,0),
-(9,'phamminh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,4,0),
-(10,'nguyenthi','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,4,0),
-(11,'ngominh','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,6,0),
-(12,'buithiph','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,6,0),
-(13,'dovan','$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua','2026-02-24 22:00:04',NULL,4,7,0);
-
+INSERT INTO `account` (`id`, `username`, `password`, `created_at`, `last_login`, `status_id`, `role_id`, `require_relogin`) VALUES 
+-- 1. Tài khoản Admin & Quản lý cấp cao
+(1, 'admin', '$2a$12$QIBl3fm0aG.SDhGTldUk5eTFgClKWp1HjNP06Er4utLo/kG1dNpCG', '2026-02-24 22:00:04', '2026-02-25 21:06:02', 4, 1, 0), -- Admin
+(2, 'huyhoang119763', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy', '2026-02-24 22:00:04', NULL, 4, 1, 0), -- Admin (theo ý Hoàng)
+-- 2. Nhóm Manager (Điều hành cửa hàng)
+(3, 'vuithii', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 2, 0),
+(4, 'lyvan', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 2, 0),
+-- 3. Nhóm Nhân sự (HR Staff - Để Hoàng test module Điều chuyển)
+(5, 'nguyenthanh', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 5, 0),
+(6, 'trinhvan', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 5, 0),
+-- 4. Nhóm Bán hàng (Sales Staff)
+(7, 'tanthien', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 3, 0),
+(8, 'lethib', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 3, 0),
+(13, 'dovan', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 3, 0),
+-- 5. Nhóm Kho hàng (Warehouse Staff)
+(9, 'phamminh', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 4, 0),
+(10, 'nguyenthi', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 4, 0),
+(11, 'ngominh', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 4, 0),
+(12, 'buithiph', '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua', '2026-02-24 22:00:04', NULL, 4, 4, 0);
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -226,7 +230,23 @@ UNLOCK TABLES;
 
 LOCK TABLES `module` WRITE;
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
-INSERT INTO `module` VALUES (1,'Quản lý nhân viên & Tài khoản'),(2,'Quản lý khách hàng'),(3,'Quản lý sản phẩm'),(4,'Quản lý nhà cung cấp'),(5,'Quản lý bán hàng'),(6,'Quản lý nhập hàng'),(7,'Quản lý thể loại'),(8,'Quản lý khuyến mãi'),(9,'Quản lý chức vụ'),(10,'Thống kê'),(11,'Quản lý nhân sự');
+INSERT INTO `module` (`id`, `name`) VALUES 
+(1,  'Quản lý nhân sự & Tài khoản'),
+(2,  'Quản lý khách hàng'),
+(3,  'Quản lý sản phẩm'),
+(4,  'Quản lý nhà cung cấp'),
+(5,  'Quản lý bán hàng'),
+(6,  'Quản lý nhập hàng'),
+(7,  'Quản lý thể loại'),
+(8,  'Quản lý khuyến mãi'),
+(9,  'Quản lý chức vụ'),
+(10, 'Thống kê'),
+(11, 'Quản lý chấm công'),
+(12, 'Quản lý điều chuyển'),
+(13, 'Khen thưởng & Kỷ luật'),
+(14, 'Đơn nghỉ phép'),
+(15, 'Chấm công'),
+(16, 'Bảng lương');
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -246,7 +266,100 @@ UNLOCK TABLES;
 
 LOCK TABLES `permission` WRITE;
 /*!40000 ALTER TABLE `permission` DISABLE KEYS */;
-INSERT INTO `permission` VALUES (1,'Xem danh sách nhân viên','EMPLOYEE_LIST_VIEW',1),(2,'Xem hồ sơ cá nhân','EMPLOYEE_PERSONAL_VIEW',1),(3,'Cập nhật hồ sơ cá nhân','EMPLOYEE_PERSONAL_UPDATE',1),(4,'Xem vị trí công tác & lịch sử','EMPLOYEE_JOB_VIEW',1),(5,'Cập nhật vị trí công tác','EMPLOYEE_JOB_UPDATE',1),(6,'Xem lương & bảo hiểm','EMPLOYEE_PAYROLLINFO_VIEW',1),(7,'Cập nhật lương & bảo hiểm','EMPLOYEE_PAYROLLINFO_UPDATE',1),(8,'Xem tài khoản hệ thống','EMPLOYEE_ACCOUNT_VIEW',1),(9,'Đặt lại mật khẩu nhân viên','EMPLOYEE_ACCOUNT_RESET_PASSWORD',1),(10,'Cập nhật trạng thái tài khoản','EMPLOYEE_ACCOUNT_UPDATE_STATUS',1),(11,'Thêm mới nhân viên, tài khoản','EMPLOYEE_INSERT',1),(12,'Xóa nhân viên','EMPLOYEE_DELETE',1),(13,'Xem danh sách khách hàng','CUSTOMER_LIST_VIEW',2),(14,'Thêm khách hàng','CUSTOMER_INSERT',2),(15,'Cập nhật khách hàng','CUSTOMER_UPDATE',2),(16,'Xóa khách hàng','CUSTOMER_DELETE',2),(17,'Xem danh sách sản phẩm','PRODUCT_LIST_VIEW',3),(18,'Thêm sản phẩm','PRODUCT_INSERT',3),(19,'Cập nhật sản phẩm','PRODUCT_UPDATE',3),(20,'Xóa sản phẩm','PRODUCT_DELETE',3),(21,'Xem danh sách nhà cung cấp','SUPPLIER_LIST_VIEW',4),(22,'Thêm nhà cung cấp','SUPPLIER_INSERT',4),(23,'Cập nhật nhà cung cấp','SUPPLIER_UPDATE',4),(24,'Xóa nhà cung cấp','SUPPLIER_DELETE',4),(25,'Xem danh sách đơn hàng','INVOICE_LIST_VIEW',5),(26,'Tạo đơn hàng mới','INVOICE_INSERT',5),(27,'Xem phiếu nhập hàng','IMPORT_LIST_VIEW',6),(28,'Tạo phiếu nhập hàng mới','IMPORT_INSERT',6),(29,'Xem phiếu nhập hàng','IMPORT_APPROVE',6),(30,'Xem danh mục sản phẩm','CATEGORY_LIST_VIEW',7),(31,'Thêm danh mục sản phẩm','CATEGORY_INSERT',7),(32,'Cập nhật danh mục sản phẩm','CATEGORY_UPDATE',7),(33,'Xóa danh mục sản phẩm','CATEGORY_DELETE',7),(34,'Xem chương trình khuyến mãi','DISCOUNT_LIST_VIEW',8),(35,'Thêm chương trình khuyến mãi','DISCOUNT_INSERT',8),(36,'Cập nhật chương trình khuyến mãi','DISCOUNT_UPDATE',8),(37,'Xóa chương trình khuyến mãi','DISCOUNT_DELETE',8),(38,'Xem danh sách chức vụ','ROLE_LIST_VIEW',9),(39,'Thêm chức vụ mới','ROLE_INSERT',9),(40,'Cập nhật chức vụ','ROLE_UPDATE',9),(41,'Xóa chức vụ','ROLE_DELETE',9),(42,'Xem bảng phân quyền','PERMISSION_VIEW',9),(43,'Cập nhật cấu hình phân quyền','PERMISSION_UPDATE',9),(44,'Xem báo cáo thống kê','STATISTICS_VIEW',10),(45,'Xem đơn nghỉ phép','EMPLOYEE_LEAVE_REQUEST_VIEW',1),(46,'Tạo đơn nghỉ phép','EMPLOYEE_LEAVE_REQUEST_CREATE',1),(47,'Quản lý duyệt đơn nghỉ','EMPLOYEE_LEAVE_REQUEST_MANAGE',1),(48,'Xem kỷ luật & khen thưởng','EMPLOYEE_FINE_REWARD_VIEW',1),(49,'Quản lý kỷ luật & khen thưởng','EMPLOYEE_FINE_REWARD_MANAGE',1),(50,'Xem chấm công','EMPLOYEE_ATTENDANCE_VIEW',1),(51,'Quản lý chấm công','EMPLOYEE_ATTENDANCE_MANAGE',1),(52,'Cập nhật chức vụ thanh viên','EMPLOYEE_ROLE_POSITION_UPDATE',1);
+INSERT INTO `permission` (`id`, `name`, `permission_key`, `module_id`) VALUES 
+-- Module 1: Quản lý nhân viên & Tài khoản
+(1, 'Xem danh sách nhân viên', 'EMPLOYEE_LIST_VIEW', 1),
+(2, 'Xem hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_VIEW', 1),
+(3, 'Cập nhật hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_UPDATE', 1),
+(4, 'Xem vị trí công tác & lịch sử', 'EMPLOYEE_JOB_VIEW', 1),
+(5, 'Cập nhật vị trí công tác', 'EMPLOYEE_JOB_UPDATE', 1),
+(6, 'Xem lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_VIEW', 1),
+(7, 'Cập nhật lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_UPDATE', 1),
+(8, 'Xem tài khoản hệ thống', 'EMPLOYEE_ACCOUNT_VIEW', 1),
+(9, 'Đặt lại mật khẩu nhân viên', 'EMPLOYEE_ACCOUNT_RESET_PASSWORD', 1),
+(10, 'Cập nhật trạng thái tài khoản', 'EMPLOYEE_ACCOUNT_UPDATE_STATUS', 1),
+(11, 'Thêm mới nhân viên, tài khoản', 'EMPLOYEE_INSERT', 1),
+(12, 'Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
+(13, 'Xem đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_VIEW', 1),
+(14, 'Tạo đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_CREATE', 1),
+(15, 'Quản lý duyệt đơn nghỉ', 'EMPLOYEE_LEAVE_REQUEST_MANAGE', 1),
+(16, 'Xem kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_VIEW', 1),
+(17, 'Quản lý kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_MANAGE', 1),
+(18, 'Xem chấm công', 'EMPLOYEE_ATTENDANCE_VIEW', 1),
+(19, 'Quản lý chấm công', 'EMPLOYEE_ATTENDANCE_MANAGE', 1),
+(20, 'Cập nhật chức vụ thành viên', 'EMPLOYEE_ROLE_POSITION_UPDATE', 1),
+
+-- Module 2: Quản lý khách hàng (ID: 21-24)
+(21, 'Xem danh sách khách hàng', 'CUSTOMER_LIST_VIEW', 2),
+(22, 'Thêm khách hàng', 'CUSTOMER_INSERT', 2),
+(23, 'Cập nhật khách hàng', 'CUSTOMER_UPDATE', 2),
+(24, 'Xóa khách hàng', 'CUSTOMER_DELETE', 2),
+
+-- Module 3: Quản lý sản phẩm (ID: 25-28)
+(25, 'Xem danh sách sản phẩm', 'PRODUCT_LIST_VIEW', 3),
+(26, 'Thêm sản phẩm', 'PRODUCT_INSERT', 3),
+(27, 'Cập nhật sản phẩm', 'PRODUCT_UPDATE', 3),
+(28, 'Xóa sản phẩm', 'PRODUCT_DELETE', 3),
+
+-- Module 4: Quản lý nhà cung cấp (ID: 29-32)
+(29, 'Xem danh sách nhà cung cấp', 'SUPPLIER_LIST_VIEW', 4),
+(30, 'Thêm nhà cung cấp', 'SUPPLIER_INSERT', 4),
+(31, 'Cập nhật nhà cung cấp', 'SUPPLIER_UPDATE', 4),
+(32, 'Xóa nhà cung cấp', 'SUPPLIER_DELETE', 4),
+
+-- Module 5: Quản lý bán hàng (ID: 33-34)
+(33, 'Xem danh sách đơn hàng', 'INVOICE_LIST_VIEW', 5),
+(34, 'Tạo đơn hàng mới', 'INVOICE_INSERT', 5),
+
+-- Module 6: Quản lý nhập hàng (ID: 35-37)
+(35, 'Xem danh sách phiếu nhập', 'IMPORT_LIST_VIEW', 6),
+(36, 'Tạo phiếu nhập hàng mới', 'IMPORT_INSERT', 6),
+(37, 'Duyệt phiếu nhập hàng', 'IMPORT_APPROVE', 6),
+
+-- Module 7: Quản lý thể loại (ID: 38-41)
+(38, 'Xem danh mục sản phẩm', 'CATEGORY_LIST_VIEW', 7),
+(39, 'Thêm danh mục sản phẩm', 'CATEGORY_INSERT', 7),
+(40, 'Cập nhật danh mục sản phẩm', 'CATEGORY_UPDATE', 7),
+(41, 'Xóa danh mục sản phẩm', 'CATEGORY_DELETE', 7),
+
+-- Module 8: Quản lý khuyến mãi (ID: 42-45)
+(42, 'Xem chương trình khuyến mãi', 'DISCOUNT_LIST_VIEW', 8),
+(43, 'Thêm chương trình khuyến mãi', 'DISCOUNT_INSERT', 8),
+(44, 'Cập nhật chương trình khuyến mãi', 'DISCOUNT_UPDATE', 8),
+(45, 'Xóa chương trình khuyến mãi', 'DISCOUNT_DELETE', 8),
+
+-- Module 9: Quản lý chức vụ & Phân quyền (ID: 46-51)
+(46, 'Xem danh sách chức vụ', 'ROLE_LIST_VIEW', 9),
+(47, 'Thêm chức vụ mới', 'ROLE_INSERT', 9),
+(48, 'Cập nhật chức vụ', 'ROLE_UPDATE', 9),
+(49, 'Xóa chức vụ', 'ROLE_DELETE', 9),
+(50, 'Xem bảng phân quyền', 'PERMISSION_VIEW', 9),
+(51, 'Cập nhật cấu hình phân quyền', 'PERMISSION_UPDATE', 9),
+
+-- Module 10: Thống kê (ID: 52)
+(52, 'Xem báo cáo thống kê', 'STATISTICS_VIEW', 10),
+
+-- Module 12: Quản lý điều chuyển (ID: 53-56)
+(53, 'Xem danh sách điều chuyển', 'EMPLOYMENT_HISTORY_LIST_VIEW', 12),
+(54, 'Tạo lệnh điều chuyển mới', 'EMPLOYMENT_HISTORY_INSERT', 12),
+(55, 'Phê duyệt điều chuyển', 'EMPLOYMENT_HISTORY_APPROVE', 12),
+(56, 'Xóa/Hủy lệnh điều chuyển', 'EMPLOYMENT_HISTORY_DELETE', 12),
+
+-- Module 13: Khen thưởng & Kỷ luật (ID: 57-58)
+(57, 'Xem khen thưởng & kỷ luật', 'EMPLOYEE_FINE_REWARD_VIEW', 13),
+(58, 'Quản lý khen thưởng & kỷ luật', 'EMPLOYEE_FINE_REWARD_MANAGE', 13),
+
+-- Module 14: Đơn nghỉ phép (ID: 59-60)
+(59, 'Xem đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_VIEW', 14),
+(60, 'Quản lý đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_MANAGE', 14),
+
+-- Module 15: Chấm công (ID: 61-62)
+(61, 'Xem chấm công', 'EMPLOYEE_ATTENDANCE_VIEW', 15),
+(62, 'Quản lý chấm công', 'EMPLOYEE_ATTENDANCE_MANAGE', 15),
+
+-- Module 16: Bảng lương (ID: 63-64)
+(63, 'Xem bảng lương', 'PAYROLL_VIEW', 16),
+(64, 'Quản lý & tính lương', 'PAYROLL_MANAGE', 16);
 /*!40000 ALTER TABLE `permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -256,7 +369,15 @@ UNLOCK TABLES;
 
 LOCK TABLES `position` WRITE;
 /*!40000 ALTER TABLE `position` DISABLE KEYS */;
-INSERT INTO `position` VALUES (1,'Giám đốc',500000000000.00,'2026-02-26 00:10:27','2026-02-26 00:59:04');
+INSERT INTO `position` (`id`, `name`, `wage`, `min_experience`, `max_experience`) VALUES 
+(1, 'Giám đốc điều hành', 50000000.00, 10, 30),
+(2, 'Quản lý cửa hàng', 25000000.00, 5, 15),
+(3, 'Trưởng nhóm', 15000000.00, 3, 8),
+(4, 'Nhân viên (Bậc 3)', 12000000.00, 3, 5),
+(5, 'Nhân viên (Bậc 2)', 9000000.00, 1, 3),
+(6, 'Nhân viên (Bậc 1)', 7000000.00, 0, 1),
+(7, 'Trưởng phòng', 18000000.00, 4, 10),
+(8, 'Nhân viên kỹ thuật/lắp ráp', 11000000.00, 1, 5);
 /*!40000 ALTER TABLE `position` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -294,16 +415,12 @@ UNLOCK TABLES;
 
 LOCK TABLES `role` WRITE;
 /*!40000 ALTER TABLE `role` DISABLE KEYS */;
-INSERT INTO `role` (`id`, `name`, `description`, `start_experience`, `end_experience`, `created_at`, `updated_at`) VALUES 
-(1,'IT Admin','Quản trị hệ thống toàn quyền',0,0,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
-(2,'Tổng giám đốc','Chủ cửa hàng/Điều hành cao cấp',10,30,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
-(3,'Quản lý cửa hàng','Điều hành toàn diện hoạt động cửa hàng',4,15,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
-(4,'Trưởng nhóm bán hàng','Giám sát ca làm việc và hỗ trợ thanh toán phức tạp',2,4,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
-(5,'Nhân viên bán hàng (Bậc 3)','Nhân viên nòng cốt, hỗ trợ đào tạo người mới',3,5,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
-(6,'Nhân viên bán hàng (Bậc 2)','Nhân viên kinh nghiệm, tư vấn chuyên sâu',1,3,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
-(7,'Nhân viên bán hàng (Bậc 1)','Nhân viên mới',0,1,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
-(8,'Nhân viên kho (Bậc 2)','Quản lý nhập xuất kho',2,5,'2026-02-24 22:00:03','2026-02-24 22:00:03'),
-(9,'Nhân viên kho (Bậc 1)','Sắp xếp và kiểm kê kho',0,2,'2026-02-24 22:00:03','2026-02-24 22:00:03');
+INSERT INTO `role` (`id`, `name`, `description`) VALUES 
+(1, 'Administrator', 'Toàn quyền quản trị hệ thống, cấu hình phân quyền và module'),
+(2, 'Manager', 'Quản lý cửa hàng, duyệt các yêu cầu nhân sự, xem báo cáo thống kê'),
+(3, 'Sales Staff', 'Sử dụng các module bán hàng, quản lý khách hàng và sản phẩm'),
+(4, 'Warehouse Staff', 'Sử dụng các module nhập hàng, kiểm kho và nhà cung cấp'),
+(5, 'HR Staff', 'Chuyên trách module quản lý nhân sự, chấm công và điều chuyển');
 /*!40000 ALTER TABLE `role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -311,9 +428,55 @@ UNLOCK TABLES;
 -- Dumping data for table `role_permission`
 --
 
-LOCK TABLES `role_permission` WRITE;
+LOCK TABLES `role_permission` WRITE, `permission` READ;
 /*!40000 ALTER TABLE `role_permission` DISABLE KEYS */;
-INSERT INTO `role_permission` VALUES (1,1),(2,1),(3,1),(1,2),(2,2),(3,2),(1,3),(2,3),(1,4),(2,4),(3,4),(1,5),(2,5),(1,6),(2,6),(1,7),(2,7),(1,8),(2,8),(1,9),(2,9),(1,10),(2,10),(1,11),(2,11),(1,12),(2,12),(1,13),(2,13),(3,13),(4,13),(5,13),(6,13),(7,13),(1,14),(2,14),(1,15),(2,15),(1,16),(2,16),(1,17),(2,17),(3,17),(4,17),(5,17),(6,17),(7,17),(8,17),(9,17),(1,18),(2,18),(1,19),(2,19),(3,19),(8,19),(9,19),(1,20),(2,20),(1,21),(2,21),(1,22),(2,22),(1,23),(2,23),(1,24),(2,24),(1,25),(2,25),(3,25),(1,26),(2,26),(4,26),(5,26),(6,26),(7,26),(1,27),(2,27),(8,27),(9,27),(1,28),(2,28),(8,28),(9,28),(1,29),(2,29),(1,30),(2,30),(1,31),(2,31),(1,32),(2,32),(1,33),(2,33),(1,34),(2,34),(1,35),(2,35),(1,36),(2,36),(1,37),(2,37),(1,38),(2,38),(1,39),(2,39),(1,40),(2,40),(1,41),(2,41),(1,42),(2,42),(1,43),(2,43),(1,44),(2,44),(3,44),(1,45),(2,45),(3,45),(4,45),(5,45),(6,45),(7,45),(8,45),(9,45),(1,46),(2,46),(5,46),(6,46),(7,46),(8,46),(9,46),(1,47),(2,47),(3,47),(1,48),(2,48),(3,48),(4,48),(1,49),(2,49),(3,49),(1,50),(2,50),(3,50),(4,50),(5,50),(6,50),(7,50),(8,50),(9,50),(1,51),(2,51),(3,51),(1,52),(2,52),(3,52);
+-- =============================================================
+-- ROLE 1: Administrator (FULL QUYỀN)
+-- =============================================================
+INSERT INTO `role_permission` (role_id, permission_id)
+SELECT 1, id FROM `permission`;
+
+-- =============================================================
+-- ROLE 2: Manager (Full quyền trừ các chức năng xóa/reset hệ thống)
+-- =============================================================
+INSERT INTO `role_permission` (role_id, permission_id)
+SELECT 2, id FROM `permission` 
+WHERE permission_key NOT LIKE '%DELETE%' 
+  AND permission_key NOT LIKE '%RESET_PASSWORD%';
+
+-- =============================================================
+-- ROLE 3: Sales Staff (Chuyên về Khách hàng, Sản phẩm, Bán hàng)
+-- =============================================================
+INSERT INTO `role_permission` (role_id, permission_id)
+SELECT 3, id FROM `permission` 
+WHERE (permission_key LIKE 'CUSTOMER%' 
+   OR permission_key LIKE 'PRODUCT_LIST_VIEW'
+   OR permission_key LIKE 'INVOICE%' 
+   OR permission_key LIKE 'DISCOUNT_LIST_VIEW'
+   OR permission_key LIKE 'CATEGORY_LIST_VIEW');
+
+-- =============================================================
+-- ROLE 4: Warehouse Staff (Chuyên về Sản phẩm, Nhà cung cấp, Nhập hàng)
+-- =============================================================
+INSERT INTO `role_permission` (role_id, permission_id)
+SELECT 4, id FROM `permission` 
+WHERE (permission_key LIKE 'PRODUCT%' 
+   OR permission_key LIKE 'SUPPLIER%' 
+   OR permission_key LIKE 'IMPORT%' 
+   OR permission_key LIKE 'CATEGORY%');
+
+-- =============================================================
+-- ROLE 5: HR Staff (Nhân viên, Chấm công, Nghỉ phép, Điều chuyển, Khen thưởng, Bảo hiểm)
+-- =============================================================
+INSERT INTO `role_permission` (role_id, permission_id)
+SELECT 5, id FROM `permission` 
+WHERE (permission_key LIKE 'EMPLOYEE%' 
+   OR permission_key LIKE 'EMPLOYMENT_HISTORY%'
+   OR permission_key = 'PAYROLL_MANAGE'
+   OR permission_key = 'PAYROLL_VIEW')
+   AND permission_key NOT LIKE '%APPROVE%' 
+   AND permission_key NOT LIKE '%RESET_PASSWORD%'
+   AND permission_key NOT LIKE '%DELETE%'; -- HR Staff chỉ soạn, không được Duyệt, xóa, reset
 /*!40000 ALTER TABLE `role_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -322,9 +485,43 @@ UNLOCK TABLES;
 --
 
 LOCK TABLES `status` WRITE;
-/*!40000 ALTER TABLE `status` DISABLE KEYS */;
-INSERT INTO `status` VALUES (1,'Active','Đang làm việc','EMPLOYEE'),(2,'Inactive','Đã nghỉ việc','EMPLOYEE'),(3,'On_Leave','Đang nghỉ phép','EMPLOYEE'),(4,'Active','Được phép đăng nhập','ACCOUNT'),(5,'Locked','Bị khóa (do sai pass/vi phạm)','ACCOUNT'),(6,'Active','Đang kinh doanh','PRODUCT'),(7,'Suspended','Ngừng kinh doanh','PRODUCT'),(8,'Inactive','Vô hiệu','PRODUCT'),(9,'Active','Hoạt động','CATEGORY'),(10,'Inactive','Vô hiệu','CATEGORY'),(11,'Active','Hoạt động','SUPPLIER'),(12,'Inactive','Vô hiệu','SUPPLIER'),(13,'Active','Hoạt động','CUSTOMER'),(14,'Inactive','Ngưng tương tác','CUSTOMER'),(15,'Completed','Hoàn thành','INVOICE'),(16,'Canceled','Hủy bỏ','INVOICE'),(17,'Completed','Hoàn thành','IMPORT'),(18,'Incompleted','Chưa hoàn thành','IMPORT'),(19,'Draft','Nháp','IMPORT'),(20,'Pending','Đơn đang chờ quản lý phê duyệt','LEAVE_REQUEST'),(21,'Approved','Đơn đã được chấp thuận','LEAVE_REQUEST'),(22,'Rejected','Đơn bị từ chối','LEAVE_REQUEST'),(23,'Canceled','Đơn đã bị hủy bởi nhân viên','LEAVE_REQUEST'),(24,'Pending','Quyết định đang chờ cấp trên phê duyệt','EMPLOYMENT_HISTORY'),(25,'Approved','Quyết định đã được duyệt, chờ ngày có hiệu lực','EMPLOYMENT_HISTORY'),(26,'Effective','Quyết định đã chính thức đi vào hiệu lực','EMPLOYMENT_HISTORY'),(27,'Rejected','Quyết định bị cấp trên từ chối','EMPLOYMENT_HISTORY'),(28,'Canceled','Quyết định đã bị hủy bỏ trước khi thực hiện','EMPLOYMENT_HISTORY'),(29,'Active','Hoạt động','DEPARTMENT'),(30,'Inactive','Vô hiệu','DEPARTMENT');
-/*!40000 ALTER TABLE `status` ENABLE KEYS */;
+INSERT INTO `status` (`id`, `name`, `description`, `type`) VALUES 
+-- EMPLOYEE (1-3)
+(1,'Active','Đang làm việc','EMPLOYEE'),
+(2,'Inactive','Đã nghỉ việc','EMPLOYEE'),
+(3,'On_Leave','Đang nghỉ phép','EMPLOYEE'),
+-- ACCOUNT (4-5)
+(4,'Active','Được phép đăng nhập','ACCOUNT'),
+(5,'Locked','Bị khóa (do sai pass/vi phạm)','ACCOUNT'),
+-- PRODUCT, CATEGORY, SUPPLIER, CUSTOMER (6-14)
+(6,'Active','Đang kinh doanh','PRODUCT'),
+(7,'Suspended','Ngừng kinh doanh','PRODUCT'),
+(8,'Inactive','Vô hiệu','PRODUCT'),
+(9,'Active','Hoạt động','CATEGORY'),
+(10,'Inactive','Vô hiệu','CATEGORY'),
+(11,'Active','Hoạt động','SUPPLIER'),
+(12,'Inactive','Vô hiệu','SUPPLIER'),
+(13,'Active','Hoạt động','CUSTOMER'),
+(14,'Inactive','Ngưng tương tác','CUSTOMER'),
+-- INVOICE & IMPORT (15-19)
+(15,'Completed','Hoàn thành','INVOICE'),
+(16,'Canceled','Hủy bỏ','INVOICE'),
+(17,'Completed','Hoàn thành','IMPORT'),
+(18,'Incompleted','Chưa hoàn thành','IMPORT'),
+(19,'Draft','Nháp','IMPORT'),
+-- LEAVE_REQUEST (20-23)
+(20,'Pending','Đơn đang chờ quản lý phê duyệt','LEAVE_REQUEST'),
+(21,'Approved','Đơn đã được chấp thuận','LEAVE_REQUEST'),
+(22,'Rejected','Đơn bị từ chối','LEAVE_REQUEST'),
+(23,'Canceled','Đơn đã bị hủy bởi nhân viên','LEAVE_REQUEST'),
+-- EMPLOYMENT_HISTORY (24-26 & 28)
+(24,'Pending','Quyết định đang chờ phê duyệt','EMPLOYMENT_HISTORY'),
+(25,'Approved','Quyết định đã được duyệt, chờ ngày có hiệu lực','EMPLOYMENT_HISTORY'),
+(26,'Effective','Quyết định đã chính thức đi vào hiệu lực','EMPLOYMENT_HISTORY'),
+(28,'Cancelled','Quyết định đã bị hủy bỏ hoặc từ chối','EMPLOYMENT_HISTORY'),
+-- DEPARTMENT (29-30)
+(29,'Active','Hoạt động','DEPARTMENT'),
+(30,'Inactive','Vô hiệu','DEPARTMENT');
 UNLOCK TABLES;
 
 --

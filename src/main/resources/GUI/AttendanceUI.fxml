@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="650.0" prefWidth="1074.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.AttendanceTabController">
+    <children>
+        <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <top>
+                <AnchorPane prefHeight="65.0" prefWidth="1074.0" BorderPane.alignment="CENTER">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="15.0">
+                            <children>
+                                <Label text="Chọn tháng:" />
+                                <ComboBox fx:id="cbMonth" prefHeight="30.0" prefWidth="150.0" promptText="Tháng/Năm" />
+                                <Button fx:id="btnDownloadTemplate" prefHeight="30.0" prefWidth="150.0" styleClass="action-btn" text="TẢI TEMPLATE" />
+                                <Button fx:id="btnImport" prefHeight="30.0" prefWidth="120.0" styleClass="action-btn" text="IMPORT EXCEL" />
+                                <Button fx:id="btnRefresh" prefHeight="30.0" prefWidth="100.0" styleClass="action-btn" text="LÀM MỚI" />
+                            </children>
+                        </HBox>
+                    </children>
+                </AnchorPane>
+            </top>
+
+            <center>
+                <VBox prefHeight="585.0" prefWidth="1074.0" spacing="10.0">
+                    <padding><Insets bottom="10.0" left="10.0" right="10.0" top="0.0" /></padding>
+                    <children>
+
+                        <TableView fx:id="tblAttendance" tableMenuButtonVisible="true" prefHeight="350.0" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colId" minWidth="50.0" prefWidth="50.0" text="ID" />
+                                <TableColumn fx:id="colCheckIn" minWidth="150.0" prefWidth="150.0" text="Giờ vào" />
+                                <TableColumn fx:id="colCheckOut" minWidth="150.0" prefWidth="150.0" text="Giờ ra" />
+                                <TableColumn fx:id="colWorkHours" minWidth="100.0" prefWidth="100.0" text="Giờ làm" />
+                                <TableColumn fx:id="colOTHours" minWidth="100.0" prefWidth="100.0" text="Giờ OT" />
+                            </columns>
+                        </TableView>
+
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <padding><Insets bottom="5.0" left="10.0" right="10.0" top="5.0" /></padding>
+                            <children>
+                                <Button fx:id="btnPrevious" mnemonicParsing="false" prefHeight="30.0" prefWidth="80.0" text="Trước" />
+                                <Button fx:id="btnNext" mnemonicParsing="false" prefHeight="30.0" prefWidth="80.0" text="Sau" />
+                                <Label fx:id="lblPageInfo" style="-fx-font-size: 11px;" text="Trang 1 / 1" />
+                            </children>
+                        </HBox>
+
+                        <HBox spacing="20.0">
+                            <children>
+                                <HBox spacing="5.0">
+                                    <children>
+                                        <Label text="Tổng giờ làm:" />
+                                        <Label fx:id="lblTotalHours" style="-fx-font-weight: bold;" text="0.0 giờ" />
+                                    </children>
+                                </HBox>
+                                <HBox spacing="5.0">
+                                    <children>
+                                        <Label text="Tổng OT:" />
+                                        <Label fx:id="lblOTHours" style="-fx-font-weight: bold;" text="0.0 giờ OT" />
+                                    </children>
+                                </HBox>
+                                <HBox spacing="5.0">
+                                    <children>
+                                        <Label text="Số ngày:" />
+                                        <Label fx:id="lblWorkDays" style="-fx-font-weight: bold;" text="0 ngày" />
+                                    </children>
+                                </HBox>
+                            </children>
+                            <padding><Insets bottom="10.0" top="10.0" /></padding>
+                        </HBox>
+                    </children>
+                </VBox>
+            </center>
+        </BorderPane>
+    </children>
+</AnchorPane>
+

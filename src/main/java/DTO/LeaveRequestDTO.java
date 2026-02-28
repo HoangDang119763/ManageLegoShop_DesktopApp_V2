@@ -11,6 +11,9 @@ public class LeaveRequestDTO {
     private LocalDate endDate;
     private int statusId;
     private int employeeId;
+    private String employeeName;
+    private int dayCount;
+    private String statusName;
 
     // Constructors
     public LeaveRequestDTO() {
@@ -118,5 +121,29 @@ public class LeaveRequestDTO {
 
     public void setStatus(boolean status) {
         this.statusId = status ? 1 : 0;
+    }
+
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
+    }
+
+    public int getDayCount() {
+        return dayCount;
+    }
+
+    public void setDayCount(int dayCount) {
+        this.dayCount = dayCount;
+    }
+
+    public String getStatusName() {
+        return statusName;
+    }
+
+    public void setStatusName(String statusName) {
+        this.statusName = statusName;
     }
 }

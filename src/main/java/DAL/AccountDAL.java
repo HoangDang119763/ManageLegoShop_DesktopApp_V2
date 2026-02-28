@@ -189,14 +189,15 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
     }
 
     public boolean insertWithConn(Connection conn, AccountDTO obj) throws SQLException {
-        String sql = "INSERT INTO account (username, password, status_id) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO account (username, password, role_id, status_id) VALUES (?, ?, ?, ?)";
 
         // Sử dụng Statement.RETURN_GENERATED_KEYS để lấy ID sau khi chèn
         try (PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             // 1. Gán các tham số (Dùng lại hàm setInsertParameters đã có ở trên)
             statement.setString(1, obj.getUsername());
             statement.setString(2, obj.getPassword());
-            statement.setInt(3, obj.getStatusId());
+            statement.setInt(3, obj.getRoleId());
+            statement.setInt(4, obj.getStatusId());
             // 2. Thực thi
             int affectedRows = statement.executeUpdate();
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {

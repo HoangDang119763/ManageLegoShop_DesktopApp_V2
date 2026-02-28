@@ -79,7 +79,8 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
     }
 
     /**
-     * [OPTIMIZED] Get all invoices with status description (JOIN)
+     * [OPTIMIZED] Get all invoices with status description, employee name, and
+     * customer name (JOINs)
      * Tránh gọi BUS lẻ lẻ từng dòng
      */
     public PagedResponse<InvoiceDisplayDTO> getAllInvoicesPagedForManage(int pageIndex, int pageSize) {
@@ -87,14 +88,19 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
         int totalItems = 0;
         int offset = pageIndex * pageSize;
 
-        // JOIN với status table để lấy statusDescription
+        // JOIN với status, employee, customer tables để lấy description, employeeName,
+        // customerName
         String sql = "SELECT " +
                 "i.id, i.created_at, i.employee_id, i.customer_id, i.discount_code, i.discount_amount, i.total_price, i.status_id, "
                 +
                 "s.description as status_description, " +
+                "CONCAT(e.first_name, ' ', e.last_name) as employee_name, " +
+                "CONCAT(c.first_name, ' ', c.last_name) as customer_name, " +
                 "COUNT(*) OVER() as total_count " +
                 "FROM invoice i " +
                 "LEFT JOIN status s ON i.status_id = s.id " +
+                "LEFT JOIN employee e ON i.employee_id = e.id " +
+                "LEFT JOIN customer c ON i.customer_id = c.id " +
                 "ORDER BY i.id DESC " +
                 "LIMIT ? OFFSET ?";
 
@@ -126,14 +132,19 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
         int totalItems = 0;
         int offset = pageIndex * pageSize;
 
-        // JOIN với status table để lấy statusDescription
+        // JOIN với status, employee, customer tables để lấy description, employeeName,
+        // customerName
         String sql = "SELECT " +
                 "i.id, i.created_at, i.employee_id, i.customer_id, i.discount_code, i.discount_amount, i.total_price, i.status_id, "
                 +
                 "s.description as status_description, " +
+                "CONCAT(e.first_name, ' ', e.last_name) as employee_name, " +
+                "CONCAT(c.first_name, ' ', c.last_name) as customer_name, " +
                 "COUNT(*) OVER() as total_count " +
                 "FROM invoice i " +
                 "LEFT JOIN status s ON i.status_id = s.id " +
+                "LEFT JOIN employee e ON i.employee_id = e.id " +
+                "LEFT JOIN customer c ON i.customer_id = c.id " +
                 "WHERE (? = -1 OR i.id = ?) " +
                 "  AND (? = -1 OR i.status_id = ?) " +
                 "ORDER BY i.id DESC " +
@@ -163,7 +174,8 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
     }
 
     /**
-     * Map ResultSet to InvoiceDisplayDTO (với status description)
+     * Map ResultSet to InvoiceDisplayDTO (với status description, employee name,
+     * customer name)
      */
     private InvoiceDisplayDTO mapResultSetToInvoiceDisplay(ResultSet rs) throws SQLException {
         return new InvoiceDisplayDTO(
@@ -172,7 +184,9 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
                         ? rs.getTimestamp("created_at").toLocalDateTime()
                         : null,
                 rs.getInt("employee_id"),
+                rs.getString("employee_name"),
                 rs.getInt("customer_id"),
+                rs.getString("customer_name"),
                 rs.getString("discount_code"),
                 rs.getBigDecimal("discount_amount") != null ? rs.getBigDecimal("discount_amount") : BigDecimal.ZERO,
                 rs.getBigDecimal("total_price"),

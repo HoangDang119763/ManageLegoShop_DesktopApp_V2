@@ -8,7 +8,7 @@ import DAL.ConnectApplication;
 public class PayRollBUS {
     public boolean calculateMonthlySalary(int employeeId, String periodDate) {
         // periodDate format: "2026-02-01"
-        String sql = "{CALL sp_CalculateMonthlyPayroll_V3(?, ?)}";
+        String sql = "{CALL sp_CalculateMonthlyPayroll(?, ?)}";
         try {
             Connection conn = ConnectApplication.getInstance().getConnectionFactory().newConnection();
             CallableStatement cstmt = conn.prepareCall(sql);

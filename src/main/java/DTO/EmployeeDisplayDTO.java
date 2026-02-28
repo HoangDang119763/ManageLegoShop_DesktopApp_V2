@@ -12,9 +12,9 @@ public class EmployeeDisplayDTO {
     private Integer employeeId;
     private String fullName; // firstName + lastName
     private String gender;
-    private Integer roleId;
-    private String roleName;
-    private BigDecimal salary; // Base salary from role's salary_id
+    private Integer positionId;
+    private String positionName;
+    private BigDecimal wage;
     private String username; // From account table
     private Integer statusId;
     private String statusDescription;
@@ -43,28 +43,28 @@ public class EmployeeDisplayDTO {
         this.gender = gender;
     }
 
-    public Integer getRoleId() {
-        return roleId;
+    public Integer getPositionId() {
+        return positionId;
     }
 
-    public void setRoleId(Integer roleId) {
-        this.roleId = roleId;
+    public void setPositionId(Integer positionId) {
+        this.positionId = positionId;
     }
 
-    public String getRoleName() {
-        return roleName;
+    public String getPositionName() {
+        return positionName;
     }
 
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
+    public void setPositionName(String positionName) {
+        this.positionName = positionName;
     }
 
-    public BigDecimal getSalary() {
-        return salary;
+    public BigDecimal getWage() {
+        return wage;
     }
 
-    public void setSalary(BigDecimal salary) {
-        this.salary = salary;
+    public void setWage(BigDecimal wage) {
+        this.wage = wage;
     }
 
     public String getUsername() {

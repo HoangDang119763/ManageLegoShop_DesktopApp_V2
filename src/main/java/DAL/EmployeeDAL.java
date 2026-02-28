@@ -36,14 +36,13 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 resultSet.getDate("date_of_birth") != null
                         ? resultSet.getDate("date_of_birth").toLocalDate()
                         : null,
-                resultSet.getInt("role_id"),
                 resultSet.getObject("department_id") != null ? resultSet.getInt("department_id") : null,
                 resultSet.getInt("status_id"),
                 resultSet.getString("gender"),
                 resultSet.getObject("account_id") != null ? resultSet.getInt("account_id") : null,
                 resultSet.getString("avatar_url"),
                 resultSet.getObject("position_id") != null ? resultSet.getInt("position_id") : null,
-                resultSet.getString("health_ins_code"),
+                resultSet.getString("health_insurance_code"),
                 resultSet.getString("social_insurance_code"),
                 resultSet.getString("unemployment_insurance_code"),
                 resultSet.getBoolean("is_meal_support"),
@@ -60,7 +59,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(first_name, last_name, phone, email, date_of_birth, role_id, department_id, status_id, gender, account_id, position_id, health_ins_code, social_insurance_code, unemployment_insurance_code, is_meal_support, is_transportation_support, is_accommodation_support, num_dependents, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(first_name, last_name, phone, email, date_of_birth, department_id, status_id, gender, account_id, position_id, health_insurance_code, social_insurance_code, unemployment_insurance_code, is_meal_support, is_transportation_support, is_accommodation_support, num_dependents, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
@@ -70,20 +69,19 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
         statement.setString(3, obj.getPhone());
         statement.setString(4, obj.getEmail());
         statement.setObject(5, obj.getDateOfBirth());
-        statement.setInt(6, obj.getRoleId());
-        statement.setObject(7, obj.getDepartmentId());
-        statement.setInt(8, obj.getStatusId());
-        statement.setString(9, obj.getGender());
-        statement.setObject(10, obj.getAccountId());
-        statement.setObject(11, obj.getPositionId());
-        statement.setString(12, obj.getHealthInsCode());
-        statement.setString(13, obj.getSocialInsCode());
-        statement.setString(14, obj.getUnemploymentInsCode());
-        statement.setBoolean(15, obj.isMealSupport());
-        statement.setBoolean(16, obj.isTransportationSupport());
-        statement.setBoolean(17, obj.isAccommodationSupport());
-        statement.setInt(18, obj.getNumDependents());
-        statement.setString(19, obj.getAvatarUrl());
+        statement.setObject(6, obj.getDepartmentId());
+        statement.setInt(7, obj.getStatusId());
+        statement.setString(8, obj.getGender());
+        statement.setObject(9, obj.getAccountId());
+        statement.setObject(10, obj.getPositionId());
+        statement.setString(11, obj.getHealthInsCode());
+        statement.setString(12, obj.getSocialInsCode());
+        statement.setString(13, obj.getUnemploymentInsCode());
+        statement.setBoolean(14, obj.isMealSupport());
+        statement.setBoolean(15, obj.isTransportationSupport());
+        statement.setBoolean(16, obj.isAccommodationSupport());
+        statement.setInt(17, obj.getNumDependents());
+        statement.setString(18, obj.getAvatarUrl());
     }
 
     @Override
@@ -107,7 +105,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             statement.setDate(5, obj.getDateOfBirth() != null ? java.sql.Date.valueOf(obj.getDateOfBirth()) : null);
             statement.setInt(6, obj.getId());
 
-            return statement.executeUpdate() > 0;
+            return statement.executeUpdate() >= 0;
         } catch (SQLException e) {
             System.err.println("Error updating personal info (self): " + e.getMessage());
             return false;
@@ -159,16 +157,15 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     public boolean updateJobInfo(Connection conn, EmployeeDTO obj) {
-        String query = "UPDATE employee SET department_id = ?, role_id = ?, status_id = ? WHERE id = ?";
+        String query = "UPDATE employee SET department_id = ?, status_id = ? WHERE id = ?";
 
         // Không dùng try-with-resources cho Connection ở đây vì BUS quản lý vòng đời
         // của nó
         try (PreparedStatement statement = conn.prepareStatement(query)) {
 
             statement.setObject(1, obj.getDepartmentId());
-            statement.setObject(2, obj.getRoleId());
-            statement.setInt(3, obj.getStatusId());
-            statement.setInt(4, obj.getId());
+            statement.setInt(2, obj.getStatusId());
+            statement.setInt(3, obj.getId());
 
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -178,7 +175,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     public boolean updatePayrollInfo(Connection conn, EmployeeDTO obj) throws SQLException {
-        String sql = "UPDATE employee SET health_ins_code = ?, social_insurance_code = ?, " +
+        String sql = "UPDATE employee SET health_insurance_code = ?, social_insurance_code = ?, " +
                 "unemployment_insurance_code = ?, is_meal_support = ?, " +
                 "is_transportation_support = ?, is_accommodation_support = ?, num_dependents = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -201,7 +198,10 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * @return EmployeeDTO or null if not found
      */
     public EmployeeDTO getByAccountId(int accountId) {
-        String query = "SELECT * FROM employee WHERE account_id = ? LIMIT 1";
+        String query = "SELECT e.*, a.role_id " +
+                "FROM employee e " +
+                "LEFT JOIN account a ON e.account_id = a.id " +
+                "WHERE e.account_id = ? LIMIT 1";
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
 
@@ -277,7 +277,9 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             return 0; // Trả về 0 nếu roleId không hợp lệ
         }
 
-        String query = "SELECT COUNT(*) FROM employee WHERE role_id = ?";
+        String query = "SELECT COUNT(*) FROM employee e " +
+                "INNER JOIN account a ON e.account_id = a.id " +
+                "WHERE a.role_id = ?";
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
 
@@ -363,7 +365,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                     .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
                     .phone(rs.getString("phone"))
                     .email(rs.getString("email"))
-                    .healthInsCode(rs.getString("health_ins_code"))
+                    .healthInsCode(rs.getString("health_insurance_code"))
 
                     // Department & Role
                     .departmentId(rs.getObject("department_id") != null ? rs.getInt("department_id") : null)
@@ -415,106 +417,34 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     public PagedResponse<EmployeeDisplayDTO> filterEmployeesPagedForManageDisplay(
-            String keyword, int roleId, int statusId, int pageIndex, int pageSize) {
+            String keyword, int filterPosId, int statusId, int pageIndex, int pageSize,
+            int excludeId, int currentAccountRoleId) {
 
         List<EmployeeDisplayDTO> items = new ArrayList<>();
         int totalItems = 0;
         int offset = pageIndex * pageSize;
 
-        // SQL hỗ trợ tìm kiếm theo ID, Họ, Tên, và cả Họ Tên đầy đủ (CONCAT)
-        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, acc.role_id, e.status_id, e.account_id, " +
-                "r.name AS roleName, " +
+        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, e.status_id, e.account_id, " +
+                "pos.name AS positionName, " +
+                "pos.id AS position_id, " +
                 "s.description AS statusDescription, " +
-                "pos.wage AS salary, " +
+                "pos.wage AS wage, " +
                 "acc.username, " +
+                "acc.role_id, " + // Cần lấy role_id để check ẩn hiện trên UI
                 "COUNT(*) OVER() AS total_count " +
                 "FROM employee e " +
                 "LEFT JOIN account acc ON e.account_id = acc.id " +
-                "LEFT JOIN role r ON acc.role_id = r.id " +
                 "LEFT JOIN status s ON e.status_id = s.id " +
                 "LEFT JOIN position pos ON e.position_id = pos.id " +
-                "WHERE e.id != 1 " + // Loại trừ admin hệ thống (ID = 1)
+                "WHERE e.id != ? " + // Loại chính mình
+                "AND acc.role_id >= ? " + // PHÂN QUYỀN: Ẩn cấp trên dựa vào Role
                 "AND (? = '' OR (" +
                 "    CAST(e.id AS CHAR) LIKE ? " +
                 "    OR LOWER(e.first_name) LIKE ? " +
                 "    OR LOWER(e.last_name) LIKE ? " +
                 "    OR LOWER(CONCAT(e.first_name, ' ', e.last_name)) LIKE ?" +
                 ")) " +
-                "AND (? = -1 OR acc.role_id = ?) " +
-                "AND (? = -1 OR e.status_id = ?) " +
-                "LIMIT ?, ?";
-
-        try (Connection conn = connectionFactory.newConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            // Chuẩn hóa từ khóa tìm kiếm
-            String cleanKeyword = (keyword == null) ? "" : keyword.trim();
-            String searchKey = "%" + cleanKeyword.toLowerCase() + "%";
-
-            int idx = 1;
-
-            // Gán tham số cho phần Tìm kiếm (Dựa trên cleanKeyword)
-            ps.setString(idx++, cleanKeyword);
-            ps.setString(idx++, searchKey); // Like ID
-            ps.setString(idx++, searchKey); // Like First Name
-            ps.setString(idx++, searchKey); // Like Last Name
-            ps.setString(idx++, searchKey); // Like Full Name (CONCAT)
-
-            // Gán tham số cho Filter Role
-            ps.setInt(idx++, roleId);
-            ps.setInt(idx++, roleId);
-
-            // Gán tham số cho Filter Status
-            ps.setInt(idx++, statusId);
-            ps.setInt(idx++, statusId);
-
-            // Gán tham số cho Phân trang
-            ps.setInt(idx++, offset);
-            ps.setInt(idx++, pageSize);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    if (totalItems == 0) {
-                        totalItems = rs.getInt("total_count");
-                    }
-                    items.add(mapResultSetToDisplayObject(rs)); // Sử dụng hàm map đã có của bạn
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi lọc nhân viên: " + e.getMessage());
-        }
-
-        return new PagedResponse<>(items, totalItems, pageIndex, pageSize);
-    }
-
-    public PagedResponse<EmployeeDisplayDTO> filterEmployeesPagedForManageDisplay(
-            String keyword, int roleId, int statusId, int pageIndex, int pageSize, int excludeId) {
-
-        List<EmployeeDisplayDTO> items = new ArrayList<>();
-        int totalItems = 0;
-        int offset = pageIndex * pageSize;
-
-        // Thêm điều kiện e.id != ? để loại bỏ chính mình
-        String sql = "SELECT e.id, e.first_name, e.last_name, e.gender, acc.role_id, e.status_id, e.account_id, " +
-                "r.name AS roleName, " +
-                "s.description AS statusDescription, " +
-                "pos.wage AS salary, " +
-                "acc.username, " +
-                "COUNT(*) OVER() AS total_count " +
-                "FROM employee e " +
-                "LEFT JOIN account acc ON e.account_id = acc.id " +
-                "LEFT JOIN role r ON acc.role_id = r.id " +
-                "LEFT JOIN status s ON e.status_id = s.id " +
-                "LEFT JOIN position pos ON e.position_id = pos.id " +
-                "WHERE e.id != 1 " + // Loại trừ admin hệ thống
-                "AND e.id != ? " + // LOẠI TRỪ CHÍNH MÌNH (Tham số mới)
-                "AND (? = '' OR (" +
-                "    CAST(e.id AS CHAR) LIKE ? " +
-                "    OR LOWER(e.first_name) LIKE ? " +
-                "    OR LOWER(e.last_name) LIKE ? " +
-                "    OR LOWER(CONCAT(e.first_name, ' ', e.last_name)) LIKE ?" +
-                ")) " +
-                "AND (? = -1 OR acc.role_id = ?) " +
+                "AND (? = -1 OR e.position_id = ?) " + // FILTER: Lọc theo Position (ID từ ComboBox)
                 "AND (? = -1 OR e.status_id = ?) " +
                 "LIMIT ?, ?";
 
@@ -525,34 +455,32 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             String searchKey = "%" + cleanKeyword.toLowerCase() + "%";
 
             int idx = 1;
-
-            // 1. Gán ID cần loại trừ
             ps.setInt(idx++, excludeId);
+            ps.setInt(idx++, currentAccountRoleId);
 
-            // 2. Gán tham số tìm kiếm
             ps.setString(idx++, cleanKeyword);
             ps.setString(idx++, searchKey);
             ps.setString(idx++, searchKey);
             ps.setString(idx++, searchKey);
             ps.setString(idx++, searchKey);
 
-            // 3. Gán Filter Role
-            ps.setInt(idx++, roleId);
-            ps.setInt(idx++, roleId);
+            // Filter theo Position ID
+            ps.setInt(idx++, filterPosId);
+            ps.setInt(idx++, filterPosId);
 
-            // 4. Gán Filter Status
+            // Filter theo Status ID
             ps.setInt(idx++, statusId);
             ps.setInt(idx++, statusId);
 
-            // 5. Phân trang
             ps.setInt(idx++, offset);
             ps.setInt(idx++, pageSize);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    if (totalItems == 0) {
+                    if (totalItems == 0)
                         totalItems = rs.getInt("total_count");
-                    }
+
+                    // Lưu ý: Nhớ thêm RoleId vào DTO nếu bạn muốn xử lý ẩn nút trên JavaFX
                     items.add(mapResultSetToDisplayObject(rs));
                 }
             }
@@ -574,9 +502,9 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 rs.getInt("id"),
                 rs.getString("first_name") + " " + rs.getString("last_name"),
                 rs.getString("gender"),
-                rs.getInt("role_id"),
-                rs.getString("roleName"),
-                rs.getObject("salary") != null ? rs.getBigDecimal("salary") : null,
+                rs.getInt("position_id"),
+                rs.getString("positionName"),
+                rs.getObject("wage") != null ? rs.getBigDecimal("wage") : null,
                 rs.getString("username"),
                 rs.getInt("status_id"),
                 rs.getString("statusDescription"));
@@ -684,17 +612,14 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * @return EmployeeJobInfoDTO hoặc null nếu không tìm thấy
      */
     public EmployeeJobInfoDTO getJobInfo(int employeeId) {
-        // Câu SQL JOIN 5 bảng để lấy đầy đủ Role từ Account và Position từ Employee
+        // Câu SQL JOIN các bảng để lấy Position từ Employee
         String sql = "SELECT " +
                 "e.department_id, d.name AS department_name, " +
-                "r.id AS role_id, r.name AS role_name, " +
                 "pos.id AS position_id, pos.name AS position_name, pos.wage, " +
                 "e.status_id, st.description AS status_description, " +
                 "e.created_at, e.updated_at " +
                 "FROM employee e " +
                 "LEFT JOIN department d ON e.department_id = d.id " +
-                "LEFT JOIN account a ON e.account_id = a.id " +
-                "LEFT JOIN role r ON a.role_id = r.id " + // Lấy Role từ Account
                 "LEFT JOIN status st ON e.status_id = st.id " +
                 "LEFT JOIN position pos ON e.position_id = pos.id " + // Lấy Position từ Employee
                 "WHERE e.id = ? LIMIT 1";
@@ -711,10 +636,6 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                                     resultSet.getObject("department_id") != null ? resultSet.getInt("department_id")
                                             : null)
                             .departmentName(resultSet.getString("department_name"))
-
-                            // Lấy thông tin Role (Quyền hệ thống)
-                            .roleId(resultSet.getObject("role_id") != null ? resultSet.getInt("role_id") : null)
-                            .roleName(resultSet.getString("role_name"))
 
                             // Lấy thông tin Position (Vị trí công việc & Lương)
                             .positionId(

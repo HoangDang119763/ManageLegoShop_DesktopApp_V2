@@ -6,22 +6,17 @@ public class RoleDTO {
     private int id;
     private String name;
     private String description;
-    private int startExperience;
-    private int endExperience;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Integer salaryId;
 
     public RoleDTO() {
     }
 
-    public RoleDTO(int id, String name, String description, int startExperience, int endExperience,
+    public RoleDTO(int id, String name, String description,
             LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.startExperience = startExperience;
-        this.endExperience = endExperience;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -36,8 +31,6 @@ public class RoleDTO {
             this.id = other.id;
             this.name = other.name;
             this.description = other.description;
-            this.startExperience = other.startExperience;
-            this.endExperience = other.endExperience;
             this.createdAt = other.createdAt;
             this.updatedAt = other.updatedAt;
         }
@@ -67,22 +60,6 @@ public class RoleDTO {
         this.description = description;
     }
 
-    public int getStartExperience() {
-        return startExperience;
-    }
-
-    public void setStartExperience(int startExperience) {
-        this.startExperience = startExperience;
-    }
-
-    public int getEndExperience() {
-        return endExperience;
-    }
-
-    public void setEndExperience(int endExperience) {
-        this.endExperience = endExperience;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -97,18 +74,6 @@ public class RoleDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public int getStatusId() {
-        return salaryId;
-    }
-
-    public Integer getSalaryId() {
-        return salaryId;
-    }
-
-    public void setSalaryId(Integer salaryId) {
-        this.salaryId = salaryId;
     }
 
     @Override

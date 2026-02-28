@@ -2,16 +2,15 @@ package GUI;
 
 import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
+import BUS.PositionBUS;
 import BUS.RoleBUS;
-import BUS.SalaryBUS;
 import BUS.StatusBUS;
 import DTO.AccountDTO;
 import DTO.DepartmentDTO;
 import DTO.EmployeeDTO;
+import DTO.PositionDTO;
 import DTO.RoleDTO;
-import DTO.SalaryDTO;
 import DTO.StatusDTO;
-import DTO.TaxDTO;
 import ENUM.Gender;
 import ENUM.PermissionKey;
 import ENUM.Status;
@@ -72,17 +71,15 @@ public class EmployeeAddModalController implements IModalController {
     @FXML
     private ComboBox<DepartmentDTO> cbDepartment;
     @FXML
-    private ComboBox<RoleDTO> cbRole;
+    private ComboBox<PositionDTO> cbPosition;
     @FXML
     private ComboBox<StatusDTO> cbStatus;
     @FXML
     private TextField txtBaseSalary;
-    @FXML
-    private TextField txtCoefficient;
 
     // ==================== INSURANCE & BENEFITS ====================
     @FXML
-    private CheckBox cbPersonalTax;
+    private CheckBox cbMealSupport;
     @FXML
     private CheckBox cbTransportSupport;
     @FXML
@@ -112,6 +109,8 @@ public class EmployeeAddModalController implements IModalController {
     private TextField txtUsername;
     @FXML
     private ComboBox<StatusDTO> cbAccountStatus;
+    @FXML
+    private ComboBox<RoleDTO> cbRole;
 
     // ==================== BUTTONS & OVERLAY ====================
     @FXML
@@ -143,7 +142,7 @@ public class EmployeeAddModalController implements IModalController {
 
         // Auto-fill salary info khi chọn vị trí
         cbDepartment.setOnAction(e -> updateSalaryInfo());
-        cbRole.setOnAction(e -> updateSalaryInfo());
+        cbPosition.setOnAction(e -> updateSalaryInfo());
 
         // Cảnh báo khi chọn phòng ban bị vô hiệu hóa
         attachDepartmentWarning();
@@ -163,7 +162,25 @@ public class EmployeeAddModalController implements IModalController {
         // Load Departments - với format inactive items
         setupComboBoxData();
 
-        // Load Roles
+        // Load Positions
+        ArrayList<PositionDTO> positions = PositionBUS.getInstance().getAll();
+        cbPosition.setItems(FXCollections.observableArrayList(positions));
+        cbPosition.setConverter(new javafx.util.StringConverter<PositionDTO>() {
+            @Override
+            public String toString(PositionDTO pos) {
+                return pos == null ? "" : pos.getName();
+            }
+
+            @Override
+            public PositionDTO fromString(String string) {
+                return null;
+            }
+        });
+        if (!positions.isEmpty()) {
+            cbPosition.getSelectionModel().selectFirst();
+        }
+
+        // Load Roles for Account
         ArrayList<RoleDTO> roles = RoleBUS.getInstance().getAll();
         if (SessionManagerService.getInstance().employeeRoleId() != 1)
             roles.removeIf(role -> role.getId() == 1); // Nếu không phải admin thì không cho chọn role admin
@@ -235,15 +252,12 @@ public class EmployeeAddModalController implements IModalController {
     }
 
     private void updateSalaryInfo() {
-        DepartmentDTO dept = cbDepartment.getValue();
-        RoleDTO role = cbRole.getValue();
+        PositionDTO position = cbPosition.getValue();
 
-        if (dept != null && role != null) {
-            SalaryDTO salary = SalaryBUS.getInstance().getById(cbRole.getValue().getSalaryId());
-            if (salary != null) {
-                txtBaseSalary.setText(validator.formatCurrency(salary.getBase()));
-                txtCoefficient.setText(validator.formatCurrency(salary.getCoefficient()));
-            }
+        if (position != null) {
+            txtBaseSalary.setText(validator.formatCurrency(position.getWage()));
+        } else {
+            txtBaseSalary.setText("");
         }
     }
 
@@ -259,17 +273,18 @@ public class EmployeeAddModalController implements IModalController {
         LocalDate dob = dpDateOfBirth.getValue();
         String gender = cbGender.getValue() != null ? cbGender.getValue().toString() : null;
 
-        int roleId = cbRole.getValue().getId();
         Integer deptId = cbDepartment.getValue() != null ? cbDepartment.getValue().getId() : null;
+        Integer positionId = cbPosition.getValue() != null ? cbPosition.getValue().getId() : null;
         int statusId = cbStatus.getValue().getId();
 
         // Các trường bảo hiểm từ TextFields và CheckBoxes
+        String healthCode = txtHealthInsCode.getText().trim();
         String socialCode = txtSocialInsCode.getText().trim();
         String unemploymentCode = txtUnemploymentInsCode.getText().trim();
-        boolean isPIT = cbPersonalTax.isSelected();
+        boolean isMeal = cbMealSupport.isSelected();
         boolean isTransport = cbTransportSupport.isSelected();
         boolean isAccommodation = cbAccommodationSupport.isSelected();
-        String healthCode = txtHealthInsCode.getText().trim();
+        int numDependents = Integer.parseInt(txtNumDependents.getText().trim());
 
         // Xử lý Avatar (tùy chọn - không bắt buộc)
         String finalAvatarUrl = null;
@@ -282,36 +297,37 @@ public class EmployeeAddModalController implements IModalController {
             }
         }
 
-        // Khởi tạo Object dùng constructor với avatarUrl
+        // Khởi tạo EmployeeDTO với constructor đầy đủ
         EmployeeDTO tempEmployee = new EmployeeDTO(
-        // 0, // id
-        // firstName, // first_name
-        // lastName, // last_name
-        // phone, // phone
-        // email, // email
-        // dob, // date_of_birth
-        // roleId, // role_id
-        // deptId, // department_id
-        // statusId, // status_id
-        // gender, // gender
-        // null, // account_id
-        // finalAvatarUrl, // avatar_url (Vị trí mới trong constructor)
-        // healthCode, // health_ins_code (String)
-        // socialCode, // social_insurance_code (String)
-        // unemploymentCode, // unemployment_insurance_code (String)
-        // isPIT, // is_personal_income_tax (boolean)
-        // isTransport, // is_transportation_support (boolean)
-        // isAccommodation, // is_accommodation_support (boolean)
-        // null, // created_at
-        // null // updated_at
+                0, // id
+                firstName,
+                lastName,
+                phone,
+                email,
+                dob,
+                deptId,
+                statusId,
+                gender,
+                null, // account_id
+                finalAvatarUrl,
+                positionId,
+                healthCode,
+                socialCode,
+                unemploymentCode,
+                isMeal,
+                isTransport,
+                isAccommodation,
+                numDependents,
+                null, // created_at
+                null // updated_at
         );
-        TaxDTO tempTax = new TaxDTO(-1, -1, Integer.parseInt(txtNumDependents.getText().trim()));
+
         AccountDTO tempAccount = new AccountDTO(-1, txtUsername.getText().trim(), "",
-                cbAccountStatus.getValue().getId());
+                cbAccountStatus.getValue().getId(), cbRole.getValue().getId());
 
         // Hiển thị loading
         TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_INSERT,
-                () -> EmployeeBUS.getInstance().insertEmployeeFull(tempEmployee, tempAccount, tempTax), result -> {
+                () -> EmployeeBUS.getInstance().insertEmployeeFull(tempEmployee, tempAccount), result -> {
                     if (result.isSuccess()) {
                         this.isSaved = true;
                         this.resultMessage = result.getMessage();

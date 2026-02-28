@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.PayrollFullTabController">
+    <padding><Insets bottom="15.0" left="20.0" right="20.0" top="10.0" /></padding>
+    <children>
+        <VBox spacing="12.0" styleClass="white-bg, shadow" VBox.vgrow="ALWAYS">
+            <padding><Insets bottom="15.0" left="15.0" right="30.0" top="15.0" /></padding>
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <FontAwesomeIcon fill="#1f7d84" glyphName="MONEY" size="1.8em" />
+                        <Label styleClass="label-header" text="BẢNG LƯƠNG TOÀN CÔNG TY" textFill="#1f7d84">
+                            <font><Font name="System Bold" size="20.0" /></font>
+                        </Label>
+                    </children>
+                </HBox>
+                <Line endX="980.0" stroke="#eee" strokeWidth="2.0" />
+
+                <HBox alignment="CENTER_LEFT" spacing="20.0">
+                    <children>
+                        <Label styleClass="label-a" text="Tìm kiếm:" />
+                        <TextField fx:id="txtSearch" prefHeight="32.0" prefWidth="200.0" promptText="Nhân viên hoặc ID..." />
+                        <Label styleClass="label-a" text="Tháng:" />
+                        <ComboBox fx:id="cbMonth" prefHeight="32.0" prefWidth="80.0" />
+                        <Label styleClass="label-a" text="Năm:" />
+                        <ComboBox fx:id="cbYear" prefHeight="32.0" prefWidth="100.0" />
+                        <Button fx:id="btnCalculateAll" mnemonicParsing="false" prefHeight="34.0" styleClass="action-btn" text="Tính lương all">
+                            <graphic><FontAwesomeIcon glyphName="CALCULATOR" /></graphic>
+                        </Button>
+                        <Button fx:id="btnRefresh" mnemonicParsing="false" prefHeight="34.0" styleClass="action-btn" text="F5">
+                            <graphic><FontAwesomeIcon glyphName="REFRESH" /></graphic>
+                        </Button>
+                    </children>
+                </HBox>
+
+                <ScrollPane fitToHeight="true" fitToWidth="false" prefHeight="400.0" VBox.vgrow="ALWAYS">
+                    <TableView fx:id="tblPayroll" prefHeight="400.0">
+                        <columns>
+                            <TableColumn fx:id="colEmployeeId" minWidth="80.0" prefWidth="80.0" text="ID NV" />
+                            <TableColumn fx:id="colEmployeeName" minWidth="150.0" prefWidth="150.0" text="Tên nhân viên" />
+                            <TableColumn fx:id="colPeriod" minWidth="100.0" prefWidth="100.0" text="Kỳ tính" />
+                            <TableColumn fx:id="colBaseSalary" minWidth="120.0" prefWidth="120.0" text="Lương cơ bản" />
+                            <TableColumn fx:id="colActualWorkDays" minWidth="80.0" prefWidth="80.0" text="Ngày công" />
+                            <TableColumn fx:id="colOvertimeAmount" minWidth="100.0" prefWidth="100.0" text="Tăng ca" />
+                            <TableColumn fx:id="colTotalAllowance" minWidth="100.0" prefWidth="100.0" text="Trợ cấp" />
+                            <TableColumn fx:id="colRewardAmount" minWidth="100.0" prefWidth="100.0" text="Khen thưởng" />
+                            <TableColumn fx:id="colViolationAmount" minWidth="100.0" prefWidth="100.0" text="Vi phạm" />
+                            <TableColumn fx:id="colTotalInsurance" minWidth="100.0" prefWidth="100.0" text="Bảo hiểm" />
+                            <TableColumn fx:id="colTaxableIncome" minWidth="120.0" prefWidth="120.0" text="Thu nhập chịu thuế" />
+                            <TableColumn fx:id="colTaxAmount" minWidth="100.0" prefWidth="100.0" text="Thuế TNCN" />
+                            <TableColumn fx:id="colNetSalary" minWidth="120.0" prefWidth="120.0" text="Lương thực nhận" />
+                        </columns>
+                    </TableView>
+                </ScrollPane>
+
+                <HBox alignment="CENTER" spacing="20.0">
+                    <children>
+                        <Label fx:id="lblPageInfo" text="Trang 1 / 1 (Tổng: 0 nhân viên)" textFill="#666" />
+                        <Pagination fx:id="pagination" maxPageIndicatorCount="5" prefHeight="32.0" style="-fx-padding: 0;" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</VBox>

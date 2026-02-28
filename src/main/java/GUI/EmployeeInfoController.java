@@ -148,7 +148,7 @@ public class EmployeeInfoController {
     @FXML
     private TableColumn<EmploymentHistoryDetailBasicDTO, String> colDepartment; // Cột phòng ban
     @FXML
-    private TableColumn<EmploymentHistoryDetailBasicDTO, String> colRole; // Cột chức vụ
+    private TableColumn<EmploymentHistoryDetailBasicDTO, String> colPosition; // Cột chức vụ
     @FXML
     private TableColumn<EmploymentHistoryDetailBasicDTO, String> colCreatedAt; // Cột ngày tạo
     @FXML
@@ -180,12 +180,12 @@ public class EmployeeInfoController {
         setupListeners();
         setupTabLoadingListeners();
 
-        if (sessionManagerService.employeeRoleId() == 1) {
-            hideInfo();
-            loadTabAccountSecurity();
-        } else {
-            loadTabPersonalInfo();
-        }
+        // if (sessionManagerService.employeeRoleId() == 1) {
+        // hideInfo();
+        // loadTabAccountSecurity();
+        // } else {
+        loadTabPersonalInfo();
+        // }
     }
 
     /**
@@ -229,11 +229,11 @@ public class EmployeeInfoController {
                     EmployeeJobInfoDTO jobInfo = bundle.getJobInfo();
                     EmployeePayrollInfoDTO payrollInfo = bundle.getPayrollInfo();
 
-                    // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
-                    if (jobInfo.getRoleId() != null && jobInfo.getRoleId() == 1) {
-                        hideInfo();
-                        return;
-                    }
+                    // // Nếu là IT Admin hệ thống -> ẩn hồ sơ cá nhân
+                    // if (jobInfo.getRoleId() != null && jobInfo.getRoleId() == 1) {
+                    // hideInfo();
+                    // return;
+                    // }
                     displayPersonalInfo(personalInfo, jobInfo, payrollInfo);
                 });
     }
@@ -298,10 +298,11 @@ public class EmployeeInfoController {
                         ? cellData.getValue().getDepartmentName()
                         : ""));
 
-        // Cột Chức vụ
-        colRole.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getRoleName() != null
-                ? cellData.getValue().getRoleName()
-                : ""));
+        // Cột Vị trí
+        colPosition
+                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPositionName() != null
+                        ? cellData.getValue().getPositionName()
+                        : ""));
 
         // Cột Ngày tạo (LocalDateTime -> hiển thị formatted)
         colCreatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
@@ -323,8 +324,8 @@ public class EmployeeInfoController {
      * Ẩn thông tin nhân viên khỏi UI
      */
     private void hideInfo() {
-        tabPaneInfo.getTabs().remove(tabPersonalInfo);
-        tabPaneInfo.getTabs().remove(tabJobHistory);
+        // tabPaneInfo.getTabs().remove(tabPersonalInfo);
+        // tabPaneInfo.getTabs().remove(tabJobHistory);
     }
 
     // Tab 1: Hiển thị thông tin nhân viên
@@ -337,8 +338,10 @@ public class EmployeeInfoController {
         lblEmployeeId.setText(String.valueOf(personalInfo.getEmployeeId()));
         lblGender.setText(personalInfo.getGender() != null ? personalInfo.getGender() : "");
         lblDepartmentName.setText(jobInfo != null ? jobInfo.getDepartmentName() : "");
-        lblPositionName.setText(jobInfo != null ? jobInfo.getPositionName() : "");
-        lblRoleName.setText(jobInfo.getRoleName() != null ? jobInfo.getRoleName() : "");
+        lblPositionName.setText(
+                sessionManagerService.getPositionName() != null ? sessionManagerService.getPositionName() : "");
+        // Role is managed in account, not in job info
+        lblRoleName.setText(sessionManagerService.getRoleName() != null ? sessionManagerService.getRoleName() : "");
         lblStatus.setText(jobInfo.getStatusDescription() != null ? jobInfo.getStatusDescription() : "");
         lblHealthInsCode.setText(payrollInfo != null ? payrollInfo.getHealthInsCode() : "");
 
@@ -372,6 +375,7 @@ public class EmployeeInfoController {
         if (jobInfo == null)
             return;
 
+        int empId = sessionManagerService.employeeLoginId();
         ValidationUtils vu = ValidationUtils.getInstance();
 
         // Salary Info
@@ -382,6 +386,16 @@ public class EmployeeInfoController {
         lblNumDependents.setText(payrollInfo != null && payrollInfo.getNumDependents() != null
                 ? String.valueOf(payrollInfo.getNumDependents())
                 : "0");
+
+        // Load payroll data into PayrollTab
+        if (payrollTabController != null) {
+            payrollTabController.loadEmployeePayroll(empId);
+        }
+        
+        // Load attendance data into AttendanceTab
+        if (attendanceTabController != null) {
+            attendanceTabController.loadEmployeeAttendance(empId);
+        }
 
         setupHistoryPagination();
     }
