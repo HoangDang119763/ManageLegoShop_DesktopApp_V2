@@ -2,6 +2,7 @@ package DAL;
 
 import DTO.AccountDTO;
 import java.sql.*;
+import java.util.List;
 
 public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
     private static final AccountDAL INSTANCE = new AccountDAL();
@@ -287,6 +288,58 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
         } catch (SQLException e) {
             System.err.println("Error resetting password: " + e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Insert batch accounts and employees in single transaction
+     * Loop insert accounts → Get IDs → Insert employees → Return count
+     *
+     * @param conn              Database connection (from BUS transaction)
+     * @param accountsToInsert  List of AccountDTO to insert
+     * @param employeesToInsert List of EmployeeDTO to insert
+     * @return Number of successfully inserted employees
+     * @throws SQLException
+     */
+    public int insertBatchAccountsAndEmployees(Connection conn,
+            List<AccountDTO> accountsToInsert,
+            List<DTO.EmployeeDTO> employeesToInsert) throws SQLException {
+
+        if (accountsToInsert == null || accountsToInsert.isEmpty() ||
+                employeesToInsert == null || employeesToInsert.size() != accountsToInsert.size()) {
+            throw new SQLException("Invalid account or employee list");
+        }
+
+        String accountSql = "INSERT INTO account (username, password, role_id, status_id) VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement accountStmt = conn.prepareStatement(accountSql, Statement.RETURN_GENERATED_KEYS)) {
+
+            // Step 1: Insert all accounts
+            for (AccountDTO acc : accountsToInsert) {
+                accountStmt.setString(1, acc.getUsername());
+                accountStmt.setString(2, acc.getPassword());
+                accountStmt.setInt(3, acc.getRoleId());
+                accountStmt.setInt(4, acc.getStatusId());
+                accountStmt.addBatch();
+            }
+
+            int[] accountResults = accountStmt.executeBatch();
+
+            // Step 2: Get generated keys and assign to employees
+            try (ResultSet generatedKeys = accountStmt.getGeneratedKeys()) {
+                int index = 0;
+                while (generatedKeys.next() && index < employeesToInsert.size()) {
+                    int generatedId = generatedKeys.getInt(1);
+                    employeesToInsert.get(index).setAccountId(generatedId);
+                    index++;
+                }
+            }
+
+            // Step 3: Insert all employees
+            EmployeeDAL employeeDAL = EmployeeDAL.getInstance();
+            int successCount = employeeDAL.insertBatchWithConn(conn, employeesToInsert);
+
+            return successCount;
         }
     }
 

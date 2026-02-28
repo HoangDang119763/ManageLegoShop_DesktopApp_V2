@@ -44,7 +44,7 @@ public class AppMessages {
     public static final String EMPLOYEE_REFRESH_SUCCESS = "Làm mới thành công";
     public static final String EMPLOYEE_ADD_SUCCESS = "Thêm nhân viên thành công";
     public static final String EMPLOYEE_DELETE_SUCCESS = "Xóa nhân viên thành công!";
-    public static final String EMPLOYEE_NO_SELECTION = "Vui lòng chọn một nhân viên để xóa!";
+    public static final String EMPLOYEE_NO_SELECTION = "Vui lòng chọn một nhân viên!";
     public static final String EMPLOYEE_UPDATE_SUCCESS = "Sửa nhân viên thành công";
     public static final String EMPLOYEE_CANNOT_DELETE_SYSTEM = "Không thể xóa nhân viên hệ thống";
     public static final String EMPLOYEE_CANNOT_DELETE_SELF = "Không thể xóa thông tin nhân viên của chính mình";

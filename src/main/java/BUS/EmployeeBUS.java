@@ -1,9 +1,11 @@
 package BUS;
 
+import DAL.AccountDAL;
 import DAL.ConnectApplication;
 import DAL.EmployeeDAL;
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
+import DTO.ImportEmployeeExcelDTO;
 import DTO.PagedResponse;
 import DTO.RoleDTO;
 import DTO.EmployeeDetailDTO;
@@ -19,6 +21,7 @@ import DTO.BUSResult;
 import DTO.AccountDTO;
 import DTO.StatusDTO;
 import ENUM.*;
+import SERVICE.ExcelImportService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ValidationUtils;
@@ -157,7 +160,12 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
         if (AccountBUS.getInstance().existsByUsername(account.getUsername()))
             return new BUSResult(BUSOperationResult.CONFLICT, AppMessages.ACCOUNT_USERNAME_DUPLICATE);
-
+        if (employee.getHealthInsCode() == null || employee.getHealthInsCode().trim().isEmpty())
+            employee.setHealthInsCode("0");
+        if (employee.getSocialInsCode() == null || employee.getSocialInsCode().trim().isEmpty())
+            employee.setSocialInsCode("0");
+        if (employee.getUnemploymentInsCode() == null || employee.getUnemploymentInsCode().trim().isEmpty())
+            employee.setUnemploymentInsCode("0");
         Connection conn = null;
         BUSResult finalResult = null;
 
@@ -458,16 +466,12 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         EmployeeDTO target = getById(employee.getId());
         if (target == null)
             return new BUSResult(BUSOperationResult.NOT_FOUND, AppMessages.NOT_FOUND);
-
-        // if (session.employeeRoleId() != 1) {
-        // boolean isTargetAdmin =
-        // PermissionBUS.getInstance().isRoleHavePermission(target.getRoleId(),
-        // PermissionKey.EMPLOYEE_PAYROLLINFO_UPDATE);
-        // if (isTargetAdmin)
-        // return new BUSResult(BUSOperationResult.FAIL,
-        // AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
-        // }
-
+        if (employee.getHealthInsCode() == null || employee.getHealthInsCode().trim().isEmpty())
+            employee.setHealthInsCode("0");
+        if (employee.getSocialInsCode() == null || employee.getSocialInsCode().trim().isEmpty())
+            employee.setSocialInsCode("0");
+        if (employee.getUnemploymentInsCode() == null || employee.getUnemploymentInsCode().trim().isEmpty())
+            employee.setUnemploymentInsCode("0");
         // 2. Thực thi Transaction
         try (Connection conn = ConnectApplication.getInstance().getConnectionFactory().newConnection()) {
             conn.setAutoCommit(false);
@@ -648,16 +652,6 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
         if (accId == null || accId <= 0)
             return new BUSResult(BUSOperationResult.INVALID_DATA, AppMessages.INVALID_DATA);
 
-        // Kiểm tra quyền ngang hàng
-        // if (session.employeeRoleId() != 1) {
-        // boolean isTargetAdmin =
-        // PermissionBUS.getInstance().isRoleHavePermission(existing.getRoleId(),
-        // PermissionKey.EMPLOYEE_ACCOUNT_RESET_PASSWORD);
-        // if (isTargetAdmin)
-        // return new BUSResult(BUSOperationResult.FAIL,
-        // AppMessages.EMPLOYEE_ERROR_UPDATE_SAME_AUTHORITY);
-        // }
-
         // 2. Execute Transaction - Reset password + ép relogin
         try (Connection conn = ConnectApplication.getInstance().getConnectionFactory().newConnection()) {
             conn.setAutoCommit(false);
@@ -837,5 +831,261 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
      */
     public ArrayList<EmployeeExcelDTO> getAllEmployeesForExcel() {
         return EmployeeDAL.getInstance().getAllEmployeesForExcel();
+    }
+
+    /**
+     * Validate imported employee data from Excel
+     * Check:
+     * 1. Duplicate username trong Excel
+     * 2. Duplicate email trong Excel
+     * 3. Username đã tồn tại trong DB
+     * 4. Email đã tồn tại trong DB
+     * 
+     * @param importDataList List of imported employee data from Excel
+     * @return Same list with isValid flag and errorMessage set for invalid records
+     */
+    public List<ImportEmployeeExcelDTO> validateImportData(List<ImportEmployeeExcelDTO> importDataList) {
+        if (importDataList == null || importDataList.isEmpty()) {
+            return importDataList;
+        }
+
+        // Track seen usernames and emails to check for duplicates within Excel
+        Map<String, Integer> usernameMap = new HashMap<>(); // username -> rowNumber of first occurrence
+        Map<String, Integer> emailMap = new HashMap<>(); // email -> rowNumber of first occurrence
+
+        // Get all existing accounts to check against DB
+        AccountBUS accountBUS = AccountBUS.getInstance();
+        ArrayList<AccountDTO> existingAccounts = accountBUS.getAll();
+        Set<String> existingUsernames = new HashSet<>();
+
+        for (AccountDTO account : existingAccounts) {
+            existingUsernames.add(account.getUsername().toLowerCase());
+        }
+
+        // Get all existing roles to check against DB
+        RoleBUS roleBUS = RoleBUS.getInstance();
+        Set<Integer> existingRoleIds = new HashSet<>();
+        if (roleBUS != null) {
+            ArrayList<RoleDTO> existingRoles = roleBUS.getAll();
+            if (existingRoles != null) {
+                for (RoleDTO role : existingRoles) {
+                    existingRoleIds.add(role.getId());
+                }
+            }
+        }
+
+        // Validate each record
+        for (ImportEmployeeExcelDTO item : importDataList) {
+            StringBuilder errorMessages = new StringBuilder();
+
+            // Check 1: Validate username (required)
+            if (item.getUsername() == null || item.getUsername().trim().isEmpty()) {
+                errorMessages.append("Tài khoản (username) bị trống. ");
+            } else {
+                String usernameLower = item.getUsername().toLowerCase();
+
+                // Check if username already exists in DB
+                if (existingUsernames.contains(usernameLower)) {
+                    errorMessages.append("Tài khoản '").append(item.getUsername())
+                            .append("' đã tồn tại trong hệ thống. ");
+                }
+
+                // Check if username is duplicate within Excel
+                if (usernameMap.containsKey(usernameLower)) {
+                    int firstRow = usernameMap.get(usernameLower);
+                    errorMessages.append("Tài khoản '").append(item.getUsername())
+                            .append("' bị trùng lặp (cũng xuất hiện ở dòng ").append(firstRow).append("). ");
+                } else {
+                    usernameMap.put(usernameLower, item.getRowNumber());
+                }
+            }
+
+            // Check 2: Validate email (required)
+            if (item.getEmail() == null || item.getEmail().trim().isEmpty()) {
+                errorMessages.append("Email bị trống. ");
+            } else {
+                String emailLower = item.getEmail().toLowerCase();
+
+                // Check if email is duplicate within Excel
+                if (emailMap.containsKey(emailLower)) {
+                    int firstRow = emailMap.get(emailLower);
+                    errorMessages.append("Email '").append(item.getEmail())
+                            .append("' bị trùng lặp (cũng xuất hiện ở dòng ").append(firstRow).append("). ");
+                } else {
+                    emailMap.put(emailLower, item.getRowNumber());
+                }
+            }
+
+            // Check 3: Other required fields
+            if (item.getFirstName() == null || item.getFirstName().trim().isEmpty()) {
+                errorMessages.append("Họ đệm bị trống. ");
+            }
+            if (item.getLastName() == null || item.getLastName().trim().isEmpty()) {
+                errorMessages.append("Tên bị trống. ");
+            }
+            if (item.getDepartmentId() == null || item.getDepartmentId() <= 0) {
+                errorMessages.append("Mã phòng ban không hợp lệ. ");
+            }
+            if (item.getPositionId() == null || item.getPositionId() <= 0) {
+                errorMessages.append("Mã vị trí không hợp lệ. ");
+            }
+
+            // Check 4: Validate roleId (required)
+            if (item.getRoleId() == null || item.getRoleId() <= 0) {
+                errorMessages.append("Mã vai trò (roleId) không hợp lệ. ");
+            } else if (!existingRoleIds.contains(item.getRoleId())) {
+                errorMessages.append("Mã vai trò '").append(item.getRoleId())
+                        .append("' không tồn tại trong hệ thống. ");
+            }
+
+            // Set validation status
+            if (errorMessages.length() > 0) {
+                item.setValid(false);
+                item.setErrorMessage(errorMessages.toString().trim());
+            } else {
+                item.setValid(true);
+                item.setErrorMessage(null);
+            }
+        }
+
+        return importDataList;
+    }
+
+    /**
+     * Insert batch employees from Excel import
+     * Tạo batch nhân viên từ dữ liệu import Excel
+     * Flow: Validate tất cả → Gom lại insert 1 lượt (không insert từng cái)
+     *
+     * @param importDataList List of ImportEmployeeExcelDTO with valid data
+     * @param importService  ExcelImportService to convert DTO
+     * @return BUSResult with success/failure status and message
+     */
+    public BUSResult insertFullEmployeeBatch(List<ImportEmployeeExcelDTO> importDataList,
+            ExcelImportService importService) {
+        // Validate parameters
+        if (importDataList == null || importDataList.isEmpty()) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        }
+        int employeeActiveStatusId = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.EMPLOYEE, Status.Employee.ACTIVE).getId();
+        Connection conn = null;
+        BUSResult finalResult = null;
+        List<AccountDTO> accountsToInsert = new ArrayList<>();
+        List<EmployeeDTO> employeesToInsert = new ArrayList<>();
+        StringBuilder errorMessages = new StringBuilder();
+
+        try {
+            // ========== STEP 1: VALIDATE ALL BEFORE INSERTING ==========
+            for (ImportEmployeeExcelDTO importDTO : importDataList) {
+                if (!importDTO.isValid()) {
+                    errorMessages.append("Dòng ").append(importDTO.getRowNumber())
+                            .append(": Dữ liệu không hợp lệ. ");
+                    continue;
+                }
+
+                try {
+                    // Convert to EmployeeDTO
+                    EmployeeDTO employeeDTO = importService.mapToDTO(importDTO);
+
+                    // Set default insurance codes if empty (avoid null/empty strings)
+                    if (employeeDTO.getHealthInsCode() == null || employeeDTO.getHealthInsCode().trim().isEmpty())
+                        employeeDTO.setHealthInsCode("0");
+                    if (employeeDTO.getSocialInsCode() == null || employeeDTO.getSocialInsCode().trim().isEmpty())
+                        employeeDTO.setSocialInsCode("0");
+                    if (employeeDTO.getUnemploymentInsCode() == null
+                            || employeeDTO.getUnemploymentInsCode().trim().isEmpty())
+                        employeeDTO.setUnemploymentInsCode("0");
+                    employeeDTO.setStatusId(employeeActiveStatusId);
+                    // Validate employee data
+                    if (!isValidEmployeeInputForInsert(employeeDTO)) {
+                        errorMessages.append("Dòng ").append(importDTO.getRowNumber())
+                                .append(": Dữ liệu nhân viên không hợp lệ. ");
+                        continue;
+                    }
+
+                    // Create AccountDTO
+                    int activeAccountStatusId = StatusBUS.getInstance()
+                            .getByTypeAndStatusName(StatusType.ACCOUNT, Status.Account.ACTIVE).getId();
+
+                    AccountDTO accountDTO = new AccountDTO(
+                            -1,
+                            importDTO.getUsername(),
+                            "", // password - will be set to default or generated
+                            activeAccountStatusId,
+                            2 // default role ID (staff)
+                    );
+
+                    // Check if account username already exists
+                    if (AccountBUS.getInstance().existsByUsername(accountDTO.getUsername())) {
+                        errorMessages.append("Dòng ").append(importDTO.getRowNumber())
+                                .append(": Tên đăng nhập đã tồn tại. ");
+                        continue;
+                    }
+
+                    // If all validations pass, add to batch lists
+                    accountsToInsert.add(accountDTO);
+                    employeesToInsert.add(employeeDTO);
+
+                } catch (Exception e) {
+                    errorMessages.append("Dòng ").append(importDTO.getRowNumber())
+                            .append(": ").append(e.getMessage()).append(" ");
+                }
+            }
+
+            // ========== STEP 2: IF VALIDATION ERRORS ONLY, RETURN EARLY ==========
+            if (accountsToInsert.isEmpty()) {
+                return new BUSResult(BUSOperationResult.FAIL,
+                        "Import thất bại. Không có dữ liệu hợp lệ.\n\nLỗi:\n" + errorMessages.toString());
+            }
+
+            // ========== STEP 3: INSERT ALL AT ONCE ==========
+            conn = ConnectApplication.getInstance().getConnectionFactory().newConnection();
+            conn.setAutoCommit(false);
+
+            try {
+                // Call DAL batch insert method - insert all accounts + employees in 1 shot
+                int successCount = AccountDAL.getInstance().insertBatchAccountsAndEmployees(
+                        conn, accountsToInsert, employeesToInsert);
+
+                if (successCount > 0) {
+                    conn.commit();
+                    String message = "Import thành công: " + successCount + "/" + importDataList.size() + " nhân viên";
+                    if (errorMessages.length() > 0) {
+                        message += "\n\nLỗi:\n" + errorMessages.toString();
+                    }
+                    finalResult = new BUSResult(BUSOperationResult.SUCCESS, message);
+                } else {
+                    conn.rollback();
+                    finalResult = new BUSResult(BUSOperationResult.FAIL,
+                            "Import thất bại. Lỗi:\n" + errorMessages.toString());
+                }
+
+            } catch (Exception e) {
+                conn.rollback();
+                finalResult = new BUSResult(BUSOperationResult.FAIL, "Lỗi batch insert: " + e.getMessage());
+            }
+
+        } catch (Exception e) {
+            // Rollback on any error
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            finalResult = new BUSResult(BUSOperationResult.DB_ERROR, "Lỗi import: " + e.getMessage());
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return finalResult;
     }
 }

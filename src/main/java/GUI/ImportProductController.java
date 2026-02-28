@@ -3,13 +3,12 @@ package GUI;
 import BUS.CategoryBUS;
 import BUS.ImportBUS;
 import BUS.ProductBUS;
-import DTO.CategoryDTO;
-import DTO.PagedResponse;
-import DTO.ProductDisplayForImportDTO;
-import DTO.SupplierForImportDTO;
-import DTO.TempDetailImportDTO;
+import DTO.*;
+import ENUM.PermissionKey;
 import INTERFACE.IController;
 import SERVICE.SessionManagerService;
+import SERVICE.TemplateGeneratorService;
+import SERVICE.ExcelService;
 import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
@@ -26,7 +25,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser;
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -93,6 +94,8 @@ public class ImportProductController implements IController {
     private Button btnImportListProductRemove;
     @FXML
     private Button btnImportListProductClear, btnSubmitImport;
+    @FXML
+    private Button btnImportFromExcel, btnDownloadTemplate;
 
     // ==================== LABELS & FIELDS ====================
     @FXML
@@ -115,7 +118,7 @@ public class ImportProductController implements IController {
     // ==================== DETAIL DATA ====================
     private ObservableList<TempDetailImportDTO> detailImportList = FXCollections.observableArrayList();
     private SupplierForImportDTO selectedSupplier = null;
-
+    private List<ProductDisplayForImportDTO> currentDisplayedProducts = new ArrayList<>();
     @FXML
     private TextField txtImportId, txtEmployeeFullName, txtSupplierName;
 
@@ -307,6 +310,8 @@ public class ImportProductController implements IController {
 
         btnImportListProductClear.setOnAction(e -> handleClearAllData());
         btnSubmitImport.setOnAction(e -> confirmImport());
+        btnImportFromExcel.setOnAction(e -> handleImportFromExcel());
+        btnDownloadTemplate.setOnAction(e -> handleDownloadTemplate());
     }
 
     /**
@@ -317,14 +322,14 @@ public class ImportProductController implements IController {
         StackPane overlay = showOverlay ? loadingOverlay : null;
 
         // Chạy task ngầm
-        TaskUtil.executePublic(overlay,
+        TaskUtil.executeSecure(overlay, PermissionKey.IMPORT_INSERT,
                 () -> productBUS.filterProductsPagedForImport(keyword, selectedCategoryId, priceOrder, pageIndex,
                         PAGE_SIZE),
                 result -> {
                     PagedResponse<ProductDisplayForImportDTO> res = result.getPagedData();
-
+                    currentDisplayedProducts = res.getItems();
                     // Cập nhật GridPane with product cards
-                    displayProductCards(res.getItems());
+                    displayProductCards(currentDisplayedProducts);
 
                     // Cập nhật pagination
                     int totalPages = (int) Math.ceil((double) res.getTotalItems() / PAGE_SIZE);
@@ -676,7 +681,7 @@ public class ImportProductController implements IController {
     private void handleClearAllData() {
         detailImportList.clear();
         selectedSupplier = null;
-        tbvDetailImportProduct.refresh();
+        tbvDetailImportProduct.setItems(FXCollections.observableArrayList(detailImportList));
         updateTotalImportPrice();
         lbTotalImportPrice.setText(validationUtils.formatCurrency(BigDecimal.ZERO) + " VNĐ");
         txtSupplierName.setText("Chọn nhà cung cấp...");
@@ -799,6 +804,102 @@ public class ImportProductController implements IController {
         }
 
         return true;
+    }
+
+    /**
+     * Handle importing from Excel file
+     * Open file chooser, read Excel, validate data, populate detailImportList
+     * Validation:
+     * - Check duplicate productId (nhiều hơn 1 dòng cùng productId)
+     * - Check productId có khớp với điều kiện nhập (phải có trong danh sách sản
+     * phẩm hợp lệ)
+     * - Báo lỗi chi tiết dòng nào
+     */
+    private void handleImportFromExcel() {
+        try {
+            // Open file chooser
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Chọn file Excel để nhập hàng");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("File Excel (*.xlsx)", "*.xlsx"));
+
+            Stage stage = (Stage) btnImportFromExcel.getScene().getWindow();
+            File selectedFile = fileChooser.showOpenDialog(stage);
+
+            if (selectedFile == null) {
+                return; // User cancelled
+            }
+
+            // Read Excel data
+            ExcelService excelService = ExcelService.getInstance();
+            List<TempDetailImportDTO> importedData = excelService.readImportDataFromExcel(selectedFile);
+
+            if (importedData == null || importedData.isEmpty()) {
+                NotificationUtils.showErrorAlert("File Excel không chứa dữ liệu hợp lệ!", "Lỗi");
+                return;
+            }
+
+            // Validate imported data using ImportBUS
+            BUSResult validationResult = importBUS.validateImportData(importedData, currentDisplayedProducts);
+
+            if (!validationResult.isSuccess()) {
+                // Show validation errors
+                NotificationUtils.showErrorAlert(validationResult.getMessage(), "Lỗi dữ liệu nhập");
+                return;
+            }
+
+            // Recalculate totalPrice for all imported items based on profit percent
+            for (TempDetailImportDTO item : importedData) {
+                recalculateTotalPrice(item);
+            }
+
+            // Ask user if they want to append or replace current data
+            boolean append = UiUtils.gI().showConfirmAlert(
+                    "Bạn có muốn thêm dữ liệu vào danh sách hiện tại không?\n" +
+                            "Chọn 'OK' để thêm vào, 'Cancel' để thay thế toàn bộ.",
+                    "Xác nhận nhập dữ liệu");
+
+            if (!append) {
+                // Clear current list
+                detailImportList.clear();
+            }
+
+            // Add imported data to list
+            detailImportList.addAll(importedData);
+            tbvDetailImportProduct.setItems(FXCollections.observableArrayList(detailImportList));
+
+            updateTotalImportPrice();
+
+            Stage currentStage = (Stage) btnImportFromExcel.getScene().getWindow();
+            NotificationUtils.showToast(currentStage,
+                    "Nhập thành công " + importedData.size() + " sản phẩm từ file Excel!");
+
+        } catch (IOException e) {
+            NotificationUtils.showErrorAlert("Lỗi khi đọc file Excel:\n" + e.getMessage(), "Lỗi");
+            System.err.println("Error reading Excel: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            NotificationUtils.showErrorAlert("Lỗi xảy ra:\n" + e.getMessage(), "Lỗi");
+            System.err.println("Error importing from Excel: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Handle download import template
+     * Generate and download Excel template file with sample data
+     */
+    private void handleDownloadTemplate() {
+        TaskUtil.executePublic(loadingOverlay,
+                () -> TemplateGeneratorService.getInstance().generateImportTemplate(currentDisplayedProducts),
+                result -> {
+                    Stage currentStage = (Stage) btnDownloadTemplate.getScene().getWindow();
+                    if (result.isSuccess()) {
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), "Lỗi");
+                    }
+                });
     }
 
     @Override

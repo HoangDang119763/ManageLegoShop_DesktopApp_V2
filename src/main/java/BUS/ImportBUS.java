@@ -11,6 +11,8 @@ import DTO.ImportDTO;
 import DTO.ImportDisplayDTO;
 import DTO.PagedResponse;
 import DTO.PriceUpdateInfoDTO;
+import DTO.ProductDisplayForImportDTO;
+import DTO.TempDetailImportDTO;
 import DTO.UpdateStockInfoDTO;
 import ENUM.BUSOperationResult;
 import ENUM.StatusType;
@@ -22,8 +24,10 @@ import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
@@ -405,5 +409,92 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
         }
 
         return finalResult;
+    }
+
+    /**
+     * Validate imported data from Excel
+     * Check:
+     * 1. Duplicate productId (nhiều hơn 1 dòng cùng productId)
+     * 2. ProductId có khớp với điều kiện nhập (phải có trong danh sách sản phẩm hợp
+     * lệ)
+     * 
+     * @param importedData  danh sách dữ liệu nhập từ Excel
+     * @param validProducts danh sách sản phẩm hợp lệ (từ filter hiện tại)
+     * @return BUSResult - SUCCESS nếu hợp lệ, FAIL nếu có lỗi với message chi tiết
+     */
+    public BUSResult validateImportData(List<TempDetailImportDTO> importedData,
+            List<ProductDisplayForImportDTO> validProducts) {
+        if (importedData == null || importedData.isEmpty()) {
+            return new BUSResult(BUSOperationResult.FAIL, "Danh sách dữ liệu nhập trống!");
+        }
+
+        if (validProducts == null || validProducts.isEmpty()) {
+            return new BUSResult(BUSOperationResult.FAIL, "Không có sản phẩm hợp lệ để nhập!");
+        }
+
+        // Tạo Map các productId hợp lệ để tìm kiếm nhanh
+        Set<String> validProductIds = new HashSet<>();
+        for (ProductDisplayForImportDTO product : validProducts) {
+            validProductIds.add(product.getId());
+        }
+
+        // Track duplicate productIds
+        Set<String> seenProductIds = new HashSet<>();
+        Set<String> duplicateProductIds = new HashSet<>();
+
+        // Track invalid productIds and their row numbers
+        List<String> invalidProductLines = new ArrayList<>();
+
+        // Kiểm tra từng dòng
+        for (int rowIndex = 0; rowIndex < importedData.size(); rowIndex++) {
+            TempDetailImportDTO item = importedData.get(rowIndex);
+            String productId = item.getProductId();
+            int lineNumber = rowIndex + 1; // Dòng bắt đầu từ 1 (dòng 0 là header)
+
+            // Check 1: Duplicate productId
+            if (seenProductIds.contains(productId)) {
+                duplicateProductIds.add(productId);
+            }
+            seenProductIds.add(productId);
+
+            // Check 2: ProductId có hợp lệ không
+            if (!validProductIds.contains(productId)) {
+                invalidProductLines.add("Dòng " + lineNumber + ": Mã SP '" + productId + "' không hợp lệ");
+            }
+        }
+
+        // Build error message
+        StringBuilder errorMessage = new StringBuilder();
+
+        // Report duplicate productIds
+        if (!duplicateProductIds.isEmpty()) {
+            errorMessage.append("Mã sản phẩm bị trùng lặp:\n");
+            for (String dupId : duplicateProductIds) {
+                List<Integer> lineNumbers = new ArrayList<>();
+                for (int i = 0; i < importedData.size(); i++) {
+                    if (importedData.get(i).getProductId().equals(dupId)) {
+                        lineNumbers.add(i + 1);
+                    }
+                }
+                errorMessage.append("- '").append(dupId).append("': ").append(lineNumbers).append("\n");
+            }
+            errorMessage.append("\n");
+        }
+
+        // Report invalid productIds
+        if (!invalidProductLines.isEmpty()) {
+            errorMessage.append("Mã sản phẩm không hợp lệ:\n");
+            for (String line : invalidProductLines) {
+                errorMessage.append("- ").append(line).append("\n");
+            }
+        }
+
+        // If no errors, return success
+        if (duplicateProductIds.isEmpty() && invalidProductLines.isEmpty()) {
+            return new BUSResult(BUSOperationResult.SUCCESS, "Dữ liệu nhập hợp lệ!");
+        }
+
+        // Return error with detailed message
+        return new BUSResult(BUSOperationResult.FAIL, errorMessage.toString().trim());
     }
 }

@@ -8,12 +8,15 @@ import BUS.StatusBUS;
 import DTO.EmployeeDisplayDTO;
 import DTO.PagedResponse;
 import DTO.PositionDTO;
+import DTO.ImportEmployeeExcelDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.ExcelService;
+import SERVICE.ExcelImportService;
 import SERVICE.SessionManagerService;
+import SERVICE.TemplateGeneratorService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
 import UTILS.NotificationUtils;
@@ -28,9 +31,12 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class EmployeeController implements IController {
     @FXML
@@ -50,7 +56,7 @@ public class EmployeeController implements IController {
     @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_status;
     @FXML
-    private Button addBtn, editBtn, deleteBtn, refreshBtn, exportExcel;
+    private Button addBtn, editBtn, deleteBtn, refreshBtn, exportExcel, importExcel, btnDownloadTemplate;
     @FXML
     private AnchorPane mainContent;
     @FXML
@@ -147,6 +153,8 @@ public class EmployeeController implements IController {
         deleteBtn.setOnAction(e -> handleDeleteBtn());
         editBtn.setOnAction(e -> handleEditBtn());
         exportExcel.setOnAction(e -> handleExportExcel());
+        importExcel.setOnAction(e -> handleImportExcel());
+        btnDownloadTemplate.setOnAction(e -> handleDownloadTemplate());
     }
 
     private void handleKeywordChange() {
@@ -341,8 +349,75 @@ public class EmployeeController implements IController {
                 });
     }
 
+    private void handleImportExcel() {
+        try {
+            // Open file chooser
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Chọn file Excel để nhập nhân viên");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("File Excel (*.xlsx)", "*.xlsx"));
+
+            Stage stage = (Stage) importExcel.getScene().getWindow();
+            File selectedFile = fileChooser.showOpenDialog(stage);
+
+            if (selectedFile == null) {
+                return; // User cancelled
+            }
+
+            // Read and validate Excel data
+            TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_INSERT,
+                    () -> ExcelImportService.getInstance().readFromExcel(selectedFile.getAbsolutePath()),
+                    result -> {
+                        if (!result.isSuccess()) {
+                            NotificationUtils.showErrorAlert(result.getMessage(), "Lỗi");
+                            return;
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        List<ImportEmployeeExcelDTO> importedData = (List<ImportEmployeeExcelDTO>) result.getData();
+
+                        if (importedData == null || importedData.isEmpty()) {
+                            NotificationUtils.showErrorAlert("File Excel không chứa dữ liệu!", "Lỗi");
+                            return;
+                        }
+
+                        // Validate imported data using EmployeeBUS
+                        List<ImportEmployeeExcelDTO> validatedData = employeeBUS.validateImportData(importedData);
+
+                        // Open confirm import modal with the validated data
+                        ConfirmImportEmployeeModalController modalController = new ModalBuilder<ConfirmImportEmployeeModalController>(
+                                "/GUI/ConfirmImportEmployeeModal.fxml",
+                                ConfirmImportEmployeeModalController.class)
+                                .configure(e -> e.setImportData(validatedData))
+                                .open();
+
+                        // If import was successful, refresh the employee list
+                        if (modalController.isSaved()) {
+                            Stage currentStage = (Stage) importExcel.getScene().getWindow();
+                            NotificationUtils.showToast(currentStage, modalController.getResultMessage());
+                            loadPageData(paginationController.getCurrentPage(), false);
+                        }
+                    });
+        } catch (Exception e) {
+            NotificationUtils.showErrorAlert("Lỗi: " + e.getMessage(), "Lỗi");
+        }
+    }
+
     private boolean isNotSelectedEmployee() {
         selectedEmployeeTable = tblEmployee.getSelectionModel().getSelectedItem();
         return selectedEmployeeTable == null;
+    }
+
+    private void handleDownloadTemplate() {
+        TaskUtil.executePublic(loadingOverlay,
+                () -> TemplateGeneratorService.getInstance().generateEmployeeImportTemplate(),
+                result -> {
+                    Stage currentStage = (Stage) btnDownloadTemplate.getScene().getWindow();
+                    if (result.isSuccess()) {
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), "Lỗi");
+                    }
+                });
     }
 }
