@@ -14,6 +14,8 @@ import lombok.Data;
 public class EmployeeAccountInfoDTO {
     private Integer accountId;
     private String username;
+    private Integer roleId; // Vai trò hệ thống
+    private String roleName;
     private Integer accountStatusId;
     private String accountStatus;
     private LocalDateTime lastLogin;
@@ -34,6 +36,22 @@ public class EmployeeAccountInfoDTO {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public Integer getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Integer roleId) {
+        this.roleId = roleId;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
     }
 
     public Integer getAccountStatusId() {
@@ -65,6 +83,8 @@ public class EmployeeAccountInfoDTO {
         return "EmployeeAccountInfoDTO{" +
                 ", accountId=" + accountId +
                 ", username='" + username + '\'' +
+                ", roleId=" + roleId +
+                ", roleName='" + roleName + '\'' +
                 ", accountStatusId=" + accountStatusId +
                 ", accountStatus='" + accountStatus + '\'' +
                 ", lastLogin=" + lastLogin +

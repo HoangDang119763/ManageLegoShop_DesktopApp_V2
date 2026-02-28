@@ -2,10 +2,11 @@ package DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * DTO chứa thông tin cơ bản lịch sử công tác của nhân viên
@@ -16,13 +17,16 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class EmploymentHistoryDetailBasicDTO {
-    private Integer departmentId; // ID phòng ban
+    private int departmentId; // ID phòng ban
     private String departmentName; // Tên phòng ban
-    private Integer positionId; // ID vị trí
+    private int positionId; // ID vị trí
     private String positionName; // Tên vị trí
     private LocalDate effectiveDate; // Ngày áp dụng
-    private LocalDateTime createdAt; // Ngày tạo bản ghi
+    private int statusId;
+    private String statusDescription;
 
     public Integer getDepartmentId() {
         return departmentId;
@@ -62,13 +66,5 @@ public class EmploymentHistoryDetailBasicDTO {
 
     public void setEffectiveDate(LocalDate effectiveDate) {
         this.effectiveDate = effectiveDate;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }

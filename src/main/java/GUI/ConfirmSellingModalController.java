@@ -1,7 +1,5 @@
 package GUI;
 
-import BUS.DetailInvoiceBUS;
-import BUS.EmployeeBUS;
 import BUS.InvoiceBUS;
 import DTO.CustomerForInvoiceDTO;
 import DTO.DetailInvoiceDTO;
@@ -84,8 +82,6 @@ public class ConfirmSellingModalController implements IModalController {
 
     // ==================== STATE ====================
     private InvoiceBUS invoiceBUS;
-    private DetailInvoiceBUS detailInvoiceBUS;
-    private EmployeeBUS employeeBUS;
     private SessionManagerService session;
     private ValidationUtils validationUtils;
 
@@ -111,8 +107,6 @@ public class ConfirmSellingModalController implements IModalController {
     public void initialize() {
         // Initialize BUS instances
         invoiceBUS = InvoiceBUS.getInstance();
-        detailInvoiceBUS = DetailInvoiceBUS.getInstance();
-        employeeBUS = EmployeeBUS.getInstance();
         session = SessionManagerService.getInstance();
         validationUtils = ValidationUtils.getInstance();
 
@@ -290,7 +284,7 @@ public class ConfirmSellingModalController implements IModalController {
                 result -> {
                     isSaved = true;
                     resultMessage = result.getMessage();
-                    NotificationUtils.showInfoAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+//                    NotificationUtils.showInfoAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
                     handleBack();
                 });
     }

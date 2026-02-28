@@ -214,14 +214,18 @@ BEGIN
     IF v_status_approved IS NOT NULL AND v_status_effective IS NOT NULL THEN
         
         -- 1. Cập nhật Position và Phòng ban cho Employee
-        UPDATE employee e
-        INNER JOIN employment_history h ON e.id = h.employee_id
-        SET 
-            e.department_id = h.department_id,
-            e.position_id = h.position_id,
-            e.updated_at = NOW()
-        WHERE h.status_id = v_status_approved 
-          AND h.effective_date <= CURDATE();
+       UPDATE employee e
+		INNER JOIN employment_history h ON e.id = h.employee_id
+		SET 
+			-- Nếu department_id trong history khác hiện tại thì mới update, không thì giữ nguyên
+			e.department_id = h.department_id,
+			-- Tương tự cho position_id
+			e.position_id = h.position_id,
+			e.updated_at = NOW()
+		WHERE h.status_id = v_status_approved 
+		  AND h.effective_date <= CURDATE()
+		  -- Thêm điều kiện: chỉ update nếu có ít nhất 1 trong 2 cái thay đổi so với bảng chính
+		  AND (e.department_id != h.department_id OR e.position_id != h.position_id);
 
         -- 3. Chuyển trạng thái lịch sử sang 'Effective'
         UPDATE employment_history 

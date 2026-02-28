@@ -12,6 +12,7 @@ import DTO.StatusDTO;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
+import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
@@ -29,7 +30,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class EmployeeController implements IController {
@@ -45,8 +45,6 @@ public class EmployeeController implements IController {
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_role;
     @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_baseSalary;
-    @FXML
-    private TableColumn<EmployeeDisplayDTO, String> tlb_col_salaryCoefficient;
     @FXML
     private TableColumn<EmployeeDisplayDTO, String> tlb_col_username;
     @FXML
@@ -148,13 +146,7 @@ public class EmployeeController implements IController {
         addBtn.setOnAction(event -> handleAddBtn());
         deleteBtn.setOnAction(e -> handleDeleteBtn());
         editBtn.setOnAction(e -> handleEditBtn());
-        exportExcel.setOnAction(e -> {
-            try {
-                handleExportExcel();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
+        exportExcel.setOnAction(e -> handleExportExcel());
     }
 
     private void handleKeywordChange() {
@@ -336,12 +328,17 @@ public class EmployeeController implements IController {
 
     }
 
-    private void handleExportExcel() throws IOException {
-        // try {
-        // ExcelService.getInstance().exportToFileExcel("employee");
-        // } catch (IOException e) {
-        // e.printStackTrace();
-        // }
+    private void handleExportExcel() {
+        TaskUtil.executePublic(loadingOverlay,
+                () -> ExcelService.getInstance().exportEmployeeToFileExcel(),
+                result -> {
+                    Stage currentStage = (Stage) exportExcel.getScene().getWindow();
+                    if (result.isSuccess()) {
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), "Lỗi");
+                    }
+                });
     }
 
     private boolean isNotSelectedEmployee() {

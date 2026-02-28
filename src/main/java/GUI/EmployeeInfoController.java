@@ -18,6 +18,7 @@ import DTO.PagedResponse;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
+import UTILS.UiUtils;
 import UTILS.ValidationUtils;
 import SERVICE.SessionManagerService;
 import javafx.beans.property.SimpleStringProperty;
@@ -150,7 +151,7 @@ public class EmployeeInfoController {
     @FXML
     private TableColumn<EmploymentHistoryDetailBasicDTO, String> colPosition; // Cột chức vụ
     @FXML
-    private TableColumn<EmploymentHistoryDetailBasicDTO, String> colCreatedAt; // Cột ngày tạo
+    private TableColumn<EmploymentHistoryDetailBasicDTO, String> colStatus; // Cột trạng thái
     @FXML
     private PaginationController historyPaginationController;
     // Gán một lần trong initialize() để tránh gọi getInstance() nhiều lần
@@ -259,14 +260,6 @@ public class EmployeeInfoController {
     }
 
     /**
-     * Overload: Load dữ liệu lịch sử công tác với phân trang (Async)
-     * Gọi từ pagination callback khi người dùng chuyển trang
-     */
-    private void loadTabJobHistory(int pageIndex) {
-        loadHistoryData(pageIndex);
-    }
-
-    /**
      * Load dữ liệu cho Tab 3: Bảo mật tài khoản (Async)
      * Luôn lấy dữ liệu mới từ DB để đảm bảo dữ liệu không bị cũ
      */
@@ -303,12 +296,13 @@ public class EmployeeInfoController {
                 .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPositionName() != null
                         ? cellData.getValue().getPositionName()
                         : ""));
-
-        // Cột Ngày tạo (LocalDateTime -> hiển thị formatted)
-        colCreatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
-                vu.formatDateTimeWithHour(cellData.getValue().getCreatedAt()) != null
-                        ? vu.formatDateTimeWithHour(cellData.getValue().getCreatedAt())
+        colStatus.setCellValueFactory(
+                cellData -> new SimpleStringProperty(cellData.getValue().getStatusDescription() != null
+                        ? cellData.getValue().getStatusDescription()
                         : ""));
+        UiUtils.gI().addTooltipToColumn(colPosition, 20);
+        UiUtils.gI().addTooltipToColumn(colDepartment, 20);
+        UiUtils.gI().addTooltipToColumn(colStatus, 20);
     }
 
     /**
@@ -630,8 +624,12 @@ public class EmployeeInfoController {
         // Gọi overloaded method loadTabJobHistory(pageIndex) khi người dùng chuyển
         // trang
         historyPaginationController.init(0, PAGE_SIZE, pageIndex -> {
-            loadTabJobHistory(pageIndex);
+            loadHistoryData(pageIndex);
+            System.out.println("Requested page index: " + pageIndex);
         });
+
+        // Load dữ liệu lần đầu (trang 0)
+        loadHistoryData(0);
     }
 
     /**

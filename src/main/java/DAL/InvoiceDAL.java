@@ -2,6 +2,8 @@ package DAL;
 
 import DTO.InvoiceDTO;
 import DTO.InvoiceDisplayDTO;
+import DTO.InvoicePDFDTO;
+import DTO.DetailInvoicePDFDTO;
 import DTO.PagedResponse;
 
 import java.math.BigDecimal;
@@ -298,5 +300,84 @@ public class InvoiceDAL extends BaseDAL<InvoiceDTO, Integer> {
             System.err.println("Error inserting into invoice table: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Lấy invoice data để in PDF
+     * Chỉ lấy được nếu invoice có trạng thái là Completed
+     */
+    public InvoicePDFDTO getInvoiceForPDF(int invoiceId) {
+        String query = "SELECT i.id, i.created_at, " +
+                "CONCAT(e.first_name, ' ', e.last_name) as employee_name, " +
+                "CONCAT(c.first_name, ' ', c.last_name) as customer_name, " +
+                "i.discount_code, i.discount_amount, i.total_price, i.status_id, s.id as status_enum_id " +
+                "FROM invoice i " +
+                "JOIN employee e ON i.employee_id = e.id " +
+                "JOIN customer c ON i.customer_id = c.id " +
+                "JOIN status s ON i.status_id = s.id " +
+                "WHERE i.id = ?";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setInt(1, invoiceId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                InvoicePDFDTO invoice = new InvoicePDFDTO();
+                invoice.setId(rs.getInt("id"));
+
+                Timestamp createdAt = rs.getTimestamp("created_at");
+                invoice.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
+
+                invoice.setEmployeeName(rs.getString("employee_name"));
+                invoice.setCustomerName(rs.getString("customer_name"));
+
+                invoice.setDiscountCode(rs.getString("discount_code"));
+                invoice.setDiscountAmount(rs.getBigDecimal("discount_amount"));
+                invoice.setTotalPrice(rs.getBigDecimal("total_price"));
+
+                // Lấy details
+                invoice.setDetails(getInvoiceDetailsForPDF(invoiceId));
+
+                return invoice;
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi DAL get invoice for PDF: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Lấy chi tiết hóa đơn (sản phẩm) để in PDF
+     */
+    private ArrayList<DetailInvoicePDFDTO> getInvoiceDetailsForPDF(int invoiceId) {
+        String query = "SELECT di.product_id, p.name, di.quantity, di.price, di.total_price " +
+                "FROM detail_invoice di " +
+                "JOIN product p ON di.product_id = p.id " +
+                "WHERE di.invoice_id = ?";
+
+        ArrayList<DetailInvoicePDFDTO> details = new ArrayList<>();
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setInt(1, invoiceId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                DetailInvoicePDFDTO detail = new DetailInvoicePDFDTO();
+                detail.setProductId(rs.getString("product_id"));
+                detail.setProductName(rs.getString("name"));
+                detail.setQuantity(rs.getInt("quantity"));
+                detail.setPrice(rs.getBigDecimal("price"));
+                detail.setTotalPrice(rs.getBigDecimal("total_price"));
+
+                details.add(detail);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi DAL get invoice details for PDF: " + e.getMessage());
+        }
+        return details;
     }
 }

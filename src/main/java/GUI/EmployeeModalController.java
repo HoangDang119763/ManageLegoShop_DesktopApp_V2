@@ -4,6 +4,7 @@ import BUS.AccountBUS;
 import BUS.DepartmentBUS;
 import BUS.EmployeeBUS;
 import BUS.EmploymentHistoryBUS;
+import BUS.PositionBUS;
 import BUS.RoleBUS;
 import BUS.StatusBUS;
 import DTO.DepartmentDTO;
@@ -14,6 +15,7 @@ import DTO.EmployeeAccountInfoDTO;
 import DTO.EmployeeJobInfoDTO;
 import DTO.EmployeePayrollInfoDTO;
 import DTO.PagedResponse;
+import DTO.PositionDTO;
 import DTO.RoleDTO;
 import DTO.StatusDTO;
 import ENUM.PermissionKey;
@@ -71,6 +73,8 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TextField txtEmployeeId;
     @FXML
+    private ComboBox<StatusDTO> cbStatus;
+    @FXML
     private TextField txtFirstName;
     @FXML
     private TextField txtLastName;
@@ -98,6 +102,8 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TextField txtUsername;
     @FXML
+    private ComboBox<RoleDTO> cbRole;
+    @FXML
     private ComboBox<StatusDTO> cbAccountStatus;
     @FXML
     private Label lblLastLogin;
@@ -112,17 +118,11 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private ComboBox<DepartmentDTO> cbDepartment;
     @FXML
-    private ComboBox<RoleDTO> cbRole;
+    private ComboBox<PositionDTO> cbPosition;
     @FXML
-    private ComboBox<StatusDTO> cbStatus;
-    @FXML
-    private TextField txtBaseSalary;
-    @FXML
-    private TextField txtCoefficient;
+    private TextField txtWage;
     @FXML
     private VBox jobHistorySection;
-    @FXML
-    private HBox paginationSection;
     @FXML
     private TableView<EmploymentHistoryDetailDTO> tblJobHistory;
     @FXML
@@ -130,13 +130,13 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colDepartment;
     @FXML
-    private TableColumn<EmploymentHistoryDetailDTO, String> colRole;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colPosition;
     @FXML
-    private TableColumn<EmploymentHistoryDetailDTO, String> colReason;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colStatus;
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colApprover;
     @FXML
-    private TableColumn<EmploymentHistoryDetailDTO, String> colStatus;
+    private TableColumn<EmploymentHistoryDetailDTO, String> colReason;
     @FXML
     private TableColumn<EmploymentHistoryDetailDTO, String> colCreatedAt;
     @FXML
@@ -152,7 +152,7 @@ public class EmployeeModalController implements IModalController {
     @FXML
     private TextField txtUnemploymentInsCode;
     @FXML
-    private CheckBox cbPersonalTax;
+    private CheckBox cbMealSupport;
     @FXML
     private CheckBox cbTransportSupport;
     @FXML
@@ -171,6 +171,8 @@ public class EmployeeModalController implements IModalController {
     private StackPane loadingOverlay;
     @FXML
     private PaginationController historyPaginationController;
+    @FXML
+    private HBox paginationSection;
     private static final int PAGE_SIZE = 10;
 
     @Getter
@@ -181,6 +183,7 @@ public class EmployeeModalController implements IModalController {
     private RoleBUS roleBUS;
     private StatusBUS statusBUS;
     private DepartmentBUS departmentBUS;
+    private PositionBUS positionBUS;
     private EmployeeBUS employeeBUS;
     private SessionManagerService session;
     private EmploymentHistoryBUS employmentHistoryBUS;
@@ -203,6 +206,7 @@ public class EmployeeModalController implements IModalController {
         roleBUS = RoleBUS.getInstance();
         statusBUS = StatusBUS.getInstance();
         departmentBUS = DepartmentBUS.getInstance();
+        positionBUS = PositionBUS.getInstance();
         employeeBUS = EmployeeBUS.getInstance();
         session = SessionManagerService.getInstance();
         employmentHistoryBUS = EmploymentHistoryBUS.getInstance();
@@ -215,6 +219,7 @@ public class EmployeeModalController implements IModalController {
         // Load initial data
         loadGenderComboBox();
         setupDepartmentComboBox();
+        setupPositionComboBox();
         loadRoleComboBox();
         loadStatusComboBox();
         loadAccountStatusComboBox();
@@ -338,6 +343,14 @@ public class EmployeeModalController implements IModalController {
                 AppMessages.DEPARTMENT_DELETED_WARNING);
     }
 
+    /**
+     * Setup Position ComboBox
+     */
+    private void setupPositionComboBox() {
+        ArrayList<PositionDTO> positions = positionBUS.getAll();
+        cbPosition.setItems(FXCollections.observableArrayList(positions));
+    }
+
     private void loadRoleComboBox() {
         ArrayList<RoleDTO> roles = RoleBUS.getInstance().getAll();
         if (SessionManagerService.getInstance().employeeRoleId() != 1)
@@ -359,31 +372,35 @@ public class EmployeeModalController implements IModalController {
      * Setup job history table columns
      */
     private void setupJobHistoryTable() {
-
+        ValidationUtils validationUtils = ValidationUtils.getInstance();
+        // 1. Ngày áp dụng
         colEffectiveDate.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getEffectiveDate() != null
-                        ? validationUtils.formatDateTime(cellData.getValue().getEffectiveDate())
-                        : ""));
-
+                validationUtils.formatDateTime(cellData.getValue().getEffectiveDate())));
+        UiUtils.gI().addTooltipToColumn(colEffectiveDate, 20);
+        // 2. Phòng ban
         colDepartment.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getDepartmentName() != null ? cellData.getValue().getDepartmentName() : ""));
-
-        colRole.setCellValueFactory(cellData -> new SimpleStringProperty(
+        UiUtils.gI().addTooltipToColumn(colDepartment, 20);
+        // 3. Vị trí (MỚI)
+        colPosition.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getPositionName() != null ? cellData.getValue().getPositionName() : ""));
-
-        colReason.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getReason() != null ? cellData.getValue().getReason() : ""));
-
+        UiUtils.gI().addTooltipToColumn(colPosition, 20);
+        // 4. Người duyệt (MỚI)
         colApprover.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getApproverName() != null ? cellData.getValue().getApproverName() : ""));
-
+                cellData.getValue().getApproverName() != null ? cellData.getValue().getApproverName() : "Hệ thống"));
+        UiUtils.gI().addTooltipToColumn(colApprover, 20);
+        // 5. Trạng thái
         colStatus.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().getStatusDescription() != null ? cellData.getValue().getStatusDescription() : ""));
-
+        UiUtils.gI().addTooltipToColumn(colStatus, 20);
+        // 6. Lý do điều chuyển (MỚI)
+        colReason.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getReason() != null ? cellData.getValue().getReason() : "---"));
+        UiUtils.gI().addTooltipToColumn(colReason, 20);
+        // 7. Ngày tạo lệnh (MỚI)
         colCreatedAt.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().getCreatedAt() != null
-                        ? validationUtils.formatDateTime(cellData.getValue().getCreatedAt())
-                        : ""));
+                validationUtils.formatDateTimeWithHour(cellData.getValue().getCreatedAt())));
+        UiUtils.gI().addTooltipToColumn(colCreatedAt, 20);
     }
 
     private void setupListeners() {
@@ -524,6 +541,16 @@ public class EmployeeModalController implements IModalController {
         txtPhone.setText(personalInfo.getPhone() != null ? personalInfo.getPhone() : "");
         txtEmail.setText(personalInfo.getEmail() != null ? personalInfo.getEmail() : "");
 
+        // Load status
+        if (personalInfo.getStatusId() != null) {
+            for (StatusDTO status : cbStatus.getItems()) {
+                if (status.getId() == personalInfo.getStatusId()) {
+                    cbStatus.getSelectionModel().select(status);
+                    break;
+                }
+            }
+        }
+
         // Load avatar
         avatarUrl = personalInfo.getAvatarUrl();
         loadEmployeeAvatar(avatarUrl);
@@ -538,6 +565,7 @@ public class EmployeeModalController implements IModalController {
             cbGender.setDisable(true);
             txtPhone.setEditable(false);
             txtEmail.setEditable(false);
+            cbStatus.setDisable(true);
             savePersonalBtn.setDisable(true);
             choseImg.setDisable(true);
             resetImgBtn.setDisable(true);
@@ -560,6 +588,16 @@ public class EmployeeModalController implements IModalController {
                 ? validationUtils.formatDateTimeWithHour(accountInfo.getLastLogin())
                 : "Chưa có lần đăng nhập");
 
+        // Set role
+        if (accountInfo.getRoleId() != null && accountInfo.getRoleId() > 0) {
+            for (RoleDTO role : cbRole.getItems()) {
+                if (role.getId() == accountInfo.getRoleId()) {
+                    cbRole.getSelectionModel().select(role);
+                    break;
+                }
+            }
+        }
+
         // Set account status
         if (accountInfo.getAccountStatusId() != null && accountInfo.getAccountStatusId() > 0) {
             StatusDTO accountStatus = statusBUS.getById(accountInfo.getAccountStatusId());
@@ -573,6 +611,7 @@ public class EmployeeModalController implements IModalController {
         lblUpdatedAt.setText(validationUtils.formatDateTimeWithHour(accountInfo.getUpdatedAt()));
 
         if (!canUpdateAccount && !canResetPassword) {
+            cbRole.setDisable(true);
             cbAccountStatus.setDisable(true);
             btnResetPassword.setDisable(true);
             saveAccountBtn.setDisable(true);
@@ -599,21 +638,20 @@ public class EmployeeModalController implements IModalController {
             }
         }
 
-        // Set status
-        if (jobInfo.getStatusId() != null) {
-            StatusDTO status = statusBUS.getById(jobInfo.getStatusId());
-            if (status != null) {
-                cbStatus.getSelectionModel().select(status);
+        // Set position
+        if (jobInfo.getPositionId() != null) {
+            PositionDTO position = positionBUS.getById(jobInfo.getPositionId());
+            if (position != null) {
+                cbPosition.getSelectionModel().select(position);
             }
         }
 
-        // // Display position name
-        // txtPositionName.setText(jobInfo.getPositionName() != null ?
-        // jobInfo.getPositionName() : "");
-
-        // // Display base salary
-        // txtBaseSalary.setText(jobInfo.getWage() != null ?
-        // jobInfo.getWage().toString() : "0");
+        // Display wage
+        if (jobInfo.getWage() != null) {
+            txtWage.setText(validationUtils.formatCurrency(jobInfo.getWage()));
+        } else {
+            txtWage.setText("0");
+        }
 
         // Set created/updated time
         lblCreatedAt.setText(validationUtils.formatDateTimeWithHour(jobInfo.getCreatedAt()));
@@ -628,8 +666,7 @@ public class EmployeeModalController implements IModalController {
 
         if (!canUpdateJob) {
             cbDepartment.setDisable(true);
-            cbRole.setDisable(true);
-            cbStatus.setDisable(true);
+            cbPosition.setDisable(true);
             saveJobBtn.setDisable(true);
         }
     }
@@ -647,7 +684,7 @@ public class EmployeeModalController implements IModalController {
         txtSocialInsCode.setText(payrollInfo.getSocialInsCode() != null ? payrollInfo.getSocialInsCode() : "");
         txtUnemploymentInsCode
                 .setText(payrollInfo.getUnemploymentInsCode() != null ? payrollInfo.getUnemploymentInsCode() : "");
-        cbPersonalTax.setSelected(payrollInfo.isMealSupport());
+        cbMealSupport.setSelected(payrollInfo.isMealSupport());
         cbTransportSupport.setSelected(payrollInfo.isTransportationSupport());
         cbAccommodationSupport.setSelected(payrollInfo.isAccommodationSupport());
 
@@ -660,7 +697,7 @@ public class EmployeeModalController implements IModalController {
             txtHealthInsCode.setEditable(false);
             txtSocialInsCode.setEditable(false);
             txtUnemploymentInsCode.setEditable(false);
-            cbPersonalTax.setDisable(true);
+            cbMealSupport.setDisable(true);
             cbTransportSupport.setDisable(true);
             cbAccommodationSupport.setDisable(true);
             savePayrollBtn.setDisable(true);
@@ -680,12 +717,13 @@ public class EmployeeModalController implements IModalController {
         UiUtils.gI().setReadOnlyItem(dpDateOfBirth);
         UiUtils.gI().setReadOnlyComboBox(cbGender);
         UiUtils.gI().setReadOnlyComboBox(cbDepartment);
+        UiUtils.gI().setReadOnlyComboBox(cbPosition);
         UiUtils.gI().setReadOnlyComboBox(cbRole);
         UiUtils.gI().setReadOnlyComboBox(cbStatus);
         UiUtils.gI().setReadOnlyItem(txtHealthInsCode);
         UiUtils.gI().setReadOnlyItem(txtSocialInsCode);
         UiUtils.gI().setReadOnlyItem(txtUnemploymentInsCode);
-        UiUtils.gI().setReadOnlyItem(cbPersonalTax);
+        UiUtils.gI().setReadOnlyItem(cbMealSupport);
         UiUtils.gI().setReadOnlyItem(cbTransportSupport);
         UiUtils.gI().setReadOnlyItem(cbAccommodationSupport);
         UiUtils.gI().setVisibleItem(detailPassword);
@@ -758,6 +796,11 @@ public class EmployeeModalController implements IModalController {
             return;
         }
 
+        if (cbStatus.getSelectionModel().getSelectedItem() == null) {
+            NotificationUtils.showErrorAlert("Trạng thái không được để trống", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
         // Xử lý Avatar (tùy chọn - không bắt buộc)
         String finalAvatarUrl = null;
         if (typeModal == 1 && avatarUrl != null && !avatarUrl.trim().isEmpty()) {
@@ -784,6 +827,7 @@ public class EmployeeModalController implements IModalController {
         personal.setGender(cbGender.getValue());
         personal.setPhone(txtPhone.getText().trim());
         personal.setEmail(txtEmail.getText().trim());
+        personal.setStatusId(cbStatus.getSelectionModel().getSelectedItem().getId());
         personal.setAvatarUrl(finalAvatarUrl);
 
         // Save to database
@@ -801,11 +845,17 @@ public class EmployeeModalController implements IModalController {
 
     /**
      * Handle save account info (Tab 2)
-     * Cập nhật: account status, reset password
+     * Cập nhật: role, account status
      */
     private void handleSaveAccount() {
         if (currentEmployeeId <= 0) {
             NotificationUtils.showErrorAlert("Thông tin nhân viên không hợp lệ", AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        RoleDTO selectedRole = cbRole.getSelectionModel().getSelectedItem();
+        if (selectedRole == null) {
+            NotificationUtils.showErrorAlert("Vai trò hệ thống không được để trống", AppMessages.DIALOG_TITLE);
             return;
         }
 
@@ -815,9 +865,10 @@ public class EmployeeModalController implements IModalController {
             return;
         }
 
-        // Update account status
+        // Update account role and status
         TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_ACCOUNT_UPDATE_STATUS,
-                () -> employeeBUS.updateAccountStatus(currentEmployeeId, selectedStatus.getId()),
+                () -> employeeBUS.updateAccountRoleAndStatus(currentEmployeeId, selectedRole.getId(),
+                        selectedStatus.getId()),
                 result -> {
                     if (result.isSuccess()) {
                         Stage currentStage = (Stage) saveAccountBtn.getScene().getWindow();
@@ -830,7 +881,7 @@ public class EmployeeModalController implements IModalController {
 
     /**
      * Handle save job info (Tab 3)
-     * Cập nhật: department, role, status
+     * Cập nhật: department
      */
     private void handleSaveJob() {
         // Validation
@@ -840,15 +891,9 @@ public class EmployeeModalController implements IModalController {
             return;
         }
 
-        RoleDTO selectedRole = cbRole.getSelectionModel().getSelectedItem();
-        if (selectedRole == null) {
-            NotificationUtils.showErrorAlert("Chức vụ không được để trống", AppMessages.DIALOG_TITLE);
-            return;
-        }
-
-        StatusDTO selectedStatus = cbStatus.getSelectionModel().getSelectedItem();
-        if (selectedStatus == null) {
-            NotificationUtils.showErrorAlert("Trạng thái không được để trống", AppMessages.DIALOG_TITLE);
+        PositionDTO selectedPosition = cbPosition.getSelectionModel().getSelectedItem();
+        if (selectedPosition == null) {
+            NotificationUtils.showErrorAlert("Vị trí không được để trống", AppMessages.DIALOG_TITLE);
             return;
         }
 
@@ -856,7 +901,7 @@ public class EmployeeModalController implements IModalController {
         EmployeeDTO jobInfo = new EmployeeDTO();
         jobInfo.setId(currentEmployeeId);
         jobInfo.setDepartmentId(selectedDept.getId());
-        jobInfo.setStatusId(selectedStatus.getId());
+        jobInfo.setPositionId(selectedPosition.getId());
 
         // Save to database
         TaskUtil.executeSecure(loadingOverlay, PermissionKey.EMPLOYEE_JOB_UPDATE,
@@ -889,7 +934,7 @@ public class EmployeeModalController implements IModalController {
         payrollInfo.setHealthInsCode(txtHealthInsCode.getText().trim());
         payrollInfo.setSocialInsCode(txtSocialInsCode.getText().trim());
         payrollInfo.setUnemploymentInsCode(txtUnemploymentInsCode.getText().trim());
-        payrollInfo.setMealSupport(cbPersonalTax.isSelected());
+        payrollInfo.setMealSupport(cbMealSupport.isSelected());
         payrollInfo.setTransportationSupport(cbTransportSupport.isSelected());
         payrollInfo.setAccommodationSupport(cbAccommodationSupport.isSelected());
         int numDependents = txtNumDependents.getText().trim().isEmpty() ? 0

@@ -203,10 +203,10 @@ public class ProductController implements IController {
             if (event.getClickCount() == 2)
                 handleDetail();
         });
-        btnImportExcel.setOnMouseClicked(event -> {
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            importProductExcel(stage);
-        });
+//        btnImportExcel.setOnMouseClicked(event -> {
+//            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+//            importProductExcel(stage);
+//        });
     }
 
     // =====================
@@ -377,13 +377,13 @@ public class ProductController implements IController {
         return selectedProduct == null;
     }
 
-    public void importProductExcel(Stage stage) {
-        try {
-            ExcelService.getInstance().ImportSheet("products", stage);
-            applyFilters();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void importProductExcel(Stage stage) {
+//        try {
+//            ExcelService.getInstance().ImportSheet("products", stage);
+//            applyFilters();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 }

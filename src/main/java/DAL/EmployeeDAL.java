@@ -9,6 +9,7 @@ import DTO.EmployeePersonalInfoDTO;
 import DTO.EmployeeAccountInfoDTO;
 import DTO.EmployeeJobInfoDTO;
 import DTO.EmployeePayrollInfoDTO;
+import DTO.EmployeeExcelDTO;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -113,7 +114,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     public boolean updatePersonalInfoByAdmin(EmployeeDTO obj) {
-        String query = "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, avatar_url = ? WHERE id = ?";
+        String query = "UPDATE employee SET first_name = ?, last_name = ?, phone = ?, email = ?, date_of_birth = ?, gender = ?, avatar_url = ?, status_id = ? WHERE id = ?";
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
 
@@ -124,7 +125,8 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             statement.setDate(5, obj.getDateOfBirth() != null ? java.sql.Date.valueOf(obj.getDateOfBirth()) : null);
             statement.setString(6, obj.getGender());
             statement.setString(7, obj.getAvatarUrl());
-            statement.setInt(8, obj.getId());
+            statement.setInt(8, obj.getStatusId());
+            statement.setInt(9, obj.getId());
 
             return statement.executeUpdate() >= 0;
         } catch (SQLException e) {
@@ -157,14 +159,14 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
     }
 
     public boolean updateJobInfo(Connection conn, EmployeeDTO obj) {
-        String query = "UPDATE employee SET department_id = ?, status_id = ? WHERE id = ?";
+        String query = "UPDATE employee SET department_id = ?, position_id = ? WHERE id = ?";
 
         // Không dùng try-with-resources cho Connection ở đây vì BUS quản lý vòng đời
         // của nó
         try (PreparedStatement statement = conn.prepareStatement(query)) {
 
             statement.setObject(1, obj.getDepartmentId());
-            statement.setInt(2, obj.getStatusId());
+            statement.setInt(2, obj.getPositionId());
             statement.setInt(3, obj.getId());
 
             return statement.executeUpdate() > 0;
@@ -519,8 +521,11 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      */
     public EmployeePersonalInfoDTO getPersonalInfo(int employeeId) {
         String sql = "SELECT e.id AS employee_id, e.first_name, e.last_name, e.date_of_birth, e.gender, " +
-                "e.phone, e.email, e.avatar_url, e.created_at, e.updated_at " +
-                "FROM employee e WHERE e.id = ? LIMIT 1";
+                "e.phone, e.email, e.status_id, st.description AS status_name, " +
+                "e.avatar_url, e.created_at, e.updated_at " +
+                "FROM employee e " +
+                "LEFT JOIN status st ON e.status_id = st.id " +
+                "WHERE e.id = ? LIMIT 1";
 
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -539,6 +544,8 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                             .gender(resultSet.getString("gender"))
                             .phone(resultSet.getString("phone"))
                             .email(resultSet.getString("email"))
+                            .statusId(resultSet.getInt("status_id"))
+                            .statusName(resultSet.getString("status_name"))
                             .avatarUrl(resultSet.getString("avatar_url"))
                             .createdAt(resultSet.getTimestamp("created_at") != null
                                     ? resultSet.getTimestamp("created_at").toLocalDateTime()
@@ -563,10 +570,12 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
      * @return EmployeeAccountInfoDTO hoặc null nếu không tìm thấy
      */
     public EmployeeAccountInfoDTO getAccountInfo(int employeeId) {
-        String sql = "SELECT a.id AS account_id, a.username, a.status_id AS account_status_id, " +
-                "st_acc.description AS account_status, a.last_login, e.created_at, e.updated_at " +
+        String sql = "SELECT a.id AS account_id, a.username, a.role_id, r.name AS role_name, " +
+                "a.status_id AS account_status_id, st_acc.description AS account_status, " +
+                "a.last_login, e.created_at, e.updated_at " +
                 "FROM employee e " +
                 "LEFT JOIN account a ON e.account_id = a.id " +
+                "LEFT JOIN role r ON a.role_id = r.id " +
                 "LEFT JOIN status st_acc ON a.status_id = st_acc.id " +
                 "WHERE e.id = ? LIMIT 1";
 
@@ -581,6 +590,8 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                             .accountId(
                                     resultSet.getObject("account_id") != null ? resultSet.getInt("account_id") : null)
                             .username(resultSet.getString("username"))
+                            .roleId(resultSet.getObject("role_id") != null ? resultSet.getInt("role_id") : null)
+                            .roleName(resultSet.getString("role_name"))
                             .accountStatusId(resultSet.getObject("account_status_id") != null
                                     ? resultSet.getInt("account_status_id")
                                     : null)
@@ -756,5 +767,85 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             System.err.println("Error updating employee status: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Get all employees with a specific status ID
+     */
+    public ArrayList<EmployeeDTO> getByStatusId(int statusId) {
+        ArrayList<EmployeeDTO> list = new ArrayList<>();
+        String query = "SELECT * FROM employee WHERE status_id = ? ORDER BY id";
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, statusId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    list.add(mapResultSetToObject(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting employees by status: " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Lấy danh sách nhân viên với thông tin đầy đủ để export Excel
+     * JOINs: Position, Department, Account, Status
+     */
+    public ArrayList<EmployeeExcelDTO> getAllEmployeesForExcel() {
+        ArrayList<EmployeeExcelDTO> list = new ArrayList<>();
+        String query = "SELECT " +
+                "e.id, CONCAT(e.first_name, ' ', e.last_name) as full_name, e.gender, " +
+                "COALESCE(p.name, 'N/A') as position_name, " +
+                "e.health_insurance_code, e.social_insurance_code, e.unemployment_insurance_code, " +
+                "e.is_meal_support, e.is_transportation_support, e.is_accommodation_support, e.num_dependents, " +
+                "COALESCE(d.name, 'N/A') as department_name, " +
+                "COALESCE(a.username, 'N/A') as username, " +
+                "COALESCE(s.description, 'N/A') as status_description, " +
+                "COALESCE(p.wage, 0) as wage " +
+                "FROM employee e " +
+                "LEFT JOIN position p ON e.position_id = p.id " +
+                "LEFT JOIN department d ON e.department_id = d.id " +
+                "LEFT JOIN account a ON e.account_id = a.id " +
+                "LEFT JOIN status s ON e.status_id = s.id " +
+                "ORDER BY e.id";
+
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                EmployeeExcelDTO emp = new EmployeeExcelDTO();
+                emp.setId(rs.getInt("id"));
+                emp.setFullName(rs.getString("full_name"));
+                emp.setGender(rs.getString("gender"));
+                emp.setPositionName(rs.getString("position_name"));
+                emp.setDepartmentName(rs.getString("department_name"));
+                emp.setHealthInsCode(rs.getString("health_insurance_code"));
+                emp.setSocialInsCode(rs.getString("social_insurance_code"));
+                emp.setUnemploymentInsCode(rs.getString("unemployment_insurance_code"));
+                emp.setMealSupport(rs.getBoolean("is_meal_support"));
+                emp.setTransportationSupport(rs.getBoolean("is_transportation_support"));
+                emp.setAccommodationSupport(rs.getBoolean("is_accommodation_support"));
+                emp.setNumDependents(rs.getInt("num_dependents"));
+                emp.setUsername(rs.getString("username"));
+                emp.setStatusDescription(rs.getString("status_description"));
+
+                Object wage = rs.getObject("wage");
+                if (wage != null) {
+                    emp.setWage(rs.getBigDecimal("wage"));
+                } else {
+                    emp.setWage(java.math.BigDecimal.ZERO);
+                }
+
+                list.add(emp);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi DAL getallEmployeesForExcel: " + e.getMessage());
+        }
+        return list;
     }
 }

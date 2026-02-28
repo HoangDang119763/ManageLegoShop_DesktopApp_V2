@@ -1,24 +1,18 @@
-
 package SERVICE;
 
-import BUS.AccountBUS;
 import BUS.CategoryBUS;
 import BUS.EmployeeBUS;
 import BUS.ProductBUS;
-import BUS.RoleBUS;
-import DTO.AccountDTO;
-import DTO.EmployeeDTO;
+import DTO.BUSResult;
+import ENUM.BUSOperationResult;
+import DTO.EmployeeExcelDTO;
 import DTO.ProductDTO;
-import DTO.RoleDTO;
 import DTO.StatisticDTO;
-import UTILS.NotificationUtils;
-import UTILS.UiUtils;
 import UTILS.ValidationUtils;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.*;
+import java.awt.Desktop;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -79,37 +73,67 @@ public class ExcelService {
     }
 
     /**
-     * Export danh sách nhân viên
+     * Export danh sách nhân viên - trả về BUSResult
      */
-    public void exportEmployeeToFileExcel() throws IOException {
+    public BUSResult exportEmployeeToFileExcel() {
+        try {
+            List<EmployeeExcelDTO> employees = EmployeeBUS.getInstance().getAllEmployeesForExcel();
 
-        List<EmployeeDTO> employees = EmployeeBUS.getInstance().getAll();
-        RoleBUS roleBUS = RoleBUS.getInstance();
-        AccountBUS accountBUS = AccountBUS.getInstance();
-        ValidationUtils validate = ValidationUtils.getInstance();
+            if (employees.isEmpty()) {
+                return new BUSResult(BUSOperationResult.FAIL, "Không có nhân viên nào để export");
+            }
 
-        List<String> headers = Arrays.asList(
-                "ID", "First Name", "Last Name", "Date Of Birth", "Role Name", "Salary", "Final Salary", "Status");
+            List<String> headers = Arrays.asList(
+                    "ID", "Họ tên", "Giới tính", "Vị trí", "Phòng ban", "Tên tài khoản", "Lương",
+                    "Trạng thái", "Mã BHYT", "Mã BHXH", "Mã BHTN",
+                    "Hỗ trợ cơm", "Hỗ trợ xe", "Hỗ trợ chỗ ở", "Số người phụ thuộc");
 
-        exportGeneric(
-                "employee.xlsx",
-                headers,
-                employees,
-                (row, emp) -> {
-                    // Get role from account, not from employee
-                    RoleDTO role = null;
-                    if (emp.getAccountId() != null && emp.getAccountId() > 0) {
-                        AccountDTO account = accountBUS.getById(emp.getAccountId());
-                        if (account != null && account.getRoleId() > 0) {
-                            role = roleBUS.getById(account.getRoleId());
-                        }
-                    }
-                    row.createCell(0).setCellValue(emp.getId());
-                    row.createCell(1).setCellValue(emp.getFirstName());
-                    row.createCell(2).setCellValue(emp.getLastName());
-                    row.createCell(3).setCellValue(validate.formatDateTime(emp.getDateOfBirth()));
-                    row.createCell(4).setCellValue(role != null ? role.getName() : "");
-                });
+            String folderName = "excel";
+            File folder = new File(folderName);
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss"));
+            String fileName = folderName + File.separator + "employee_" + timestamp + ".xlsx";
+
+            exportGeneric(
+                    fileName,
+                    headers,
+                    employees,
+                    (row, emp) -> {
+                        row.createCell(0).setCellValue(emp.getId());
+                        row.createCell(1).setCellValue(emp.getFullName());
+                        row.createCell(2).setCellValue(emp.getGender() != null ? emp.getGender() : "");
+                        row.createCell(3).setCellValue(emp.getPositionName());
+                        row.createCell(4).setCellValue(emp.getDepartmentName());
+                        row.createCell(5).setCellValue(emp.getUsername());
+                        row.createCell(6).setCellValue(emp.getWage() != null ? emp.getWage().doubleValue() : 0);
+                        row.createCell(7).setCellValue(emp.getStatusDescription());
+                        row.createCell(8).setCellValue(emp.getHealthInsCode() != null ? emp.getHealthInsCode() : "");
+                        row.createCell(9).setCellValue(emp.getSocialInsCode() != null ? emp.getSocialInsCode() : "");
+                        row.createCell(10)
+                                .setCellValue(emp.getUnemploymentInsCode() != null ? emp.getUnemploymentInsCode() : "");
+                        row.createCell(11).setCellValue(emp.isMealSupport() ? "Có" : "Không");
+                        row.createCell(12).setCellValue(emp.isTransportationSupport() ? "Có" : "Không");
+                        row.createCell(13).setCellValue(emp.isAccommodationSupport() ? "Có" : "Không");
+                        row.createCell(14).setCellValue(emp.getNumDependents());
+                    });
+
+            // Mở file
+            File excelFile = new File(fileName);
+            if (excelFile.exists() && Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(excelFile);
+            }
+
+            return new BUSResult(BUSOperationResult.SUCCESS, "Xuất file Excel thành công!");
+        } catch (IOException e) {
+            System.err.println("Lỗi export Excel: " + e.getMessage());
+            return new BUSResult(BUSOperationResult.FAIL, "Lỗi khi xuất file Excel: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Lỗi export Excel: " + e.getMessage());
+            return new BUSResult(BUSOperationResult.DB_ERROR, "Lỗi không xác định: " + e.getMessage());
+        }
     }
 
     public void exportProductToFileExcel() throws IOException {
@@ -140,157 +164,179 @@ public class ExcelService {
 
     // ========== IMPORT METHODS ==========
 
-    public void ImportSheet(String importData, Stage stage) throws IOException {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Chọn file Excel để nhập dữ liệu");
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
+    // public void ImportSheet(String importData, Stage stage) throws IOException {
+    // FileChooser fileChooser = new FileChooser();
+    // fileChooser.setTitle("Chọn file Excel để nhập dữ liệu");
+    // fileChooser.getExtensionFilters().add(
+    // new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
 
-        File file = fileChooser.showOpenDialog(stage);
+    // File file = fileChooser.showOpenDialog(stage);
 
-        if (file == null) {
-            return; // Người dùng không chọn file
-        }
+    // if (file == null) {
+    // return; // Người dùng không chọn file
+    // }
 
-        // Kiểm tra đúng định dạng
-        if (!file.getName().toLowerCase().endsWith(".xlsx")) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn file Excel (.xlsx)", "Thông báo");
-            return;
-        }
+    // // Kiểm tra đúng định dạng
+    // if (!file.getName().toLowerCase().endsWith(".xlsx")) {
+    // NotificationUtils.showErrorAlert("Vui lòng chọn file Excel (.xlsx)", "Thông
+    // báo");
+    // return;
+    // }
 
-        try (FileInputStream fis = new FileInputStream(file);
-                Workbook workbook = new XSSFWorkbook(fis)) {
+    // try (FileInputStream fis = new FileInputStream(file);
+    // Workbook workbook = new XSSFWorkbook(fis)) {
 
-            Sheet sheet = workbook.getSheetAt(0);
+    // Sheet sheet = workbook.getSheetAt(0);
 
-            if (importData.equalsIgnoreCase("products")) {
-                importToProducts(sheet);
-            }
+    // if (importData.equalsIgnoreCase("products")) {
+    // importToProducts(sheet);
+    // }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            NotificationUtils.showErrorAlert("Không thể mở file Excel: " + e.getMessage(), "Lỗi");
-        }
-    }
+    // } catch (Exception e) {
+    // e.printStackTrace();
+    // NotificationUtils.showErrorAlert("Không thể mở file Excel: " +
+    // e.getMessage(), "Lỗi");
+    // }
+    // }
 
-    private void importToProducts(Sheet sheet) {
-        ArrayList<ProductDTO> list = returnListProduct(sheet, new ArrayList<>());
+    // private void importToProducts(Sheet sheet) {
+    // ArrayList<ProductDTO> list = returnListProduct(sheet, new ArrayList<>());
 
-        if (list.isEmpty()) {
-            return;
-        }
+    // if (list.isEmpty()) {
+    // return;
+    // }
 
-        if (UiUtils.gI().showConfirmAlert("Bạn chắc chắn muốn thêm sản phẩm bằng Excel?", "Thông báo")) {
-            int deleteResult = ProductBUS.getInstance().insertListProductExcel(list);
-            switch (deleteResult) {
-                case 1 -> NotificationUtils.showInfoAlert("Thêm sản phẩm thành công.", "Thông báo");
-                case 2 -> NotificationUtils.showErrorAlert("Danh sách rỗng.", "Thông báo");
-                case 3 -> NotificationUtils.showErrorAlert("Dữ liệu đầu vào không hợp lệ.", "Thông báo");
-                case 4 -> NotificationUtils.showErrorAlert("Thể loại không hợp lệ hoặc đã bị xóa.", "Thông báo");
-                case 5 -> NotificationUtils.showErrorAlert("Tên sản phẩm trong hệ thống đã tồn tại.", "Thông báo");
-                case 6 ->
-                    NotificationUtils.showErrorAlert("Có lỗi khi thêm danh sách sản phẩm qua Excel.", "Thông báo");
-                case 7 -> NotificationUtils.showErrorAlert("Lỗi cơ sở dữ liệu khi insert.", "Thông báo");
-                default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử lại sau.", "Thông báo");
-            }
-        }
-    }
+    // if (UiUtils.gI().showConfirmAlert("Bạn chắc chắn muốn thêm sản phẩm bằng
+    // Excel?", "Thông báo")) {
+    // int deleteResult = ProductBUS.getInstance().insertListProductExcel(list);
+    // switch (deleteResult) {
+    // case 1 -> NotificationUtils.showInfoAlert("Thêm sản phẩm thành công.", "Thông
+    // báo");
+    // case 2 -> NotificationUtils.showErrorAlert("Danh sách rỗng.", "Thông báo");
+    // case 3 -> NotificationUtils.showErrorAlert("Dữ liệu đầu vào không hợp lệ.",
+    // "Thông báo");
+    // case 4 -> NotificationUtils.showErrorAlert("Thể loại không hợp lệ hoặc đã bị
+    // xóa.", "Thông báo");
+    // case 5 -> NotificationUtils.showErrorAlert("Tên sản phẩm trong hệ thống đã
+    // tồn tại.", "Thông báo");
+    // case 6 ->
+    // NotificationUtils.showErrorAlert("Có lỗi khi thêm danh sách sản phẩm qua
+    // Excel.", "Thông báo");
+    // case 7 -> NotificationUtils.showErrorAlert("Lỗi cơ sở dữ liệu khi insert.",
+    // "Thông báo");
+    // default -> NotificationUtils.showErrorAlert("Lỗi không xác định, vui lòng thử
+    // lại sau.", "Thông báo");
+    // }
+    // }
+    // }
 
-    // VALIDATE ON PRODUCT BUS
-    private ArrayList<ProductDTO> returnListProduct(Sheet sheet, ArrayList<ProductDTO> list) {
-        if (list == null)
-            return new ArrayList<>();
-        list.clear(); // Clear luôn nếu không null
+    // // VALIDATE ON PRODUCT BUS
+    // private ArrayList<ProductDTO> returnListProduct(Sheet sheet,
+    // ArrayList<ProductDTO> list) {
+    // if (list == null)
+    // return new ArrayList<>();
+    // list.clear(); // Clear luôn nếu không null
 
-        ArrayList<ProductDTO> tempList = new ArrayList<>();
-        StringBuilder errorMessages = new StringBuilder();
-        int errorCount = 0;
+    // ArrayList<ProductDTO> tempList = new ArrayList<>();
+    // StringBuilder errorMessages = new StringBuilder();
+    // int errorCount = 0;
 
-        for (Row row : sheet) {
-            if (row.getRowNum() == 0)
-                continue; // Bỏ qua tiêu đề
-            if (isRowEmpty(row))
-                continue; // Bỏ qua dòng trống
+    // for (Row row : sheet) {
+    // if (row.getRowNum() == 0)
+    // continue; // Bỏ qua tiêu đề
+    // if (isRowEmpty(row))
+    // continue; // Bỏ qua dòng trống
 
-            try {
-                Cell nameCell = row.getCell(1);
-                Cell descCell = row.getCell(2);
-                Cell categoryCell = row.getCell(3);
-                Cell statusCell = row.getCell(4);
+    // try {
+    // Cell nameCell = row.getCell(1);
+    // Cell descCell = row.getCell(2);
+    // Cell categoryCell = row.getCell(3);
+    // Cell statusCell = row.getCell(4);
 
-                String name = (nameCell != null) ? nameCell.getStringCellValue().trim() : "";
-                String description = (descCell != null) ? descCell.getStringCellValue().trim() : "";
+    // String name = (nameCell != null) ? nameCell.getStringCellValue().trim() : "";
+    // String description = (descCell != null) ?
+    // descCell.getStringCellValue().trim() : "";
 
-                if (name.isEmpty()) {
-                    if (handleError(errorMessages, row.getRowNum(), "Tên sản phẩm không được để trống.", ++errorCount))
-                        break;
-                    continue;
-                }
-                if (name.length() > 148) {
-                    if (handleError(errorMessages, row.getRowNum(), "Tên sản phẩm không được quá 148 ký tự.",
-                            ++errorCount))
-                        break;
-                    continue;
-                }
-                if (description.length() > 65400) {
-                    if (handleError(errorMessages, row.getRowNum(), "Mô tả không được quá 65k4 ký tự.", ++errorCount))
-                        break;
-                    continue;
-                }
+    // if (name.isEmpty()) {
+    // if (handleError(errorMessages, row.getRowNum(), "Tên sản phẩm không được để
+    // trống.", ++errorCount))
+    // break;
+    // continue;
+    // }
+    // if (name.length() > 148) {
+    // if (handleError(errorMessages, row.getRowNum(), "Tên sản phẩm không được quá
+    // 148 ký tự.",
+    // ++errorCount))
+    // break;
+    // continue;
+    // }
+    // if (description.length() > 65400) {
+    // if (handleError(errorMessages, row.getRowNum(), "Mô tả không được quá 65k4 ký
+    // tự.", ++errorCount))
+    // break;
+    // continue;
+    // }
 
-                int categoryId;
-                try {
-                    categoryId = (int) categoryCell.getNumericCellValue();
-                } catch (Exception e) {
-                    if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ (phải là số).",
-                            ++errorCount))
-                        break;
-                    continue;
-                }
-                // if (categoryId < 0 || !CategoryBUS.getInstance().isValidCategory(categoryId))
-                // {
-                // if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ hoặc
-                // đã bị xóa.",
-                // ++errorCount))
-                // break;
-                // continue;
-                // }
+    // int categoryId;
+    // try {
+    // categoryId = (int) categoryCell.getNumericCellValue();
+    // } catch (Exception e) {
+    // if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ (phải
+    // là số).",
+    // ++errorCount))
+    // break;
+    // continue;
+    // }
+    // // if (categoryId < 0 ||
+    // !CategoryBUS.getInstance().isValidCategory(categoryId))
+    // // {
+    // // if (handleError(errorMessages, row.getRowNum(), "Thể loại không hợp lệ
+    // hoặc
+    // // đã bị xóa.",
+    // // ++errorCount))
+    // // break;
+    // // continue;
+    // // }
 
-                int statusInt;
-                try {
-                    statusInt = (int) statusCell.getNumericCellValue();
-                } catch (Exception e) {
-                    if (handleError(errorMessages, row.getRowNum(), "Trạng thái không hợp lệ (phải là 0 hoặc 1).",
-                            ++errorCount))
-                        break;
-                    continue;
-                }
-                if (statusInt != 0 && statusInt != 1) {
-                    if (handleError(errorMessages, row.getRowNum(), "Trạng thái chỉ được là 0 hoặc 1.", ++errorCount))
-                        break;
-                    continue;
-                }
+    // int statusInt;
+    // try {
+    // statusInt = (int) statusCell.getNumericCellValue();
+    // } catch (Exception e) {
+    // if (handleError(errorMessages, row.getRowNum(), "Trạng thái không hợp lệ
+    // (phải là 0 hoặc 1).",
+    // ++errorCount))
+    // break;
+    // continue;
+    // }
+    // if (statusInt != 0 && statusInt != 1) {
+    // if (handleError(errorMessages, row.getRowNum(), "Trạng thái chỉ được là 0
+    // hoặc 1.", ++errorCount))
+    // break;
+    // continue;
+    // }
 
-                // tempList.add(new ProductDTO(null, name, 0, null, statusInt == 1, description,
-                // null, categoryId));
+    // // tempList.add(new ProductDTO(null, name, 0, null, statusInt == 1,
+    // description,
+    // // null, categoryId));
 
-            } catch (Exception e) {
-                if (handleError(errorMessages, row.getRowNum(), "Lỗi không xác định: " + e.getMessage(), ++errorCount))
-                    break;
-            }
-        }
+    // } catch (Exception e) {
+    // if (handleError(errorMessages, row.getRowNum(), "Lỗi không xác định: " +
+    // e.getMessage(), ++errorCount))
+    // break;
+    // }
+    // }
 
-        if (errorMessages.length() > 0) {
-            if (errorCount > 20) {
-                errorMessages.append("Và một số lỗi khác không thể hiển thị.\n");
-            }
-            NotificationUtils.showErrorAlert(errorMessages.toString(), "Thông báo");
-            return new ArrayList<>();
-        }
+    // if (errorMessages.length() > 0) {
+    // if (errorCount > 20) {
+    // errorMessages.append("Và một số lỗi khác không thể hiển thị.\n");
+    // }
+    // NotificationUtils.showErrorAlert(errorMessages.toString(), "Thông báo");
+    // return new ArrayList<>();
+    // }
 
-        list.addAll(tempList);
-        return list;
-    }
+    // list.addAll(tempList);
+    // return list;
+    // }
 
     private boolean isRowEmpty(Row row) {
         for (Cell cell : row) {
