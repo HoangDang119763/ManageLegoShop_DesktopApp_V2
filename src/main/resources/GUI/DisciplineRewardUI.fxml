@@ -40,7 +40,7 @@
                                 <TableColumn fx:id="colId" minWidth="50.0" prefWidth="50.0" text="ID" />
                                 <TableColumn fx:id="colEmployeeName" minWidth="120.0" prefWidth="120.0" text="Nhân viên" />
                                 <TableColumn fx:id="colType" minWidth="100.0" prefWidth="100.0" text="Loại" />
-                                <TableColumn fx:id="colReason" minWidth="150.0" prefWidth="150.0" text="Lý do" />
+                                <TableColumn fx:id="colReason" minWidth="150.0" prefWidth="250.0" text="Lý do" />
                                 <TableColumn fx:id="colLevel" minWidth="100.0" prefWidth="100.0" text="Mức độ" />
                                 <TableColumn fx:id="colAmount" minWidth="100.0" prefWidth="100.0" text="Số tiền" />
                                 <TableColumn fx:id="colDate" minWidth="150.0" prefWidth="150.0" text="Ngày tạo" />

@@ -176,16 +176,6 @@ if (user.hasPermission(EMPLOYEE_ATTENDANCE_MANAGE)) {
 }
 */
 
--- ============================================================
--- 7. THÊM QUYỀN QUẢN LÝ LƯƠNG CHO ADMIN & MANAGER
--- ============================================================
-
--- Kiểm tra nếu permission EMPLOYEE_PAYROLL_VIEW không tồn tại thì thêm
-INSERT IGNORE INTO `permission` (`permission_key`, `description`, `module_id`)
-VALUES 
-    ('EMPLOYEE_PAYROLL_VIEW', 'Xem bảng lương', 1),
-    ('EMPLOYEE_PAYROLL_MANAGE', 'Quản lý lương (tính lương, export)', 1);
-
 -- Cấp quyền PAYROLL cho Manager (full)
 INSERT INTO `role_permission` (role_id, permission_id) 
 SELECT 2, id FROM `permission` 

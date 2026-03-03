@@ -385,11 +385,6 @@ public class EmployeeInfoController {
         if (payrollTabController != null) {
             payrollTabController.loadEmployeePayroll(empId);
         }
-        
-        // Load attendance data into AttendanceTab
-        if (attendanceTabController != null) {
-            attendanceTabController.loadEmployeeAttendance(empId);
-        }
 
         setupHistoryPagination();
     }

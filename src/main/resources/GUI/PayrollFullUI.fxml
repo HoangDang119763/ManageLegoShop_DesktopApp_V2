@@ -41,7 +41,7 @@
                 </HBox>
 
                 <ScrollPane fitToHeight="true" fitToWidth="false" prefHeight="400.0" VBox.vgrow="ALWAYS">
-                    <TableView fx:id="tblPayroll" prefHeight="400.0">
+                    <TableView fx:id="tblPayroll" prefHeight="400.0" prefWidth="1000.0" tableMenuButtonVisible="true">
                         <columns>
                             <TableColumn fx:id="colEmployeeId" minWidth="80.0" prefWidth="80.0" text="ID NV" />
                             <TableColumn fx:id="colEmployeeName" minWidth="150.0" prefWidth="150.0" text="Tên nhân viên" />

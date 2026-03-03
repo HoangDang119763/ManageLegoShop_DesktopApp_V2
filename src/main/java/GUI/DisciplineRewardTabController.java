@@ -82,7 +82,7 @@ public class DisciplineRewardTabController {
         colLevel.setCellValueFactory(new PropertyValueFactory<>("fineLevel"));
         colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
-        colType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        colType.setCellValueFactory(new PropertyValueFactory<>("actionType"));
 
         // Custom cell factory for employee name (join with employee table)
         colEmployeeName.setCellValueFactory(cellData -> {

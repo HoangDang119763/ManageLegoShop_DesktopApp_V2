@@ -98,7 +98,7 @@ public class HrMainController {
                 new ModuleMetadata(13, "Khen thưởng & Kỷ luật", "discipline.png"), // ID 13
                 new ModuleMetadata(14, "Đơn nghỉ phép", "leave_request.png"), // ID 14
                 new ModuleMetadata(15, "Chấm công", "attendance.png"), // ID 15
-                new ModuleMetadata(16, "Bảng lương", "money.png")); // ID 16
+                new ModuleMetadata(16, "Bảng lương", "attendance.png")); // ID 16
 
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : hrModules) {
