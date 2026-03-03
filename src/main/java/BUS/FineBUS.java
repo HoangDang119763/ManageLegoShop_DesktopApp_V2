@@ -2,6 +2,7 @@ package BUS;
 
 import DTO.FineDTO;
 import DAL.FineDAL;
+import ENUM.BUSOperationResult;
 import UTILS.ValidationUtils;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -9,12 +10,9 @@ import java.util.ArrayList;
 public class FineBUS extends BaseBUS<FineDTO, Integer> {
     public static final FineBUS INSTANCE = new FineBUS();
 
-    private FineBUS() {
-    }
+    private FineBUS() {}
 
-    public static FineBUS getInstance() {
-        return INSTANCE;
-    }
+    public static FineBUS getInstance() { return INSTANCE; }
 
     @Override
     public ArrayList<FineDTO> getAll() {
@@ -22,85 +20,46 @@ public class FineBUS extends BaseBUS<FineDTO, Integer> {
     }
 
     @Override
-    protected Integer getKey(FineDTO obj) {
-        return obj.getId();
-    }
+    protected Integer getKey(FineDTO obj) { return obj.getId(); }
 
     public FineDTO getById(Integer id) {
         return FineDAL.getInstance().getById(id);
     }
 
-    public ArrayList<FineDTO> getByFineLevel(String fineLevel) {
-        ArrayList<FineDTO> allFines = getAll();
-        ArrayList<FineDTO> result = new ArrayList<>();
-        for (FineDTO fine : allFines) {
-            if (fine.getFineLevel() != null && fine.getFineLevel().equals(fineLevel)) {
-                result.add(fine);
-            }
-        }
-        return result;
-    }
-
     public ArrayList<FineDTO> getByEmployeeId(int employeeId) {
-        ArrayList<FineDTO> allFines = getAll();
-        ArrayList<FineDTO> result = new ArrayList<>();
-        for (FineDTO fine : allFines) {
-            if (fine.getEmployeeId() == employeeId) {
-                result.add(fine);
-            }
-        }
-        return result;
+        if (employeeId <= 0) return new ArrayList<>();
+        // Tối ưu: Gọi trực tiếp từ DAL nếu DAL có hàm getByEmployeeId, 
+        // nếu chưa có thì lọc thủ công từ getAll() như bạn đã làm.
+        return (ArrayList<FineDTO>) getAll().stream()
+                .filter(f -> f.getEmployeeId() == employeeId)
+                .collect(java.util.stream.Collectors.toList());
     }
 
-    public boolean insert(FineDTO obj, int employeeRoleId, int employeeLoginId) {
-        if (!isValidFineInput(obj)) {
-            return false;
-        }
-        return false;
+    // VỊ TRÍ SỬA: Thực thi gọi DAL thay vì return false
+    public boolean insert(FineDTO obj, int roleId, int loginId) {
+        if (!isValidFineInput(obj)) return false;
+        return FineDAL.getInstance().insert(obj);
     }
 
-    public boolean update(FineDTO obj, int employeeRoleId, int employeeLoginId) {
-        if (!isValidFineInput(obj)) {
-            return false;
-        }
-
-        return false;
+    public boolean update(FineDTO obj, int roleId, int loginId) {
+        if (!isValidFineInput(obj) || obj.getId() <= 0) return false;
+        return FineDAL.getInstance().update(obj);
     }
 
-    public boolean delete(Integer id, int employeeRoleId, int employeeLoginId) {
-        if (id == null || id <= 0) {
-            return false;
-        }
-
-        return false;
+    public boolean delete(Integer id, int roleId, int loginId) {
+        if (id == null || id <= 0) return false;
+        return FineDAL.getInstance().delete(id);
     }
 
     private boolean isValidFineInput(FineDTO obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj.getReason() == null || obj.getReason().trim().isEmpty()) {
-            return false;
-        }
+        if (obj == null || obj.getEmployeeId() <= 0) return false;
+        if (obj.getReason() == null || obj.getReason().trim().isEmpty()) return false;
+        
+        // Đảm bảo type luôn hợp lệ
+        if (obj.getType() == null) obj.setType("DISCIPLINE");
+        
         ValidationUtils validator = ValidationUtils.getInstance();
-        if (!validator.validateVietnameseText255(obj.getReason())) {
-            return false;
-        }
-        if (obj.getFineLevel() == null || obj.getFineLevel().trim().isEmpty()) {
-            return false;
-        }
-        if (obj.getAmount() == null || !validator.validateBigDecimal(obj.getAmount(), 15, 2, false)) {
-            return false;
-        }
-        if (obj.getFinePay() == null) {
-            obj.setFinePay(BigDecimal.ZERO);
-        } else if (!validator.validateBigDecimal(obj.getFinePay(), 15, 2, true)) {
-            return false;
-        }
-        if (obj.getEmployeeId() <= 0) {
-            return false;
-        }
-        return true;
+        return validator.validateVietnameseText255(obj.getReason()) 
+            && validator.validateBigDecimal(obj.getAmount(), 15, 2, false);
     }
-
 }

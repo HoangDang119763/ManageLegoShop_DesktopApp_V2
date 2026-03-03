@@ -79,46 +79,34 @@ public class DisciplineModalController {
             return;
         }
 
-        // Parse fine amount
+        // Parse amount
         BigDecimal fineAmount = BigDecimal.ZERO;
-        if (txtFineAmount.getText() != null && !txtFineAmount.getText().isEmpty()) {
-            try {
-                fineAmount = new BigDecimal(txtFineAmount.getText());
-            } catch (NumberFormatException e) {
-                NotificationUtils.showErrorAlert("Lỗi", "Số tiền phạt không hợp lệ");
-                return;
-            }
+        try {
+            fineAmount = new BigDecimal(txtFineAmount.getText().replace(",", ""));
+        } catch (Exception e) {
+            NotificationUtils.showErrorAlert("Lỗi", "Số tiền không hợp lệ");
+            return;
         }
 
-        // Create DTO using FineDTO (used for both discipline and reward)
         FineDTO fine = new FineDTO();
         fine.setEmployeeId(employeeId);
         fine.setFineLevel(cbDisciplineType.getValue());
         fine.setReason(taReason.getText());
         fine.setAmount(fineAmount);
-        fine.setFinePay(fineAmount);
+        fine.setFinePay(BigDecimal.ZERO); // Mặc định chưa thanh toán
+        fine.setCreatedAt(java.time.LocalDateTime.now());
+        fine.setType("DISCIPLINE"); // QUAN TRỌNG: Gán type để đồng bộ với Database
 
-        // Save to database
         new Thread(() -> {
-            try {
-                if (fineBUS.insert(fine, 1, 1)) {
-                    Platform.runLater(() -> {
-                        NotificationUtils.showInfoAlert("Thành công", "Thêm bản kỷ luật thành công");
-                        if (parentController != null) {
-                            parentController.loadEmployeeDisciplines(employeeId);
-                        }
-                        closeModal();
-                    });
-                } else {
-                    Platform.runLater(() -> {
-                        NotificationUtils.showErrorAlert("Thất bại", "Không thể thêm bản kỷ luật");
-                    });
-                }
-            } catch (Exception e) {
-                log.error("Error saving discipline", e);
+            // Sử dụng tham số Role và ID người dùng hiện tại (giả định Admin = 1)
+            if (fineBUS.insert(fine, 1, 1)) {
                 Platform.runLater(() -> {
-                    NotificationUtils.showErrorAlert("Lỗi", "Chi tiết: " + e.getMessage());
+                    NotificationUtils.showInfoAlert("Thành công", "Thêm bản kỷ luật thành công");
+                    if (parentController != null) parentController.loadEmployeeDisciplines(employeeId);
+                    closeModal();
                 });
+            } else {
+                Platform.runLater(() -> NotificationUtils.showErrorAlert("Thất bại", "Lỗi dữ liệu hoặc phân quyền"));
             }
         }).start();
     }

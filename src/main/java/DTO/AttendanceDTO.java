@@ -4,29 +4,20 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 
-public class TimeSheetDTO {
+public class AttendanceDTO {
     private int id;
     private int employeeId;
-    private String employeeName; // Join từ bảng employee
-    private String departmentName; // Join từ bảng department
+    private String employeeName;
+    private String departmentName;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private BigDecimal workHours;
     private BigDecimal otHours;
+    private String status; // PRESENT, LATE, ABSENT...
 
-    public TimeSheetDTO() {}
+    public AttendanceDTO() {}
 
-    public TimeSheetDTO(int id, int employeeId, String employeeName, LocalDateTime checkIn, LocalDateTime checkOut, BigDecimal workHours, BigDecimal otHours) {
-            this.id = id;
-            this.employeeId = employeeId;
-            this.employeeName = employeeName;
-            this.checkIn = checkIn;
-            this.checkOut = checkOut;
-            this.workHours = workHours;
-            this.otHours = otHours;
-        }
-
-    // Getters và Setters cho tất cả các trường
+    // Getters and Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getEmployeeId() { return employeeId; }
@@ -43,4 +34,11 @@ public class TimeSheetDTO {
     public void setWorkHours(BigDecimal workHours) { this.workHours = workHours; }
     public BigDecimal getOtHours() { return otHours; }
     public void setOtHours(BigDecimal otHours) { this.otHours = otHours; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    
+    // Helper để lấy ngày từ checkIn phục vụ hiển thị cột colDate
+    public LocalDate getDate() {
+        return checkIn != null ? checkIn.toLocalDate() : null;
+    }
 }

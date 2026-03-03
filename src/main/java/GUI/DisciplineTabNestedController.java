@@ -193,36 +193,26 @@ public class DisciplineTabNestedController {
      * Delete discipline record
      */
     private void deleteDiscipline(FineDTO fine) {
-        if (fine == null)
-            return;
+        if (fine == null || !NotificationUtils.showConfirmAlert("Bạn có chắc muốn xóa bản ghi này?")) return;
 
-        Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmDialog.setTitle("Xác nhận xóa");
-        confirmDialog.setHeaderText("Xóa bản ghi kỷ luật/khen thưởng");
-        confirmDialog.setContentText("Bạn có chắc muốn xóa bản ghi này?");
-
-        if (confirmDialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            new Thread(() -> {
-                try {
-                    if (fineBUS.delete(fine.getId(), sessionManager.employeeRoleId(),
-                            sessionManager.employeeLoginId())) {
-                        Platform.runLater(() -> {
-                            NotificationUtils.showInfoAlert("Thành công", "Xóa thành công");
-                            loadEmployeeDiscipline(currentEmployeeId);
-                        });
+        new Thread(() -> {
+            try {
+                // SỬA: Truyền đủ 3 tham số như định nghĩa trong BUS
+                boolean success = fineBUS.delete(fine.getId(), 
+                                                sessionManager.employeeRoleId(), 
+                                                sessionManager.employeeLoginId());
+                Platform.runLater(() -> {
+                    if (success) {
+                        NotificationUtils.showInfoAlert("Thành công", "Đã xóa bản ghi");
+                        loadEmployeeDisciplines(currentEmployeeId);
                     } else {
-                        Platform.runLater(() -> {
-                            NotificationUtils.showErrorAlert("Thất bại", "Không thể xóa bản ghi");
-                        });
+                        NotificationUtils.showErrorAlert("Thất bại", "Không thể xóa (có thể do phân quyền)");
                     }
-                } catch (Exception e) {
-                    log.error("Error deleting discipline record", e);
-                    Platform.runLater(() -> {
-                        NotificationUtils.showErrorAlert("Lỗi", "Chi tiết: " + e.getMessage());
-                    });
-                }
-            }).start();
-        }
+                });
+            } catch (Exception e) {
+                log.error("Error delete", e);
+            }
+        }).start();
     }
 
     private void deleteSelectedDiscipline() {
