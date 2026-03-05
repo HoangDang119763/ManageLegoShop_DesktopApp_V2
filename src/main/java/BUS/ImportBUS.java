@@ -422,8 +422,8 @@ public class ImportBUS extends BaseBUS<ImportDTO, Integer> {
      * @param validProducts danh sách sản phẩm hợp lệ (từ filter hiện tại)
      * @return BUSResult - SUCCESS nếu hợp lệ, FAIL nếu có lỗi với message chi tiết
      */
-    public BUSResult validateImportData(List<TempDetailImportDTO> importedData,
-            List<ProductDisplayForImportDTO> validProducts) {
+    public BUSResult validateImportData(List<TempDetailImportDTO> importedData) {
+        List<ProductDisplayForImportDTO> validProducts = ProductBUS.getInstance().getAllActive();
         if (importedData == null || importedData.isEmpty()) {
             return new BUSResult(BUSOperationResult.FAIL, "Danh sách dữ liệu nhập trống!");
         }

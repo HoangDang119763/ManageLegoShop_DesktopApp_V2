@@ -87,28 +87,14 @@ UNLOCK TABLES;
 -- Dumping data for table `detail_discount`
 --
 
-LOCK TABLES `detail_discount` WRITE;
-/*!40000 ALTER TABLE `detail_discount` DISABLE KEYS */;
-INSERT INTO `detail_discount` VALUES ('30T4',100000.00,5.00),('30T4',200000.00,7.00),('30T4',300000.00,9.00),('CODE01',50000.00,5.00),('CODE01',100000.00,7.00),('CODE02',30000.00,2000.00),('CODE02',60000.00,5000.00);
-/*!40000 ALTER TABLE `detail_discount` ENABLE KEYS */;
-UNLOCK TABLES;
-
 --
 -- Dumping data for table `detail_import`
 --
 
 LOCK TABLES `detail_import` WRITE;
 /*!40000 ALTER TABLE `detail_import` DISABLE KEYS */;
+INSERT INTO `detail_import` VALUES (1,'SP00001',30,50.00,15000.00,450000.00,1),(1,'SP00002',30,50.00,15000.00,450000.00,1),(1,'SP00003',30,50.00,15000.00,450000.00,1),(1,'SP00004',30,50.00,12000.00,360000.00,1),(1,'SP00005',30,45.00,12000.00,360000.00,1),(1,'SP00006',30,45.00,12000.00,360000.00,1),(1,'SP00007',30,45.00,15000.00,450000.00,1),(2,'SP00008',30,50.00,15000.00,450000.00,1),(2,'SP00009',2,50.00,1000000.00,2000000.00,1),(2,'SP00010',2,50.00,850000.00,1700000.00,1),(2,'SP00011',2,50.00,850000.00,1700000.00,1),(2,'SP00012',2,50.00,850000.00,1700000.00,1),(2,'SP00013',2,50.00,890000.00,1780000.00,1),(2,'SP00014',2,50.00,750000.00,1500000.00,1),(3,'SP00001',40,55.00,15000.00,600000.00,1),(3,'SP00002',40,55.00,15000.00,600000.00,1),(3,'SP00003',40,55.00,15000.00,600000.00,1),(3,'SP00004',40,55.00,12000.00,480000.00,1),(3,'SP00005',40,55.00,12000.00,480000.00,1),(3,'SP00006',40,55.00,12000.00,480000.00,1),(3,'SP00007',40,55.00,15000.00,600000.00,1),(3,'SP00008',50,60.00,15000.00,750000.00,1),(3,'SP00009',3,60.00,1000000.00,3000000.00,1),(3,'SP00010',3,60.00,850000.00,2550000.00,1),(3,'SP00011',3,60.00,850000.00,2550000.00,1),(3,'SP00012',3,60.00,850000.00,2550000.00,1),(3,'SP00013',3,60.00,890000.00,2670000.00,1),(3,'SP00014',3,60.00,750000.00,2250000.00,1);
 /*!40000 ALTER TABLE `detail_import` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `detail_invoice`
---
-
-LOCK TABLES `detail_invoice` WRITE;
-/*!40000 ALTER TABLE `detail_invoice` DISABLE KEYS */;
-/*!40000 ALTER TABLE `detail_invoice` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -117,7 +103,6 @@ UNLOCK TABLES;
 
 LOCK TABLES `discount` WRITE;
 /*!40000 ALTER TABLE `discount` DISABLE KEYS */;
-INSERT INTO `discount` VALUES ('30T4','30 Tháng 4',0,'2025-04-30','2025-06-11'),('CODE01','Khuyến mãi mùa hạ',0,'2024-02-05','2025-03-31'),('CODE02','Khuyến mãi mùa hè',1,'2024-03-22','2025-03-31');
 /*!40000 ALTER TABLE `discount` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -192,16 +177,10 @@ UNLOCK TABLES;
 
 LOCK TABLES `import` WRITE;
 /*!40000 ALTER TABLE `import` DISABLE KEYS */;
+INSERT INTO `import` VALUES (1,'2025-12-01 08:30:00',1,1,2880000.00,17),
+(2,'2025-12-15 09:45:00',1,2,10830000.00,17),
+(3,'2026-01-01 00:34:38',1,3,20160000.00,17);
 /*!40000 ALTER TABLE `import` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `invoice`
---
-
-LOCK TABLES `invoice` WRITE;
-/*!40000 ALTER TABLE `invoice` DISABLE KEYS */;
-/*!40000 ALTER TABLE `invoice` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -369,7 +348,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `product` WRITE;
 /*!40000 ALTER TABLE `product` DISABLE KEYS */;
-INSERT INTO `product` VALUES ('SP00001','Naruto - 01',0,0.00,0.00,6,'Minifigure nhân vật Naruto.','images/product/sp00001.png',2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00002','Naruto - 02',0,0.00,0.00,6,'Minifigure Naruto trong trạng thái chiến đấu.','images/product/sp00002.png',2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00003','Sasuke Uchiha',0,0.00,0.00,6,'Minifigure nhân vật Sasuke Uchiha từ series Naruto.',NULL,2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00004','Kakashi Hatake',0,0.00,0.00,6,'Minifigure nhân vật Kakashi với Sharingan.',NULL,2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00005','Sakura Haruno',0,0.00,0.00,6,'Minifigure nhân vật Sakura từ series Naruto.',NULL,2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00007','Darth Vader',0,0.00,0.00,6,'Minifigure Darth Vader với lightsaber đỏ và mặt nạ.',NULL,2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00008','Iron Man Mark 85',0,0.00,0.00,6,'Minifigure Iron Man trong bộ giáp Mark 85 từ Avengers: Endgame.',NULL,2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00010','Harry Potter',0,0.00,0.00,6,'Minifigure Harry Potter với đũa phép và kính tròn.',NULL,2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00011','LEGO Technic Bugatti Chiron',0,0.00,0.00,6,'Mô hình kỹ thuật cao của siêu xe Bugatti Chiron.',NULL,3,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00014','LEGO Technic Race Car',0,0.00,0.00,6,'Xe đua công thức 1 với động cơ pistons hoạt động.',NULL,3,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00019','LEGO Architecture Empire State Building',0,0.00,0.00,6,'Mô hình chi tiết của tòa nhà Empire State.',NULL,4,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00030','MOC - Tháp Rùa Hồ Gươm',0,0.00,0.00,6,'Mô hình Tháp Rùa trên Hồ Gươm, 1250 chi tiết.',NULL,6,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00031','LEGO City Police Station',0,0.00,0.00,6,'Trụ sở cảnh sát thành phố.',NULL,6,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00036','LEGO Star Wars Millennium Falcon',0,0.00,0.00,6,'Tàu Millennium Falcon với nhiều nhân vật.',NULL,4,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00038','LEGO Star Wars AT-AT',0,0.00,0.00,6,'Walker AT-AT từ phim The Empire Strikes Back.',NULL,4,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00039','LEGO Star Wars Death Star',0,0.00,0.00,6,'Ngôi sao tử thần Death Star.',NULL,4,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00040','LEGO Star Wars X-Wing Starfighter',0,0.00,0.00,6,'Tàu chiến X-Wing của Luke Skywalker.',NULL,4,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00042','LEGO Marvel Sanctum Sanctorum',0,0.00,0.00,6,'Sanctum Sanctorum của Doctor Strange.',NULL,3,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00043','LEGO Marvel Guardians Ship',0,0.00,0.00,6,'Tàu của đội Guardians of the Galaxy.',NULL,3,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00044','LEGO Marvel Spider-Man Daily Bugle',0,0.00,0.00,6,'Tòa nhà Daily Bugle với nhiều nhân vật Spider-Man.',NULL,3,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00048','LEGO Harry Potter Hogwarts Express',0,0.00,0.00,6,'Tàu Hogwarts Express với sân ga 9¾.',NULL,1,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00049','LEGO Harry Potter Chamber of Secrets',0,0.00,0.00,6,'Phòng chứa bí mật với rắn Basilisk.',NULL,1,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00051','LEGO Creator Expert Bookshop',0,0.00,0.00,6,'Hiệu sách chi tiết với căn hộ ở trên.',NULL,2,'2026-02-24 22:00:04','2026-02-24 22:00:04'),('SP00052','LEGO Creator Expert Assembly Square',0,0.00,0.00,6,'Quảng trường trung tâm với nhiều tòa nhà.',NULL,4,'2026-02-24 22:00:04','2026-02-24 22:00:04');
+INSERT INTO `product` VALUES ('SP00001','Naruto - 01',15,23250.00,15000.00,6,'Minifigure nhân vật Naruto.','images/product/sp00001.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00002','Naruto - 02',0,23250.00,15000.00,6,'Minifigure Naruto trong trạng thái chiến đấu.','images/product/sp00002.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00003','Sasuke Uchiha',0,23250.00,15000.00,6,'Minifigure nhân vật Sasuke Uchiha từ series Naruto','images/product/SP00003.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00004','Kakashi Hatake',0,18600.00,12000.00,6,'Minifigure nhân vật Kakashi với Sharingan','images/product/SP00004.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00005','Iron Man Mark 85',1,18600.00,12000.00,6,'Minifigure Iron Man trong bộ giáp Mark 85 từ Avengers: Endgame','images/product/SP00007.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00006','Jiraiya',3,18600.00,12000.00,6,'Minifigure Jiraiya, thầy của Naruto.','images/product/SP00008.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00007','Sarada',0,23250.00,15000.00,6,'Minifigure Sarada, con gái của Sasuke.','images/product/SP00009.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00008','Thanos',13,24000.00,15000.00,6,'Minifigure Thanos trong phim Marvel.','images/product/SP00010.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00009','Awp Asiimov',0,1600000.00,1000000.00,6,'Mô hình súng Awp Asiimov.','images/product/SP00025.jpg',6,'2026-03-05 22:52:52','2026-03-06 00:53:23'),('SP00010','HK G28',0,1360000.00,850000.00,6,'Mô hình súng HK G28.','images/product/SP00026.png',6,'2026-03-05 22:53:25','2026-03-06 00:53:23'),('SP00011','Scar-L Asiimov',0,1360000.00,850000.00,6,'Mô hình súng Scar-L Asiimov.','images/product/SP00027.png',6,'2026-03-05 22:54:07','2026-03-06 00:53:23'),('SP00012','Sniper XPR-50',0,1360000.00,850000.00,6,'Mô hình súng Sniper XPR-50.','images/product/SP00028.png',6,'2026-03-05 22:55:08','2026-03-06 00:53:23'),('SP00013','Siêu Xe Lamborghini Sian FKP 37',0,1424000.00,890000.00,6,'Mô hình siêu xe Lamborghini Sian.','images/product/SP00029.png',3,'2026-03-05 22:55:46','2026-03-06 00:53:23'),('SP00014','Xe mô tô thể thao Kawasaki Ninja H2R',0,1200000.00,750000.00,6,'Mô hình xe mô tô Kawasaki Ninja H2R.','images/product/SP00030.png',3,'2026-03-05 22:57:24','2026-03-06 00:53:23');
 /*!40000 ALTER TABLE `product` ENABLE KEYS */;
 UNLOCK TABLES;
 

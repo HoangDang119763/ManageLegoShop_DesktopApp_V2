@@ -29,7 +29,6 @@ import javafx.stage.FileChooser;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -620,17 +619,16 @@ public class ImportProductController implements IController {
     }
 
     /**
-     * Recalculate totalPrice based on importPrice, quantity, and profitPercent
-     * Formula: totalPrice = importPrice * quantity * (1 + profitPercent/100)
+     * Recalculate totalPrice based on importPrice and quantity
+     * Formula: totalPrice = importPrice * quantity
+     * profitPercent được lưu riêng để tính selling price khi bán hàng
      */
     private void recalculateTotalPrice(TempDetailImportDTO item) {
         if (item == null)
             return;
 
-        BigDecimal basePrice = item.getImportPrice().multiply(new BigDecimal(item.getQuantity()));
-        BigDecimal profitAmount = basePrice.multiply(item.getProfitPercent())
-                .divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
-        BigDecimal totalPrice = basePrice.add(profitAmount);
+        // totalPrice = giá nhập × số lượng
+        BigDecimal totalPrice = item.getImportPrice().multiply(new BigDecimal(item.getQuantity()));
 
         item.setTotalPrice(totalPrice);
         updateTotalImportPrice();
@@ -840,7 +838,7 @@ public class ImportProductController implements IController {
             }
 
             // Validate imported data using ImportBUS
-            BUSResult validationResult = importBUS.validateImportData(importedData, currentDisplayedProducts);
+            BUSResult validationResult = importBUS.validateImportData(importedData);
 
             if (!validationResult.isSuccess()) {
                 // Show validation errors
@@ -891,7 +889,7 @@ public class ImportProductController implements IController {
      */
     private void handleDownloadTemplate() {
         TaskUtil.executePublic(loadingOverlay,
-                () -> TemplateGeneratorService.getInstance().generateImportTemplate(currentDisplayedProducts),
+                () -> TemplateGeneratorService.getInstance().generateImportTemplate(),
                 result -> {
                     Stage currentStage = (Stage) btnDownloadTemplate.getScene().getWindow();
                     if (result.isSuccess()) {
