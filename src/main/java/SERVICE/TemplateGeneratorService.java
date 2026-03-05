@@ -6,6 +6,8 @@ import ENUM.BUSOperationResult;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import BUS.ProductBUS;
+
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -124,10 +126,11 @@ public class TemplateGeneratorService {
      *
      * @return BUSResult with success status and file name
      */
-    public BUSResult generateImportTemplate(List<ProductDisplayForImportDTO> validProducts) {
+    public BUSResult generateImportTemplate() {
         try {
             XSSFWorkbook workbook = new XSSFWorkbook();
-
+            List<ProductDisplayForImportDTO> validProducts = ProductBUS.getInstance()
+                    .getAllActive(); // Ví dụ: lấy sản phẩm có status_id = 1
             // Sheet 1: Import form cho user nhập dữ liệu
             Sheet sheet = workbook.createSheet("Import");
 

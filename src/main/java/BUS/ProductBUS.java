@@ -33,6 +33,19 @@ public class ProductBUS extends BaseBUS<ProductDTO, String> {
         return ProductDAL.getInstance().getAll();
     }
 
+    /**
+     * Get all products with specific status ID
+     * Lấy tất cả sản phẩm có status_id cụ thể
+     * 
+     * @param statusId Status ID (e.g., 4 = ACTIVE)
+     * @return List of ProductDisplayForImportDTO, empty list if none found
+     */
+    public ArrayList<ProductDisplayForImportDTO> getAllActive() {
+        int inac = StatusBUS.getInstance()
+                .getByTypeAndStatusName(StatusType.PRODUCT, Status.Product.INACTIVE).getId();
+        return ProductDAL.getInstance().getAllValidImportProduct(inac);
+    }
+
     @Override
     protected String getKey(ProductDTO obj) {
         return obj.getId();
