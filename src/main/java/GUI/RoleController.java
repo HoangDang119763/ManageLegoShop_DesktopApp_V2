@@ -1,3 +1,263 @@
+package GUI;
+
+import BUS.EmployeeBUS;
+import BUS.RoleBUS;
+import BUS.RolePermissionBUS;
+import DTO.BUSResult;
+import DTO.RoleDTO;
+import ENUM.BUSOperationResult;
+import ENUM.PermissionKey;
+import INTERFACE.IController;
+import SERVICE.SessionManagerService;
+import UTILS.NotificationUtils;
+import UTILS.UiUtils;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+public class RoleController implements IController {
+    @FXML
+    private TableView<RoleDTO> tblRole;
+    @FXML
+    private TableColumn<RoleDTO, String> tlb_col_id;
+    @FXML
+    private TableColumn<RoleDTO, String> tlb_col_name;
+    @FXML
+    private TableColumn<RoleDTO, String> tlb_col_description;
+    @FXML
+    private TableColumn<RoleDTO, String> tlb_col_salaryCoefficient;
+    @FXML
+    private HBox functionBtns;
+    @FXML
+    private Button addBtn, editBtn, deleteBtn, refreshBtn, authorizeBtn;
+    @FXML
+    private TextField txtSearch;
+    @FXML
+    private ComboBox<String> cbSearchBy;
+
+    private String searchBy = "Mã chức vụ";
+    private String keyword = "";
+    private RoleDTO selectedRole;
+
+    @FXML
+    public void initialize() {
+        tblRole.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        Platform.runLater(() -> tblRole.getSelectionModel().clearSelection());
+
+        hideButtonWithoutPermission();
+        loadComboBox();
+        setupListeners();
+
+        loadTable();
+        applyFilters();
+    }
+
+    @Override
+    public void loadTable() {
+        tlb_col_id.setCellValueFactory(cellData -> new SimpleStringProperty(
+                String.valueOf(cellData.getValue().getId())));
+        tlb_col_name.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getName()));
+        tlb_col_description.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getDescription() == null ? "" : cellData.getValue().getDescription()));
+
+        // Cột "Số quyền": đếm số quyền được gán cho từng chức vụ
+        tlb_col_salaryCoefficient.setCellValueFactory(cellData -> {
+            int roleId = cellData.getValue().getId();
+            int count = RolePermissionBUS.getInstance().countByRoleId(roleId);
+            return new SimpleStringProperty(String.valueOf(count));
+        });
+    }
+
+    private void loadComboBox() {
+        cbSearchBy.getItems().addAll("Mã chức vụ", "Tên chức vụ");
+        cbSearchBy.getSelectionModel().selectFirst();
+    }
+
+    @Override
+    public void setupListeners() {
+        cbSearchBy.setOnAction(event -> handleSearchByChange());
+        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> handleKeywordChange());
+
+        refreshBtn.setOnAction(event -> {
+            resetFilters();
+            NotificationUtils.showInfoAlert("Làm mới thành công", "Thông báo");
+        });
+
+        authorizeBtn.setOnAction(event -> handleAuthorize());
+        addBtn.setOnAction(e -> handleAdd());
+        editBtn.setOnAction(e -> handleEdit());
+        deleteBtn.setOnAction(e -> handleDelete());
+
+        tblRole.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            selectedRole = newSel;
+        });
+    }
+
+    private void handleSearchByChange() {
+        searchBy = cbSearchBy.getValue();
+        applyFilters();
+    }
+
+    private void handleKeywordChange() {
+        keyword = txtSearch.getText().trim();
+        applyFilters();
+    }
+
+    @Override
+    public void applyFilters() {
+        ArrayList<RoleDTO> allRoles = RoleBUS.getInstance().getAllForUI();
+        if (allRoles == null) {
+            allRoles = new ArrayList<>();
+        }
+
+        String kw = keyword.toLowerCase(Locale.ROOT);
+
+        List<RoleDTO> filtered = allRoles.stream().filter(r -> {
+            if (kw.isEmpty()) {
+                return true;
+            }
+            if ("Mã chức vụ".equals(searchBy)) {
+                return String.valueOf(r.getId()).contains(kw);
+            }
+            String name = r.getName() != null ? r.getName().toLowerCase(Locale.ROOT) : "";
+            return name.contains(kw);
+        }).collect(Collectors.toList());
+
+        tblRole.setItems(FXCollections.observableArrayList(filtered));
+        tblRole.getSelectionModel().clearSelection();
+        selectedRole = null;
+    }
+
+    @Override
+    public void resetFilters() {
+        cbSearchBy.getSelectionModel().selectFirst();
+        txtSearch.clear();
+        searchBy = "Mã chức vụ";
+        keyword = "";
+        applyFilters();
+    }
+
+    @Override
+    public void hideButtonWithoutPermission() {
+        SessionManagerService session = SessionManagerService.getInstance();
+        boolean canAdd = session.hasPermission(PermissionKey.ROLE_INSERT);
+        boolean canEdit = session.hasPermission(PermissionKey.ROLE_UPDATE);
+        boolean canDelete = session.hasPermission(PermissionKey.ROLE_DELETE);
+
+        if (!canAdd) {
+            functionBtns.getChildren().remove(addBtn);
+        }
+        if (!canEdit) {
+            functionBtns.getChildren().remove(editBtn);
+        }
+        if (!canDelete) {
+            functionBtns.getChildren().remove(deleteBtn);
+        }
+    }
+
+    private boolean isNotSelectedRole() {
+        if (selectedRole == null) {
+            selectedRole = tblRole.getSelectionModel().getSelectedItem();
+        }
+        return selectedRole == null;
+    }
+
+    private void handleAuthorize() {
+        if (isNotSelectedRole()) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn chức vụ", "Thông báo");
+            return;
+        }
+
+        if (selectedRole.getId() == SessionManagerService.getInstance().employeeRoleId()) {
+            NotificationUtils.showErrorAlert("Bạn không thể cập nhật phân quyền của chính mình.", "Thông báo");
+            return;
+        }
+
+        AuthorizeModalController modalController = UiUtils.gI().openStageWithController(
+                "/GUI/AuthorizeModal.fxml",
+                controller -> controller.setRole(selectedRole),
+                "Phân quyền");
+
+        if (modalController != null && modalController.isSaved()) {
+            NotificationUtils.showInfoAlert("Cập nhật phân quyền thành công", "Thông báo");
+            resetFilters();
+        }
+    }
+
+    private void handleDelete() {
+        if (isNotSelectedRole()) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn chức vụ", "Thông báo");
+            return;
+        }
+
+        if (selectedRole.getId() == SessionManagerService.getInstance().employeeRoleId()) {
+            NotificationUtils.showErrorAlert("Bạn không thể xóa chức vụ của chính mình.", "Thông báo");
+            return;
+        }
+
+        int employeeCount = EmployeeBUS.getInstance().countByRoleId(selectedRole.getId());
+        if (employeeCount > 0) {
+            String ask = "Hiện có " + employeeCount + " nhân viên sở hữu chức vụ này!";
+            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa chức vụ này? " + ask, "Thông báo xác nhận")) {
+                return;
+            }
+        }
+
+        BUSResult result = RoleBUS.getInstance().delete(selectedRole.getId());
+        if (result.getCode() == BUSOperationResult.SUCCESS) {
+            NotificationUtils.showInfoAlert("Xóa chức vụ thành công.", "Thông báo");
+            resetFilters();
+        } else {
+            String message = result.getMessage() != null ? result.getMessage() : "Có lỗi khi xóa chức vụ.";
+            NotificationUtils.showErrorAlert(message, "Thông báo");
+        }
+    }
+
+    private void handleAdd() {
+        RoleModalController modalController = UiUtils.gI().openStageWithController(
+                "/GUI/RoleModal.fxml",
+                controller -> controller.setTypeModal(0),
+                "Thêm chức vụ");
+        if (modalController != null && modalController.isSaved()) {
+            NotificationUtils.showInfoAlert("Thêm chức vụ thành công", "Thông báo");
+            resetFilters();
+        }
+    }
+
+    private void handleEdit() {
+        if (isNotSelectedRole()) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn chức vụ", "Thông báo");
+            return;
+        }
+
+        RoleModalController modalController = UiUtils.gI().openStageWithController(
+                "/GUI/RoleModal.fxml",
+                controller -> {
+                    controller.setRole(selectedRole);
+                    controller.setTypeModal(1);
+                },
+                "Sửa chức vụ");
+
+        if (modalController != null && modalController.isSaved()) {
+            NotificationUtils.showInfoAlert("Sửa chức vụ thành công", "Thông báo");
+            applyFilters();
+        }
+    }
+}
+
 // package GUI;
 
 // import BUS.AccountBUS;

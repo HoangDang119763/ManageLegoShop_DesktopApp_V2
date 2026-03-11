@@ -66,25 +66,6 @@
                               </TextField>
                            </children>
                         </HBox>
-                        <HBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="61.0" prefWidth="422.0" spacing="10.0">
-                           <children>
-                              <Label prefHeight="22.0" prefWidth="140.0" text="Hệ số lương" textFill="#30bac4">
-                                 <font>
-                                    <Font name="Arial Bold" size="18.0" />
-                                 </font>
-                              </Label>
-                              <Label text=":" textFill="#30bac4">
-                                 <font>
-                                    <Font size="20.0" />
-                                 </font>
-                              </Label>
-                              <TextField fx:id="txtSalaryCoefficient" promptText="Hệ số lương" styleClass="textfield-1">
-                                 <font>
-                                    <Font size="16.0" />
-                                 </font>
-                              </TextField>
-                           </children>
-                        </HBox>
                      </children>
                   </VBox>
                </children>

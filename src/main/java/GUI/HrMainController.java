@@ -37,7 +37,9 @@ public class HrMainController {
     private static final Map<Integer, String> MODULE_FXML_MAP = Map.ofEntries(
             Map.entry(0, "/GUI/EmployeeInfoUI.fxml"), // Thông tin cá nhân (luôn có)
             Map.entry(1, "/GUI/EmployeeUI.fxml"), // Quản lý NV & TK
-            Map.entry(12, "/GUI/EmploymentHistory.fxml")); // Quản lý Nhân sự
+            Map.entry(12, "/GUI/EmploymentHistory.fxml"), // Điều chuyển
+            Map.entry(13, "/GUI/DepartmentPositionUI.fxml"), // Phòng ban & Chức vụ
+            Map.entry(14, "/GUI/HrStatisticUI.fxml")); // Thống kê nhân sự
 
     @FXML
     public void initialize() {
@@ -90,11 +92,13 @@ public class HrMainController {
         List<ModuleMetadata> hrModules = Arrays.asList(
                 new ModuleMetadata(0, "Cá nhân", "employee_info.png"), // ID 0: Luôn cho phép
                 new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
-                new ModuleMetadata(12, "Điều chuyển", "employment_history.png"));
+                new ModuleMetadata(12, "Điều chuyển", "employment_history.png"),
+                new ModuleMetadata(13, "Phòng ban & Chức vụ", "department.png"),
+                new ModuleMetadata(14, "Thống kê nhân sự", "employee.png"));
 
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : hrModules) {
-            // Module 0 luôn hiện, các module khác phải có ID trong allowedModules của DTO
+            // Module 0 luôn hiện, các module khác theo quyền module
             if (meta.id() == 0 || sessionService.hasModuleAccess(meta.id())) {
                 Button btn = createModuleButton(meta.name(), meta.icon(), () -> {
                     handleModuleClick(meta.id(), meta.name());
@@ -177,11 +181,10 @@ public class HrMainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             Pane newContent = loader.load();
 
-            // Anchor để nội dung con dãn đều theo mainContent
-            AnchorPane.setTopAnchor(newContent, 0.0);
-            AnchorPane.setBottomAnchor(newContent, 0.0);
-            AnchorPane.setLeftAnchor(newContent, 0.0);
-            AnchorPane.setRightAnchor(newContent, 0.0);
+            // Bind kích thước để nội dung luôn lấp đầy mainContent,
+            // đảm bảo VBox.vgrow và ScrollPane bên trong hoạt động đúng
+            newContent.prefWidthProperty().bind(mainContent.widthProperty());
+            newContent.prefHeightProperty().bind(mainContent.heightProperty());
 
             mainContent.getChildren().setAll(newContent);
         } catch (IOException e) {

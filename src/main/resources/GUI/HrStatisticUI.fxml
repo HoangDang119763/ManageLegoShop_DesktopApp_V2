@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="GUI.HrStatisticController"
+            stylesheets="@../css/base.css"
+            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+            AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <children>
+        <VBox spacing="10.0"
+              style="-fx-padding: 14 18 0 18; -fx-background-color: #f8f9fa;"
+              AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+              AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+            <!-- Tiêu đề -->
+            <Label text="Thống kê nhân sự" textFill="#006A71"
+                   style="-fx-font-size: 20px; -fx-font-weight: bold;">
+                <font><Font name="Arial Bold" size="20.0"/></font>
+            </Label>
+
+            <!-- Bộ lọc dùng chung -->
+            <HBox alignment="CENTER_LEFT" spacing="10.0"
+                  style="-fx-background-color: white; -fx-padding: 8 14 8 14;
+                         -fx-background-radius: 8; -fx-border-color: #e0e0e0;
+                         -fx-border-radius: 8; -fx-border-width: 1;">
+                <Label text="Tháng" textFill="#006A71"
+                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                <ComboBox fx:id="cbMonth" prefWidth="90.0" style="-fx-font-size: 13px;"/>
+                <Label text="Năm" textFill="#006A71"
+                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                <ComboBox fx:id="cbYear" prefWidth="110.0" style="-fx-font-size: 13px;"/>
+                <Button fx:id="btnSearch" mnemonicParsing="false"
+                        prefHeight="30.0" prefWidth="115.0"
+                        styleClass="action-btn" stylesheets="@../css/base.css" text="Tìm kiếm">
+                    <font><Font size="13.0"/></font>
+                    <graphic><FontAwesomeIcon glyphName="SEARCH" styleClass="action-icon"/></graphic>
+                </Button>
+                <Button fx:id="btnRefresh" mnemonicParsing="false"
+                        prefHeight="30.0" prefWidth="115.0"
+                        styleClass="action-btn" stylesheets="@../css/base.css" text="Làm mới">
+                    <font><Font size="13.0"/></font>
+                    <graphic><FontAwesomeIcon glyphName="REFRESH" styleClass="action-icon"/></graphic>
+                </Button>
+                <Button fx:id="btnExport" mnemonicParsing="false"
+                        prefHeight="30.0" prefWidth="135.0"
+                        styleClass="action-btn" stylesheets="@../css/base.css" text="Xuất báo cáo">
+                    <font><Font size="13.0"/></font>
+                    <graphic><FontAwesomeIcon glyphName="FILE_EXCEL_ALT" styleClass="action-icon"/></graphic>
+                </Button>
+            </HBox>
+
+            <!-- TabPane -->
+            <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS"
+                     style="-fx-background-color: white;">
+
+                <!-- ══════════ Tab 1: Tổng quan nhân sự ══════════ -->
+                <Tab text="Tổng quan nhân sự">
+                    <content>
+                        <AnchorPane>
+                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                        AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                                        AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                        style="-fx-background-color: white; -fx-background: white;">
+                                <content>
+                                    <VBox spacing="14.0"
+                                          style="-fx-padding: 14 12 18 12; -fx-background-color: white;">
+
+                                        <!-- KPI Cards -->
+                                        <HBox alignment="CENTER_LEFT" spacing="16.0">
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="190.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng nhân sự" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalEmployees" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="người đang làm việc" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="190.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Nhân sự mới trong kỳ" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblNewEmployees" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="người mới vào" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="240.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng lương đã trả" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalPaidSalary" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                                                <Label text="(lương NET trong kỳ)" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- Charts -->
+                                        <HBox spacing="16.0" alignment="TOP_LEFT">
+                                            <VBox spacing="5.0" minWidth="0.0" HBox.hgrow="ALWAYS">
+                                                <Label text="Biến động nhân sự trong tháng" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <BarChart fx:id="headcountChart"
+                                                          prefHeight="290.0" minHeight="290.0" maxHeight="290.0"
+                                                          legendVisible="false" animated="false"
+                                                          categoryGap="8.0" barGap="2.0"
+                                                          style="-fx-background-color: transparent;">
+                                                    <xAxis><CategoryAxis label="Ngày"/></xAxis>
+                                                    <yAxis><NumberAxis label="Số nhân sự"/></yAxis>
+                                                </BarChart>
+                                            </VBox>
+                                            <VBox spacing="8.0" minWidth="300.0" prefWidth="300.0" maxWidth="300.0">
+                                                <Label text="Phân bổ theo trạng thái" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <PieChart fx:id="statusPieChart"
+                                                          prefHeight="175.0" minHeight="175.0" maxHeight="175.0"
+                                                          prefWidth="300.0" animated="false" labelsVisible="false"/>
+                                                <Label text="Phân bổ theo phòng ban" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <PieChart fx:id="departmentPieChart"
+                                                          prefHeight="175.0" minHeight="175.0" maxHeight="175.0"
+                                                          prefWidth="300.0" animated="false" labelsVisible="false"/>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- Bảng thay đổi nhân sự -->
+                                        <Label text="Biến động nhân sự chi tiết" textFill="#006A71"
+                                               style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 6 0 0 0;"/>
+                                        <TableView fx:id="tblHeadcountChanges" prefHeight="220.0" VBox.vgrow="NEVER">
+                                            <columns>
+                                                <TableColumn fx:id="colHcName"    text="Họ và tên"         prefWidth="150.0"/>
+                                                <TableColumn fx:id="colHcFromDept" text="Phòng ban (cũ)"   prefWidth="130.0"/>
+                                                <TableColumn fx:id="colHcToDept"  text="Phòng ban (mới)"   prefWidth="130.0"/>
+                                                <TableColumn fx:id="colHcFromPos" text="Chức vụ (cũ)"      prefWidth="120.0"/>
+                                                <TableColumn fx:id="colHcToPos"   text="Chức vụ (mới)"     prefWidth="120.0"/>
+                                                <TableColumn fx:id="colHcDate"    text="Ngày hiệu lực"     prefWidth="110.0"/>
+                                                <TableColumn fx:id="colHcStatus"  text="Trạng thái"        prefWidth="110.0"/>
+                                            </columns>
+                                        </TableView>
+
+                                    </VBox>
+                                </content>
+                            </ScrollPane>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+
+                <!-- ══════════ Tab 2: Chấm công ══════════ -->
+                <Tab text="Chấm công">
+                    <content>
+                        <AnchorPane>
+                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                        AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                                        AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                        style="-fx-background-color: white; -fx-background: white;">
+                                <content>
+                                    <VBox spacing="14.0"
+                                          style="-fx-padding: 14 12 18 12; -fx-background-color: white;">
+
+                                        <!-- KPI Cards -->
+                                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="175.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng lượt chấm công" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalSessions" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="lượt trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="175.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Nhân viên tham gia" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblAttendanceEmployees" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="người" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="175.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng giờ làm" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalWorkHours" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+                                                <Label text="giờ làm việc" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="175.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng giờ OT" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalOtHours" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+                                                <Label text="giờ tăng ca" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- BarChart: Giờ làm theo ngày -->
+                                        <VBox spacing="5.0">
+                                            <Label text="Giờ làm và giờ OT theo ngày trong tháng" textFill="#006A71"
+                                                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                            <BarChart fx:id="attendanceChart"
+                                                      prefHeight="270.0" minHeight="270.0" maxHeight="270.0"
+                                                      animated="false"
+                                                      categoryGap="8.0" barGap="2.0"
+                                                      style="-fx-background-color: transparent;">
+                                                <xAxis><CategoryAxis label="Ngày"/></xAxis>
+                                                <yAxis><NumberAxis label="Giờ"/></yAxis>
+                                            </BarChart>
+                                        </VBox>
+
+                                        <!-- TableView -->
+                                        <VBox spacing="6.0">
+                                            <Label text="Chi tiết chấm công theo nhân viên" textFill="#006A71"
+                                                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                            <TableView fx:id="tblAttendance" prefHeight="260.0"
+                                                       styleClass="table-view" stylesheets="@../css/base.css">
+                                                <columns>
+                                                    <TableColumn fx:id="colAttName" text="Họ và tên" prefWidth="200.0"/>
+                                                    <TableColumn fx:id="colAttDept" text="Phòng ban" prefWidth="160.0"/>
+                                                    <TableColumn fx:id="colAttSessions" text="Số ca" prefWidth="80.0"/>
+                                                    <TableColumn fx:id="colAttWork" text="Giờ làm" prefWidth="100.0"/>
+                                                    <TableColumn fx:id="colAttOt" text="Giờ OT" prefWidth="100.0"/>
+                                                </columns>
+                                            </TableView>
+                                        </VBox>
+
+                                    </VBox>
+                                </content>
+                            </ScrollPane>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+
+                <!-- ══════════ Tab 3: Nghỉ phép ══════════ -->
+                <Tab text="Nghỉ phép">
+                    <content>
+                        <AnchorPane>
+                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                        AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                                        AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                        style="-fx-background-color: white; -fx-background: white;">
+                                <content>
+                                    <VBox spacing="14.0"
+                                          style="-fx-padding: 14 12 18 12; -fx-background-color: white;">
+
+                                        <!-- KPI Cards -->
+                                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="190.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng đơn nghỉ phép" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalLeaveRequests" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="đơn trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="190.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng ngày nghỉ" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalLeaveDays" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="ngày (tổng các đơn)" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- Charts side by side -->
+                                        <HBox spacing="16.0" alignment="TOP_LEFT">
+                                            <VBox spacing="5.0" minWidth="0.0" HBox.hgrow="ALWAYS">
+                                                <Label text="Số đơn theo loại nghỉ phép" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <BarChart fx:id="leaveTypeChart"
+                                                          prefHeight="250.0" minHeight="250.0" maxHeight="250.0"
+                                                          legendVisible="false" animated="false"
+                                                          categoryGap="20.0" barGap="4.0"
+                                                          style="-fx-background-color: transparent;">
+                                                    <xAxis><CategoryAxis/></xAxis>
+                                                    <yAxis><NumberAxis label="Số đơn"/></yAxis>
+                                                </BarChart>
+                                            </VBox>
+                                            <VBox spacing="5.0" minWidth="260.0" prefWidth="260.0" maxWidth="260.0">
+                                                <Label text="Phân bổ theo trạng thái" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <PieChart fx:id="leaveStatusChart"
+                                                          prefHeight="250.0" minHeight="250.0" maxHeight="250.0"
+                                                          animated="false" labelsVisible="false"/>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- TableView -->
+                                        <VBox spacing="6.0">
+                                            <Label text="Chi tiết đơn nghỉ phép trong kỳ" textFill="#006A71"
+                                                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                            <TableView fx:id="tblLeave" prefHeight="260.0"
+                                                       styleClass="table-view" stylesheets="@../css/base.css">
+                                                <columns>
+                                                    <TableColumn fx:id="colLeaveName" text="Họ và tên" prefWidth="180.0"/>
+                                                    <TableColumn fx:id="colLeaveType" text="Loại nghỉ phép" prefWidth="150.0"/>
+                                                    <TableColumn fx:id="colLeaveStart" text="Từ ngày" prefWidth="100.0"/>
+                                                    <TableColumn fx:id="colLeaveEnd" text="Đến ngày" prefWidth="100.0"/>
+                                                    <TableColumn fx:id="colLeaveDays" text="Số ngày" prefWidth="80.0"/>
+                                                    <TableColumn fx:id="colLeaveStatus" text="Trạng thái" prefWidth="120.0"/>
+                                                </columns>
+                                            </TableView>
+                                        </VBox>
+
+                                    </VBox>
+                                </content>
+                            </ScrollPane>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+
+                <!-- ══════════ Tab 4: Khen thưởng – Kỷ luật ══════════ -->
+                <Tab text="Khen thưởng – Kỷ luật">
+                    <content>
+                        <AnchorPane>
+                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                        AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                                        AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                        style="-fx-background-color: white; -fx-background: white;">
+                                <content>
+                                    <VBox spacing="12.0"
+                                          style="-fx-padding: 14 12 18 12; -fx-background-color: white;">
+
+                                        <!-- KPI Cards -->
+                                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                                            <VBox alignment="CENTER" spacing="4.0"
+                                                  prefWidth="165.0" minHeight="82.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 10;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng phụ cấp" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalAllowance" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                                <Label text="trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0"
+                                                  prefWidth="165.0" minHeight="82.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 10;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="NV có phụ cấp" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblEmployeesWithAllowance" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+                                                <Label text="người" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0"
+                                                  prefWidth="165.0" minHeight="82.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #e57373; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 10;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng vi phạm" textFill="#c62828"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalFine" text="—" textFill="#e53935"
+                                                       style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                                <Label text="trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0"
+                                                  prefWidth="165.0" minHeight="82.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #e57373; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 10;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="NV bị vi phạm" textFill="#c62828"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblEmployeesWithFine" text="—" textFill="#e53935"
+                                                       style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+                                                <Label text="người" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- BarChart -->
+                                        <VBox spacing="5.0">
+                                            <Label text="So sánh Phụ cấp và Vi phạm" textFill="#006A71"
+                                                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                            <BarChart fx:id="allowanceFineChart"
+                                                      prefHeight="240.0" minHeight="240.0" maxHeight="240.0"
+                                                      animated="false"
+                                                      categoryGap="80.0" barGap="6.0"
+                                                      style="-fx-background-color: transparent;">
+                                                <xAxis><CategoryAxis label="Loại"/></xAxis>
+                                                <yAxis><NumberAxis label="Giá trị"/></yAxis>
+                                            </BarChart>
+                                        </VBox>
+
+                                        <!-- Bảng chi tiết -->
+                                        <VBox spacing="8.0">
+                                            <Label text="Chi tiết thưởng / phạt nhân viên" textFill="#006A71"
+                                                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                <ComboBox fx:id="cbFilterDept" prefWidth="180.0"
+                                                          style="-fx-font-size: 13px;" promptText="Phòng ban"/>
+                                                <ComboBox fx:id="cbFilterFineLevel" prefWidth="200.0"
+                                                          style="-fx-font-size: 13px;" promptText="Loại thưởng / phạt"/>
+                                            </HBox>
+                                            <TableView fx:id="tblFineReward" prefHeight="280.0"
+                                                       styleClass="table-view" stylesheets="@../css/base.css">
+                                                <columns>
+                                                    <TableColumn fx:id="colEmpCode" text="Mã NV" prefWidth="80.0"/>
+                                                    <TableColumn fx:id="colFullName" text="Họ tên" prefWidth="160.0"/>
+                                                    <TableColumn fx:id="colDept" text="Phòng ban" prefWidth="140.0"/>
+                                                    <TableColumn fx:id="colPosition" text="Chức vụ" prefWidth="130.0"/>
+                                                    <TableColumn fx:id="colFineLevel" text="Loại thưởng/phạt" prefWidth="140.0"/>
+                                                    <TableColumn fx:id="colAmount" text="Số tiền" prefWidth="120.0"/>
+                                                    <TableColumn fx:id="colDate" text="Ngày" prefWidth="100.0"/>
+                                                </columns>
+                                            </TableView>
+                                        </VBox>
+
+                                    </VBox>
+                                </content>
+                            </ScrollPane>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+
+                <!-- ══════════ Tab 5: Thống kê lương ══════════ -->
+                <Tab text="Thống kê lương">
+                    <content>
+                        <AnchorPane>
+                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                        AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                                        AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                        style="-fx-background-color: white; -fx-background: white;">
+                                <content>
+                                    <VBox spacing="14.0"
+                                          style="-fx-padding: 14 12 18 12; -fx-background-color: white;">
+
+                                        <!-- KPI Cards -->
+                                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="175.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Số NV được trả lương" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblSalaryEmployees" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="người" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="210.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng lương NET" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalNet" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                                                <Label text="chi trả trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="210.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Lương NET trung bình" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblAvgNet" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                                                <Label text="mỗi nhân viên" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0" prefWidth="210.0" minHeight="90.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #e57373; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 12;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng bảo hiểm" textFill="#c62828"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalInsurance" text="—" textFill="#e53935"
+                                                       style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                                                <Label text="đóng trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- BarChart: Top 10 lương NET -->
+                                        <VBox spacing="5.0">
+                                            <Label text="Top 10 nhân viên lương NET cao nhất" textFill="#006A71"
+                                                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                            <BarChart fx:id="salaryTopChart"
+                                                      prefHeight="280.0" minHeight="280.0" maxHeight="280.0"
+                                                      animated="false" legendVisible="false"
+                                                      categoryGap="14.0" barGap="4.0"
+                                                      style="-fx-background-color: transparent;">
+                                                <xAxis><CategoryAxis/></xAxis>
+                                                <yAxis><NumberAxis label="Triệu đồng"/></yAxis>
+                                            </BarChart>
+                                        </VBox>
+
+                                        <!-- TableView -->
+                                        <VBox spacing="6.0">
+                                            <Label text="Chi tiết bảng lương nhân viên" textFill="#006A71"
+                                                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                            <TableView fx:id="tblSalary" prefHeight="280.0"
+                                                       styleClass="table-view" stylesheets="@../css/base.css">
+                                                <columns>
+                                                    <TableColumn fx:id="colSalaryName" text="Họ và tên" prefWidth="190.0"/>
+                                                    <TableColumn fx:id="colSalaryDept" text="Phòng ban" prefWidth="150.0"/>
+                                                    <TableColumn fx:id="colSalaryBase" text="Lương cơ bản" prefWidth="150.0"/>
+                                                    <TableColumn fx:id="colSalaryNet" text="Lương NET" prefWidth="150.0"/>
+                                                    <TableColumn fx:id="colSalaryInsurance" text="Bảo hiểm" prefWidth="140.0"/>
+                                                    <TableColumn fx:id="colSalaryWork" text="Số ngày làm" prefWidth="110.0"/>
+                                                </columns>
+                                            </TableView>
+                                        </VBox>
+
+                                    </VBox>
+                                </content>
+                            </ScrollPane>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+
+                <!-- ══════════ Tab 6: Báo cáo nhân sự ══════════ -->
+                <Tab text="Báo cáo nhân sự">
+                    <content>
+                        <AnchorPane>
+                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                        AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                                        AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                        style="-fx-background-color: white; -fx-background: white;">
+                                <content>
+                                    <VBox spacing="16.0"
+                                          style="-fx-padding: 14 12 18 12; -fx-background-color: white;">
+
+                                        <Label text="Tổng kết nhân sự trong kỳ" textFill="#006A71"
+                                               style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+
+                                        <!-- Summary KPI Cards -->
+                                        <HBox alignment="CENTER_LEFT" spacing="16.0">
+                                            <VBox alignment="CENTER" spacing="6.0" prefWidth="200.0" minHeight="100.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 14;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 6, 0, 0, 3);">
+                                                <Label text="Tổng nhân sự" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblReportEmployees" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="người đang làm việc" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="6.0" prefWidth="200.0" minHeight="100.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 14;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 6, 0, 0, 3);">
+                                                <Label text="Nhân sự mới" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblReportNewEmployees" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="người mới vào kỳ này" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="6.0" prefWidth="220.0" minHeight="100.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 14;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 6, 0, 0, 3);">
+                                                <Label text="Tổng lương NET đã trả" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblReportTotalSalary" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                                                <Label text="trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="6.0" prefWidth="190.0" minHeight="100.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 14;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 6, 0, 0, 3);">
+                                                <Label text="Lượt chấm công" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblReportAttSessions" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="lượt trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="6.0" prefWidth="190.0" minHeight="100.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 14;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 6, 0, 0, 3);">
+                                                <Label text="Đơn nghỉ phép" textFill="#006A71"
+                                                       style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblReportLeaveRequests" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+                                                <Label text="đơn trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- Export hint -->
+                                        <Label text="Sử dụng nút 'Xuất báo cáo' ở thanh lọc phía trên để xuất dữ liệu."
+                                               textFill="#888" style="-fx-font-size: 12px; -fx-padding: 6 0 0 0;"/>
+
+                                    </VBox>
+                                </content>
+                            </ScrollPane>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+
+            </TabPane>
+        </VBox>
+    </children>
+</AnchorPane>

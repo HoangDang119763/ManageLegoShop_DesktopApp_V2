@@ -1,5 +1,6 @@
 package DAL;
 
+import DTO.HrStatisticDTO;
 import DTO.LeaveRequestDTO;
 import java.sql.*;
 import java.util.ArrayList;
@@ -104,6 +105,120 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
             }
         } catch (SQLException e) {
             System.err.println("Error retrieving all leave requests: " + e.getMessage());
+        }
+        return list;
+    }
+
+    // ===== HR STATISTIC =====
+
+    public HrStatisticDTO.LeaveStat getLeaveStat(int month, int year) {
+        String sql = """
+                SELECT COUNT(*) AS total_requests,
+                       COALESCE(SUM(DATEDIFF(end_date, start_date) + 1), 0) AS total_days
+                FROM leave_request
+                WHERE MONTH(start_date) = ? AND YEAR(start_date) = ?
+                """;
+        HrStatisticDTO.LeaveStat stat = new HrStatisticDTO.LeaveStat();
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stat.setTotalRequests(rs.getInt("total_requests"));
+                    stat.setTotalDays(rs.getInt("total_days"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting leave stat: " + e.getMessage());
+        }
+        return stat;
+    }
+
+    public java.util.List<HrStatisticDTO.LeaveByTypeItem> getLeaveByType(int month, int year) {
+        String sql = """
+                SELECT COALESCE(lt.name, 'Không xác định') AS leave_type, COUNT(*) AS cnt
+                FROM leave_request lr
+                LEFT JOIN leave_type lt ON lt.id = lr.leave_type_id
+                WHERE MONTH(lr.start_date) = ? AND YEAR(lr.start_date) = ?
+                GROUP BY lr.leave_type_id, lt.name
+                ORDER BY cnt DESC
+                """;
+        java.util.List<HrStatisticDTO.LeaveByTypeItem> list = new java.util.ArrayList<>();
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new HrStatisticDTO.LeaveByTypeItem(
+                            rs.getString("leave_type"), rs.getInt("cnt")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting leave by type: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public java.util.List<HrStatisticDTO.LeaveStatusItem> getLeaveByStatus(int month, int year) {
+        String sql = """
+                SELECT COALESCE(s.description, 'Không xác định') AS status_name, COUNT(*) AS cnt
+                FROM leave_request lr
+                LEFT JOIN status s ON s.id = lr.status_id
+                WHERE MONTH(lr.start_date) = ? AND YEAR(lr.start_date) = ?
+                GROUP BY lr.status_id, s.description
+                """;
+        java.util.List<HrStatisticDTO.LeaveStatusItem> list = new java.util.ArrayList<>();
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new HrStatisticDTO.LeaveStatusItem(
+                            rs.getString("status_name"), rs.getInt("cnt")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting leave by status: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public java.util.List<HrStatisticDTO.LeaveRow> getLeaveRows(int month, int year) {
+        String sql = """
+                SELECT CONCAT(e.first_name, ' ', e.last_name) AS full_name,
+                       COALESCE(lt.name, '—') AS leave_type,
+                       DATE_FORMAT(lr.start_date, '%d/%m/%Y') AS start_fmt,
+                       DATE_FORMAT(lr.end_date, '%d/%m/%Y') AS end_fmt,
+                       DATEDIFF(lr.end_date, lr.start_date) + 1 AS days,
+                       COALESCE(s.description, '—') AS status_name
+                FROM leave_request lr
+                LEFT JOIN employee e ON e.id = lr.employee_id
+                LEFT JOIN leave_type lt ON lt.id = lr.leave_type_id
+                LEFT JOIN status s ON s.id = lr.status_id
+                WHERE MONTH(lr.start_date) = ? AND YEAR(lr.start_date) = ?
+                ORDER BY lr.start_date DESC
+                """;
+        java.util.List<HrStatisticDTO.LeaveRow> list = new java.util.ArrayList<>();
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new HrStatisticDTO.LeaveRow(
+                            rs.getString("full_name"),
+                            rs.getString("leave_type"),
+                            rs.getString("start_fmt"),
+                            rs.getString("end_fmt"),
+                            rs.getInt("days"),
+                            rs.getString("status_name")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting leave rows: " + e.getMessage());
         }
         return list;
     }

@@ -40,6 +40,7 @@ public enum PermissionKey {
     EMPLOYEE_ATTENDANCE_MANAGE,
 
     // === HR TAB: Chức vụ/Vị trí ===
+    DEPARTMENT_POSITION_VIEW,
     EMPLOYEE_ROLE_POSITION_UPDATE,
 
     // === HR TAB: Lịch sử điều chuyển ===
@@ -70,5 +71,6 @@ public enum PermissionKey {
     PERMISSION_LIST_VIEW, PERMISSION_UPDATE,
 
     // === 📊 THỐNG KÊ ===
-    STATISTICS_VIEW;
+    STATISTICS_VIEW,
+    HR_STATISTIC_VIEW;
 }
