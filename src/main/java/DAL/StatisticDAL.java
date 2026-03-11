@@ -1,6 +1,9 @@
 package DAL;
 
 import DTO.StatisticDTO;
+import DTO.StatisticDTO.CategoryRevenue;
+import DTO.StatisticDTO.RevenuePoint;
+import ENUM.ViewBy;
 import INTERFACE.ConnectionFactory;
 
 import java.sql.*;
@@ -40,8 +43,7 @@ public class StatisticDAL {
         List<StatisticDTO.QuarterlyEmployeeRevenue> list = new ArrayList<>();
 
         try (Connection connection = connectionFactory.newConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
-            // System.out.println("Connected to database: " + connection.getCatalog());
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, year);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -83,7 +85,7 @@ public class StatisticDAL {
 
         List<StatisticDTO.ProductRevenue> list = new ArrayList<>();
         try (Connection connection = connectionFactory.newConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setDate(1, java.sql.Date.valueOf(start));
             statement.setDate(2, java.sql.Date.valueOf(end));
@@ -102,4 +104,223 @@ public class StatisticDAL {
         }
         return list;
     }
+
+    /**
+     * Doanh thu theo thời gian (Module 4)
+     */
+    public List<RevenuePoint> getRevenueTimeline(LocalDate from, LocalDate to, ViewBy viewBy, int completedStatusId) {
+        String periodExpression;
+        String orderByExpression;
+
+        switch (viewBy) {
+            case MONTH:
+                periodExpression = "DATE_FORMAT(i.created_at, '%Y-%m')";
+                orderByExpression = "DATE_FORMAT(i.created_at, '%Y-%m')";
+                break;
+            case YEAR:
+                periodExpression = "DATE_FORMAT(i.created_at, '%Y')";
+                orderByExpression = "DATE_FORMAT(i.created_at, '%Y')";
+                break;
+            case DAY:
+            default:
+                periodExpression = "DATE(i.created_at)";
+                orderByExpression = "DATE(i.created_at)";
+                break;
+        }
+
+        final String query = """
+                SELECT
+                    %s AS period_label,
+                    COALESCE(SUM(i.total_price - i.discount_amount), 0) AS revenue,
+                    COUNT(*) AS invoice_count
+                FROM invoice i
+                WHERE i.created_at >= ? AND i.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+                  AND i.status_id = ?
+                GROUP BY %s
+                ORDER BY %s;
+                """.formatted(periodExpression, orderByExpression, orderByExpression);
+
+        List<RevenuePoint> list = new ArrayList<>();
+
+        try (Connection connection = connectionFactory.newConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setDate(1, Date.valueOf(from));
+            statement.setDate(2, Date.valueOf(to));
+            statement.setInt(3, completedStatusId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new RevenuePoint(
+                            rs.getString("period_label"),
+                            rs.getBigDecimal("revenue"),
+                            rs.getInt("invoice_count")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving revenue timeline statistics: " + e.getMessage());
+        }
+        return list;
+    }
+
+    // ===== CHI PHÍ NHẬP HÀNG =====
+
+    public List<StatisticDTO.ImportCostPoint> getImportCostTimeline(LocalDate from, LocalDate to, ViewBy viewBy) {
+        String periodExpr;
+        switch (viewBy) {
+            case MONTH -> periodExpr = "DATE_FORMAT(i.created_at, '%Y-%m')";
+            case YEAR  -> periodExpr = "DATE_FORMAT(i.created_at, '%Y')";
+            default    -> periodExpr = "DATE(i.created_at)";
+        }
+        String query = """
+                SELECT %s AS period_label,
+                       COALESCE(SUM(i.total_price), 0) AS cost,
+                       COUNT(*) AS import_count
+                FROM import i
+                WHERE i.created_at >= ? AND i.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+                GROUP BY %s
+                ORDER BY %s
+                """.formatted(periodExpr, periodExpr, periodExpr);
+
+        List<StatisticDTO.ImportCostPoint> list = new ArrayList<>();
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setDate(1, Date.valueOf(from));
+            ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new StatisticDTO.ImportCostPoint(
+                            rs.getString("period_label"),
+                            rs.getBigDecimal("cost"),
+                            rs.getInt("import_count")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving import cost timeline: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public List<StatisticDTO.SupplierCostItem> getImportCostBySupplier(LocalDate from, LocalDate to) {
+        String query = """
+                SELECT COALESCE(s.name, 'Không rõ') AS supplier_name,
+                       COALESCE(SUM(i.total_price), 0) AS cost
+                FROM import i
+                LEFT JOIN supplier s ON s.id = i.supplier_id
+                WHERE i.created_at >= ? AND i.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+                GROUP BY i.supplier_id, s.name
+                ORDER BY cost DESC
+                LIMIT 10
+                """;
+        List<StatisticDTO.SupplierCostItem> list = new ArrayList<>();
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setDate(1, Date.valueOf(from));
+            ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new StatisticDTO.SupplierCostItem(
+                            rs.getString("supplier_name"),
+                            rs.getBigDecimal("cost")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving import cost by supplier: " + e.getMessage());
+        }
+        return list;
+    }
+
+    // ===== LƯƠNG NHÂN VIÊN (dùng cho thống kê) =====
+
+    public List<StatisticDTO.SalaryPoint> getSalaryTimelineInRange(LocalDate from, LocalDate to) {
+        String sql = """
+                SELECT DATE_FORMAT(salary_period, '%Y-%m') AS period_label,
+                       COALESCE(SUM(net_salary), 0) AS net_salary
+                FROM payroll_history
+                WHERE DATE_FORMAT(salary_period, '%Y-%m') >= DATE_FORMAT(?, '%Y-%m')
+                  AND DATE_FORMAT(salary_period, '%Y-%m') <= DATE_FORMAT(?, '%Y-%m')
+                GROUP BY DATE_FORMAT(salary_period, '%Y-%m')
+                ORDER BY DATE_FORMAT(salary_period, '%Y-%m')
+                """;
+        List<StatisticDTO.SalaryPoint> list = new ArrayList<>();
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from));
+            ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new StatisticDTO.SalaryPoint(
+                            rs.getString("period_label"),
+                            rs.getBigDecimal("net_salary")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving salary timeline in range: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public java.math.BigDecimal sumNetSalaryInRange(LocalDate from, LocalDate to) {
+        String sql = """
+                SELECT COALESCE(SUM(net_salary), 0) AS total_net
+                FROM payroll_history
+                WHERE DATE_FORMAT(salary_period, '%Y-%m') >= DATE_FORMAT(?, '%Y-%m')
+                  AND DATE_FORMAT(salary_period, '%Y-%m') <= DATE_FORMAT(?, '%Y-%m')
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from));
+            ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    java.math.BigDecimal val = rs.getBigDecimal("total_net");
+                    return val != null ? val : java.math.BigDecimal.ZERO;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error summing net salary in range: " + e.getMessage());
+        }
+        return java.math.BigDecimal.ZERO;
+    }
+
+    /**
+     * Doanh thu theo danh mục sản phẩm (Module 4)
+     */
+    public List<CategoryRevenue> getCategoryRevenue(LocalDate from, LocalDate to, int completedStatusId) {
+        final String query = """
+                SELECT
+                    c.name AS category_name,
+                    COALESCE(SUM(di.total_price), 0) AS revenue
+                FROM invoice i
+                JOIN detail_invoice di ON di.invoice_id = i.id
+                JOIN product p ON p.id = di.product_id
+                JOIN category c ON c.id = p.category_id
+                WHERE i.created_at >= ? AND i.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+                  AND i.status_id = ?
+                GROUP BY c.id, c.name
+                ORDER BY revenue DESC;
+                """;
+
+        List<CategoryRevenue> list = new ArrayList<>();
+
+        try (Connection connection = connectionFactory.newConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setDate(1, Date.valueOf(from));
+            statement.setDate(2, Date.valueOf(to));
+            statement.setInt(3, completedStatusId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new CategoryRevenue(
+                            rs.getString("category_name"),
+                            rs.getBigDecimal("revenue")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving category revenue statistics: " + e.getMessage());
+        }
+        return list;
+    }
 }
+

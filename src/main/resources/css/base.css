@@ -747,3 +747,9 @@
     -fx-padding: 0;
     -fx-shape: "";
 }
+
+/* BarChart – giới hạn chiều rộng cột, tránh cột phình to khi ít category */
+.chart-bar {
+    -fx-max-width: 55px;
+    -fx-background-radius: 3 3 0 0;
+}

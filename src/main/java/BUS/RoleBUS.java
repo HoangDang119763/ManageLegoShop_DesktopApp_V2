@@ -105,6 +105,13 @@ public class RoleBUS extends BaseBUS<RoleDTO, Integer> {
             return new BUSResult(BUSOperationResult.FAIL, "Còn nhân viên thuộc chức vụ này, không thể xóa!");
         }
 
+        // Xóa toàn bộ quyền của chức vụ trước khi xóa chức vụ
+        int permCount = RolePermissionBUS.getInstance().countByRoleId(roleId);
+        if (permCount > 0) {
+            if (!RolePermissionBUS.getInstance().deleteAllByRoleId(roleId))
+                return new BUSResult(BUSOperationResult.DB_ERROR, "Xóa quyền của chức vụ thất bại!");
+        }
+
         if (!RoleDAL.getInstance().delete(roleId))
             return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
 

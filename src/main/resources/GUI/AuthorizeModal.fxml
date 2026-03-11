@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -11,18 +13,32 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="485.0" prefWidth="825.0" style="-fx-background-color: TRANSPARENT;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.AuthorizeModalController">
+<AnchorPane prefHeight="650.0" prefWidth="1074.0"
+           xmlns="http://javafx.com/javafx/23.0.1"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="GUI.AuthorizeModalController">
    <children>
-      <BorderPane prefHeight="425.0" prefWidth="600.0" style="-fx-border-color: #30bac4; -fx-border-width: 2px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <BorderPane AnchorPane.bottomAnchor="0.0"
+                  AnchorPane.leftAnchor="0.0"
+                  AnchorPane.rightAnchor="0.0"
+                  AnchorPane.topAnchor="0.0">
+         <!-- Top: tiêu đề giống các màn khác -->
          <top>
-            <AnchorPane prefHeight="60.0" prefWidth="550.0" BorderPane.alignment="CENTER">
+            <AnchorPane prefHeight="60.0" BorderPane.alignment="CENTER">
                <children>
-                  <Label layoutX="293.0" layoutY="2.0" text="Phân quyền cho chức vụ" textFill="#30bac4">
+                  <Label layoutX="20.0" layoutY="10.0"
+                         text="Phân quyền cho chức vụ"
+                         textFill="#30bac4">
                      <font>
                         <Font name="Arial Bold" size="20.0" />
                      </font>
                   </Label>
-                  <Label fx:id="roleName" alignment="CENTER" layoutX="263.0" layoutY="25.0" prefHeight="30.0" prefWidth="300.0" text="Admin" textFill="#30bac4">
+                  <Label fx:id="roleName"
+                         alignment="CENTER_LEFT"
+                         layoutX="20.0" layoutY="32.0"
+                         prefHeight="30.0" prefWidth="400.0"
+                         text="Admin"
+                         textFill="#30bac4">
                      <font>
                         <Font name="Arial Bold Italic" size="18.0" />
                      </font>
@@ -30,35 +46,70 @@
                </children>
             </AnchorPane>
          </top>
+
+         <!-- Center: thẻ trắng chứa danh sách quyền, có ScrollPane để không bị đè -->
          <center>
-            <AnchorPane prefHeight="365.0" prefWidth="539.0" BorderPane.alignment="CENTER">
+            <AnchorPane BorderPane.alignment="CENTER">
                <children>
-                  <GridPane fx:id="permissionGridPane" hgap="5.0" layoutX="153.0" layoutY="145.0" prefHeight="357.6" prefWidth="600.0" vgap="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="0.0">
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
+                  <AnchorPane stylesheets="@../css/base.css"
+                              AnchorPane.bottomAnchor="5.0"
+                              AnchorPane.leftAnchor="10.0"
+                              AnchorPane.rightAnchor="10.0"
+                              AnchorPane.topAnchor="5.0">
+                     <styleClass>
+                        <String fx:value="white-bg"/>
+                        <String fx:value="shadow"/>
+                     </styleClass>
                      <children>
-                        <VBox prefHeight="116.0" prefWidth="142.0" spacing="5.0" />
+                        <ScrollPane fitToWidth="true" fitToHeight="true"
+                                    hbarPolicy="AS_NEEDED"
+                                    vbarPolicy="AS_NEEDED"
+                                    AnchorPane.bottomAnchor="10.0"
+                                    AnchorPane.leftAnchor="10.0"
+                                    AnchorPane.rightAnchor="10.0"
+                                    AnchorPane.topAnchor="10.0">
+                           <content>
+                              <GridPane fx:id="permissionGridPane"
+                                        hgap="20.0" vgap="20.0"
+                                        prefWidth="950.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
+                                 </columnConstraints>
+                              </GridPane>
+                           </content>
+                        </ScrollPane>
                      </children>
-                  </GridPane>
+                  </AnchorPane>
                </children>
             </AnchorPane>
          </center>
+
+         <!-- Bottom: nút Thoát / Lưu căn giữa giống các modal khác -->
          <bottom>
-            <AnchorPane prefHeight="60.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+            <AnchorPane prefHeight="60.0" BorderPane.alignment="CENTER">
                <children>
-                  <HBox alignment="CENTER" layoutX="180.0" prefHeight="60.0" prefWidth="600.0" spacing="60.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="130.0" AnchorPane.rightAnchor="130.0" AnchorPane.topAnchor="0.0">
+                  <HBox alignment="CENTER"
+                        spacing="40.0"
+                        AnchorPane.bottomAnchor="10.0"
+                        AnchorPane.leftAnchor="0.0"
+                        AnchorPane.rightAnchor="0.0"
+                        AnchorPane.topAnchor="10.0">
                      <children>
-                        <Button fx:id="closeBtn" mnemonicParsing="false" prefHeight="26.0" prefWidth="140.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Thoát" />
-                        <Button fx:id="saveBtn" mnemonicParsing="false" prefHeight="26.0" prefWidth="140.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Lưu" />
+                        <Button fx:id="closeBtn"
+                                mnemonicParsing="false"
+                                prefHeight="35.0" prefWidth="140.0"
+                                styleClass="action-btn"
+                                stylesheets="@../css/base.css"
+                                text="Thoát" />
+                        <Button fx:id="saveBtn"
+                                mnemonicParsing="false"
+                                prefHeight="35.0" prefWidth="140.0"
+                                styleClass="action-btn"
+                                stylesheets="@../css/base.css"
+                                text="Lưu" />
                      </children>
                   </HBox>
                </children>

@@ -2,6 +2,8 @@ package DAL;
 
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
+import DTO.HrStatisticDTO.DepartmentDistributionItem;
+import DTO.HrStatisticDTO.StatusDistributionItem;
 import DTO.PagedResponse;
 import DTO.EmployeeDetailDTO;
 import DTO.EmployeeDisplayDTO;
@@ -854,7 +856,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             }
 
             // Execute batch
-            int[] results = statement.executeBatch();
+            statement.executeBatch();
 
             // Get generated keys and assign to objects
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -871,5 +873,93 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             System.err.println("Lỗi DAL insertBatchWithConn: " + e.getMessage());
             throw e;
         }
+    }
+
+    // ===== HR STATISTIC HELPERS =====
+
+    public int countActiveEmployees() {
+        final String sql = """
+                SELECT COUNT(*) AS cnt
+                FROM employee e
+                JOIN status s ON e.status_id = s.id
+                WHERE LOWER(s.type) = 'employee'
+                  AND LOWER(s.name) = 'active'
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("cnt");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting active employees: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countNewEmployeesInMonth(int month, int year) {
+        final String sql = """
+                SELECT COUNT(*) AS cnt
+                FROM employee
+                WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("cnt");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting new employees in month: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public java.util.List<StatusDistributionItem> getStatusDistribution() {
+        java.util.List<StatusDistributionItem> list = new java.util.ArrayList<>();
+        final String sql = """
+                SELECT s.description AS status_name, COUNT(*) AS cnt
+                FROM employee e
+                JOIN status s ON e.status_id = s.id
+                WHERE LOWER(s.type) = 'employee'
+                GROUP BY s.id, s.description
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new StatusDistributionItem(
+                        rs.getString("status_name"),
+                        rs.getInt("cnt")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting employee status distribution: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public java.util.List<DepartmentDistributionItem> getDepartmentDistribution() {
+        java.util.List<DepartmentDistributionItem> list = new java.util.ArrayList<>();
+        final String sql = """
+                SELECT d.name AS department_name, COUNT(*) AS cnt
+                FROM employee e
+                JOIN department d ON e.department_id = d.id
+                GROUP BY d.id, d.name
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new DepartmentDistributionItem(
+                        rs.getString("department_name"),
+                        rs.getInt("cnt")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting employee department distribution: " + e.getMessage());
+        }
+        return list;
     }
 }
