@@ -144,15 +144,6 @@ LOCK TABLES `employment_history` WRITE;
 UNLOCK TABLES;
 
 --
--- Dumping data for table `file`
---
-
-LOCK TABLES `file` WRITE;
-/*!40000 ALTER TABLE `file` DISABLE KEYS */;
-/*!40000 ALTER TABLE `file` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Dumping data for table `fine`
 --
 
@@ -350,24 +341,6 @@ LOCK TABLES `product` WRITE;
 /*!40000 ALTER TABLE `product` DISABLE KEYS */;
 INSERT INTO `product` VALUES ('SP00001','Naruto - 01',15,23250.00,15000.00,6,'Minifigure nhân vật Naruto.','images/product/sp00001.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00002','Naruto - 02',0,23250.00,15000.00,6,'Minifigure Naruto trong trạng thái chiến đấu.','images/product/sp00002.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00003','Sasuke Uchiha',0,23250.00,15000.00,6,'Minifigure nhân vật Sasuke Uchiha từ series Naruto','images/product/SP00003.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00004','Kakashi Hatake',0,18600.00,12000.00,6,'Minifigure nhân vật Kakashi với Sharingan','images/product/SP00004.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00005','Iron Man Mark 85',1,18600.00,12000.00,6,'Minifigure Iron Man trong bộ giáp Mark 85 từ Avengers: Endgame','images/product/SP00007.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00006','Jiraiya',3,18600.00,12000.00,6,'Minifigure Jiraiya, thầy của Naruto.','images/product/SP00008.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00007','Sarada',0,23250.00,15000.00,6,'Minifigure Sarada, con gái của Sasuke.','images/product/SP00009.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00008','Thanos',13,24000.00,15000.00,6,'Minifigure Thanos trong phim Marvel.','images/product/SP00010.png',2,'2026-02-24 22:00:04','2026-03-06 00:53:23'),('SP00009','Awp Asiimov',0,1600000.00,1000000.00,6,'Mô hình súng Awp Asiimov.','images/product/SP00025.jpg',6,'2026-03-05 22:52:52','2026-03-06 00:53:23'),('SP00010','HK G28',0,1360000.00,850000.00,6,'Mô hình súng HK G28.','images/product/SP00026.png',6,'2026-03-05 22:53:25','2026-03-06 00:53:23'),('SP00011','Scar-L Asiimov',0,1360000.00,850000.00,6,'Mô hình súng Scar-L Asiimov.','images/product/SP00027.png',6,'2026-03-05 22:54:07','2026-03-06 00:53:23'),('SP00012','Sniper XPR-50',0,1360000.00,850000.00,6,'Mô hình súng Sniper XPR-50.','images/product/SP00028.png',6,'2026-03-05 22:55:08','2026-03-06 00:53:23'),('SP00013','Siêu Xe Lamborghini Sian FKP 37',0,1424000.00,890000.00,6,'Mô hình siêu xe Lamborghini Sian.','images/product/SP00029.png',3,'2026-03-05 22:55:46','2026-03-06 00:53:23'),('SP00014','Xe mô tô thể thao Kawasaki Ninja H2R',0,1200000.00,750000.00,6,'Mô hình xe mô tô Kawasaki Ninja H2R.','images/product/SP00030.png',3,'2026-03-05 22:57:24','2026-03-06 00:53:23');
 /*!40000 ALTER TABLE `product` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `profit_stat`
---
-
-LOCK TABLES `profit_stat` WRITE;
-/*!40000 ALTER TABLE `profit_stat` DISABLE KEYS */;
-/*!40000 ALTER TABLE `profit_stat` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `report`
---
-
-LOCK TABLES `report` WRITE;
-/*!40000 ALTER TABLE `report` DISABLE KEYS */;
-/*!40000 ALTER TABLE `report` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

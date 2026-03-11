@@ -3,11 +3,9 @@ package GUI;
 import BUS.StatisticBUS;
 import DTO.StatisticDTO;
 import DTO.StatisticDTO.CategoryRevenue;
-import DTO.StatisticDTO.ImportCostPoint;
 import DTO.StatisticDTO.ProductRevenue;
 import DTO.StatisticDTO.ProfitPoint;
 import DTO.StatisticDTO.RevenuePoint;
-import DTO.StatisticDTO.SupplierCostItem;
 import ENUM.ViewBy;
 import INTERFACE.IController;
 import UTILS.NotificationUtils;
@@ -38,74 +36,128 @@ public class StatisticController implements IController {
 
     /** Lưu trạng thái bộ lọc giữa các lần điều hướng module. */
     private static String savedFromDate = null;
-    private static String savedToDate   = null;
-    private static ViewBy savedViewBy   = null;
+    private static String savedToDate = null;
+    private static ViewBy savedViewBy = null;
 
     // ── Bộ lọc chung ──────────────────────────────────────
-    @FXML private TextField fromDate;
-    @FXML private TextField toDate;
-    @FXML private ComboBox<ViewBy> viewByCombo;
-    @FXML private Button btnFilter;
-    @FXML private Button btnRefresh;
-    @FXML private Button btnExport;
+    @FXML
+    private TextField fromDate;
+    @FXML
+    private TextField toDate;
+    @FXML
+    private ComboBox<ViewBy> viewByCombo;
+    @FXML
+    private Button btnFilter;
+    @FXML
+    private Button btnRefresh;
+    @FXML
+    private Button btnExport;
 
     // ── Tab 1: Tổng quan ──────────────────────────────────
-    @FXML private Label lblOverviewRevenue;
-    @FXML private Label lblOverviewCost;
-    @FXML private Label lblOverviewImportCost;
-    @FXML private Label lblOverviewSalaryCost;
-    @FXML private Label lblOverviewProfit;
-    @FXML private Label lblOverviewInvoiceCount;
-    @FXML private LineChart<String, Number> overviewTrendChart;
-    @FXML private BarChart<String, Number> overviewCategoryChart;
+    @FXML
+    private Label lblOverviewRevenue;
+    @FXML
+    private Label lblOverviewCost;
+    @FXML
+    private Label lblOverviewImportCost;
+    @FXML
+    private Label lblOverviewSalaryCost;
+    @FXML
+    private Label lblOverviewProfit;
+    @FXML
+    private Label lblOverviewInvoiceCount;
+    @FXML
+    private LineChart<String, Number> overviewTrendChart;
+    @FXML
+    private BarChart<String, Number> overviewCategoryChart;
 
     // ── Tab 2: Doanh thu ──────────────────────────────────
-    @FXML private Label lblTotalRevenue;
-    @FXML private Label lblTotalInvoices;
-    @FXML private Label lblAvgInvoice;
-    @FXML private LineChart<String, Number> revenueLineChart;
-    @FXML private BarChart<String, Number> revenueCategoryChart;
-    @FXML private TableView<RevenuePoint> tblRevenue;
-    @FXML private TableColumn<RevenuePoint, String> colRevPeriod;
-    @FXML private TableColumn<RevenuePoint, String> colRevAmount;
-    @FXML private TableColumn<RevenuePoint, String> colRevCount;
+    @FXML
+    private Label lblTotalRevenue;
+    @FXML
+    private Label lblTotalInvoices;
+    @FXML
+    private Label lblAvgInvoice;
+    @FXML
+    private LineChart<String, Number> revenueLineChart;
+    @FXML
+    private BarChart<String, Number> revenueCategoryChart;
+    @FXML
+    private TableView<RevenuePoint> tblRevenue;
+    @FXML
+    private TableColumn<RevenuePoint, String> colRevPeriod;
+    @FXML
+    private TableColumn<RevenuePoint, String> colRevAmount;
+    @FXML
+    private TableColumn<RevenuePoint, String> colRevCount;
 
     // ── Tab 3: Chi ────────────────────────────────────────
-    @FXML private Label lblTotalCost;
-    @FXML private Label lblImportCost;
-    @FXML private Label lblSalaryCost;
-    @FXML private Label lblImportCount;
-    @FXML private BarChart<String, Number> costTimelineChart;
-    @FXML private BarChart<String, Number> supplierCostChart;
-    @FXML private TableView<ProfitPoint> tblCost;
-    @FXML private TableColumn<ProfitPoint, String> colCostPeriod;
-    @FXML private TableColumn<ProfitPoint, String> colCostImport;
-    @FXML private TableColumn<ProfitPoint, String> colCostSalary;
-    @FXML private TableColumn<ProfitPoint, String> colCostTotal;
+    @FXML
+    private Label lblTotalCost;
+    @FXML
+    private Label lblImportCost;
+    @FXML
+    private Label lblSalaryCost;
+    @FXML
+    private Label lblImportCount;
+    @FXML
+    private BarChart<String, Number> costTimelineChart;
+    @FXML
+    private BarChart<String, Number> supplierCostChart;
+    @FXML
+    private TableView<ProfitPoint> tblCost;
+    @FXML
+    private TableColumn<ProfitPoint, String> colCostPeriod;
+    @FXML
+    private TableColumn<ProfitPoint, String> colCostImport;
+    @FXML
+    private TableColumn<ProfitPoint, String> colCostSalary;
+    @FXML
+    private TableColumn<ProfitPoint, String> colCostTotal;
 
     // ── Tab 4: Lợi nhuận ─────────────────────────────────
-    @FXML private Label lblProfitRevenue;
-    @FXML private Label lblProfitCost;
-    @FXML private Label lblProfitAmount;
-    @FXML private Label lblProfitRate;
-    @FXML private LineChart<String, Number> profitLineChart;
-    @FXML private TableView<ProfitPoint> tblProfit;
-    @FXML private TableColumn<ProfitPoint, String> colProfitPeriod;
-    @FXML private TableColumn<ProfitPoint, String> colProfitRevenue;
-    @FXML private TableColumn<ProfitPoint, String> colProfitCost;
-    @FXML private TableColumn<ProfitPoint, String> colProfitAmount;
-    @FXML private TableColumn<ProfitPoint, String> colProfitRate;
+    @FXML
+    private Label lblProfitRevenue;
+    @FXML
+    private Label lblProfitCost;
+    @FXML
+    private Label lblProfitAmount;
+    @FXML
+    private Label lblProfitRate;
+    @FXML
+    private LineChart<String, Number> profitLineChart;
+    @FXML
+    private TableView<ProfitPoint> tblProfit;
+    @FXML
+    private TableColumn<ProfitPoint, String> colProfitPeriod;
+    @FXML
+    private TableColumn<ProfitPoint, String> colProfitRevenue;
+    @FXML
+    private TableColumn<ProfitPoint, String> colProfitCost;
+    @FXML
+    private TableColumn<ProfitPoint, String> colProfitAmount;
+    @FXML
+    private TableColumn<ProfitPoint, String> colProfitRate;
 
     // ── Tab 5: Doanh số ───────────────────────────────────
-    @FXML private Label lblTotalQuantity;
-    @FXML private Label lblProductCount;
-    @FXML private Label lblAvgQuantity;
-    @FXML private BarChart<String, Number> salesCategoryChart;
-    @FXML private BarChart<String, Number> topProductChart;
-    @FXML private TableView<ProductRevenue> tblSales;
-    @FXML private TableColumn<ProductRevenue, String> colSalesProduct;
-    @FXML private TableColumn<ProductRevenue, String> colSalesCategory;
-    @FXML private TableColumn<ProductRevenue, String> colSalesQuantity;
+    @FXML
+    private Label lblTotalQuantity;
+    @FXML
+    private Label lblProductCount;
+    @FXML
+    private Label lblAvgQuantity;
+    @FXML
+    private BarChart<String, Number> salesCategoryChart;
+    @FXML
+    private BarChart<String, Number> topProductChart;
+    @FXML
+    private TableView<ProductRevenue> tblSales;
+    @FXML
+    private TableColumn<ProductRevenue, String> colSalesProduct;
+    @FXML
+    private TableColumn<ProductRevenue, String> colSalesCategory;
+    @FXML
+    private TableColumn<ProductRevenue, String> colSalesQuantity;
 
     // ─────────────────────────────────────────────────────
 
@@ -125,13 +177,16 @@ public class StatisticController implements IController {
      */
     private void setupDateAutoFormat(TextField field) {
         field.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null) return;
+            if (newVal == null)
+                return;
             String digits = newVal.replaceAll("[^0-9]", "");
-            if (digits.length() > 8) digits = digits.substring(0, 8);
+            if (digits.length() > 8)
+                digits = digits.substring(0, 8);
 
             StringBuilder formatted = new StringBuilder();
             for (int i = 0; i < digits.length(); i++) {
-                if (i == 2 || i == 4) formatted.append('/');
+                if (i == 2 || i == 4)
+                    formatted.append('/');
                 formatted.append(digits.charAt(i));
             }
 
@@ -160,7 +215,8 @@ public class StatisticController implements IController {
         if (savedFromDate != null && savedToDate != null) {
             fromDate.setText(savedFromDate);
             toDate.setText(savedToDate);
-            if (savedViewBy != null) viewByCombo.setValue(savedViewBy);
+            if (savedViewBy != null)
+                viewByCombo.setValue(savedViewBy);
         } else {
             setupDefaultFilters();
         }
@@ -169,8 +225,8 @@ public class StatisticController implements IController {
     /** Ghi nhớ giá trị bộ lọc hiện tại trước khi thực hiện tìm kiếm. */
     private void saveCurrentFilters() {
         savedFromDate = fromDate.getText();
-        savedToDate   = toDate.getText();
-        savedViewBy   = viewByCombo.getValue();
+        savedToDate = toDate.getText();
+        savedViewBy = viewByCombo.getValue();
     }
 
     @Override
@@ -198,7 +254,8 @@ public class StatisticController implements IController {
         colProfitRate.setCellValueFactory(c -> {
             BigDecimal rev = c.getValue().getRevenue();
             BigDecimal profit = c.getValue().getProfit();
-            if (rev.compareTo(BigDecimal.ZERO) == 0) return new SimpleStringProperty("—");
+            if (rev.compareTo(BigDecimal.ZERO) == 0)
+                return new SimpleStringProperty("—");
             BigDecimal rate = profit.multiply(BigDecimal.valueOf(100))
                     .divide(rev, 1, RoundingMode.HALF_UP);
             return new SimpleStringProperty(rate + "%");
@@ -217,16 +274,15 @@ public class StatisticController implements IController {
         btnFilter.setOnAction(e -> handleFilter());
         btnRefresh.setOnAction(e -> {
             savedFromDate = null;
-            savedToDate   = null;
-            savedViewBy   = null;
+            savedToDate = null;
+            savedViewBy = null;
             setupDefaultFilters();
             initViewByCombo();
             clearAll();
         });
         if (btnExport != null) {
-            btnExport.setOnAction(e ->
-                    NotificationUtils.showInfoAlert(
-                            "Chức năng xuất báo cáo sẽ được bổ sung sau.", "Thông báo"));
+            btnExport.setOnAction(e -> NotificationUtils.showInfoAlert(
+                    "Chức năng xuất báo cáo sẽ được bổ sung sau.", "Thông báo"));
         }
     }
 
@@ -240,8 +296,7 @@ public class StatisticController implements IController {
 
             TaskUtil.executeAsync(
                     () -> StatisticBUS.getInstance().getAllStatistic(from, to, viewBy),
-                    this::renderAll
-            );
+                    this::renderAll);
         } catch (IllegalArgumentException ex) {
             NotificationUtils.showErrorAlert(ex.getMessage(), "Lỗi nhập liệu");
         }
@@ -336,8 +391,8 @@ public class StatisticController implements IController {
         supplierCostChart.getData().clear();
         XYChart.Series<String, Number> supSeries = new XYChart.Series<>();
         supSeries.setName("Chi nhập hàng");
-        dto.getSupplierCosts().stream().limit(10).forEach(s ->
-                supSeries.getData().add(new XYChart.Data<>(s.getSupplierName(), toMil(s.getCost()))));
+        dto.getSupplierCosts().stream().limit(10)
+                .forEach(s -> supSeries.getData().add(new XYChart.Data<>(s.getSupplierName(), toMil(s.getCost()))));
         supplierCostChart.getData().add(supSeries);
 
         tblCost.setItems(FXCollections.observableArrayList(dto.getProfitTimeline()));
@@ -416,9 +471,12 @@ public class StatisticController implements IController {
     // ── Tab 6 ──────────────────────────────────────────────
 
     private void renderReportTab(StatisticDTO dto) {
-        if (lblReportRevenue != null) lblReportRevenue.setText(fmt(dto.getTotalRevenue()));
-        if (lblReportCost != null) lblReportCost.setText(fmt(dto.getTotalCost()));
-        if (lblReportProfit != null) lblReportProfit.setText(fmt(dto.getProfit()));
+        if (lblReportRevenue != null)
+            lblReportRevenue.setText(fmt(dto.getTotalRevenue()));
+        if (lblReportCost != null)
+            lblReportCost.setText(fmt(dto.getTotalCost()));
+        if (lblReportProfit != null)
+            lblReportProfit.setText(fmt(dto.getProfit()));
         if (lblReportRate != null) {
             BigDecimal rate = dto.getTotalRevenue().compareTo(BigDecimal.ZERO) != 0
                     ? dto.getProfit().multiply(BigDecimal.valueOf(100))
@@ -429,10 +487,14 @@ public class StatisticController implements IController {
     }
 
     // ── Report tab labels (Tab 6) ─────────────────────────
-    @FXML private Label lblReportRevenue;
-    @FXML private Label lblReportCost;
-    @FXML private Label lblReportProfit;
-    @FXML private Label lblReportRate;
+    @FXML
+    private Label lblReportRevenue;
+    @FXML
+    private Label lblReportCost;
+    @FXML
+    private Label lblReportProfit;
+    @FXML
+    private Label lblReportRate;
 
     // ── Helpers ────────────────────────────────────────────
 
@@ -451,7 +513,8 @@ public class StatisticController implements IController {
     }
 
     private double toMil(BigDecimal value) {
-        if (value == null) return 0.0;
+        if (value == null)
+            return 0.0;
         return value.divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.HALF_UP).doubleValue();
     }
 
@@ -491,14 +554,20 @@ public class StatisticController implements IController {
         lblTotalQuantity.setText("—");
         lblProductCount.setText("—");
         lblAvgQuantity.setText("—");
-        if (lblReportRevenue != null) lblReportRevenue.setText("—");
-        if (lblReportCost != null) lblReportCost.setText("—");
-        if (lblReportProfit != null) lblReportProfit.setText("—");
-        if (lblReportRate != null) lblReportRate.setText("—");
+        if (lblReportRevenue != null)
+            lblReportRevenue.setText("—");
+        if (lblReportCost != null)
+            lblReportCost.setText("—");
+        if (lblReportProfit != null)
+            lblReportProfit.setText("—");
+        if (lblReportRate != null)
+            lblReportRate.setText("—");
     }
 
     @Override
-    public void applyFilters() { handleFilter(); }
+    public void applyFilters() {
+        handleFilter();
+    }
 
     @Override
     public void resetFilters() {
@@ -508,5 +577,6 @@ public class StatisticController implements IController {
     }
 
     @Override
-    public void hideButtonWithoutPermission() {}
+    public void hideButtonWithoutPermission() {
+    }
 }
