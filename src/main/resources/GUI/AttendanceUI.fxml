@@ -23,6 +23,9 @@
                                 <Button fx:id="btnImport" styleClass="action-btn" text="IMPORT EXCEL">
                                     <graphic><FontAwesomeIcon glyphName="FILE_EXCEL_ALT" /></graphic>
                                 </Button>
+                                <Button fx:id="btnExport" styleClass="action-btn" text="XUẤT BÁO CÁO">
+                                    <graphic><FontAwesomeIcon glyphName="EXTERNAL_LINK" /></graphic>
+                                </Button>
                                 <Button fx:id="btnRefresh" styleClass="action-btn" text="LÀM MỚI">
                                     <graphic><FontAwesomeIcon glyphName="REFRESH" /></graphic>
                                 </Button>
@@ -31,11 +34,22 @@
                         
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
-                                <TextField fx:id="txtSearchEmployee" prefWidth="250.0" promptText="Tìm theo tên hoặc mã NV..." styleClass="textfield" />
-                                <ComboBox fx:id="cbDepartment" prefWidth="150.0" promptText="Phòng ban" />
-                                <ComboBox fx:id="cbMonth" prefWidth="120.0" promptText="Tháng" />
+                                <TextField fx:id="txtSearchEmployee" prefWidth="220.0" promptText="Tìm theo tên hoặc mã NV..." styleClass="textfield" />
+                                <ComboBox fx:id="cbDepartment" prefWidth="140.0" promptText="Phòng ban" />
+                                
                                 <Separator orientation="VERTICAL" />
-                                <DatePicker fx:id="dpSpecificDate" prefWidth="150.0" promptText="Xem theo ngày" />
+                                
+                                <Label text="Ngày:" style="-fx-font-weight: bold;" />
+                                <ComboBox fx:id="cbDay" prefWidth="65.0" />
+                                
+                                <Label text="Tháng:" style="-fx-font-weight: bold;" />
+                                <ComboBox fx:id="cbMonth" prefWidth="65.0" />
+                                
+                                <Label text="Năm:" style="-fx-font-weight: bold;" />
+                                <ComboBox fx:id="cbYear" prefWidth="85.0" />
+                                
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblEmployeeName" style="-fx-font-style: italic;" text="NV: Chưa chọn" />
                             </children>
                         </HBox>
                     </children>
@@ -46,24 +60,30 @@
                 <VBox spacing="10.0">
                     <padding><Insets bottom="10.0" left="15.0" right="15.0" top="10.0" /></padding>
                     <children>
-                        <HBox spacing="20.0">
+                        <HBox spacing="15.0">
                             <children>
-                                <VBox style="-fx-background-color: #e3f2fd; -fx-padding: 15; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                                <VBox style="-fx-background-color: #e3f2fd; -fx-padding: 10; -fx-background-radius: 8;" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <Label text="Tổng nhân sự đi làm" style="-fx-text-fill: #1976d2;" />
-                                        <Label fx:id="lblStatPresent" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+                                        <Label text="Nhân sự đi làm" style="-fx-text-fill: #1976d2; -fx-font-weight: bold;" />
+                                        <Label fx:id="lblStatPresent" text="0" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
                                     </children>
                                 </VBox>
-                                <VBox style="-fx-background-color: #fff3e0; -fx-padding: 15; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                                <VBox style="-fx-background-color: #f1f8e9; -fx-padding: 10; -fx-background-radius: 8;" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <Label text="Nhân viên đi muộn" style="-fx-text-fill: #f57c00;" />
-                                        <Label fx:id="lblStatLate" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+                                        <Label text="Tổng giờ công" style="-fx-text-fill: #388e3c; -fx-font-weight: bold;" />
+                                        <Label fx:id="lblTotalHours" text="0.0 giờ" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
                                     </children>
                                 </VBox>
-                                <VBox style="-fx-background-color: #ffebee; -fx-padding: 15; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                                <VBox style="-fx-background-color: #fff3e0; -fx-padding: 10; -fx-background-radius: 8;" HBox.hgrow="ALWAYS">
                                     <children>
-                                        <Label text="Nhân viên vắng mặt" style="-fx-text-fill: #d32f2f;" />
-                                        <Label fx:id="lblStatAbsent" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+                                        <Label text="Tổng giờ OT" style="-fx-text-fill: #f57c00; -fx-font-weight: bold;" />
+                                        <Label fx:id="lblOTHours" text="0.0 giờ" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+                                    </children>
+                                </VBox>
+                                <VBox style="-fx-background-color: #fafafa; -fx-padding: 10; -fx-border-color: #ddd; -fx-border-radius: 8; -fx-background-radius: 8;" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label text="Số dòng dữ liệu" style="-fx-text-fill: #616161; -fx-font-weight: bold;" />
+                                        <Label fx:id="lblWorkDays" text="0 dòng" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
                                     </children>
                                 </VBox>
                             </children>
@@ -73,11 +93,10 @@
                             <columns>
                                 <TableColumn fx:id="colId" prefWidth="60.0" text="Mã NV" />
                                 <TableColumn fx:id="colName" prefWidth="180.0" text="Họ tên" />
-                                <TableColumn fx:id="colDate" prefWidth="100.0" text="Ngày" />
-                                <TableColumn fx:id="colCheckIn" prefWidth="120.0" text="Giờ vào" />
-                                <TableColumn fx:id="colCheckOut" prefWidth="120.0" text="Giờ ra" />
-                                <TableColumn fx:id="colWorkHours" prefWidth="100.0" text="Giờ làm" />
-                                <TableColumn fx:id="colOTHours" prefWidth="100.0" text="Giờ OT" />
+                                <TableColumn fx:id="colCheckIn" prefWidth="130.0" text="Thời gian vào" />
+                                <TableColumn fx:id="colCheckOut" prefWidth="130.0" text="Thời gian ra" />
+                                <TableColumn fx:id="colWorkHours" prefWidth="90.0" text="Số giờ công" />
+                                <TableColumn fx:id="colOTHours" prefWidth="90.0" text="Giờ OT" />
                                 <TableColumn fx:id="colStatus" prefWidth="120.0" text="Trạng thái" />
                             </columns>
                             <columnResizePolicy>
@@ -87,7 +106,7 @@
 
                         <HBox alignment="CENTER_RIGHT" spacing="10.0">
                             <children>
-                                <Label fx:id="lblPageInfo" text="Hiển thị 1-50 của 1000 bản ghi" />
+                                <Label fx:id="lblPageInfo" text="Trang 1 / 1" />
                                 <Button fx:id="btnPrevious" styleClass="btn-page" text="&lt;" />
                                 <Button fx:id="btnNext" styleClass="btn-page" text="&gt;" />
                             </children>
