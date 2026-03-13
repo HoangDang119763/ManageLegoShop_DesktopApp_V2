@@ -6,6 +6,7 @@ import DTO.FineDTO;
 import DTO.EmployeeDTO;
 import DTO.BUSResult;
 import ENUM.BUSOperationResult;
+import ENUM.Status.FineType; // Import Enum mới của bạn
 import ENUM.PermissionKey;
 import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
@@ -27,35 +28,21 @@ import java.util.stream.Collectors;
 public class DisciplineRewardTabController {
     private static final int PAGE_SIZE = 10;
     
-    @FXML
-    private TableView<FineDTO> tblDisciplineReward;
-    @FXML
-    private TableColumn<FineDTO, Integer> colId;
-    @FXML
-    private TableColumn<FineDTO, String> colEmployeeName;
-    @FXML
-    private TableColumn<FineDTO, String> colType;
-    @FXML
-    private TableColumn<FineDTO, String> colReason;
-    @FXML
-    private TableColumn<FineDTO, String> colLevel;
-    @FXML
-    private TableColumn<FineDTO, BigDecimal> colAmount;
-    @FXML
-    private TableColumn<FineDTO, LocalDateTime> colDate;
-    @FXML
-    private TableColumn<FineDTO, Void> colAction;
+    @FXML private TableView<FineDTO> tblDisciplineReward;
+    @FXML private TableColumn<FineDTO, Integer> colId;
+    @FXML private TableColumn<FineDTO, String> colEmployeeName;
+    @FXML private TableColumn<FineDTO, String> colType; // Hiển thị loại khen thưởng/kỷ luật
+    @FXML private TableColumn<FineDTO, String> colReason;
+    @FXML private TableColumn<FineDTO, String> colLevel;
+    @FXML private TableColumn<FineDTO, BigDecimal> colAmount;
+    @FXML private TableColumn<FineDTO, LocalDateTime> colDate;
+    @FXML private TableColumn<FineDTO, Void> colAction;
 
-    @FXML
-    private TextField txtSearch;
-    @FXML
-    private ComboBox<String> cbType;
-    @FXML
-    private Button btnAdd, btnRefresh;
-    @FXML
-    private Button btnPrevious, btnNext;
-    @FXML
-    private Label lblPageInfo;
+    @FXML private TextField txtSearch;
+    @FXML private ComboBox<Object> cbType; // Để Object để chứa cả String "TẤT CẢ" và FineType
+    @FXML private Button btnAdd, btnRefresh;
+    @FXML private Button btnPrevious, btnNext;
+    @FXML private Label lblPageInfo;
 
     private FineBUS fineBUS;
     private EmployeeBUS employeeBUS;
@@ -82,9 +69,24 @@ public class DisciplineRewardTabController {
         colLevel.setCellValueFactory(new PropertyValueFactory<>("fineLevel"));
         colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
-        colType.setCellValueFactory(new PropertyValueFactory<>("actionType"));
+        
+        // Hiển thị Loại có màu sắc dựa trên Enum
+        colType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        colType.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    FineType type = FineType.fromString(item);
+                    setText(type.getLabel());
+                    setStyle("-fx-text-fill: " + type.getColor() + "; -fx-font-weight: bold;");
+                }
+            }
+        });
 
-        // Custom cell factory for employee name (join with employee table)
         colEmployeeName.setCellValueFactory(cellData -> {
             int empId = cellData.getValue().getEmployeeId();
             EmployeeDTO emp = employeeBUS.getById(empId);
@@ -92,22 +94,18 @@ public class DisciplineRewardTabController {
                 emp != null ? emp.getFirstName() + " " + emp.getLastName() : "N/A");
         });
 
-        // Action column (Edit, Delete)
-        colAction.setCellFactory(param -> new TableCell<FineDTO, Void>() {
+        colAction.setCellFactory(param -> new TableCell<>() {
             private final Button editBtn = new Button("Sửa");
             private final Button deleteBtn = new Button("Xóa");
             private final HBox pane = new HBox(5);
-
             {
                 editBtn.setStyle("-fx-font-size: 11px; -fx-padding: 5px;");
                 deleteBtn.setStyle("-fx-font-size: 11px; -fx-padding: 5px;");
                 pane.setAlignment(Pos.CENTER);
                 pane.getChildren().addAll(editBtn, deleteBtn);
-
                 editBtn.setOnAction(event -> handleEdit(getTableView().getItems().get(getIndex())));
                 deleteBtn.setOnAction(event -> handleDelete(getTableView().getItems().get(getIndex())));
             }
-
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -117,7 +115,11 @@ public class DisciplineRewardTabController {
     }
 
     private void setupTypeFilter() {
-        cbType.setItems(FXCollections.observableArrayList("TẤT CẢ", "REWARD", "DISCIPLINE"));
+        ArrayList<Object> items = new ArrayList<>();
+        items.add("TẤT CẢ");
+        items.add(FineType.REWARD);
+        items.add(FineType.DISCIPLINE);
+        cbType.setItems(FXCollections.observableArrayList(items));
         cbType.setValue("TẤT CẢ");
     }
 
@@ -131,65 +133,41 @@ public class DisciplineRewardTabController {
     }
 
     private void loadData() {
-        SecureExecutor.executeSafeBusResult(
-            PermissionKey.EMPLOYEE_FINE_REWARD_VIEW,
-            () -> {
-                allData.clear();
-                allData.addAll(fineBUS.getAll());
-                return new BUSResult(BUSOperationResult.SUCCESS, "Loaded");
-            }
-        );
-
+        SecureExecutor.executeSafeBusResult(PermissionKey.EMPLOYEE_FINE_REWARD_VIEW, () -> {
+            allData.clear();
+            allData.addAll(fineBUS.getAll());
+            return new BUSResult(BUSOperationResult.SUCCESS, "Loaded");
+        });
         filterData();
     }
 
     private void filterData() {
         String searchText = txtSearch.getText().toLowerCase();
-        String type = cbType.getValue();
+        Object typeFilter = cbType.getValue();
 
-        filteredData.clear();
-        filteredData.addAll(allData.stream()
+        filteredData = allData.stream()
             .filter(f -> {
                 EmployeeDTO emp = employeeBUS.getById(f.getEmployeeId());
                 String empName = emp != null ? (emp.getFirstName() + " " + emp.getLastName()).toLowerCase() : "";
                 return f.getReason().toLowerCase().contains(searchText) || empName.contains(searchText);
             })
-            .filter(f -> type.equals("TẤT CẢ") || f.getType().equals(type))
-            .collect(Collectors.toCollection(ArrayList::new)));
+            .filter(f -> {
+                if (typeFilter.equals("TẤT CẢ")) return true;
+                return f.getType().equals(((FineType)typeFilter).name());
+            })
+            .collect(Collectors.toCollection(ArrayList::new));
 
         currentPageIndex = 0;
         displayPage(0);
     }
 
-    private void showPreviousPage() {
-        if (currentPageIndex > 0) {
-            currentPageIndex--;
-            displayPage(currentPageIndex);
-        }
-    }
-
-    private void showNextPage() {
-        int totalPages = (int) Math.ceil((double) filteredData.size() / PAGE_SIZE);
-        if (filteredData.isEmpty()) totalPages = 1;
-        if (currentPageIndex < totalPages - 1) {
-            currentPageIndex++;
-            displayPage(currentPageIndex);
-        }
-    }
-
     private void displayPage(int pageIndex) {
         int start = pageIndex * PAGE_SIZE;
         int end = Math.min(start + PAGE_SIZE, filteredData.size());
+        tblDisciplineReward.setItems(FXCollections.observableArrayList(new ArrayList<>(filteredData.subList(start, end))));
         
-        ArrayList<FineDTO> pageData = new ArrayList<>(filteredData.subList(start, end));
-        tblDisciplineReward.setItems(FXCollections.observableArrayList(pageData));
-        
-        // Update page info label
         int totalPages = filteredData.isEmpty() ? 1 : (int) Math.ceil((double) filteredData.size() / PAGE_SIZE);
-        lblPageInfo.setText(String.format("Trang %d / %d (Tổng: %d bản ghi)", 
-            pageIndex + 1, totalPages, filteredData.size()));
-        
-        // Update button states
+        lblPageInfo.setText(String.format("Trang %d / %d (Tổng: %d)", pageIndex + 1, totalPages, filteredData.size()));
         btnPrevious.setDisable(pageIndex == 0);
         btnNext.setDisable(pageIndex >= totalPages - 1);
     }
@@ -197,203 +175,119 @@ public class DisciplineRewardTabController {
     private void handleAdd() {
         Dialog<FineDTO> dialog = new Dialog<>();
         dialog.setTitle("Thêm Khen thưởng / Kỷ luật");
-        dialog.setHeaderText("Nhập thông tin");
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new javafx.geometry.Insets(10));
-
-        ComboBox<EmployeeDTO> cbEmployee = new ComboBox<>();
-        cbEmployee.setItems(FXCollections.observableArrayList(employeeBUS.getAll()));
-        cbEmployee.setCellFactory(param -> new ListCell<EmployeeDTO>() {
-            @Override
-            protected void updateItem(EmployeeDTO item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty ? "" : item.getFirstName() + " " + item.getLastName());
-            }
-        });
-
-        ComboBox<String> cbType = new ComboBox<>();
-        cbType.setItems(FXCollections.observableArrayList("REWARD", "DISCIPLINE"));
-
-        ComboBox<String> cbLevel = new ComboBox<>();
-        cbLevel.setItems(FXCollections.observableArrayList("LEVEL_1", "LEVEL_2", "LEVEL_3", "HIGH", "MEDIUM", "LOW"));
-
-        TextArea txtReason = new TextArea();
-        txtReason.setPrefRowCount(3);
-
-        TextField txtAmount = new TextField();
-        txtAmount.setPromptText("Nhập số tiền");
-
-        grid.add(new Label("Nhân viên:"), 0, 0);
-        grid.add(cbEmployee, 1, 0);
-        grid.add(new Label("Loại:"), 0, 1);
-        grid.add(cbType, 1, 1);
-        grid.add(new Label("Mức độ:"), 0, 2);
-        grid.add(cbLevel, 1, 2);
-        grid.add(new Label("Lý do:"), 0, 3);
-        grid.add(txtReason, 1, 3);
-        grid.add(new Label("Số tiền:"), 0, 4);
-        grid.add(txtAmount, 1, 4);
-
+        GridPane grid = createDialogGrid(null);
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == ButtonType.OK) {
-                if (cbEmployee.getValue() == null || cbType.getValue() == null || txtAmount.getText().isEmpty()) {
-                    NotificationUtils.showErrorAlert("Vui lòng điền đầy đủ thông tin", "Lỗi");
-                    return null;
-                }
-
-                try {
-                    BigDecimal amount = new BigDecimal(txtAmount.getText());
-                    // Khen thưởng là dương, kỷ luật là âm
-                    if (cbType.getValue().equals("DISCIPLINE")) {
-                        amount = amount.negate();
-                    }
-
-                    FineDTO fine = new FineDTO();
-                    fine.setEmployeeId(cbEmployee.getValue().getId());
-                    fine.setType(cbType.getValue());
-                    fine.setFineLevel(cbLevel.getValue());
-                    fine.setReason(txtReason.getText());
-                    fine.setAmount(amount);
-                    fine.setFinePay(BigDecimal.ZERO);
-                    fine.setCreatedAt(LocalDateTime.now());
-
-                    return fine;
-                } catch (NumberFormatException e) {
-                    NotificationUtils.showErrorAlert("Số tiền không hợp lệ", "Lỗi");
-                }
-            }
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK) return getFineFromGrid(grid, null);
             return null;
         });
 
-        var result = dialog.showAndWait();
-        if (result.isPresent() && result.get() != null) {
-            FineDTO fine = result.get();
-            SessionManagerService sessionManager = SessionManagerService.getInstance();
-            BUSResult res = SecureExecutor.executeSafeBusResult(
-                PermissionKey.EMPLOYEE_FINE_REWARD_MANAGE,
-                () -> fineBUS.insert(fine, sessionManager.employeeRoleId(), sessionManager.employeeLoginId()) ? 
-                    new BUSResult(BUSOperationResult.SUCCESS, "Thêm thành công") :
-                    new BUSResult(BUSOperationResult.DB_ERROR, "Thêm thất bại")
-            );
+        dialog.showAndWait().ifPresent(fine -> {
+            SessionManagerService session = SessionManagerService.getInstance();
+            BUSResult res = SecureExecutor.executeSafeBusResult(PermissionKey.EMPLOYEE_FINE_REWARD_MANAGE,
+                () -> fineBUS.insert(fine, session.employeeRoleId(), session.employeeLoginId()) ? 
+                new BUSResult(BUSOperationResult.SUCCESS, "OK") : new BUSResult(BUSOperationResult.DB_ERROR, "Error"));
 
             if (res.getCode() == BUSOperationResult.SUCCESS) {
-                NotificationUtils.showInfoAlert("Thêm thành công", "Thành công");
+                NotificationUtils.showInfoAlert("Thành công", "Thông báo");
                 loadData();
-            } else {
-                NotificationUtils.showErrorAlert(res.getMessage(), "Lỗi");
             }
-        }
+        });
     }
 
     private void handleEdit(FineDTO fine) {
         Dialog<FineDTO> dialog = new Dialog<>();
         dialog.setTitle("Sửa Khen thưởng / Kỷ luật");
-        dialog.setHeaderText("Cập nhật thông tin");
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new javafx.geometry.Insets(10));
-
-        ComboBox<String> cbType = new ComboBox<>();
-        cbType.setItems(FXCollections.observableArrayList("REWARD", "DISCIPLINE"));
-        cbType.setValue(fine.getType());
-
-        ComboBox<String> cbLevel = new ComboBox<>();
-        cbLevel.setItems(FXCollections.observableArrayList("LEVEL_1", "LEVEL_2", "LEVEL_3", "HIGH", "MEDIUM", "LOW"));
-        cbLevel.setValue(fine.getFineLevel());
-
-        TextArea txtReason = new TextArea();
-        txtReason.setText(fine.getReason());
-
-        TextField txtAmount = new TextField();
-        txtAmount.setText(fine.getAmount().toPlainString());
-
-        EmployeeDTO emp = employeeBUS.getById(fine.getEmployeeId());
-        Label lblEmployee = new Label(emp != null ? emp.getFirstName() + " " + emp.getLastName() : "");
-
-        grid.add(new Label("Nhân viên:"), 0, 0);
-        grid.add(lblEmployee, 1, 0);
-        grid.add(new Label("Loại:"), 0, 1);
-        grid.add(cbType, 1, 1);
-        grid.add(new Label("Mức độ:"), 0, 2);
-        grid.add(cbLevel, 1, 2);
-        grid.add(new Label("Lý do:"), 0, 3);
-        grid.add(txtReason, 1, 3);
-        grid.add(new Label("Số tiền:"), 0, 4);
-        grid.add(txtAmount, 1, 4);
-
+        GridPane grid = createDialogGrid(fine);
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == ButtonType.OK) {
-                if (cbType.getValue() == null || txtAmount.getText().isEmpty()) {
-                    NotificationUtils.showErrorAlert("Vui lòng điền đầy đủ thông tin", "Lỗi");
-                    return null;
-                }
-
-                try {
-                    BigDecimal amount = new BigDecimal(txtAmount.getText());
-                    if (cbType.getValue().equals("DISCIPLINE")) {
-                        amount = amount.negate();
-                    }
-
-                    fine.setType(cbType.getValue());
-                    fine.setFineLevel(cbLevel.getValue());
-                    fine.setReason(txtReason.getText());
-                    fine.setAmount(amount);
-
-                    return fine;
-                } catch (NumberFormatException e) {
-                    NotificationUtils.showErrorAlert("Số tiền không hợp lệ", "Lỗi");
-                }
-            }
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK) return getFineFromGrid(grid, fine);
             return null;
         });
 
-        var result = dialog.showAndWait();
-        if (result.isPresent() && result.get() != null) {
-            FineDTO updated = result.get();
-            SessionManagerService sessionManager = SessionManagerService.getInstance();
-            BUSResult res = SecureExecutor.executeSafeBusResult(
-                PermissionKey.EMPLOYEE_FINE_REWARD_MANAGE,
-                () -> fineBUS.update(updated, sessionManager.employeeRoleId(), sessionManager.employeeLoginId()) ? 
-                    new BUSResult(BUSOperationResult.SUCCESS, "Cập nhật thành công") :
-                    new BUSResult(BUSOperationResult.DB_ERROR, "Cập nhật thất bại")
-            );
+        dialog.showAndWait().ifPresent(updated -> {
+            SessionManagerService session = SessionManagerService.getInstance();
+            SecureExecutor.executeSafeBusResult(PermissionKey.EMPLOYEE_FINE_REWARD_MANAGE,
+                () -> fineBUS.update(updated, session.employeeRoleId(), session.employeeLoginId()) ?
+                new BUSResult(BUSOperationResult.SUCCESS, "OK") : new BUSResult(BUSOperationResult.DB_ERROR, "Error"));
+            loadData();
+        });
+    }
 
-            if (res.getCode() == BUSOperationResult.SUCCESS) {
-                NotificationUtils.showInfoAlert("Cập nhật thành công", "Thành công");
-                loadData();
-            } else {
-                NotificationUtils.showErrorAlert(res.getMessage(), "Lỗi");
+    private GridPane createDialogGrid(FineDTO fine) {
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(10));
+
+        ComboBox<EmployeeDTO> cbEmployee = new ComboBox<>();
+        cbEmployee.setItems(FXCollections.observableArrayList(employeeBUS.getAll()));
+        if (fine != null) {
+            cbEmployee.setValue(employeeBUS.getById(fine.getEmployeeId()));
+            cbEmployee.setDisable(true);
+        }
+
+        ComboBox<FineType> cbTypeDlg = new ComboBox<>();
+        cbTypeDlg.setItems(FXCollections.observableArrayList(FineType.values()));
+        if (fine != null) cbTypeDlg.setValue(FineType.fromString(fine.getType()));
+
+        ComboBox<String> cbLevel = new ComboBox<>();
+        cbLevel.setItems(FXCollections.observableArrayList("CẤP 1", "CẤP 2", "CẤP 3", "ĐẶC BIỆT"));
+        if (fine != null) cbLevel.setValue(fine.getFineLevel());
+
+        TextArea txtReason = new TextArea(fine != null ? fine.getReason() : "");
+        TextField txtAmount = new TextField(fine != null ? fine.getAmount().abs().toPlainString() : "");
+
+        grid.add(new Label("Nhân viên:"), 0, 0); grid.add(cbEmployee, 1, 0);
+        grid.add(new Label("Loại:"), 0, 1); grid.add(cbTypeDlg, 1, 1);
+        grid.add(new Label("Mức độ:"), 0, 2); grid.add(cbLevel, 1, 2);
+        grid.add(new Label("Lý do:"), 0, 3); grid.add(txtReason, 1, 3);
+        grid.add(new Label("Số tiền:"), 0, 4); grid.add(txtAmount, 1, 4);
+        
+        return grid;
+    }
+
+    private FineDTO getFineFromGrid(GridPane grid, FineDTO existing) {
+        try {
+            ComboBox<EmployeeDTO> cbEmp = (ComboBox) grid.getChildren().get(1);
+            ComboBox<FineType> cbT = (ComboBox) grid.getChildren().get(3);
+            ComboBox<String> cbL = (ComboBox) grid.getChildren().get(5);
+            TextArea taR = (TextArea) grid.getChildren().get(7);
+            TextField tfA = (TextField) grid.getChildren().get(9);
+
+            BigDecimal amount = new BigDecimal(tfA.getText());
+            if (cbT.getValue() == FineType.DISCIPLINE) amount = amount.negate();
+
+            FineDTO f = (existing == null) ? new FineDTO() : existing;
+            f.setEmployeeId(cbEmp.getValue().getId());
+            f.setType(cbT.getValue().name());
+            f.setFineLevel(cbL.getValue());
+            f.setReason(taR.getText());
+            f.setAmount(amount);
+            if (existing == null) {
+                f.setFinePay(BigDecimal.ZERO);
+                f.setCreatedAt(LocalDateTime.now());
             }
+            return f;
+        } catch (Exception e) {
+            NotificationUtils.showErrorAlert("Dữ liệu nhập không hợp lệ", "Lỗi");
+            return null;
         }
     }
 
     private void handleDelete(FineDTO fine) {
-        if (UiUtils.gI().showConfirmAlert("Bạn có chắc chắn muốn xóa?", "Xác nhận")) {
-            SessionManagerService sessionManager = SessionManagerService.getInstance();
-            BUSResult res = SecureExecutor.executeSafeBusResult(
-                PermissionKey.EMPLOYEE_FINE_REWARD_MANAGE,
-                () -> fineBUS.delete(fine.getId(), sessionManager.employeeRoleId(), sessionManager.employeeLoginId()) ? 
-                    new BUSResult(BUSOperationResult.SUCCESS, "Xóa thành công") :
-                    new BUSResult(BUSOperationResult.DB_ERROR, "Xóa thất bại")
-            );
-
-            if (res.getCode() == BUSOperationResult.SUCCESS) {
-                NotificationUtils.showInfoAlert("Xóa thành công", "Thành công");
-                loadData();
-            } else {
-                NotificationUtils.showErrorAlert(res.getMessage(), "Lỗi");
-            }
+        if (UiUtils.gI().showConfirmAlert("Bạn có chắc chắn muốn xóa bản ghi này?", "Xác nhận xóa")) {
+            SessionManagerService session = SessionManagerService.getInstance();
+            SecureExecutor.executeSafeBusResult(PermissionKey.EMPLOYEE_FINE_REWARD_MANAGE,
+                () -> fineBUS.delete(fine.getId(), session.employeeRoleId(), session.employeeLoginId()) ?
+                new BUSResult(BUSOperationResult.SUCCESS, "Xóa thành công") : new BUSResult(BUSOperationResult.DB_ERROR, "Lỗi"));
+            loadData();
         }
     }
+    
+    private void showPreviousPage() { if (currentPageIndex > 0) displayPage(--currentPageIndex); }
+    private void showNextPage() { if (currentPageIndex < (int) Math.ceil((double) filteredData.size() / PAGE_SIZE) - 1) displayPage(++currentPageIndex); }
 }

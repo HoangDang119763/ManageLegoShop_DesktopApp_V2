@@ -19,6 +19,7 @@ import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 public class LeaveRequestTabController {
@@ -31,6 +32,7 @@ public class LeaveRequestTabController {
     @FXML private TableColumn<LeaveRequestDTO, String> colStatus;
     @FXML private TableColumn<LeaveRequestDTO, String> colReason;
     @FXML private TableColumn<LeaveRequestDTO, Void> colAction;
+    @FXML private TableColumn<LeaveRequestDTO, Long> colDays;
 
     @FXML private Button btnAdd, btnRefresh, btnApprove, btnReject;
     @FXML private TextField txtSearch;
@@ -64,6 +66,16 @@ public class LeaveRequestTabController {
         colLeaveType.setCellValueFactory(new PropertyValueFactory<>("leaveTypeName"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("statusName"));
         colReason.setCellValueFactory(new PropertyValueFactory<>("content"));
+
+        colDays.setCellValueFactory(cellData -> {
+            LeaveRequestDTO dto = cellData.getValue();
+            if (dto.getStartDate() != null && dto.getEndDate() != null) {
+                // +1 để tính cả ngày bắt đầu (ví dụ: nghỉ từ mùng 1 đến mùng 1 là 1 ngày)
+                long days = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate()) + 1;
+                return new javafx.beans.property.SimpleLongProperty(days).asObject();
+            }
+            return new javafx.beans.property.SimpleLongProperty(0).asObject();
+        });
 
         colAction.setCellFactory(param -> new TableCell<>() {
             private final Button approveBtn = new Button("Duyệt");

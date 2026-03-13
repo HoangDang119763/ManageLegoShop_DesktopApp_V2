@@ -38,8 +38,8 @@
                         <TableView fx:id="tblLeaveRequest" tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colId" minWidth="50.0" prefWidth="50.0" text="ID" />
-                                <TableColumn fx:id="colEmployeeName" minWidth="120.0" prefWidth="120.0" text="Nhân viên" />
-                                <TableColumn fx:id="colLeaveType" minWidth="100.0" prefWidth="100.0" text="Loại nghỉ" />
+                                <TableColumn fx:id="colEmployeeName" minWidth="220.0" prefWidth="120.0" text="Nhân viên" />
+                                <TableColumn fx:id="colLeaveType" minWidth="150.0" prefWidth="100.0" text="Loại nghỉ" />
                                 <TableColumn fx:id="colStartDate" minWidth="100.0" prefWidth="100.0" text="Ngày bắt đầu" />
                                 <TableColumn fx:id="colEndDate" minWidth="100.0" prefWidth="100.0" text="Ngày kết thúc" />
                                 <TableColumn fx:id="colDays" minWidth="80.0" prefWidth="80.0" text="Số ngày" />
