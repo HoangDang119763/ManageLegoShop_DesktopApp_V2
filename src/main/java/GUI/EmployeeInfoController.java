@@ -369,6 +369,7 @@ public class EmployeeInfoController {
         if (jobInfo == null)
             return;
 
+        int empId = sessionManagerService.employeeLoginId();
         ValidationUtils vu = ValidationUtils.getInstance();
 
         // Salary Info
@@ -379,6 +380,11 @@ public class EmployeeInfoController {
         lblNumDependents.setText(payrollInfo != null && payrollInfo.getNumDependents() != null
                 ? String.valueOf(payrollInfo.getNumDependents())
                 : "0");
+
+        // Load payroll data into PayrollTab
+        if (payrollTabController != null) {
+            payrollTabController.loadEmployeePayroll(empId);
+        }
 
         setupHistoryPagination();
     }

@@ -8,6 +8,7 @@ public class FineDTO {
     private String reason;
     private LocalDateTime createdAt;
     private String fineLevel;
+    private String type;  // REWARD hoặc DISCIPLINE
     private BigDecimal amount;
     private BigDecimal finePay;
     private int employeeId;
@@ -15,12 +16,13 @@ public class FineDTO {
     public FineDTO() {
     }
 
-    public FineDTO(int id, String reason, LocalDateTime createdAt, String fineLevel, BigDecimal amount,
-            BigDecimal finePay, int employeeId) {
+    public FineDTO(int id, String reason, LocalDateTime createdAt, String fineLevel, String type,
+            BigDecimal amount, BigDecimal finePay, int employeeId) {
         this.id = id;
         this.reason = reason;
         this.createdAt = createdAt;
         this.fineLevel = fineLevel;
+        this.type = type;
         this.amount = amount;
         this.finePay = finePay;
         this.employeeId = employeeId;
@@ -31,6 +33,7 @@ public class FineDTO {
         this.reason = other.reason;
         this.createdAt = other.createdAt;
         this.fineLevel = other.fineLevel;
+        this.type = other.type;
         this.amount = other.amount;
         this.finePay = other.finePay;
         this.employeeId = other.employeeId;
@@ -68,6 +71,14 @@ public class FineDTO {
         this.fineLevel = fineLevel;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public BigDecimal getAmount() {
         return amount;
     }
@@ -99,6 +110,7 @@ public class FineDTO {
                 ", reason='" + reason + '\'' +
                 ", createdAt=" + createdAt +
                 ", fineLevel='" + fineLevel + '\'' +
+                ", type='" + type + '\'' +
                 ", amount=" + amount +
                 ", finePay=" + finePay +
                 ", employeeId=" + employeeId +

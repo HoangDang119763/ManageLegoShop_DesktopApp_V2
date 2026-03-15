@@ -2,8 +2,10 @@ package GUI;
 
 import BUS.FineBUS;
 import DTO.FineDTO;
+import ENUM.Status.FineType;
 import UTILS.NotificationUtils;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -54,12 +56,14 @@ public class DisciplineModalController {
     }
 
     private void setupDisciplineTypes() {
-        cbDisciplineType.getItems().addAll(
+        // Bạn có thể giữ danh sách các mức độ kỷ luật này
+        cbDisciplineType.setItems(FXCollections.observableArrayList(
                 "Cảnh cáo",
                 "Nhắc nhở",
                 "Giáng chức",
                 "Tạm dừng hợp đồng",
-                "Chấm dứt hợp đồng");
+                "Chấm dứt hợp đồng"
+        ));
     }
 
     private void saveDiscipline() {
@@ -79,46 +83,41 @@ public class DisciplineModalController {
             return;
         }
 
-        // Parse fine amount
+        // Parse amount
         BigDecimal fineAmount = BigDecimal.ZERO;
-        if (txtFineAmount.getText() != null && !txtFineAmount.getText().isEmpty()) {
-            try {
-                fineAmount = new BigDecimal(txtFineAmount.getText());
-            } catch (NumberFormatException e) {
-                NotificationUtils.showErrorAlert("Lỗi", "Số tiền phạt không hợp lệ");
-                return;
+        try {
+            String amountStr = txtFineAmount.getText().replace(",", "").trim();
+            if (!amountStr.isEmpty()) {
+                fineAmount = new BigDecimal(amountStr);
             }
+        } catch (Exception e) {
+            NotificationUtils.showErrorAlert("Lỗi", "Số tiền không hợp lệ");
+            return;
         }
 
-        // Create DTO using FineDTO (used for both discipline and reward)
+        // Create DTO
         FineDTO fine = new FineDTO();
         fine.setEmployeeId(employeeId);
         fine.setFineLevel(cbDisciplineType.getValue());
         fine.setReason(taReason.getText());
         fine.setAmount(fineAmount);
-        fine.setFinePay(fineAmount);
+        fine.setFinePay(BigDecimal.ZERO); 
+        fine.setCreatedAt(java.time.LocalDateTime.now());
+        
+        // SỬ DỤNG ENUM TẠI ĐÂY:
+        // Thay vì dùng fine.setType("DISCIPLINE"), ta dùng Enum để đảm bảo chính xác
+        fine.setType(FineType.DISCIPLINE.name()); 
 
-        // Save to database
         new Thread(() -> {
-            try {
-                if (fineBUS.insert(fine, 1, 1)) {
-                    Platform.runLater(() -> {
-                        NotificationUtils.showInfoAlert("Thành công", "Thêm bản kỷ luật thành công");
-                        if (parentController != null) {
-                            parentController.loadEmployeeDisciplines(employeeId);
-                        }
-                        closeModal();
-                    });
-                } else {
-                    Platform.runLater(() -> {
-                        NotificationUtils.showErrorAlert("Thất bại", "Không thể thêm bản kỷ luật");
-                    });
-                }
-            } catch (Exception e) {
-                log.error("Error saving discipline", e);
+            // Giả định Admin thực hiện (Role=1, ID=1)
+            if (fineBUS.insert(fine, 1, 1)) {
                 Platform.runLater(() -> {
-                    NotificationUtils.showErrorAlert("Lỗi", "Chi tiết: " + e.getMessage());
+                    NotificationUtils.showInfoAlert("Thành công", "Thêm bản kỷ luật thành công");
+                    if (parentController != null) parentController.loadEmployeeDisciplines(employeeId);
+                    closeModal();
                 });
+            } else {
+                Platform.runLater(() -> NotificationUtils.showErrorAlert("Thất bại", "Lỗi hệ thống hoặc bạn không có quyền thực hiện"));
             }
         }).start();
     }

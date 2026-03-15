@@ -23,6 +23,8 @@ public enum BUSOperationResult {
     // Success cases
     SUCCESS,
     NO_CHANGES,
+    // User action cases
+    CANCELLED,
     // Error cases
     INVALID_PARAMS,
     INVALID_DATA,

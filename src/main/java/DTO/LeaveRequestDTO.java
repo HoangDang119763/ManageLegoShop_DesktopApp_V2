@@ -1,6 +1,7 @@
 package DTO;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class LeaveRequestDTO {
     private int id;
@@ -11,20 +12,69 @@ public class LeaveRequestDTO {
     private LocalDate endDate;
     private int statusId;
     private int employeeId;
+    private String employeeName;
+    private int dayCount;
+    private String statusName;
 
     // Constructors
     public LeaveRequestDTO() {
     }
 
-    // Constructor without leaveTypeName (for BaseDAL getAll when not JOINed)
-    public LeaveRequestDTO(int id, int leaveTypeId, String content, LocalDate startDate, LocalDate endDate, int statusId,
+    // Constructor cơ bản (không join)
+    public LeaveRequestDTO(
+            int id,
+            int leaveTypeId,
+            String content,
+            LocalDate startDate,
+            LocalDate endDate,
+            int statusId,
             int employeeId) {
-        this(id, leaveTypeId, "", content, startDate, endDate, statusId, employeeId);
+
+        this(id, leaveTypeId, "", content, startDate, endDate, statusId, "", employeeId, "");
     }
 
-    // Constructor with leaveTypeName
-    public LeaveRequestDTO(int id, int leaveTypeId, String leaveTypeName, String content, LocalDate startDate, LocalDate endDate, int statusId,
+    // Constructor có leaveTypeName
+    public LeaveRequestDTO(
+            int id,
+            int leaveTypeId,
+            String leaveTypeName,
+            String content,
+            LocalDate startDate,
+            LocalDate endDate,
+            int statusId,
             int employeeId) {
+
+        this(id, leaveTypeId, leaveTypeName, content, startDate, endDate, statusId, "", employeeId, "");
+    }
+
+    // ✅ Constructor đầy đủ (JOIN leave_type + status + employee)
+    public LeaveRequestDTO(
+            int id,
+            int leaveTypeId,
+            String leaveTypeName,
+            String content,
+            LocalDate startDate,
+            LocalDate endDate,
+            int statusId,
+            String statusName,
+            int employeeId) {
+
+        this(id, leaveTypeId, leaveTypeName, content, startDate, endDate, statusId, statusName, employeeId, "");
+    }
+
+    // ✅ Constructor FULL (JOIN tất cả)
+    public LeaveRequestDTO(
+            int id,
+            int leaveTypeId,
+            String leaveTypeName,
+            String content,
+            LocalDate startDate,
+            LocalDate endDate,
+            int statusId,
+            String statusName,
+            int employeeId,
+            String employeeName) {
+
         this.id = id;
         this.leaveTypeId = leaveTypeId;
         this.leaveTypeName = leaveTypeName;
@@ -32,30 +82,48 @@ public class LeaveRequestDTO {
         this.startDate = startDate;
         this.endDate = endDate;
         this.statusId = statusId;
+        this.statusName = statusName;
         this.employeeId = employeeId;
+        this.employeeName = employeeName;
+
+        calculateDayCount();
     }
 
-    // Copy Constructor
+    // Copy constructor
     public LeaveRequestDTO(LeaveRequestDTO other) {
-        if (other != null) {
-            this.id = other.id;
-            this.leaveTypeId = other.leaveTypeId;
-            this.leaveTypeName = other.leaveTypeName;
-            this.content = other.content;
-            this.startDate = other.startDate;
-            this.endDate = other.endDate;
-            this.statusId = other.statusId;
-            this.employeeId = other.employeeId;
+
+        this.id = other.id;
+        this.leaveTypeId = other.leaveTypeId;
+        this.leaveTypeName = other.leaveTypeName;
+        this.content = other.content;
+        this.startDate = other.startDate;
+        this.endDate = other.endDate;
+        this.statusId = other.statusId;
+        this.statusName = other.statusName;
+        this.employeeId = other.employeeId;
+        this.employeeName = other.employeeName;
+        this.dayCount = other.dayCount;
+    }
+
+    // ========================
+    // Logic
+    // ========================
+
+    private void calculateDayCount() {
+
+        if (startDate != null && endDate != null) {
+
+            dayCount = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+
+        } else {
+            dayCount = 0;
         }
     }
 
-    // Getters and Setters
-    public int getLeaveTypeId() {
-        return leaveTypeId;
-    }
-    public void setLeaveTypeId(int leaveTypeId) {
-        this.leaveTypeId = leaveTypeId;
-    }
+    // ========================
+    // Getters / Setters
+    // ========================
+
     public int getId() {
         return id;
     }
@@ -63,6 +131,16 @@ public class LeaveRequestDTO {
     public void setId(int id) {
         this.id = id;
     }
+
+
+    public int getLeaveTypeId() {
+        return leaveTypeId;
+    }
+
+    public void setLeaveTypeId(int leaveTypeId) {
+        this.leaveTypeId = leaveTypeId;
+    }
+
 
     public String getLeaveTypeName() {
         return leaveTypeName;
@@ -72,6 +150,7 @@ public class LeaveRequestDTO {
         this.leaveTypeName = leaveTypeName;
     }
 
+
     public String getContent() {
         return content;
     }
@@ -80,13 +159,16 @@ public class LeaveRequestDTO {
         this.content = content;
     }
 
+
     public LocalDate getStartDate() {
         return startDate;
     }
 
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
+        calculateDayCount();
     }
+
 
     public LocalDate getEndDate() {
         return endDate;
@@ -94,7 +176,9 @@ public class LeaveRequestDTO {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+        calculateDayCount();
     }
+
 
     public int getStatusId() {
         return statusId;
@@ -104,6 +188,16 @@ public class LeaveRequestDTO {
         this.statusId = statusId;
     }
 
+
+    public String getStatusName() {
+        return statusName;
+    }
+
+    public void setStatusName(String statusName) {
+        this.statusName = statusName;
+    }
+
+
     public int getEmployeeId() {
         return employeeId;
     }
@@ -112,11 +206,24 @@ public class LeaveRequestDTO {
         this.employeeId = employeeId;
     }
 
-    public boolean isStatus() {
+
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
+    }
+
+
+    public int getDayCount() {
+        return dayCount;
+    }
+
+
+    // Optional boolean helper
+    public boolean isApproved() {
         return statusId == 1;
     }
 
-    public void setStatus(boolean status) {
-        this.statusId = status ? 1 : 0;
-    }
 }

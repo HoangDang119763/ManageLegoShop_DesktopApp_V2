@@ -3,9 +3,7 @@
 -- Host: localhost    Database: java_sql
 -- ------------------------------------------------------
 -- Server version	8.0.45
-DROP SCHEMA IF EXISTS `java_sql`;
-CREATE SCHEMA `java_sql`;
-USE `java_sql`;
+
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
@@ -20,7 +18,10 @@ USE `java_sql`;
 --
 -- Table structure for table `account`
 --
+
 DROP TABLE IF EXISTS `account`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `account` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
@@ -28,15 +29,13 @@ CREATE TABLE `account` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `last_login` datetime DEFAULT NULL,
   `status_id` int NOT NULL,
-  `role_id` int NOT NULL,
-  `require_relogin` tinyint(1) DEFAULT '0', -- Cột thứ 8
+  `require_relogin` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `fk_account_status` (`status_id`),
-  CONSTRAINT `fk_account_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`) ON DELETE CASCADE,
-  KEY `fk_account_role` (`role_id`),
-  CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+  CONSTRAINT `fk_account_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `allowance`
@@ -47,11 +46,17 @@ DROP TABLE IF EXISTS `allowance`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `allowance` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_bin NOT NULL,
-  `amount` decimal(15,2) DEFAULT '0.00',
+  `employee_id` int NOT NULL,
+  `salary_period` date NOT NULL,
+  `attendance_bonus` decimal(15,2) DEFAULT '0.00',
+  `annual_leave_days` decimal(5,1) DEFAULT '0.0',
+  `transportation_support` decimal(15,2) DEFAULT '0.00',
+  `accommodation_support` decimal(15,2) DEFAULT '0.00',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `fk_allowance_employee` (`employee_id`),
+  CONSTRAINT `fk_allowance_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -71,7 +76,7 @@ CREATE TABLE `category` (
   PRIMARY KEY (`id`),
   KEY `fk_category_status` (`status_id`),
   CONSTRAINT `fk_category_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -93,6 +98,29 @@ CREATE TABLE `customer` (
   PRIMARY KEY (`id`),
   KEY `fk_customer_status` (`status_id`),
   CONSTRAINT `fk_customer_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `deduction`
+--
+
+DROP TABLE IF EXISTS `deduction`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `deduction` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_id` int NOT NULL,
+  `salary_period` date NOT NULL,
+  `health_insurance` decimal(15,2) DEFAULT '0.00',
+  `social_insurance` decimal(15,2) DEFAULT '0.00',
+  `unemployment_insurance` decimal(15,2) DEFAULT '0.00',
+  `personal_income_tax` decimal(15,2) DEFAULT '0.00',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_deduction_employee` (`employee_id`),
+  CONSTRAINT `fk_deduction_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -113,7 +141,7 @@ CREATE TABLE `department` (
   PRIMARY KEY (`id`),
   KEY `fk_dept_status` (`status_id`),
   CONSTRAINT `fk_dept_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -204,32 +232,32 @@ CREATE TABLE `employee` (
   `first_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `last_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
   `gender` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `department_id` int NOT NULL,
+  `role_id` int DEFAULT NULL,
+  `department_id` int DEFAULT NULL,
   `status_id` int NOT NULL,
-  `account_id` int NOT NULL,
+  `account_id` int DEFAULT NULL,
   `avatar_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `position_id` int DEFAULT NULL,
-  `health_insurance_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT '0',
+  `health_ins_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT '0',
   `social_insurance_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT '0',
   `unemployment_insurance_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT '0',
-  `is_meal_support` tinyint(1) DEFAULT '0',
+  `is_personal_income_tax` tinyint(1) DEFAULT '0',
   `is_transportation_support` tinyint(1) DEFAULT '0',
   `is_accommodation_support` tinyint(1) DEFAULT '0',
-  `num_dependents` int DEFAULT '0',
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_employee_role` (`role_id`),
   KEY `idx_employee_department` (`department_id`),
   KEY `idx_employee_account` (`account_id`),
   KEY `fk_employee_status` (`status_id`),
-  KEY `employee_position_idx` (`position_id`),
-  CONSTRAINT `employee_position` FOREIGN KEY (`position_id`) REFERENCES `position` (`id`),
-  CONSTRAINT `fk_employee_department` FOREIGN KEY (`department_id`) REFERENCES `department` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_employee_department` FOREIGN KEY (`department_id`) REFERENCES `department` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_employee_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_employee_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -243,7 +271,7 @@ CREATE TABLE `employment_history` (
   `id` int NOT NULL AUTO_INCREMENT,
   `employee_id` int NOT NULL,
   `department_id` int NOT NULL,
-  `position_id` int NOT NULL,
+  `role_id` int NOT NULL,
   `effective_date` date NOT NULL,
   `approver_id` int DEFAULT NULL,
   `status_id` int NOT NULL,
@@ -252,14 +280,30 @@ CREATE TABLE `employment_history` (
   PRIMARY KEY (`id`),
   KEY `fk_eh_employee` (`employee_id`),
   KEY `fk_eh_dept` (`department_id`),
-  KEY `fk_eh_position` (`position_id`),
+  KEY `fk_eh_role` (`role_id`),
   KEY `fk_eh_approver` (`approver_id`),
   KEY `fk_eh_status` (`status_id`),
   CONSTRAINT `fk_eh_approver` FOREIGN KEY (`approver_id`) REFERENCES `employee` (`id`),
   CONSTRAINT `fk_eh_dept` FOREIGN KEY (`department_id`) REFERENCES `department` (`id`),
   CONSTRAINT `fk_eh_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_eh_role` FOREIGN KEY (`position_id`) REFERENCES `position` (`id`),
+  CONSTRAINT `fk_eh_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`),
   CONSTRAINT `fk_eh_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `file`
+--
+
+DROP TABLE IF EXISTS `file`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `file` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `file_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `file_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -275,14 +319,13 @@ CREATE TABLE `fine` (
   `reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fine_level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `type` ENUM('REWARD', 'DISCIPLINE') NOT NULL DEFAULT 'DISCIPLINE',
   `amount` decimal(15,2) NOT NULL,
   `fine_pay` decimal(15,2) DEFAULT '0.00',
   `employee_id` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fine_ibfk_1` (`employee_id`),
   CONSTRAINT `fine_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -309,7 +352,7 @@ DROP TABLE IF EXISTS `import`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `import` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `create_date` datetime DEFAULT CURRENT_TIMESTAMP,
   `employee_id` int NOT NULL,
   `supplier_id` int NOT NULL,
   `total_price` decimal(12,2) NOT NULL,
@@ -333,7 +376,7 @@ DROP TABLE IF EXISTS `invoice`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `invoice` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `create_date` datetime DEFAULT CURRENT_TIMESTAMP,
   `employee_id` int NOT NULL,
   `customer_id` int NOT NULL,
   `discount_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
@@ -374,7 +417,7 @@ CREATE TABLE `leave_request` (
   CONSTRAINT `leave_request_ibfk_1` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`),
   CONSTRAINT `leave_request_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`),
   CONSTRAINT `leave_type` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_type` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -389,7 +432,7 @@ CREATE TABLE `leave_type` (
   `name` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `fine_amount` decimal(15,2) NOT NULL DEFAULT '0.00',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -403,7 +446,7 @@ CREATE TABLE `module` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -417,26 +460,17 @@ CREATE TABLE `payroll_history` (
   `id` int NOT NULL AUTO_INCREMENT,
   `employee_id` int NOT NULL,
   `salary_period` date NOT NULL,
-  `base_salary` decimal(15,2) DEFAULT NULL,
-  `standard_work_days` int DEFAULT NULL,
-  `actual_work_days` decimal(10,2) DEFAULT NULL,
-  `bhxh_amount` decimal(15,2) DEFAULT NULL,
-  `bhyt_amount` decimal(15,2) DEFAULT NULL,
-  `bhtn_amount` decimal(15,2) DEFAULT NULL,
-  `total_insurance` decimal(15,2) DEFAULT NULL,
-  `violation_amount` decimal(15,2) DEFAULT NULL,
-  `reward_amount` decimal(15,2) DEFAULT NULL,
-  `total_allowance` decimal(15,2) DEFAULT NULL,
-  `overtime_amount` decimal(15,2) DEFAULT NULL,
-  `taxable_income` decimal(15,2) DEFAULT NULL,
-  `tax_percent` decimal(5,2) DEFAULT NULL,
-  `tax_amount` decimal(15,2) DEFAULT NULL,
-  `net_salary` decimal(15,2) DEFAULT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `temporary_salary` decimal(15,2) NOT NULL,
+  `overtime_amount` decimal(15,2) DEFAULT '0.00',
+  `total_allowance` decimal(15,2) DEFAULT '0.00',
+  `total_bonus` decimal(15,2) DEFAULT '0.00',
+  `total_deduction` decimal(15,2) DEFAULT '0.00',
+  `total_fine` decimal(15,2) DEFAULT '0.00',
+  `net_salary` decimal(15,2) NOT NULL,
+  `paid_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `employee_id` (`employee_id`,`salary_period`),
-  UNIQUE KEY `idx_employee_period` (`employee_id`,`salary_period`),
-  CONSTRAINT `fk_payroll_history_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
+  UNIQUE KEY `uk_employee_period` (`employee_id`,`salary_period`),
+  CONSTRAINT `fk_payroll_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -456,26 +490,7 @@ CREATE TABLE `permission` (
   UNIQUE KEY `permission_key` (`permission_key`),
   KEY `module_id` (`module_id`),
   CONSTRAINT `permission_ibfk_1` FOREIGN KEY (`module_id`) REFERENCES `module` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `position`
---
-
-DROP TABLE IF EXISTS `position`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `position` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `wage` decimal(15,2) NOT NULL DEFAULT 0.00,
-  `min_experience` int DEFAULT 0 COMMENT 'Số năm kinh nghiệm tối thiểu',
-  `max_experience` int DEFAULT 0 COMMENT 'Số năm kinh nghiệm tối đa',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -506,6 +521,47 @@ CREATE TABLE `product` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `profit_stat`
+--
+
+DROP TABLE IF EXISTS `profit_stat`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `profit_stat` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `stat_date` date NOT NULL,
+  `revenue` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `expense` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `total_profit` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_stat_date` (`stat_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `report`
+--
+
+DROP TABLE IF EXISTS `report`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `report` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `employee_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_report_employee` (`employee_id`),
+  CONSTRAINT `fk_report_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `role`
 --
 
@@ -516,10 +572,15 @@ CREATE TABLE `role` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `start_experience` int DEFAULT '0',
+  `end_experience` int DEFAULT '0',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+  `salary_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `salary_id` (`salary_id`),
+  CONSTRAINT `role_ibfk_1` FOREIGN KEY (`salary_id`) REFERENCES `salary` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -540,17 +601,37 @@ CREATE TABLE `role_permission` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `salary`
+--
+
+DROP TABLE IF EXISTS `salary`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `salary` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `base` decimal(10,2) NOT NULL,
+  `coefficient` decimal(5,2) NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `status`
 --
 
 DROP TABLE IF EXISTS `status`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `status` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `supplier`
@@ -569,8 +650,26 @@ CREATE TABLE `supplier` (
   PRIMARY KEY (`id`),
   KEY `fk_supplier_status` (`status_id`),
   CONSTRAINT `fk_supplier_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `tax`
+--
+
+DROP TABLE IF EXISTS `tax`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tax` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_id` int NOT NULL,
+  `num_dependents` int DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_employee` (`employee_id`),
+  CONSTRAINT `fk_tax_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 --
 -- Table structure for table `time_sheet`
 --
@@ -585,12 +684,10 @@ CREATE TABLE `time_sheet` (
   `check_out` datetime DEFAULT NULL,
   `work_hours` decimal(10,2) DEFAULT '0.00',
   `ot_hours` decimal(5,2) DEFAULT '0.00',
-  `date` DATE GENERATED ALWAYS AS (DATE(`check_in`)) STORED,
   PRIMARY KEY (`id`),
   KEY `time_sheet_ibfk_1` (`employee_id`),
-  KEY `idx_date_employee` (`date`, `employee_id`),
   CONSTRAINT `time_sheet_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -602,4 +699,4 @@ CREATE TABLE `time_sheet` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-26  1:31:07
+-- Dump completed on 2026-02-24 22:12:51
