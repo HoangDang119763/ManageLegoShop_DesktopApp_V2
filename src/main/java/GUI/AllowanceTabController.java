@@ -1,9 +1,7 @@
 package GUI;
 
 import BUS.AllowanceBUS;
-import BUS.EmployeeBUS;
 import DTO.AllowanceDTO;
-import DTO.EmployeeDTO;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -12,8 +10,7 @@ import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class AllowanceTabController {
@@ -22,63 +19,38 @@ public class AllowanceTabController {
     @FXML
     private TableColumn<AllowanceDTO, Integer> colId;
     @FXML
-    private TableColumn<AllowanceDTO, LocalDate> colPeriod;
+    private TableColumn<AllowanceDTO, String> colName;
     @FXML
-    private TableColumn<AllowanceDTO, BigDecimal> colAttendanceBonus;
+    private TableColumn<AllowanceDTO, BigDecimal> colAmount;
     @FXML
-    private TableColumn<AllowanceDTO, BigDecimal> colLeaveDays;
+    private TableColumn<AllowanceDTO, LocalDateTime> colCreatedAt;
     @FXML
-    private TableColumn<AllowanceDTO, BigDecimal> colTransport;
-    @FXML
-    private TableColumn<AllowanceDTO, BigDecimal> colAccommodation;
+    private TableColumn<AllowanceDTO, LocalDateTime> colUpdatedAt;
 
     @FXML
-    private ComboBox<YearMonth> cbPeriod;
+    private TextField txtName;
+    @FXML
+    private TextField txtAmount;
     @FXML
     private Button btnAdd, btnEdit, btnDelete, btnRefresh;
 
-    @FXML
-    private TextField txtAttendanceBonus;
-    @FXML
-    private TextField txtLeaveDays;
-    @FXML
-    private TextField txtTransport;
-    @FXML
-    private TextField txtAccommodation;
-    @FXML
-    private Label lblEmployeeName;
-
     private AllowanceBUS allowanceBUS;
-    private EmployeeBUS employeeBUS;
-    private int currentEmployeeId;
 
     @FXML
     public void initialize() {
         allowanceBUS = AllowanceBUS.getInstance();
-        employeeBUS = EmployeeBUS.getInstance();
 
         setupTable();
-        setupPeriodCombo();
         setupListeners();
+        loadAllowances();
     }
 
     private void setupTable() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colPeriod.setCellValueFactory(new PropertyValueFactory<>("salaryPeriod"));
-        colAttendanceBonus.setCellValueFactory(new PropertyValueFactory<>("attendanceBonus"));
-        colLeaveDays.setCellValueFactory(new PropertyValueFactory<>("annualLeaveDays"));
-        colTransport.setCellValueFactory(new PropertyValueFactory<>("transportationSupport"));
-        colAccommodation.setCellValueFactory(new PropertyValueFactory<>("accommodationSupport"));
-    }
-
-    private void setupPeriodCombo() {
-        ArrayList<YearMonth> periods = new ArrayList<>();
-        YearMonth current = YearMonth.now();
-        for (int i = 11; i >= 0; i--) {
-            periods.add(current.minusMonths(i));
-        }
-        cbPeriod.setItems(FXCollections.observableArrayList(periods));
-        cbPeriod.valueProperty().addListener((obs, oldVal, newVal) -> loadAllowances());
+        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        colCreatedAt.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
+        colUpdatedAt.setCellValueFactory(new PropertyValueFactory<>("updatedAt"));
     }
 
     private void setupListeners() {
@@ -89,31 +61,16 @@ public class AllowanceTabController {
         tblAllowance.setOnMouseClicked(e -> loadSelectedAllowance());
     }
 
-    public void loadEmployeeAllowances(int employeeId) {
-        this.currentEmployeeId = employeeId;
-        EmployeeDTO emp = employeeBUS.getById(employeeId);
-        if (emp != null) {
-            lblEmployeeName.setText(emp.getFirstName() + " " + emp.getLastName());
-        }
-        loadAllowances();
-    }
-
     private void loadAllowances() {
-        ArrayList<AllowanceDTO> allowances = allowanceBUS.getByEmployeeId(currentEmployeeId);
+        ArrayList<AllowanceDTO> allowances = allowanceBUS.getAll();
         tblAllowance.setItems(FXCollections.observableArrayList(allowances));
     }
 
     private void loadSelectedAllowance() {
         AllowanceDTO selected = tblAllowance.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            txtAttendanceBonus
-                    .setText(selected.getAttendanceBonus() != null ? selected.getAttendanceBonus().toString() : "0");
-            txtLeaveDays
-                    .setText(selected.getAnnualLeaveDays() != null ? selected.getAnnualLeaveDays().toString() : "0");
-            txtTransport.setText(
-                    selected.getTransportationSupport() != null ? selected.getTransportationSupport().toString() : "0");
-            txtAccommodation.setText(
-                    selected.getAccommodationSupport() != null ? selected.getAccommodationSupport().toString() : "0");
+            txtName.setText(selected.getName() != null ? selected.getName() : "");
+            txtAmount.setText(selected.getAmount() != null ? selected.getAmount().toString() : "0");
         }
     }
 
@@ -125,15 +82,10 @@ public class AllowanceTabController {
         }
 
         AllowanceDTO allowance = new AllowanceDTO();
-        allowance.setEmployeeId(currentEmployeeId);
-        allowance.setSalaryPeriod(cbPeriod.getValue().atDay(1));
-        allowance.setAttendanceBonus(
-                new BigDecimal(txtAttendanceBonus.getText().isEmpty() ? "0" : txtAttendanceBonus.getText()));
-        allowance.setAnnualLeaveDays(new BigDecimal(txtLeaveDays.getText().isEmpty() ? "0" : txtLeaveDays.getText()));
-        allowance.setTransportationSupport(
-                new BigDecimal(txtTransport.getText().isEmpty() ? "0" : txtTransport.getText()));
-        allowance.setAccommodationSupport(
-                new BigDecimal(txtAccommodation.getText().isEmpty() ? "0" : txtAccommodation.getText()));
+        allowance.setName(txtName.getText());
+        allowance.setAmount(new BigDecimal(txtAmount.getText().isEmpty() ? "0" : txtAmount.getText()));
+        allowance.setCreatedAt(LocalDateTime.now());
+        allowance.setUpdatedAt(LocalDateTime.now());
 
         if (allowanceBUS.insert(allowance, 1, 1)) {
             NotificationUtils.showInfoAlert("Thêm trợ cấp thành công", "Thành công");
@@ -152,13 +104,14 @@ public class AllowanceTabController {
             return;
         }
 
-        selected.setAttendanceBonus(
-                new BigDecimal(txtAttendanceBonus.getText().isEmpty() ? "0" : txtAttendanceBonus.getText()));
-        selected.setAnnualLeaveDays(new BigDecimal(txtLeaveDays.getText().isEmpty() ? "0" : txtLeaveDays.getText()));
-        selected.setTransportationSupport(
-                new BigDecimal(txtTransport.getText().isEmpty() ? "0" : txtTransport.getText()));
-        selected.setAccommodationSupport(
-                new BigDecimal(txtAccommodation.getText().isEmpty() ? "0" : txtAccommodation.getText()));
+        if (!validateInputs()) {
+            NotificationUtils.showErrorAlert("Vui lòng kiểm tra lại dữ liệu", "Lỗi nhập liệu");
+            return;
+        }
+
+        selected.setName(txtName.getText());
+        selected.setAmount(new BigDecimal(txtAmount.getText().isEmpty() ? "0" : txtAmount.getText()));
+        selected.setUpdatedAt(LocalDateTime.now());
 
         if (allowanceBUS.update(selected, 1, 1)) {
             NotificationUtils.showInfoAlert("Cập nhật trợ cấp thành công", "Thành công");
@@ -183,25 +136,24 @@ public class AllowanceTabController {
                 NotificationUtils.showInfoAlert("Xóa trợ cấp thành công", "Thành công");
                 clearInputs();
                 loadAllowances();
+            } else {
+                NotificationUtils.showErrorAlert("Không thể xóa trợ cấp", "Lỗi");
             }
         }
     }
 
     private boolean validateInputs() {
-
-        if (!txtAttendanceBonus.getText().isEmpty()) {
-            try {
-                BigDecimal val = new BigDecimal(txtAttendanceBonus.getText());
-                if (val.signum() < 0)
-                    return false;
-            } catch (NumberFormatException e) {
-                return false;
-            }
+        if (txtName.getText().isEmpty()) {
+            return false;
         }
 
-        if (!txtLeaveDays.getText().isEmpty()) {
+        if (txtName.getText().length() > 100) {
+            return false;
+        }
+
+        if (!txtAmount.getText().isEmpty()) {
             try {
-                BigDecimal val = new BigDecimal(txtLeaveDays.getText());
+                BigDecimal val = new BigDecimal(txtAmount.getText());
                 if (val.signum() < 0)
                     return false;
             } catch (NumberFormatException e) {
@@ -213,10 +165,8 @@ public class AllowanceTabController {
     }
 
     private void clearInputs() {
-        txtAttendanceBonus.clear();
-        txtLeaveDays.clear();
-        txtTransport.clear();
-        txtAccommodation.clear();
+        txtName.clear();
+        txtAmount.clear();
         tblAllowance.getSelectionModel().clearSelection();
     }
 }
