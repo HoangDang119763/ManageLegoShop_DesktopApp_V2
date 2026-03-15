@@ -95,7 +95,7 @@ public class InvoiceController implements IController {
     private InvoiceBUS invoiceBUS;
     private StatusBUS statusBUS;
     private int statusFilter = -1;
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 13;
     private boolean isResetting = false;
 
     @FXML

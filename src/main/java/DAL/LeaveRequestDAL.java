@@ -1,5 +1,6 @@
 package DAL;
 
+import DTO.HrStatisticDTO;
 import DTO.LeaveRequestDTO;
 import java.sql.*;
 import java.util.ArrayList;

@@ -94,15 +94,15 @@ public class HrMainController {
         List<ModuleMetadata> hrModules = Arrays.asList(
                 new ModuleMetadata(0, "Cá nhân", "employee_info.png"), // ID 0: Luôn cho phép
                 new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
-                new ModuleMetadata(12, "Điều chuyển", "employment_history.png"),
-                new ModuleMetadata(13, "Khen thưởng & Kỷ luật", "discipline.png"), // ID 13
-                new ModuleMetadata(14, "Đơn nghỉ phép", "leave_request.png"), // ID 14
-                new ModuleMetadata(15, "Chấm công", "attendance.png"), // ID 15
-                new ModuleMetadata(16, "Bảng lương", "attendance.png")); // ID 16
+                new ModuleMetadata(12, "Điều chuyển", "employment_history.png"), // ID 12
+                new ModuleMetadata(15, "Khen thưởng & Kỷ luật", "discipline.png"), // ID 15
+                new ModuleMetadata(13, "Đơn nghỉ phép", "leave_request.png"), // ID 13
+                new ModuleMetadata(11, "Chấm công", "attendance.png"), // ID 11
+                new ModuleMetadata(16, "Bảng lương", "payroll.png")); // ID 16
 
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : hrModules) {
-            // Module 0 luôn hiện, các module khác phải có ID trong allowedModules của DTO
+            // Module 0 luôn hiện, các module khác theo quyền module
             if (meta.id() == 0 || sessionService.hasModuleAccess(meta.id())) {
                 Button btn = createModuleButton(meta.name(), meta.icon(), () -> {
                     handleModuleClick(meta.id(), meta.name());
@@ -185,11 +185,10 @@ public class HrMainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             Pane newContent = loader.load();
 
-            // Anchor để nội dung con dãn đều theo mainContent
-            AnchorPane.setTopAnchor(newContent, 0.0);
-            AnchorPane.setBottomAnchor(newContent, 0.0);
-            AnchorPane.setLeftAnchor(newContent, 0.0);
-            AnchorPane.setRightAnchor(newContent, 0.0);
+            // Bind kích thước để nội dung luôn lấp đầy mainContent,
+            // đảm bảo VBox.vgrow và ScrollPane bên trong hoạt động đúng
+            newContent.prefWidthProperty().bind(mainContent.widthProperty());
+            newContent.prefHeightProperty().bind(mainContent.heightProperty());
 
             mainContent.getChildren().setAll(newContent);
         } catch (IOException e) {

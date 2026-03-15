@@ -1,10 +1,11 @@
 package BUS;
 
 import DAL.RolePermissionDAL;
-import DTO.RolePermissionDTO;
 import DTO.BUSResult;
+import DTO.RolePermissionDTO;
 import ENUM.BUSOperationResult;
 import UTILS.AppMessages;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -69,6 +70,72 @@ public class RolePermissionBUS extends BaseBUS<RolePermissionDTO, Integer> {
 
     public boolean hasPermission(int roleId, int permissionId) {
         return RolePermissionDAL.getInstance().exists(roleId, permissionId);
+    }
+
+    /**
+     * Cập nhật toàn bộ danh sách quyền cho một Role dựa trên tập permissionId mới.
+     * Được dùng khi nhấn nút "Lưu" trong màn phân quyền.
+     */
+    public BUSResult updateRolePermissions(int roleId, Set<Integer> newPermissionIds) {
+        if (roleId <= 0 || newPermissionIds == null) {
+            return new BUSResult(BUSOperationResult.INVALID_PARAMS, AppMessages.INVALID_PARAMS);
+        }
+
+        // Không cho chỉnh sửa quyền của Admin hệ thống
+        if (roleId == 1) {
+            return new BUSResult(BUSOperationResult.FAIL, "Không thể chỉnh sửa quyền của Admin hệ thống");
+        }
+
+        // Lấy danh sách hiện tại từ DB
+        ArrayList<RolePermissionDTO> current = getAllByRoleId(roleId);
+        Set<Integer> currentIds = new HashSet<>();
+        for (RolePermissionDTO rp : current) {
+            currentIds.add(rp.getPermissionId());
+        }
+
+        // Tính toán tập cần thêm / cần xóa
+        Set<Integer> toInsert = new HashSet<>(newPermissionIds);
+        toInsert.removeAll(currentIds);
+
+        Set<Integer> toDelete = new HashSet<>(currentIds);
+        toDelete.removeAll(newPermissionIds);
+
+        boolean success = true;
+
+        if (!toInsert.isEmpty()) {
+            success = RolePermissionDAL.getInstance()
+                    .insertListRolePermission(roleId, new ArrayList<>(toInsert));
+        }
+
+        if (success && !toDelete.isEmpty()) {
+            for (Integer permissionId : toDelete) {
+                if (!RolePermissionDAL.getInstance().revokePermission(roleId, permissionId)) {
+                    success = false;
+                    break;
+                }
+            }
+        }
+
+        if (!success) {
+            return new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);
+        }
+
+        // Đánh dấu yêu cầu đăng nhập lại cho các User thuộc Role này
+        AccountBUS.getInstance().setRequireReloginByRoleId(roleId, true);
+
+        return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.OPERATION_SUCCESS);
+    }
+
+    public int countByRoleId(int roleId) {
+        if (roleId <= 0) {
+            return 0;
+        }
+        return RolePermissionDAL.getInstance().countByRoleId(roleId);
+    }
+
+    public boolean deleteAllByRoleId(int roleId) {
+        if (roleId <= 0) return false;
+        return RolePermissionDAL.getInstance().deleteAllByRoleId(roleId);
     }
 
     @Override

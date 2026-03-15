@@ -106,7 +106,7 @@ public class MainController {
                 new ModuleMetadata(8, "Khuyến mãi", "discount.png"), // ID 8
                 new ModuleMetadata(5, "Bán hàng", "invoice.png"), // ID 5: Module quan trọng nhất
                 new ModuleMetadata(6, "Nhập hàng", "import.png"), // ID 6
-                new ModuleMetadata(9, "Cơ cấu", "role.png"), // ID 9
+                new ModuleMetadata(9, "Vai trò", "role.png"), // ID 9
                 new ModuleMetadata(10, "Thống kê", "statistical.png"), // ID 10
                 new ModuleMetadata(11, "Quản lý Nhân sự", "employee.png") // ID 11: HR Operations
         );

@@ -7,7 +7,6 @@ import DTO.*;
 import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
-import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
 import UTILS.ModalBuilder;
@@ -20,7 +19,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
@@ -28,7 +26,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
@@ -203,10 +200,10 @@ public class ProductController implements IController {
             if (event.getClickCount() == 2)
                 handleDetail();
         });
-//        btnImportExcel.setOnMouseClicked(event -> {
-//            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-//            importProductExcel(stage);
-//        });
+        // btnImportExcel.setOnMouseClicked(event -> {
+        // Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        // importProductExcel(stage);
+        // });
     }
 
     // =====================
@@ -377,13 +374,13 @@ public class ProductController implements IController {
         return selectedProduct == null;
     }
 
-//    public void importProductExcel(Stage stage) {
-//        try {
-//            ExcelService.getInstance().ImportSheet("products", stage);
-//            applyFilters();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    // public void importProductExcel(Stage stage) {
+    // try {
+    // ExcelService.getInstance().ImportSheet("products", stage);
+    // applyFilters();
+    // } catch (IOException e) {
+    // e.printStackTrace();
+    // }
+    // }
 
 }

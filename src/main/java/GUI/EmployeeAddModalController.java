@@ -408,6 +408,18 @@ public class EmployeeAddModalController implements IModalController {
             return false;
         }
 
+        try {
+            String wage = txtNumDependents.getText().trim();
+            int dependents = wage.isEmpty() ? 0 : Integer.parseInt(wage);
+            if (dependents < 0) {
+                NotificationUtils.showErrorAlert("Lương không được âm.", "Thông báo");
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            NotificationUtils.showErrorAlert("Lương phải là số nguyên.", "Thông báo");
+            return false;
+        }
+
         // 6. Kiểm tra Số người phụ thuộc (Bắt buộc vì có giá trị mặc định là 0)
         try {
             String depStr = txtNumDependents.getText().trim();

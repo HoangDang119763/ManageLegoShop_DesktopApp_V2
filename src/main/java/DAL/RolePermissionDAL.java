@@ -40,6 +40,19 @@ public class RolePermissionDAL extends BaseDAL<RolePermissionDTO, Integer> {
      * Trong mô hình mới, ta không dùng UPDATE.
      * Để tước quyền, ta dùng DELETE theo RoleID và PermissionID.
      */
+    public boolean deleteAllByRoleId(int roleId) {
+        String query = "DELETE FROM role_permission WHERE role_id = ?";
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, roleId);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean revokePermission(int roleId, int permissionId) {
         String query = "DELETE FROM role_permission WHERE role_id = ? AND permission_id = ?";
         try (Connection conn = connectionFactory.newConnection();
@@ -105,6 +118,22 @@ public class RolePermissionDAL extends BaseDAL<RolePermissionDTO, Integer> {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public int countByRoleId(int roleId) {
+        String query = "SELECT COUNT(*) AS total FROM role_permission WHERE role_id = ?";
+        try (Connection connection = connectionFactory.newConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, roleId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public Set<Integer> getAllowedModuleIdsByRoleId(int roleId) {
