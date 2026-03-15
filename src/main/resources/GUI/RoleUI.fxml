@@ -13,43 +13,111 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.RoleController" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<AnchorPane fx:id="mainContent"
+            prefHeight="650.0" prefWidth="1074.0"
+            AnchorPane.bottomAnchor="0.0"
+            AnchorPane.leftAnchor="0.0"
+            AnchorPane.rightAnchor="0.0"
+            AnchorPane.topAnchor="0.0"
+            xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="GUI.RoleController">
     <children>
-        <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <BorderPane AnchorPane.bottomAnchor="0.0"
+                    AnchorPane.leftAnchor="0.0"
+                    AnchorPane.rightAnchor="0.0"
+                    AnchorPane.topAnchor="0.0">
+            <!-- Top: thanh tìm kiếm & filter giống thể loại -->
             <top>
-                <AnchorPane prefHeight="50.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                <AnchorPane prefHeight="50.0" BorderPane.alignment="CENTER">
                     <children>
-                        <AnchorPane prefHeight="50.0" prefWidth="880.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <AnchorPane prefHeight="50.0"
+                                    AnchorPane.bottomAnchor="0.0"
+                                    AnchorPane.leftAnchor="0.0"
+                                    AnchorPane.rightAnchor="0.0"
+                                    AnchorPane.topAnchor="0.0">
                             <children>
-                                <FontAwesomeIcon fill="#58c9c9" glyphName="SEARCH" layoutX="169.0" layoutY="32.0" size="1.8em" text="" AnchorPane.topAnchor="15.0" />
-                                <Line endX="79.0" endY="-3.814697265625E-6" layoutX="111.0" layoutY="38.0" startX="-100.0" stroke="#58c9c9" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="45.0" />
-                                <TextField fx:id="txtSearch" layoutX="10.0" layoutY="10.0" prefHeight="26.0" prefWidth="145.6" promptText="Nhập để tìm kiếm" styleClass="textfield" stylesheets="@../css/base.css" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="15.0" />
-                                  <ComboBox fx:id="cbSearchBy" layoutX="206.39999389648438" layoutY="13.59999942779541" prefHeight="26.0" prefWidth="117.0" styleClass="combo-box" stylesheets="@../css/base.css" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="13.59999942779541" />
-                        <Button fx:id="authorizeBtn" layoutX="796.0" layoutY="13.0" mnemonicParsing="false" styleClass="action-btn" stylesheets="@../css/base.css" text="Phân quyền" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="13.0">
-                           <graphic>
-                              <FontAwesomeIcon glyphName="COGS" size="1.2em" styleClass="action-icon" />
-                           </graphic>
-                        </Button>
+                                <TextField fx:id="txtSearch"
+                                           layoutX="10.0" layoutY="15.0"
+                                           prefHeight="26.0" prefWidth="145.6"
+                                           promptText="Nhập để tìm kiếm"
+                                           styleClass="textfield"
+                                           stylesheets="@../css/base.css"
+                                           AnchorPane.leftAnchor="10.0"
+                                           AnchorPane.topAnchor="15.0" />
+                                <FontAwesomeIcon fill="#58c9c9"
+                                                 glyphName="SEARCH"
+                                                 layoutX="169.0" layoutY="32.0"
+                                                 size="1.8em"
+                                                 AnchorPane.leftAnchor="169.0"
+                                                 AnchorPane.topAnchor="15.0" />
+                                <Line endX="79.0"
+                                      layoutX="111.0" layoutY="45.0"
+                                      startX="-100.0"
+                                      stroke="#58c9c9"
+                                      AnchorPane.leftAnchor="10.0"
+                                      AnchorPane.topAnchor="45.0" />
+
+                                <HBox alignment="CENTER_LEFT"
+                                      layoutX="210.0" layoutY="3.0"
+                                      prefHeight="46.0" spacing="10.0"
+                                      AnchorPane.bottomAnchor="1.0"
+                                      AnchorPane.leftAnchor="200.0"
+                                      AnchorPane.topAnchor="3.0">
+                                    <children>
+                                        <ComboBox fx:id="cbSearchBy"
+                                                  prefHeight="26.0" prefWidth="140.0"
+                                                  stylesheets="@../css/base.css" />
+                                    </children>
+                                </HBox>
+
+                                <Button fx:id="authorizeBtn"
+                                        mnemonicParsing="false"
+                                        prefHeight="35.0" prefWidth="140.0"
+                                        styleClass="action-btn"
+                                        stylesheets="@../css/base.css"
+                                        text="Phân quyền"
+                                        AnchorPane.rightAnchor="10.0"
+                                        AnchorPane.topAnchor="8.0">
+                                    <graphic>
+                                        <FontAwesomeIcon glyphName="COGS" size="1.2em" styleClass="action-icon" />
+                                    </graphic>
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Button>
                             </children>
                         </AnchorPane>
                     </children>
                 </AnchorPane>
             </top>
+
+            <!-- Center: thẻ trắng + bảng giống thể loại -->
             <center>
-                <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                <AnchorPane BorderPane.alignment="CENTER">
                     <children>
-                        <AnchorPane layoutX="10.0" layoutY="9.0" prefHeight="286.0" prefWidth="858.0" stylesheets="@../css/base.css" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
+                        <AnchorPane layoutX="10.0" layoutY="5.0"
+                                    stylesheets="@../css/base.css"
+                                    AnchorPane.bottomAnchor="5.0"
+                                    AnchorPane.leftAnchor="10.0"
+                                    AnchorPane.rightAnchor="10.0"
+                                    AnchorPane.topAnchor="5.0">
                             <styleClass>
                                 <String fx:value="white-bg" />
                                 <String fx:value="shadow" />
                             </styleClass>
                             <children>
-                                <TableView fx:id="tblRole" editable="true" prefHeight="444.0" prefWidth="859.2" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <TableView fx:id="tblRole"
+                                           prefHeight="444.0" prefWidth="859.2"
+                                           AnchorPane.bottomAnchor="0.0"
+                                           AnchorPane.leftAnchor="0.0"
+                                           AnchorPane.rightAnchor="0.0"
+                                           AnchorPane.topAnchor="0.0">
                                     <columns>
-                                        <TableColumn fx:id="tlb_col_id" prefWidth="93.59997606277466" text="Mã chức vụ" />
-                                        <TableColumn fx:id="tlb_col_name" prefWidth="214.4000015258789" text="Tên chức vụ" />
-                                        <TableColumn fx:id="tlb_col_description" prefWidth="411.20001220703125" text="Mô tả" />
-                                        <TableColumn fx:id="tlb_col_salaryCoefficient" prefWidth="132.0" text="Hệ số lương" />
+                                        <TableColumn fx:id="tlb_col_id" prefWidth="150.0" text="Mã chức vụ" />
+                                        <TableColumn fx:id="tlb_col_name" prefWidth="250.0" text="Tên chức vụ" />
+                                        <TableColumn fx:id="tlb_col_description" prefWidth="350.0" text="Mô tả" />
+                                        <TableColumn fx:id="tlb_col_salaryCoefficient" prefWidth="150.0" text="Số quyền" />
                                     </columns>
                                     <columnResizePolicy>
                                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -60,49 +128,79 @@
                     </children>
                 </AnchorPane>
             </center>
+
+            <!-- Bottom: nút giống thể loại (Làm mới bên trái, CRUD bên phải) -->
             <bottom>
-                <AnchorPane prefHeight="50.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                <AnchorPane prefHeight="50.0" BorderPane.alignment="CENTER">
                     <children>
-                        <AnchorPane prefHeight="50.0" prefWidth="880.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <HBox layoutX="10.4" layoutY="7.2"
+                              spacing="10.0"
+                              AnchorPane.bottomAnchor="8.0"
+                              AnchorPane.leftAnchor="10.0">
                             <children>
-                                <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="680.0" layoutY="2.0" prefHeight="46.0" prefWidth="315.0" spacing="10.0" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="9.5" AnchorPane.topAnchor="0.0">
-                                    <children>
-                                        <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="34.0" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Thêm">
-                                            <graphic>
-                                                <FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" />
-                                            </graphic>
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </Button>
-                                        <Button fx:id="editBtn" mnemonicParsing="false" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Sửa">
-                                            <graphic>
-                                                <FontAwesomeIcon glyphName="PENCIL" size="1.2em" styleClass="action-icon" />
-                                            </graphic>
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </Button>
-                                        <Button fx:id="deleteBtn" mnemonicParsing="false" prefWidth="92.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Xóa">
-                                            <graphic>
-                                                <FontAwesomeIcon glyphName="TRASH" size="1.2em" styleClass="action-icon" />
-                                            </graphic>
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </Button>
-                                    </children>
-                                </HBox>
-                                <Button fx:id="refreshBtn" layoutX="14.0" layoutY="5.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="108.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Làm mới" AnchorPane.bottomAnchor="11.000000000000007" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="758.8" AnchorPane.topAnchor="5.0">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
+                                <Button fx:id="refreshBtn"
+                                        mnemonicParsing="false"
+                                        prefHeight="35.0" prefWidth="130.0"
+                                        styleClass="action-btn"
+                                        stylesheets="@../css/base.css"
+                                        text="Làm mới">
                                     <graphic>
                                         <FontAwesomeIcon glyphName="REFRESH" size="1.2em" styleClass="action-icon" />
                                     </graphic>
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
                                 </Button>
                             </children>
-                        </AnchorPane>
+                        </HBox>
+
+                        <HBox fx:id="functionBtns"
+                              alignment="CENTER_RIGHT"
+                              prefHeight="46.0" spacing="10.0"
+                              AnchorPane.bottomAnchor="2.0"
+                              AnchorPane.rightAnchor="10.0">
+                            <children>
+                                <Button fx:id="addBtn"
+                                        mnemonicParsing="false"
+                                        prefHeight="34.0" prefWidth="92.0"
+                                        styleClass="action-btn"
+                                        stylesheets="@../css/base.css"
+                                        text="Thêm">
+                                    <graphic>
+                                        <FontAwesomeIcon glyphName="PLUS_SQUARE" size="1.2em" styleClass="action-icon" />
+                                    </graphic>
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Button>
+                                <Button fx:id="editBtn"
+                                        mnemonicParsing="false"
+                                        prefHeight="34.0" prefWidth="92.0"
+                                        styleClass="action-btn"
+                                        stylesheets="@../css/base.css"
+                                        text="Sửa">
+                                    <graphic>
+                                        <FontAwesomeIcon glyphName="EDIT" size="1.2em" styleClass="action-icon" />
+                                    </graphic>
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Button>
+                                <Button fx:id="deleteBtn"
+                                        mnemonicParsing="false"
+                                        prefHeight="34.0" prefWidth="92.0"
+                                        styleClass="action-btn"
+                                        stylesheets="@../css/base.css"
+                                        text="Xóa">
+                                    <graphic>
+                                        <FontAwesomeIcon glyphName="TRASH" size="1.2em" styleClass="action-icon" />
+                                    </graphic>
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Button>
+                            </children>
+                        </HBox>
                     </children>
                 </AnchorPane>
             </bottom>

@@ -2,6 +2,8 @@ package DAL;
 
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
+import DTO.HrStatisticDTO.DepartmentDistributionItem;
+import DTO.HrStatisticDTO.StatusDistributionItem;
 import DTO.PagedResponse;
 import DTO.EmployeeDetailDTO;
 import DTO.EmployeeDisplayDTO;
@@ -169,7 +171,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             statement.setInt(2, obj.getPositionId());
             statement.setInt(3, obj.getId());
 
-            return statement.executeUpdate() > 0;
+            return statement.executeUpdate() >= 0;
         } catch (SQLException e) {
             System.err.println("Error updating job info in DAL: " + e.getMessage());
             return false;
@@ -189,7 +191,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             ps.setBoolean(6, obj.isAccommodationSupport());
             ps.setInt(7, obj.getNumDependents());
             ps.setInt(8, obj.getId());
-            return ps.executeUpdate() > 0;
+            return ps.executeUpdate() >= 0;
         }
     }
 
@@ -251,27 +253,6 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             e.printStackTrace();
         }
         return null;
-    }
-
-    /**
-     * Cập nhật TAB 4: Tài khoản hệ thống
-     * Update: accountId
-     */
-    public boolean updateSystemAccount(EmployeeDTO obj) {
-        String query = "UPDATE employee SET account_id = ?, updated_at = ? WHERE id = ?";
-
-        try (Connection connection = connectionFactory.newConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setObject(1, obj.getAccountId());
-            statement.setObject(2, obj.getUpdatedAt());
-            statement.setInt(3, obj.getId());
-
-            return statement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating system account: " + e.getMessage());
-            return false;
-        }
     }
 
     public int countByRoleId(int roleId) {
@@ -845,6 +826,139 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
             }
         } catch (SQLException e) {
             System.err.println("Lỗi DAL getallEmployeesForExcel: " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Insert batch employees in single transaction
+     * Tạo batch nhân viên 1 lượt (đã có account_id được set sẵn)
+     *
+     * @param conn      Database connection (from BUS transaction)
+     * @param employees List of EmployeeDTO to insert
+     * @return Number of successfully inserted employees
+     * @throws SQLException
+     */
+    public int insertBatchWithConn(Connection conn, java.util.List<EmployeeDTO> employees) throws SQLException {
+        if (employees == null || employees.isEmpty()) {
+            return 0;
+        }
+
+        String sql = "INSERT INTO employee " + getInsertQuery();
+        int successCount = 0;
+
+        try (PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            // Add all employees to batch
+            for (EmployeeDTO emp : employees) {
+                setInsertParameters(statement, emp);
+                statement.addBatch();
+            }
+
+            // Execute batch
+            statement.executeBatch();
+
+            // Get generated keys and assign to objects
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                int index = 0;
+                while (generatedKeys.next() && index < employees.size()) {
+                    employees.get(index).setId(generatedKeys.getInt(1));
+                    index++;
+                    successCount++;
+                }
+            }
+
+            return successCount;
+        } catch (SQLException e) {
+            System.err.println("Lỗi DAL insertBatchWithConn: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    // ===== HR STATISTIC HELPERS =====
+
+    public int countActiveEmployees() {
+        final String sql = """
+                SELECT COUNT(*) AS cnt
+                FROM employee e
+                JOIN status s ON e.status_id = s.id
+                WHERE LOWER(s.type) = 'employee'
+                  AND LOWER(s.name) = 'active'
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("cnt");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting active employees: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countNewEmployeesInMonth(int month, int year) {
+        final String sql = """
+                SELECT COUNT(*) AS cnt
+                FROM employee
+                WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("cnt");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting new employees in month: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public java.util.List<StatusDistributionItem> getStatusDistribution() {
+        java.util.List<StatusDistributionItem> list = new java.util.ArrayList<>();
+        final String sql = """
+                SELECT s.description AS status_name, COUNT(*) AS cnt
+                FROM employee e
+                JOIN status s ON e.status_id = s.id
+                WHERE LOWER(s.type) = 'employee'
+                GROUP BY s.id, s.description
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new StatusDistributionItem(
+                        rs.getString("status_name"),
+                        rs.getInt("cnt")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting employee status distribution: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public java.util.List<DepartmentDistributionItem> getDepartmentDistribution() {
+        java.util.List<DepartmentDistributionItem> list = new java.util.ArrayList<>();
+        final String sql = """
+                SELECT d.name AS department_name, COUNT(*) AS cnt
+                FROM employee e
+                JOIN department d ON e.department_id = d.id
+                GROUP BY d.id, d.name
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new DepartmentDistributionItem(
+                        rs.getString("department_name"),
+                        rs.getInt("cnt")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting employee department distribution: " + e.getMessage());
         }
         return list;
     }

@@ -187,9 +187,19 @@
                            </children>
                         </StackPane>
 
-                        <HBox alignment="CENTER" prefHeight="45.0">
+                        <HBox alignment="CENTER_RIGHT" prefHeight="45.0" spacing="10.0">
                            <children>
                               <fx:include fx:id="pagination" source="PaginationControl.fxml" />
+                              <Button fx:id="btnDownloadTemplate" maxWidth="1.7976931348623157E308" prefHeight="35.0" prefWidth="140.0" styleClass="action-btn" text="Template">
+                                 <graphic>
+                                    <FontAwesomeIcon fill="WHITE" glyphName="DOWNLOAD" />
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="btnImportFromExcel" maxWidth="1.7976931348623157E308" prefHeight="35.0" prefWidth="140.0" styleClass="action-btn" text="Nhập Excel">
+                                 <graphic>
+                                    <FontAwesomeIcon fill="WHITE" glyphName="TABLE" />
+                                 </graphic>
+                              </Button>
                            </children>
                         </HBox>
                      </children>
@@ -281,12 +291,13 @@
                                     <Button fx:id="btnImportListProductRemove" maxWidth="1.7976931348623157E308" prefHeight="35.0" styleClass="action-btn" text="XÓA SP" GridPane.columnIndex="1">
                                        <graphic><FontAwesomeIcon fill="WHITE" glyphName="TRASH" /></graphic>
                                     </Button>
-                                    <Button fx:id="btnSubmitImport" maxWidth="1.7976931348623157E308" prefHeight="45.0" styleClass="action-btn" text="NHẬP HÀNG" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                                    <Button fx:id="btnSubmitImport" maxWidth="1.7976931348623157E308" prefHeight="45.0" styleClass="action-btn" text="NHẬP HÀNG" GridPane.columnSpan="2" GridPane.rowIndex="2">
                                        <graphic><FontAwesomeIcon fill="WHITE" glyphName="TRUCK" size="1.5em" /></graphic>
                                        <font><Font name="System Bold" size="16.0" /></font>
                                     </Button>
                                  </children>
                                  <rowConstraints>
+                                    <RowConstraints />
                                     <RowConstraints />
                                     <RowConstraints />
                                  </rowConstraints>

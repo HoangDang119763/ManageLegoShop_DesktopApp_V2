@@ -37,6 +37,7 @@ public class HROperationsTabController {
     private LeaveRequestTabNestedController leaveRequestTabNestedController;
     private DisciplineTabNestedController disciplineTabNestedController;
     private AttendanceTabNestedController attendanceTabNestedController;
+    private DepartmentPositionController departmentPositionController;
 
     private EmployeeBUS employeeBUS;
     private ObservableList<EmployeeDTO> allEmployees;
@@ -58,6 +59,14 @@ public class HROperationsTabController {
 
     private void loadNestedTabs() {
         try {
+            // Load Department & Position Tab
+            FXMLLoader deptPosLoader = new FXMLLoader(getClass().getResource("/GUI/DepartmentPositionUI.fxml"));
+            VBox deptPosContent = deptPosLoader.load();
+            departmentPositionController = deptPosLoader.getController();
+            Tab deptPosTab = new Tab("Phòng ban & Chức vụ", deptPosContent);
+            deptPosTab.setClosable(false);
+            tabPaneHROperations.getTabs().add(deptPosTab);
+
             // Load Leave Request Tab
             FXMLLoader leaveLoader = new FXMLLoader(getClass().getResource("/GUI/LeaveRequestTabNested.fxml"));
             VBox leaveContent = leaveLoader.load();

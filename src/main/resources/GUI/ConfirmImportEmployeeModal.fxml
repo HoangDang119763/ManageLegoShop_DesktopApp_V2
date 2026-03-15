@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="700.0" prefWidth="1200.0" style="-fx-border-color: #1f7d84; -fx-border-width: 2px;" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.ConfirmImportEmployeeModalController">
+    <children>
+        <VBox spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+                <Insets bottom="25.0" left="20.0" right="20.0" top="20.0" />
+            </padding>
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="15.0">
+                    <children>
+                        <FontAwesomeIcon fill="#1f7d84" glyphName="FILE_EXCEL_ALT" size="2.5em" />
+                        <VBox>
+                            <children>
+                                <Label text="XÁC NHẬN NHẬP NHÂN VIÊN TỪ EXCEL" textFill="#1f7d84">
+                                    <font><Font name="System Bold" size="22.0" /></font>
+                                </Label>
+                                <Label text="Vui lòng kiểm tra dữ liệu trích xuất. Các dòng có lỗi sẽ không được lưu vào hệ thống." textFill="#7f8c8d" />
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <Line endX="1150.0" stroke="#eee" strokeWidth="2.0" />
+
+                <HBox spacing="15.0" VBox.vgrow="ALWAYS">
+                    <children>
+                        <VBox maxWidth="250.0" minWidth="250.0" prefWidth="250.0" spacing="15.0" style="-fx-background-color: #f9fbfb; -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: #e0e6e6; -fx-border-radius: 10;">
+                            <children>
+                                <Label text="THỐNG KÊ FILE NHẬP" textFill="#1f7d84">
+                                    <font><Font name="System Bold" size="14.0" /></font>
+                                </Label>
+                                <VBox spacing="12.0">
+                                    <children>
+                                        <VBox spacing="3.0">
+                                            <children>
+                                                <Label text="Tổng dòng:" textFill="#7f8c8d" />
+                                                <Label fx:id="lblTotalRows" text="0 dòng"><font><Font name="System Bold" size="13.0" /></font></Label>
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="3.0">
+                                            <children>
+                                                <Label text="Hợp lệ:" textFill="#7f8c8d" />
+                                                <Label fx:id="lblValidRows" text="0 dòng" textFill="#27ae60"><font><Font name="System Bold" size="13.0" /></font></Label>
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="3.0">
+                                            <children>
+                                                <Label text="Có lỗi:" textFill="#7f8c8d" />
+                                                <Label fx:id="lblErrorRows" text="0 dòng" textFill="#e74c3c"><font><Font name="System Bold" size="13.0" /></font></Label>
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </VBox>
+                                <AnchorPane VBox.vgrow="ALWAYS" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="10.0" HBox.hgrow="ALWAYS">
+                            <children>
+                                <TableView fx:id="tvEmployeeConfirm" tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="col_rowNumber" maxWidth="60.0" minWidth="55.0" prefWidth="55.0" text="Dòng" />
+                                        <TableColumn fx:id="col_status" minWidth="250.0" prefWidth="300.0" text="Trạng thái / Chi tiết lỗi" />
+                                        <TableColumn fx:id="col_firstName" minWidth="100.0" prefWidth="120.0" text="Họ đệm" />
+                                        <TableColumn fx:id="col_lastName" minWidth="80.0" prefWidth="90.0" text="Tên" />
+                                        <TableColumn fx:id="col_username" minWidth="100.0" prefWidth="110.0" text="Tài khoản" />
+                                        <TableColumn fx:id="col_gender" minWidth="65.0" prefWidth="65.0" text="G.Tính" />
+                                        <TableColumn fx:id="col_dob" minWidth="90.0" prefWidth="100.0" text="Ngày sinh" />
+                                        <TableColumn fx:id="col_dept" minWidth="100.0" prefWidth="110.0" text="Mã Phòng" />
+                                        <TableColumn fx:id="col_pos" minWidth="100.0" prefWidth="110.0" text="Mã Vị trí" />
+                                        <TableColumn fx:id="col_role" minWidth="100.0" prefWidth="110.0" text="Mã vai trò" />
+                                        <TableColumn fx:id="col_phone" minWidth="100.0" prefWidth="110.0" text="SĐT" />
+                                        <TableColumn fx:id="col_email" minWidth="150.0" prefWidth="160.0" text="Email" />
+                                        <TableColumn fx:id="col_healthIns" minWidth="120.0" prefWidth="130.0" text="Mã BHYT" />
+                                        <TableColumn fx:id="col_socialIns" minWidth="120.0" prefWidth="130.0" text="Mã BHXH" />
+                                        <TableColumn fx:id="col_unemploymentIns" minWidth="120.0" prefWidth="130.0" text="Mã thất nghiệp" />
+                                        <TableColumn fx:id="col_meal" minWidth="60.0" prefWidth="70.0" text="Cơm" />
+                                        <TableColumn fx:id="col_transport" minWidth="60.0" prefWidth="70.0" text="Xe" />
+                                        <TableColumn fx:id="col_accommodation" minWidth="60.0" prefWidth="70.0" text="Ở" />
+                                        <TableColumn fx:id="col_dependents" minWidth="80.0" prefWidth="90.0" text="Phụ thuộc" />
+                                    </columns>
+                                </TableView>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <HBox alignment="CENTER_RIGHT" spacing="15.0">
+                    <children>
+                        <Button fx:id="btnBack" mnemonicParsing="false" prefHeight="40.0" prefWidth="170.0" style="-fx-background-color: #f1f2f6; -fx-text-fill: #2c3e50;" styleClass="action-btn" text="HỦY &amp; QUAY LẠI">
+                            <graphic><FontAwesomeIcon glyphName="ARROW_LEFT" /></graphic>
+                        </Button>
+                        <Button fx:id="btnFinalSubmit" mnemonicParsing="false" prefHeight="40.0" prefWidth="220.0" styleClass="action-btn" text="XÁC NHẬN LƯU">
+                            <graphic><FontAwesomeIcon fill="WHITE" glyphName="CLOUD_UPLOAD" size="1.2em" /></graphic>
+                        </Button>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+        <StackPane fx:id="loadingOverlay" prefHeight="550.0" prefWidth="850.0" style="-fx-background-color: rgba(0, 0, 0, 0.3);" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+        
+    </children>
+</AnchorPane>

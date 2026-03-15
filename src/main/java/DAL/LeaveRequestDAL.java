@@ -1,5 +1,6 @@
 package DAL;
 
+import DTO.HrStatisticDTO;
 import DTO.LeaveRequestDTO;
 import java.sql.*;
 import java.util.ArrayList;
@@ -22,9 +23,18 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
         String employeeName = "";
 
         // Lấy dữ liệu từ các cột JOIN an toàn
-        try { leaveTypeName = resultSet.getString("leave_type_name"); } catch (SQLException ignored) {}
-        try { statusName = resultSet.getString("status_name"); } catch (SQLException ignored) {}
-        try { employeeName = resultSet.getString("employee_name"); } catch (SQLException ignored) {}
+        try {
+            leaveTypeName = resultSet.getString("leave_type_name");
+        } catch (SQLException ignored) {
+        }
+        try {
+            statusName = resultSet.getString("status_name");
+        } catch (SQLException ignored) {
+        }
+        try {
+            employeeName = resultSet.getString("employee_name");
+        } catch (SQLException ignored) {
+        }
 
         LeaveRequestDTO dto = new LeaveRequestDTO(
                 resultSet.getInt("id"),
@@ -35,12 +45,11 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
                 resultSet.getDate("end_date") != null ? resultSet.getDate("end_date").toLocalDate() : null,
                 resultSet.getInt("status_id"),
                 statusName != null ? statusName : "",
-                resultSet.getInt("employee_id")
-        );
-        
+                resultSet.getInt("employee_id"));
+
         // Gán tên nhân viên vào DTO (Đảm bảo DTO của bạn có field này)
         dto.setEmployeeName(employeeName != null ? employeeName : "");
-        
+
         return dto;
     }
 
@@ -76,52 +85,56 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
     @Override
     public ArrayList<LeaveRequestDTO> getAll() {
         String query = """
-            SELECT lr.*, 
-                   COALESCE(lt.name,'') AS leave_type_name, 
-                   COALESCE(s.name,'') AS status_name,
-                   CONCAT(e.first_name, ' ', e.last_name) AS employee_name
-            FROM leave_request lr
-            LEFT JOIN leave_type lt ON lr.leave_type_id = lt.id
-            LEFT JOIN status s ON lr.status_id = s.id
-            LEFT JOIN employee e ON lr.employee_id = e.id
-            ORDER BY lr.id DESC
-            """;
+                SELECT lr.*,
+                       COALESCE(lt.name,'') AS leave_type_name,
+                       COALESCE(s.name,'') AS status_name,
+                       CONCAT(e.first_name, ' ', e.last_name) AS employee_name
+                FROM leave_request lr
+                LEFT JOIN leave_type lt ON lr.leave_type_id = lt.id
+                LEFT JOIN status s ON lr.status_id = s.id
+                LEFT JOIN employee e ON lr.employee_id = e.id
+                ORDER BY lr.id DESC
+                """;
 
         ArrayList<LeaveRequestDTO> list = new ArrayList<>();
         try (Connection conn = connectionFactory.newConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(query)) {
+                Statement st = conn.createStatement();
+                ResultSet rs = st.executeQuery(query)) {
             while (rs.next()) {
                 list.add(mapResultSetToObject(rs));
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
     public ArrayList<LeaveRequestDTO> getByEmployeeId(Integer employeeId) {
         String query = """
-            SELECT lr.*, 
-                   COALESCE(lt.name,'') AS leave_type_name, 
-                   COALESCE(s.name,'') AS status_name,
-                   CONCAT(e.first_name, ' ', e.last_name) AS employee_name
-            FROM leave_request lr
-            LEFT JOIN leave_type lt ON lr.leave_type_id = lt.id
-            LEFT JOIN status s ON lr.status_id = s.id
-            LEFT JOIN employee e ON lr.employee_id = e.id
-            WHERE lr.employee_id = ?
-            ORDER BY lr.start_date DESC
-            """;
+                SELECT lr.*,
+                       COALESCE(lt.name,'') AS leave_type_name,
+                       COALESCE(s.name,'') AS status_name,
+                       CONCAT(e.first_name, ' ', e.last_name) AS employee_name
+                FROM leave_request lr
+                LEFT JOIN leave_type lt ON lr.leave_type_id = lt.id
+                LEFT JOIN status s ON lr.status_id = s.id
+                LEFT JOIN employee e ON lr.employee_id = e.id
+                WHERE lr.employee_id = ?
+                ORDER BY lr.start_date DESC
+                """;
 
         ArrayList<LeaveRequestDTO> list = new ArrayList<>();
         try (Connection conn = connectionFactory.newConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+                PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, employeeId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapResultSetToObject(rs));
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
@@ -133,7 +146,7 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
     private boolean updateStatus(int leaveRequestId, int statusId) {
         String sql = "UPDATE leave_request SET status_id = ? WHERE id = ?";
         try (Connection conn = connectionFactory.newConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, statusId);
             ps.setInt(2, leaveRequestId);
             return ps.executeUpdate() > 0;

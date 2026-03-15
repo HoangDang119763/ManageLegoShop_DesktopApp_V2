@@ -740,4 +740,49 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
             return false;
         }
     }
+
+    /**
+     * Get all products with specific status ID
+     * Lấy tất cả sản phẩm có status_id cụ thể, trả về ProductDisplayForImportDTO
+     * 
+     * @param statusId Status ID (e.g., 4 = ACTIVE)
+     * @return List of ProductDisplayForImportDTO, empty list if none found
+     */
+    public ArrayList<ProductDisplayForImportDTO> getAllValidImportProduct(int inActiveStatusId) {
+        ArrayList<ProductDisplayForImportDTO> result = new ArrayList<>();
+        String query = "SELECT p.id, p.name, p.stock_quantity, p.import_price, p.image_url, " +
+                "p.category_id, c.name as category_name, p.status_id, s.name as status_name, s.description as status_description "
+                +
+                "FROM product p " +
+                "LEFT JOIN category c ON p.category_id = c.id " +
+                "LEFT JOIN status s ON p.status_id = s.id " +
+                "WHERE p.status_id != ? ";
+
+        try (Connection connection = connectionFactory.newConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, inActiveStatusId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    ProductDisplayForImportDTO dto = new ProductDisplayForImportDTO();
+                    dto.setId(rs.getString("id"));
+                    dto.setName(rs.getString("name"));
+                    dto.setImageUrl(rs.getString("image_url"));
+                    dto.setImportPrice(rs.getBigDecimal("import_price"));
+                    dto.setStockQuantity(rs.getInt("stock_quantity"));
+                    dto.setCategoryId(rs.getInt("category_id"));
+                    dto.setCategoryName(rs.getString("category_name"));
+                    dto.setStatusName(rs.getString("status_name"));
+                    dto.setStatusDescription(rs.getString("status_description"));
+
+                    result.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting products by status ID: " + e.getMessage());
+        }
+
+        return result;
+    }
 }

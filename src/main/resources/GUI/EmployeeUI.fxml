@@ -31,6 +31,34 @@
                                         <ComboBox fx:id="cbStatusFilter" prefHeight="26.0" prefWidth="140.0" styleClass="combo-box" stylesheets="@../css/base.css" />
                                     </children>
                                 </HBox>
+                        <HBox layoutX="503.0" layoutY="11.0" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="7.0">
+                           <children>
+                              <Button fx:id="importExcel" mnemonicParsing="false" prefHeight="35.0" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Nhập Excel">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <graphic>
+                                    <FontAwesomeIcon glyphName="TABLE" size="1.2em" styleClass="action-icon" />
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="exportExcel" mnemonicParsing="false" prefHeight="35.0" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Xuất Excel">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <graphic>
+                                    <FontAwesomeIcon glyphName="TABLE" size="1.2em" styleClass="action-icon" />
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="btnDownloadTemplate" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Template">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <graphic>
+                                    <FontAwesomeIcon glyphName="DOWNLOAD" size="1.2em" styleClass="action-icon" />
+                                 </graphic>
+                              </Button>
+                           </children>
+                        </HBox>
                             </children>
                         </AnchorPane>
                     </children>
@@ -107,14 +135,6 @@
                                  </font>
                                  <graphic>
                                     <FontAwesomeIcon glyphName="REFRESH" size="1.2em" styleClass="action-icon" />
-                                 </graphic>
-                              </Button>
-                              <Button fx:id="exportExcel" mnemonicParsing="false" prefHeight="35.0" prefWidth="130.0" styleClass="action-btn" stylesheets="@../css/base.css" text="Xuất Excel">
-                                 <font>
-                                    <Font size="14.0" />
-                                 </font>
-                                 <graphic>
-                                    <FontAwesomeIcon glyphName="TABLE" size="1.2em" styleClass="action-icon" />
                                  </graphic>
                               </Button>
                            </children>

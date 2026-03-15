@@ -4,6 +4,8 @@ import DTO.EmploymentHistoryDTO;
 import DTO.EmploymentHistoryDetailBasicDTO;
 import DTO.EmploymentHistoryDetailDTO;
 import DTO.EmploymentHistoryDisplayDTO;
+import DTO.HrStatisticDTO.HeadcountChangeRow;
+import DTO.HrStatisticDTO.HeadcountPoint;
 import DTO.PagedResponse;
 
 import java.sql.*;
@@ -342,5 +344,94 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
             System.err.println("Lỗi khi gọi sp_SyncEmploymentChanges: " + e.getMessage());
             throw e;
         }
+    }
+
+    // ===== HR STATISTIC HELPERS =====
+
+    /**
+     * Lấy danh sách thay đổi nhân sự trong tháng/năm, kèm phòng ban/chức vụ cũ → mới.
+     * "Từ" được lấy từ bản ghi employment_history liền trước (cùng employee_id, effective_date nhỏ hơn).
+     */
+    public java.util.List<HeadcountChangeRow> getHeadcountChanges(int month, int year) {
+        String sql = """
+                SELECT
+                    CONCAT(e.first_name, ' ', e.last_name) AS full_name,
+                    COALESCE(
+                        (SELECT d2.name
+                         FROM employment_history eh2
+                         LEFT JOIN department d2 ON d2.id = eh2.department_id
+                         WHERE eh2.employee_id = eh.employee_id
+                           AND eh2.effective_date < eh.effective_date
+                         ORDER BY eh2.effective_date DESC LIMIT 1),
+                        'Mới tuyển'
+                    ) AS from_dept,
+                    COALESCE(d.name, '—') AS to_dept,
+                    COALESCE(
+                        (SELECT p2.name
+                         FROM employment_history eh3
+                         LEFT JOIN position p2 ON p2.id = eh3.position_id
+                         WHERE eh3.employee_id = eh.employee_id
+                           AND eh3.effective_date < eh.effective_date
+                         ORDER BY eh3.effective_date DESC LIMIT 1),
+                        '—'
+                    ) AS from_pos,
+                    COALESCE(p.name, '—') AS to_pos,
+                    DATE_FORMAT(eh.effective_date, '%d/%m/%Y') AS eff_date,
+                    COALESCE(s.description, '—') AS status_name
+                FROM employment_history eh
+                INNER JOIN employee e ON e.id = eh.employee_id
+                LEFT JOIN department d ON d.id = eh.department_id
+                LEFT JOIN position p ON p.id = eh.position_id
+                LEFT JOIN status s ON s.id = eh.status_id
+                WHERE MONTH(eh.effective_date) = ? AND YEAR(eh.effective_date) = ?
+                ORDER BY eh.effective_date DESC
+                """;
+        java.util.List<HeadcountChangeRow> list = new java.util.ArrayList<>();
+        try (Connection conn = connectionFactory.newConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new HeadcountChangeRow(
+                            rs.getString("full_name"),
+                            rs.getString("from_dept"),
+                            rs.getString("to_dept"),
+                            rs.getString("from_pos"),
+                            rs.getString("to_pos"),
+                            rs.getString("eff_date"),
+                            rs.getString("status_name")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting headcount changes: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public java.util.List<HeadcountPoint> getHeadcountOverTime(int month, int year) {
+        java.util.List<HeadcountPoint> list = new java.util.ArrayList<>();
+        final String sql = """
+                SELECT DATE(effective_date) AS d, COUNT(DISTINCT employee_id) AS headcount
+                FROM employment_history
+                WHERE MONTH(effective_date) = ? AND YEAR(effective_date) = ?
+                GROUP BY DATE(effective_date)
+                ORDER BY d
+                """;
+        try (Connection conn = connectionFactory.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Date d = rs.getDate("d");
+                    String label = d != null ? d.toLocalDate().toString() : "";
+                    list.add(new HeadcountPoint(label, rs.getInt("headcount")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting headcount over time: " + e.getMessage());
+        }
+        return list;
     }
 }
