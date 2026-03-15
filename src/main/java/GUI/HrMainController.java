@@ -37,10 +37,10 @@ public class HrMainController {
     private static final Map<Integer, String> MODULE_FXML_MAP = Map.ofEntries(
             Map.entry(0, "/GUI/EmployeeInfoUI.fxml"), // Thông tin cá nhân (luôn có)
             Map.entry(1, "/GUI/EmployeeUI.fxml"), // Quản lý NV & TK
-            Map.entry(12, "/GUI/EmploymentHistory.fxml"), // Quản lý Nhân sự
-            Map.entry(13, "/GUI/DisciplineRewardUI.fxml"), // Khen thưởng & Kỷ luật
-            Map.entry(14, "/GUI/LeaveRequestUI.fxml"), // Đơn nghỉ phép
-            Map.entry(15, "/GUI/AttendanceUI.fxml"), // Chấm công
+            Map.entry(12, "/GUI/EmploymentHistory.fxml"), // Quản lý Điều chuyển nhân viên
+            Map.entry(15, "/GUI/DisciplineRewardUI.fxml"), // Khen thưởng & Kỷ luật
+            Map.entry(13, "/GUI/LeaveRequestUI.fxml"), // Đơn nghỉ phép
+            Map.entry(11, "/GUI/AttendanceUI.fxml"), // Chấm công
             Map.entry(16, "/GUI/PayrollFullUI.fxml")); // Bảng lương toàn công ty
 
     @FXML

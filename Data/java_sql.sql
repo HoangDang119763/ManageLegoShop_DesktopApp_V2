@@ -264,22 +264,6 @@ CREATE TABLE `employment_history` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `file`
---
-
-DROP TABLE IF EXISTS `file`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `file` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `file_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `file_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `fine`
 --
 
@@ -291,6 +275,7 @@ CREATE TABLE `fine` (
   `reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fine_level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `type` ENUM('REWARD', 'DISCIPLINE') NOT NULL DEFAULT 'DISCIPLINE',
   `amount` decimal(15,2) NOT NULL,
   `fine_pay` decimal(15,2) DEFAULT '0.00',
   `employee_id` int NOT NULL,
@@ -450,7 +435,8 @@ CREATE TABLE `payroll_history` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `employee_id` (`employee_id`,`salary_period`),
-  UNIQUE KEY `idx_employee_period` (`employee_id`,`salary_period`)
+  UNIQUE KEY `idx_employee_period` (`employee_id`,`salary_period`),
+  CONSTRAINT `fk_payroll_history_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -516,47 +502,6 @@ CREATE TABLE `product` (
   KEY `fk_category_id` (`category_id`),
   CONSTRAINT `fk_category_id` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`),
   CONSTRAINT `fk_product_status` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `profit_stat`
---
-
-DROP TABLE IF EXISTS `profit_stat`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `profit_stat` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `stat_date` date NOT NULL,
-  `revenue` decimal(15,2) NOT NULL DEFAULT '0.00',
-  `expense` decimal(15,2) NOT NULL DEFAULT '0.00',
-  `total_profit` decimal(15,2) NOT NULL DEFAULT '0.00',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_stat_date` (`stat_date`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `report`
---
-
-DROP TABLE IF EXISTS `report`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `report` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `employee_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_report_employee` (`employee_id`),
-  CONSTRAINT `fk_report_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -640,8 +585,10 @@ CREATE TABLE `time_sheet` (
   `check_out` datetime DEFAULT NULL,
   `work_hours` decimal(10,2) DEFAULT '0.00',
   `ot_hours` decimal(5,2) DEFAULT '0.00',
+  `date` DATE GENERATED ALWAYS AS (DATE(`check_in`)) STORED,
   PRIMARY KEY (`id`),
   KEY `time_sheet_ibfk_1` (`employee_id`),
+  KEY `idx_date_employee` (`date`, `employee_id`),
   CONSTRAINT `time_sheet_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
