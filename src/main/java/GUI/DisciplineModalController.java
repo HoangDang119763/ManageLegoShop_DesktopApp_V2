@@ -2,8 +2,10 @@ package GUI;
 
 import BUS.FineBUS;
 import DTO.FineDTO;
+import ENUM.Status.FineType;
 import UTILS.NotificationUtils;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -54,12 +56,14 @@ public class DisciplineModalController {
     }
 
     private void setupDisciplineTypes() {
-        cbDisciplineType.getItems().addAll(
+        // Bạn có thể giữ danh sách các mức độ kỷ luật này
+        cbDisciplineType.setItems(FXCollections.observableArrayList(
                 "Cảnh cáo",
                 "Nhắc nhở",
                 "Giáng chức",
                 "Tạm dừng hợp đồng",
-                "Chấm dứt hợp đồng");
+                "Chấm dứt hợp đồng"
+        ));
     }
 
     private void saveDiscipline() {

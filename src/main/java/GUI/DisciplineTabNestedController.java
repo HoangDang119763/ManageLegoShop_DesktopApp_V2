@@ -3,6 +3,7 @@ package GUI;
 import BUS.FineBUS;
 import BUS.EmployeeBUS;
 import DTO.FineDTO;
+import ENUM.Status.FineType; // Import Enum mới
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
 import SERVICE.SessionManagerService;
@@ -29,7 +30,7 @@ public class DisciplineTabNestedController {
     private VBox containerDiscipline;
 
     @FXML
-    private ComboBox<String> cbFilterType; // Filter: All, Discipline, Reward
+    private ComboBox<Object> cbFilterType; // Cập nhật để chứa String "Tất cả" và FineType
 
     @FXML
     private TableView<FineDTO> tblDiscipline;
@@ -54,7 +55,6 @@ public class DisciplineTabNestedController {
     @FXML
     private Button btnDelete;
 
-    // BUS instances
     private FineBUS fineBUS;
     private EmployeeBUS employeeBUS;
     private ValidationUtils validationUtils;
@@ -63,9 +63,6 @@ public class DisciplineTabNestedController {
     private int currentEmployeeId = -1;
     private ObservableList<FineDTO> disciplineList;
 
-    /**
-     * Initialize Discipline nested controller
-     */
     @FXML
     public void initialize() {
         log.info("Initializing DisciplineTabNestedController");
@@ -76,33 +73,71 @@ public class DisciplineTabNestedController {
         disciplineList = FXCollections.observableArrayList();
 
         setupTable();
+        setupFilters(); // Khởi tạo bộ lọc
         setupButtons();
     }
 
-    /**
-     * Setup table columns
-     */
     private void setupTable() {
         colId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
                 String.valueOf(cellData.getValue().getId())));
+        
         colDate.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
                 validationUtils.formatDateTime(cellData.getValue().getCreatedAt())));
+
+        // Cập nhật hiển thị cột Loại bằng Enum FineType (có màu sắc)
         colType.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getFineLevel() != null ? cellData.getValue().getFineLevel() : ""));
+                cellData.getValue().getType()));
+        colType.setCellFactory(column -> new TableCell<FineDTO, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    FineType type = FineType.fromString(item);
+                    setText(type.getLabel());
+                    // Tô màu xanh cho Khen thưởng, đỏ cho Kỷ luật
+                    setStyle("-fx-text-fill: " + type.getColor() + "; -fx-font-weight: bold;");
+                }
+            }
+        });
+
         colAmount.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
                 validationUtils.formatCurrency(cellData.getValue().getAmount())));
+        
         colReason.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
                 cellData.getValue().getReason() != null ? cellData.getValue().getReason() : ""));
 
-        // Action column
         colAction.setCellFactory(param -> createActionCell());
 
         tblDiscipline.setItems(disciplineList);
     }
 
-    /**
-     * Create action cell with View/Delete buttons
-     */
+    private void setupFilters() {
+        if (cbFilterType != null) {
+            ObservableList<Object> filterItems = FXCollections.observableArrayList();
+            filterItems.add("Tất cả");
+            filterItems.addAll(FineType.values());
+            cbFilterType.setItems(filterItems);
+            cbFilterType.getSelectionModel().selectFirst();
+            
+            // Lắng nghe sự kiện lọc (nếu cần thiết triển khai lọc local)
+            cbFilterType.setOnAction(e -> applyLocalFilter());
+        }
+    }
+
+    private void applyLocalFilter() {
+        Object selected = cbFilterType.getValue();
+        if (selected == null || selected.equals("Tất cả")) {
+            tblDiscipline.setItems(disciplineList);
+        } else {
+            FineType type = (FineType) selected;
+            ObservableList<FineDTO> filtered = disciplineList.filtered(f -> f.getType().equals(type.name()));
+            tblDiscipline.setItems(filtered);
+        }
+    }
+
     private TableCell<FineDTO, String> createActionCell() {
         return new TableCell<FineDTO, String>() {
             private final Button btnView = new Button("Xem");
@@ -131,107 +166,71 @@ public class DisciplineTabNestedController {
         };
     }
 
-    /**
-     * Setup button actions
-     */
     private void setupButtons() {
         btnAdd.setOnAction(event -> addNewDiscipline());
         btnEdit.setOnAction(event -> editSelectedDiscipline());
         btnDelete.setOnAction(event -> deleteSelectedDiscipline());
     }
 
-    /**
-     * Load discipline records for specified employee
-     */
-    public void loadEmployeeDiscipline(int employeeId) {
-        loadEmployeeDisciplines(employeeId);
-    }
-
     public void loadEmployeeDisciplines(int employeeId) {
         currentEmployeeId = employeeId;
-        log.info("Loading discipline records for employee: {}", employeeId);
+        log.info("Loading records for employee: {}", employeeId);
 
         new Thread(() -> {
             try {
                 List<FineDTO> fines = fineBUS.getByEmployeeId(employeeId);
                 Platform.runLater(() -> {
-                    if (fines != null && !fines.isEmpty()) {
-                        disciplineList.setAll(fines);
-                    } else {
-                        disciplineList.clear();
-                    }
+                    disciplineList.setAll(fines != null ? fines : FXCollections.observableArrayList());
+                    applyLocalFilter(); // Áp dụng lại filter hiện tại sau khi load
                 });
             } catch (Exception e) {
-                log.error("Error loading discipline records", e);
-                Platform.runLater(() -> {
-                    NotificationUtils.showErrorAlert("Lỗi tải kỷ luật/khen thưởng",
-                            "Chi tiết: " + e.getMessage());
-                });
+                log.error("Error loading records", e);
+                Platform.runLater(() -> NotificationUtils.showErrorAlert("Lỗi", "Không thể tải dữ liệu"));
             }
         }).start();
     }
 
-    /**
-     * Show discipline record details
-     */
     private void showDisciplineDetails(FineDTO fine) {
-        if (fine == null)
-            return;
-
-        String details = String.format("ID: %d\nMức Độ: %s\nNgày: %s\nSố tiền: %s\nLý do: %s",
+        if (fine == null) return;
+        FineType type = FineType.fromString(fine.getType());
+        
+        String details = String.format("ID: %d\nLoại: %s\nMức Độ: %s\nNgày: %s\nSố tiền: %s\nLý do: %s",
                 fine.getId(),
+                type.getLabel(),
                 fine.getFineLevel() != null ? fine.getFineLevel() : "Không xác định",
                 validationUtils.formatDateTime(fine.getCreatedAt()),
                 validationUtils.formatCurrency(fine.getAmount()),
                 fine.getReason() != null ? fine.getReason() : "Không có");
 
-        NotificationUtils.showInfoAlert("Chi tiết " + (fine.getFineLevel() != null ? fine.getFineLevel() : ""),
-                details);
+        NotificationUtils.showInfoAlert("Chi tiết bản ghi", details);
     }
 
-    /**
-     * Delete discipline record
-     */
     private void deleteDiscipline(FineDTO fine) {
-        if (fine == null)
-            return;
+        if (fine == null || !NotificationUtils.showConfirmAlert("Xác nhận xóa bản ghi này?")) return;
 
-        Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmDialog.setTitle("Xác nhận xóa");
-        confirmDialog.setHeaderText("Xóa bản ghi kỷ luật/khen thưởng");
-        confirmDialog.setContentText("Bạn có chắc muốn xóa bản ghi này?");
-
-        if (confirmDialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            new Thread(() -> {
-                try {
-                    if (fineBUS.delete(fine.getId(), sessionManager.employeeRoleId(),
-                            sessionManager.employeeLoginId())) {
-                        Platform.runLater(() -> {
-                            NotificationUtils.showInfoAlert("Thành công", "Xóa thành công");
-                            loadEmployeeDiscipline(currentEmployeeId);
-                        });
+        new Thread(() -> {
+            try {
+                boolean success = fineBUS.delete(fine.getId(), 
+                                                sessionManager.employeeRoleId(), 
+                                                sessionManager.employeeLoginId());
+                Platform.runLater(() -> {
+                    if (success) {
+                        NotificationUtils.showInfoAlert("Thành công", "Đã xóa bản ghi");
+                        loadEmployeeDisciplines(currentEmployeeId);
                     } else {
-                        Platform.runLater(() -> {
-                            NotificationUtils.showErrorAlert("Thất bại", "Không thể xóa bản ghi");
-                        });
+                        NotificationUtils.showErrorAlert("Thất bại", "Lỗi phân quyền hoặc hệ thống");
                     }
-                } catch (Exception e) {
-                    log.error("Error deleting discipline record", e);
-                    Platform.runLater(() -> {
-                        NotificationUtils.showErrorAlert("Lỗi", "Chi tiết: " + e.getMessage());
-                    });
-                }
-            }).start();
-        }
+                });
+            } catch (Exception e) {
+                log.error("Error delete", e);
+            }
+        }).start();
     }
 
     private void deleteSelectedDiscipline() {
         FineDTO selected = tblDiscipline.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            deleteDiscipline(selected);
-        } else {
-            NotificationUtils.showInfoAlert("Cảnh báo", "Vui lòng chọn một bản ghi");
-        }
+        if (selected != null) deleteDiscipline(selected);
+        else NotificationUtils.showInfoAlert("Cảnh báo", "Vui lòng chọn một bản ghi");
     }
 
     private void addNewDiscipline() {
@@ -243,13 +242,13 @@ public class DisciplineTabNestedController {
             modalController.setParentController(this);
 
             Stage modalStage = new Stage();
-            modalStage.setTitle("Thêm Bản Kỷ Luật");
+            modalStage.setTitle("Thêm Bản Khen thưởng / Kỷ luật");
             modalStage.setScene(new Scene(modalRoot));
             modalStage.initModality(Modality.APPLICATION_MODAL);
             modalStage.showAndWait();
         } catch (IOException e) {
-            log.error("Error opening discipline modal", e);
-            NotificationUtils.showErrorAlert("Lỗi", "Không thể mở form thêm bản kỷ luật");
+            log.error("Error opening modal", e);
+            NotificationUtils.showErrorAlert("Lỗi", "Không thể mở form");
         }
     }
 
@@ -258,7 +257,8 @@ public class DisciplineTabNestedController {
         if (selected == null) {
             NotificationUtils.showInfoAlert("Cảnh báo", "Vui lòng chọn một bản ghi");
         } else {
-            NotificationUtils.showInfoAlert("Thông báo", "Chức năng chỉnh sửa sẽ được thêm vào");
+            // Có thể mở Modal tương tự như addNew nhưng truyền dữ liệu vào để sửa
+            NotificationUtils.showInfoAlert("Thông báo", "Chức năng chỉnh sửa đang được cập nhật");
         }
     }
 }

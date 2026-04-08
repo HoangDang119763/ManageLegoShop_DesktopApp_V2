@@ -4,6 +4,7 @@ import BUS.LeaveRequestBUS;
 import BUS.LeaveTypeBUS;
 import DTO.LeaveRequestDTO;
 import DTO.LeaveTypeDTO;
+import ENUM.BUSOperationResult;
 import UTILS.NotificationUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -104,9 +105,9 @@ public class LeaveRequestModalController {
         // Save to database
         new Thread(() -> {
             try {
-                int result = leaveRequestBUS.insert(leaveRequest, 1, 1);
-                Platform.runLater(() -> {
-                    if (result == 1) {
+            BUSOperationResult result = leaveRequestBUS.insert(leaveRequest);                
+            Platform.runLater(() -> {
+                    if (result == BUSOperationResult.SUCCESS) {
                         NotificationUtils.showInfoAlert("Thành công", "Thêm đơn nghỉ phép thành công");
                         if (parentController != null) {
                             parentController.loadEmployeeLeaves(employeeId);

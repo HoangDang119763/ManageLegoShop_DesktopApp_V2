@@ -2,174 +2,159 @@ package BUS;
 
 import DAL.LeaveRequestDAL;
 import DTO.LeaveRequestDTO;
+import ENUM.BUSOperationResult;
+import ENUM.Status;
 import UTILS.ValidationUtils;
 
 import java.util.ArrayList;
 
 public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
+
     private static final LeaveRequestBUS INSTANCE = new LeaveRequestBUS();
 
-    private LeaveRequestBUS() {
-    }
+    private LeaveRequestBUS() {}
 
     public static LeaveRequestBUS getInstance() {
         return INSTANCE;
     }
 
+    // =========================================================
+    // GET OPERATIONS
+    // =========================================================
+
     @Override
     public ArrayList<LeaveRequestDTO> getAll() {
-        return (ArrayList<LeaveRequestDTO>) LeaveRequestDAL.getInstance().getAll();
+        // DAL đã Join với bảng Status và LeaveType, lấy trực tiếp về dùng
+        return LeaveRequestDAL.getInstance().getAll();
     }
 
     @Override
-    protected Integer getKey(LeaveRequestDTO obj) {
-        return obj.getId();
-    }
-
-    public int insert(LeaveRequestDTO obj, int employee_roleId, int employeeLoginId) {
-        // 1. Kiểm tra null
-        if (obj == null || employee_roleId <= 0 || employeeLoginId <= 0)
-            return 2;
-
-        // 2. Kiểm tra phân quyền (permission ID for insert leave request)
-
-        // 3. Kiểm tra đầu vào hợp lệ
-        if (!isValidLeaveRequestInput(obj))
-            return 2;
-
-        // 4. validate khi chuyển xuống database
-        ValidationUtils validate = ValidationUtils.getInstance();
-        obj.setStatus(true);
-        if (obj.getContent() != null) {
-            obj.setContent(validate.normalizeWhiteSpace(obj.getContent()));
-        }
-
-        // 5. Kiểm tra thêm vào CSDL
-        if (!LeaveRequestDAL.getInstance().insert(obj))
-            return 5;
-
-        // 6. Thêm vào danh sách tạm
-
-        return 1; // thêm thành công
-    }
-
-    public int update(LeaveRequestDTO obj, int employee_roleId, int employeeLoginId) {
-        // 1. Kiểm tra null & phân quyền
-        if (obj == null || employee_roleId <= 0 || employeeLoginId <= 0)
-            return 2;
-
-        // 2. Kiểm tra phân quyền (permission ID for update leave request)
-
-        // 3. Kiểm tra đầu vào hợp lệ
-        if (!isValidLeaveRequestInput(obj))
-            return 2;
-
-        // 4. Kiểm tra dữ liệu mới có trùng dữ liệu cũ không
-
-        // 5. Kiểm tra đầu vào hợp lệ khi truyền xuống CSDL
-        ValidationUtils validate = ValidationUtils.getInstance();
-        if (obj.getContent() != null) {
-            obj.setContent(validate.normalizeWhiteSpace(obj.getContent()));
-        }
-
-        // 6. Kiểm tra update vào CSDL
-        if (!LeaveRequestDAL.getInstance().update(obj))
-            return 5;
-
-        return 1;
-    }
-
-    public int delete(Integer id) {
-        // 1. Kiểm tra null
-        if (id == null || id <= 0)
-            return 2;
-
-        // 3. Kiểm tra leave request có tồn tại không
-        // LeaveRequestDTO targetLeaveRequest = getByIdLocal(id);
-        // if (targetLeaveRequest == null)
-        // return 5;
-
-        // 4. Kiểm tra đã xoá ở CSDL
-        if (!LeaveRequestDAL.getInstance().delete(id))
-            return 6;
-
-        // 5. Cập nhật trạng thái trong bộ nhớ local
-        return 1;
-    }
-
-    public boolean delete(Integer id, int employeeRoleId, int employeeLoginId) {
-        return delete(id) == 1;
+    public LeaveRequestDTO getById(Integer id) {
+        if (id == null || id <= 0) return null;
+        // Tận dụng phương thức kế thừa từ BaseDAL qua DAL Singleton
+        return LeaveRequestDAL.getInstance().getById(id);
     }
 
     public ArrayList<LeaveRequestDTO> getByEmployeeId(int employeeId) {
+        if (employeeId <= 0) return new ArrayList<>();
         return LeaveRequestDAL.getInstance().getByEmployeeId(employeeId);
     }
 
+    // =========================================================
+    // WRITE OPERATIONS
+    // =========================================================
+
+    public BUSOperationResult insert(LeaveRequestDTO obj) {
+        // Chặn insert nếu dữ liệu không hợp lệ
+        if (!isValidLeaveRequestInput(obj)) {
+            return BUSOperationResult.INVALID_DATA;
+        }
+
+        // Normalize nội dung trước khi lưu
+        if (obj.getContent() != null) {
+            obj.setContent(ValidationUtils.getInstance().normalizeWhiteSpace(obj.getContent()));
+        }
+
+        // Luôn gán trạng thái mặc định là Pending (20) cho đơn mới
+        obj.setStatusId(20); 
+
+        boolean success = LeaveRequestDAL.getInstance().insert(obj);
+        return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
+    }
+
+    public BUSOperationResult update(LeaveRequestDTO obj) {
+        if (obj == null || obj.getId() <= 0) return BUSOperationResult.INVALID_PARAMS;
+
+        LeaveRequestDTO existing = getById(obj.getId());
+        if (existing == null) return BUSOperationResult.NOT_FOUND;
+
+        // Chỉ cho phép sửa đơn nếu đang ở trạng thái PENDING (20)
+        if (existing.getStatusId() != 20) {
+            return BUSOperationResult.CONFLICT; // Đơn đã duyệt/hủy không được sửa
+        }
+
+        if (!isValidLeaveRequestInput(obj)) return BUSOperationResult.INVALID_DATA;
+
+        boolean success = LeaveRequestDAL.getInstance().update(obj);
+        return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
+    }
+
+    public BUSOperationResult delete(Integer id) {
+        if (id == null || id <= 0) return BUSOperationResult.INVALID_PARAMS;
+
+        LeaveRequestDTO existing = getById(id);
+        if (existing == null) return BUSOperationResult.NOT_FOUND;
+
+        boolean success = LeaveRequestDAL.getInstance().delete(id);
+        return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
+    }
+
+    // =========================================================
+    // STATUS TRANSITION OPERATIONS (Duyệt/Hủy)
+    // =========================================================
+
+    public BUSOperationResult approve(int id) {
+        LeaveRequestDTO existing = getById(id);
+        if (existing == null) return BUSOperationResult.NOT_FOUND;
+
+        if (existing.getStatusId() != 20) {
+            return BUSOperationResult.CONFLICT;
+        }
+
+        boolean success = LeaveRequestDAL.getInstance().approve(id);
+        return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
+    }
+
+    public BUSOperationResult reject(int id) {
+        LeaveRequestDTO existing = getById(id);
+        if (existing == null) return BUSOperationResult.NOT_FOUND;
+
+        if (existing.getStatusId() != 20) {
+            return BUSOperationResult.CONFLICT;
+        }
+
+        boolean success = LeaveRequestDAL.getInstance().reject(id);
+        return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
+    }
+
+    public BUSOperationResult cancel(int id, int employeeLoginId) {
+        LeaveRequestDTO existing = getById(id);
+        if (existing == null) return BUSOperationResult.NOT_FOUND;
+
+        // Kiểm tra quyền sở hữu đơn
+        if (existing.getEmployeeId() != employeeLoginId) {
+            return BUSOperationResult.UNAUTHORIZED;
+        }
+
+        // Gọi phương thức cancel (ID 23) từ DAL
+        boolean success = LeaveRequestDAL.getInstance().cancel(id);
+        return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
+    }
+
+    // =========================================================
+    // VALIDATION HELPER
+    // =========================================================
+
     private boolean isValidLeaveRequestInput(LeaveRequestDTO obj) {
-        // Type and content can be nullable
-        // But start_date and end_date are required
-        if (obj.getStartDate() == null || obj.getEndDate() == null)
+        if (obj == null || obj.getStartDate() == null || obj.getEndDate() == null) {
             return false;
+        }
 
-        // End date must be after start date
-        if (obj.getEndDate().isBefore(obj.getStartDate()))
+        // Ngày bắt đầu không được sau ngày kết thúc
+        if (obj.getEndDate().isBefore(obj.getStartDate())) {
             return false;
+        }
 
-        ValidationUtils validator = ValidationUtils.getInstance();
-
+        // Validate nội dung tiếng Việt tối đa 255 ký tự
         if (obj.getContent() != null && !obj.getContent().isEmpty()) {
-            if (!validator.validateVietnameseText255(obj.getContent()))
-                return false;
+            return ValidationUtils.getInstance().validateVietnameseText255(obj.getContent());
         }
 
         return true;
     }
 
-    public ArrayList<LeaveRequestDTO> filterLeaveRequests(String searchBy, String keyword, int statusFilter,
-            int employeeFilter) {
-        ArrayList<LeaveRequestDTO> filteredList = new ArrayList<>();
-
-        // if (keyword == null)
-        // keyword = "";
-        // if (searchBy == null)
-        // searchBy = "";
-
-        // keyword = keyword.trim().toLowerCase();
-
-        // for (LeaveRequestDTO leaveRequest : arrLocal) {
-        // boolean matchesSearch = true;
-        // boolean matchesStatus = (statusFilter == -1) || (leaveRequest.isStatus() ==
-        // (statusFilter == 1));
-        // boolean matchesEmployee = (employeeFilter == -1) ||
-        // (leaveRequest.getEmployeeId() == employeeFilter);
-
-        // String id = String.valueOf(leaveRequest.getId());
-        // String type = leaveRequest.getType() != null ?
-        // leaveRequest.getType().toLowerCase() : "";
-        // String content = leaveRequest.getContent() != null ?
-        // leaveRequest.getContent().toLowerCase() : "";
-        // String employeeId = String.valueOf(leaveRequest.getEmployeeId());
-
-        // if (!keyword.isEmpty()) {
-        // switch (searchBy) {
-        // case "Mã yêu cầu" -> matchesSearch = id.contains(keyword);
-        // case "Loại phép" -> matchesSearch = type.contains(keyword);
-        // case "Nội dung" -> matchesSearch = content.contains(keyword);
-        // case "Mã nhân viên" -> matchesSearch = employeeId.contains(keyword);
-        // }
-        // }
-
-        // if (matchesSearch && matchesStatus && matchesEmployee) {
-        // filteredList.add(leaveRequest);
-        // }
-        // }
-
-        return filteredList;
-    }
-
     @Override
-    public LeaveRequestDTO getById(Integer id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+    protected Integer getKey(LeaveRequestDTO obj) {
+        return obj.getId();
     }
 }

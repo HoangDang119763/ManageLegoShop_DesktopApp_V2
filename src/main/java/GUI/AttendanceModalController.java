@@ -40,15 +40,12 @@ public class AttendanceModalController {
     @FXML
     private Button btnCancel;
 
-    private TimeSheetBUS timeSheetBUS;
     private int employeeId;
     private AttendanceTabNestedController parentController;
 
     @FXML
     public void initialize() {
         log.info("Initializing AttendanceModalController");
-        timeSheetBUS = TimeSheetBUS.getInstance();
-
         setupButtons();
         dpAttendanceDate.setValue(LocalDate.now());
     }
@@ -111,7 +108,7 @@ public class AttendanceModalController {
         // Save to database
         new Thread(() -> {
             try {
-                if (timeSheetBUS.insert(timeSheet, 1, 1)) {
+                if (TimeSheetBUS.getInstance().insert(timeSheet) != null) {
                     Platform.runLater(() -> {
                         NotificationUtils.showInfoAlert("Thành công", "Thêm chấm công thành công");
                         if (parentController != null) {

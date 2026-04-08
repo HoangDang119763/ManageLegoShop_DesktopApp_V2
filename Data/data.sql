@@ -213,8 +213,10 @@ INSERT INTO `module` (`id`, `name`) VALUES
 (10, 'Thống kê'),
 (11, 'Quản lý chấm công'),
 (12, 'Quản lý điều chuyển'),
-(13, 'Quản lý đơn'),
-(14, 'Quản lý phúc lợi');
+(13, 'Quản lý đơn nghỉ phép'),
+(14, 'Quản lý lương thưởng'),
+(15, 'Quản lý kỷ luật');
+
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -241,20 +243,13 @@ INSERT INTO `permission` (`id`, `name`, `permission_key`, `module_id`) VALUES
 (3, 'Cập nhật hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_UPDATE', 1),
 (4, 'Xem vị trí công tác & lịch sử', 'EMPLOYEE_JOB_VIEW', 1),
 (5, 'Cập nhật vị trí công tác', 'EMPLOYEE_JOB_UPDATE', 1),
-(6, 'Xem lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_VIEW', 1),
-(7, 'Cập nhật lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_UPDATE', 1),
+
 (8, 'Xem tài khoản hệ thống', 'EMPLOYEE_ACCOUNT_VIEW', 1),
 (9, 'Đặt lại mật khẩu nhân viên', 'EMPLOYEE_ACCOUNT_RESET_PASSWORD', 1),
 (10, 'Cập nhật trạng thái tài khoản', 'EMPLOYEE_ACCOUNT_UPDATE_STATUS', 1),
 (11, 'Thêm mới nhân viên, tài khoản', 'EMPLOYEE_INSERT', 1),
 (12, 'Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
-(13, 'Xem đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_VIEW', 1),
-(14, 'Tạo đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_CREATE', 1),
-(15, 'Quản lý duyệt đơn nghỉ', 'EMPLOYEE_LEAVE_REQUEST_MANAGE', 1),
-(16, 'Xem kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_VIEW', 1),
-(17, 'Quản lý kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_MANAGE', 1),
-(18, 'Xem chấm công', 'EMPLOYEE_ATTENDANCE_VIEW', 1),
-(19, 'Quản lý chấm công', 'EMPLOYEE_ATTENDANCE_MANAGE', 1),
+
 (20, 'Cập nhật chức vụ thành viên', 'EMPLOYEE_ROLE_POSITION_UPDATE', 1),
 
 -- Module 2: Quản lý khách hàng (ID: 21-24)
@@ -307,11 +302,30 @@ INSERT INTO `permission` (`id`, `name`, `permission_key`, `module_id`) VALUES
 -- Module 10: Thống kê (ID: 52)
 (52, 'Xem báo cáo thống kê', 'STATISTICS_VIEW', 10),
 
+-- Module 11: Quản lý chấm công (ID: 67-68)
+(67, 'Xem chấm công', 'EMPLOYEE_ATTENDANCE_VIEW', 11),
+(68, 'Quản lý chấm công', 'EMPLOYEE_ATTENDANCE_MANAGE', 11),
+
 -- Module 12: Quản lý nhân sự (ID: 53-56)
 (53, 'Xem danh sách điều chuyển', 'EMPLOYMENT_HISTORY_LIST_VIEW', 12),
 (54, 'Tạo lệnh điều chuyển mới', 'EMPLOYMENT_HISTORY_INSERT', 12),
 (55, 'Phê duyệt điều chuyển', 'EMPLOYMENT_HISTORY_APPROVE', 12),
-(56, 'Xóa/Hủy lệnh điều chuyển', 'EMPLOYMENT_HISTORY_DELETE', 12);
+(56, 'Xóa/Hủy lệnh điều chuyển', 'EMPLOYMENT_HISTORY_DELETE', 12),
+
+-- Module 13: Quản lý đơn nghỉ phép (ID: 57-59)
+(57, 'Xem đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_VIEW', 13),
+(58, 'Tạo đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_CREATE', 13),
+(59, 'Quản lý duyệt đơn nghỉ', 'EMPLOYEE_LEAVE_REQUEST_MANAGE', 13),
+
+-- Module 14: Quản lý Lương & Bảo hiểm (ID: 60-64)
+(60, 'Xem lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_VIEW', 14),
+(61, 'Cập nhật lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_UPDATE', 14),
+
+-- Module 15: Quản lý kỷ luật & khen thưởng (ID: 65-66)
+(65, 'Xem kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_VIEW', 15),
+(66, 'Quản lý kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_MANAGE', 15);
+
+
 /*!40000 ALTER TABLE `permission` ENABLE KEYS */;
 UNLOCK TABLES;
 

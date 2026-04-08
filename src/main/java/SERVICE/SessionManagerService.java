@@ -150,4 +150,8 @@ public class SessionManagerService {
         }
         return false;
     }
+
+    public int getEmployeeId() {
+        return currentSession != null ? currentSession.getEmployeeId() : -1;
+    }
 }

@@ -3,6 +3,7 @@ package GUI;
 import BUS.LeaveRequestBUS;
 import BUS.EmployeeBUS;
 import DTO.LeaveRequestDTO;
+import ENUM.BUSOperationResult;
 import UTILS.NotificationUtils;
 import UTILS.ValidationUtils;
 import javafx.application.Platform;
@@ -202,7 +203,7 @@ public class LeaveRequestTabNestedController {
         if (confirmDialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             new Thread(() -> {
                 try {
-                    if (leaveRequestBUS.delete(leave.getId()) > 0) {
+                    if (leaveRequestBUS.delete(leave.getId()) == BUSOperationResult.SUCCESS) {
                         Platform.runLater(() -> {
                             NotificationUtils.showInfoAlert("Thành công", "Xóa đơn nghỉ phép thành công");
                             loadEmployeeLeaves(currentEmployeeId);

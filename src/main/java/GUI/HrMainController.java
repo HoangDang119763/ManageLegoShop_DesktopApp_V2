@@ -37,9 +37,14 @@ public class HrMainController {
     private static final Map<Integer, String> MODULE_FXML_MAP = Map.ofEntries(
             Map.entry(0, "/GUI/EmployeeInfoUI.fxml"), // Thông tin cá nhân (luôn có)
             Map.entry(1, "/GUI/EmployeeUI.fxml"), // Quản lý NV & TK
+            Map.entry(13, "/GUI/LeaveRequestUI.fxml"), // Quản lý đơn nghỉ phép
+            Map.entry(9, "/GUI/DepartmentPositionUI.fxml"), // Phòng ban & Chức vụ
+            Map.entry(10, "/GUI/HrStatisticUI.fxml"), // Thống kê nhân sự
+            Map.entry(11, "/GUI/AttendanceUI.fxml"), // Quản lý chấm công
             Map.entry(12, "/GUI/EmploymentHistory.fxml"), // Điều chuyển
-            Map.entry(13, "/GUI/DepartmentPositionUI.fxml"), // Phòng ban & Chức vụ
-            Map.entry(14, "/GUI/HrStatisticUI.fxml")); // Thống kê nhân sự
+            Map.entry(14, "/GUI/PayrollFullUI.fxml"), // Quản lý lương thưởng
+            Map.entry(15, "/GUI/DisciplineRewardUI.fxml") // Kỷ luật & khen thưởng
+        ); // Thống kê nhân sự
 
     @FXML
     public void initialize() {
@@ -92,9 +97,14 @@ public class HrMainController {
         List<ModuleMetadata> hrModules = Arrays.asList(
                 new ModuleMetadata(0, "Cá nhân", "employee_info.png"), // ID 0: Luôn cho phép
                 new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
+                new ModuleMetadata(9, "Phòng ban & Chức vụ", "department.png"),
+                new ModuleMetadata(10, "Thống kê nhân sự", "employee.png"),
+                new ModuleMetadata(11, "Chấm công", "attendance.png"),
                 new ModuleMetadata(12, "Điều chuyển", "employment_history.png"),
-                new ModuleMetadata(13, "Phòng ban & Chức vụ", "department.png"),
-                new ModuleMetadata(14, "Thống kê nhân sự", "employee.png"));
+                new ModuleMetadata(13, "Đơn nghỉ phép", "leave_request.png"),
+                new ModuleMetadata(14, "Bảng lương", "payroll.png"),
+                new ModuleMetadata(15, "Kỷ luật & khen thưởng", "award-solid.png")
+            );
 
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : hrModules) {

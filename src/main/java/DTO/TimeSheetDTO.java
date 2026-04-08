@@ -8,10 +8,12 @@ import java.time.Duration;
 public class TimeSheetDTO {
     private int id;
     private int employeeId;
+    private String employeeName;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private BigDecimal workHours;
     private BigDecimal otHours;
+    private String departmentName;
 
     public TimeSheetDTO() {
     }
@@ -57,6 +59,14 @@ public class TimeSheetDTO {
 
     public void setEmployeeId(int employeeId) {
         this.employeeId = employeeId;
+    }
+
+    public String getEmployeeName() {
+      return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+      this.employeeName = employeeName;
     }
 
     public LocalDateTime getCheckIn() {
@@ -117,6 +127,13 @@ public class TimeSheetDTO {
                 ", checkOut=" + checkOut +
                 ", workHours=" + workHours +
                 ", otHours=" + otHours +
+                ", departmentName=" + employeeName +
                 '}';
     }
+
+    public void setDepartmentName(String string) {
+        this.departmentName = string;
+    }
 }
+
+        

@@ -11,6 +11,7 @@ public class FineDTO {
     private BigDecimal amount;
     private BigDecimal finePay;
     private int employeeId;
+    private String type;
 
     public FineDTO() {
     }
@@ -104,4 +105,13 @@ public class FineDTO {
                 ", employeeId=" + employeeId +
                 '}';
     }
+
+    public void setType(String name) {
+        this.type = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
 }

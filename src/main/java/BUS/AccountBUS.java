@@ -145,6 +145,8 @@ public class AccountBUS extends BaseBUS<AccountDTO, Integer> {
             session.setPermissions(PermissionBUS.getInstance().getPermissionKeysByRoleId(session.getRoleId()));
             session.setAllowedModuleIds(
                     RolePermissionBUS.getInstance().getAllowedModuleIdsByRoleId(session.getRoleId()));
+            System.out.println("Session Permissions: " + session.getPermissions());
+            System.out.println("Session Allowed Module IDs: " + session.getAllowedModuleIds());
         }
         SessionManagerService.getInstance().login(session);
         return new BUSResult(BUSOperationResult.SUCCESS, AppMessages.LOGIN_SUCCESS + " - Chào "

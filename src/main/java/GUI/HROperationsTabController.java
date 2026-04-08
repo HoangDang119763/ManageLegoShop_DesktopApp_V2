@@ -164,7 +164,7 @@ public class HROperationsTabController {
 
         // Load Discipline data
         if (disciplineTabNestedController != null) {
-            disciplineTabNestedController.loadEmployeeDiscipline(employeeId);
+            disciplineTabNestedController.loadEmployeeDisciplines(employeeId);
         }
 
         // Load Attendance data

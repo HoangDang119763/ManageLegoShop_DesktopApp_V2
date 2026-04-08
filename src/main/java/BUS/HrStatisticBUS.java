@@ -72,10 +72,10 @@ public class HrStatisticBUS {
         dto.setDailyWorkPoints(TimeSheetDAL.getInstance().getDailyWorkPoints(month, year));
 
         // Nghỉ phép
-        dto.setLeaveStat(LeaveRequestDAL.getInstance().getLeaveStat(month, year));
-        dto.setLeaveByType(LeaveRequestDAL.getInstance().getLeaveByType(month, year));
-        dto.setLeaveByStatus(LeaveRequestDAL.getInstance().getLeaveByStatus(month, year));
-        dto.setLeaveRows(LeaveRequestDAL.getInstance().getLeaveRows(month, year));
+        // dto.setLeaveStat(LeaveRequestDAL.getInstance().getLeaveStat(month, year));
+        // dto.setLeaveByType(LeaveRequestDAL.getInstance().getLeaveByType(month, year));
+        // dto.setLeaveByStatus(LeaveRequestDAL.getInstance().getLeaveByStatus(month, year));
+        // dto.setLeaveRows(LeaveRequestDAL.getInstance().getLeaveRows(month, year));
 
         // Thống kê lương
         dto.setSalaryStat(PayrollHistoryDAL.getInstance().getSalaryStatForMonth(month, year));
