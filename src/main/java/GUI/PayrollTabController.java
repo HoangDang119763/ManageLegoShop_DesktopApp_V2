@@ -1,135 +1,205 @@
 package GUI;
 
 import BUS.PayrollHistoryBUS;
-import BUS.PayRollBUS;
 import BUS.EmployeeBUS;
 import DTO.PayrollHistoryDTO;
 import DTO.EmployeeDTO;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import UTILS.NotificationUtils;
+import SERVICE.SessionManagerService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class PayrollTabController {
-    @FXML
-    private TableView<PayrollHistoryDTO> tblPayroll;
-    @FXML
-    private TableColumn<PayrollHistoryDTO, LocalDate> colPeriod;
-    @FXML
-    private TableColumn<PayrollHistoryDTO, BigDecimal> colTemporarySalary;
-    @FXML
-    private TableColumn<PayrollHistoryDTO, BigDecimal> colOvertime;
-    @FXML
-    private TableColumn<PayrollHistoryDTO, BigDecimal> colAllowance;
-    @FXML
-    private TableColumn<PayrollHistoryDTO, BigDecimal> colBonus;
-    @FXML
-    private TableColumn<PayrollHistoryDTO, BigDecimal> colDeduction;
-    @FXML
-    private TableColumn<PayrollHistoryDTO, BigDecimal> colFine;
-    @FXML
-    private TableColumn<PayrollHistoryDTO, BigDecimal> colNetSalary;
 
     @FXML
-    private ComboBox<YearMonth> cbPeriod;
+    private Button btnRefresh, btnPrevious, btnNext;
     @FXML
-    private Button btnCalculate, btnRefresh;
+    private ComboBox<Integer> cbMonth;
+    @FXML
+    private ComboBox<Integer> cbYear;
 
+    // Labels for displaying payroll data
     @FXML
-    private Label lblEmployeeName;
+    private Label lblPeriod;
     @FXML
     private Label lblBaseSalary;
     @FXML
-    private Label lblTemporarySalary;
+    private Label lblActualWorkDays;
+    @FXML
+    private Label lblOvertimeAmount;
+    @FXML
+    private Label lblTotalAllowance;
+    @FXML
+    private Label lblRewardAmount;
+    @FXML
+    private Label lblViolationAmount;
+    @FXML
+    private Label lblTotalInsurance;
+    @FXML
+    private Label lblTaxableIncome;
+    @FXML
+    private Label lblTaxAmount;
     @FXML
     private Label lblNetSalary;
 
     private PayrollHistoryBUS payrollHistoryBUS;
-    private PayRollBUS payrollBUS;
     private EmployeeBUS employeeBUS;
+    private SessionManagerService sessionManager;
     private int currentEmployeeId;
+    private ArrayList<PayrollHistoryDTO> allPayrolls;
+    private ArrayList<PayrollHistoryDTO> filteredPayrolls;
+    private int currentDisplayIndex = 0;
 
     @FXML
     public void initialize() {
         payrollHistoryBUS = PayrollHistoryBUS.getInstance();
-        payrollBUS = new PayRollBUS();
         employeeBUS = EmployeeBUS.getInstance();
+        sessionManager = SessionManagerService.getInstance();
+        allPayrolls = new ArrayList<>();
+        filteredPayrolls = new ArrayList<>();
 
-        setupTable();
-        setupPeriodCombo();
+        setupMonthYearCombo();
         setupListeners();
     }
 
-    private void setupTable() {
-        colPeriod.setCellValueFactory(new PropertyValueFactory<>("salaryPeriod"));
-        colTemporarySalary.setCellValueFactory(new PropertyValueFactory<>("temporarySalary"));
-        colOvertime.setCellValueFactory(new PropertyValueFactory<>("overtimeAmount"));
-        colAllowance.setCellValueFactory(new PropertyValueFactory<>("totalAllowance"));
-        colBonus.setCellValueFactory(new PropertyValueFactory<>("totalBonus"));
-        colDeduction.setCellValueFactory(new PropertyValueFactory<>("totalDeduction"));
-        colFine.setCellValueFactory(new PropertyValueFactory<>("totalFine"));
-        colNetSalary.setCellValueFactory(new PropertyValueFactory<>("netSalary"));
-    }
-
-    private void setupPeriodCombo() {
-        ArrayList<YearMonth> periods = new ArrayList<>();
-        YearMonth current = YearMonth.now();
-        for (int i = 23; i >= 0; i--) {
-            periods.add(current.minusMonths(i));
+    private void setupMonthYearCombo() {
+        // Setup Month ComboBox (1-12)
+        ArrayList<Integer> months = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            months.add(i);
         }
-        cbPeriod.setItems(FXCollections.observableArrayList(periods));
-        cbPeriod.setValue(YearMonth.now());
-        cbPeriod.valueProperty().addListener((obs, oldVal, newVal) -> loadPayrolls());
+        cbMonth.setItems(FXCollections.observableArrayList(months));
+        cbMonth.setValue(LocalDate.now().getMonthValue());
+
+        // Setup Year ComboBox (5 năm gần nhất)
+        ArrayList<Integer> years = new ArrayList<>();
+        int currentYear = LocalDate.now().getYear();
+        for (int i = 0; i < 5; i++) {
+            years.add(currentYear - i);
+        }
+        cbYear.setItems(FXCollections.observableArrayList(years));
+        cbYear.setValue(currentYear);
     }
 
     private void setupListeners() {
-        btnCalculate.setOnAction(e -> handleCalculate());
         btnRefresh.setOnAction(e -> loadPayrolls());
-        tblPayroll.setOnMouseClicked(e -> loadSelectedPayroll());
+        btnPrevious.setOnAction(e -> showPreviousPayroll());
+        btnNext.setOnAction(e -> showNextPayroll());
+        cbMonth.valueProperty().addListener((obs, oldVal, newVal) -> filterPayrolls());
+        cbYear.valueProperty().addListener((obs, oldVal, newVal) -> filterPayrolls());
     }
 
     public void loadEmployeePayroll(int employeeId) {
         this.currentEmployeeId = employeeId;
-        EmployeeDTO emp = employeeBUS.getById(employeeId);
-        if (emp != null) {
-            lblEmployeeName.setText(emp.getFirstName() + " " + emp.getLastName());
-        }
         loadPayrolls();
     }
 
     private void loadPayrolls() {
-        ArrayList<PayrollHistoryDTO> payrolls = payrollHistoryBUS.getByEmployeeId(currentEmployeeId);
-        tblPayroll.setItems(FXCollections.observableArrayList(payrolls));
+        allPayrolls.clear();
+        allPayrolls.addAll(payrollHistoryBUS.getByEmployeeId(currentEmployeeId));
+        filterPayrolls();
     }
 
-    private void loadSelectedPayroll() {
-        PayrollHistoryDTO selected = tblPayroll.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            lblTemporarySalary.setText(String.format("%,.0f đ", selected.getTemporarySalary()));
-            lblNetSalary.setText(String.format("%,.0f đ", selected.getNetSalary()));
+    private void filterPayrolls() {
+        Integer selectedMonth = cbMonth.getValue();
+        Integer selectedYear = cbYear.getValue();
+
+        filteredPayrolls.clear();
+        if (selectedMonth != null && selectedYear != null) {
+            filteredPayrolls.addAll(allPayrolls.stream()
+                .filter(p -> {
+                    if (p.getSalaryPeriod() == null) {
+                        return false;
+                    }
+                    return p.getSalaryPeriod().getMonthValue() == selectedMonth
+                        && p.getSalaryPeriod().getYear() == selectedYear;
+                })
+                .collect(Collectors.toCollection(ArrayList::new)));
+        }
+
+        currentDisplayIndex = 0;
+        displayCurrentPayroll();
+    }
+
+    private void showPreviousPayroll() {
+        if (currentDisplayIndex > 0) {
+            currentDisplayIndex--;
+            displayCurrentPayroll();
         }
     }
 
-    @FXML
-    private void handleCalculate() {
-        YearMonth selected = cbPeriod.getValue();
-        if (selected == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn kỳ tính lương", "Cảnh báo");
+    private void showNextPayroll() {
+        if (currentDisplayIndex < filteredPayrolls.size() - 1) {
+            currentDisplayIndex++;
+            displayCurrentPayroll();
+        }
+    }
+
+    private void displayCurrentPayroll() {
+        if (filteredPayrolls.isEmpty()) {
+            clearAllLabels();
             return;
         }
 
-        String periodDate = selected.atDay(1).toString() + "";
-        if (payrollBUS.calculateMonthlySalary(currentEmployeeId, periodDate)) {
-            NotificationUtils.showInfoAlert("Tính lương tháng thành công", "Thành công");
-            loadPayrolls();
-        } else {
-            NotificationUtils.showErrorAlert("Không thể tính lương tháng", "Lỗi");
+        PayrollHistoryDTO payroll = filteredPayrolls.get(currentDisplayIndex);
+        updatePayrollDisplay(payroll);
+        
+        // Update button states
+        btnPrevious.setDisable(currentDisplayIndex == 0);
+        btnNext.setDisable(currentDisplayIndex == filteredPayrolls.size() - 1);
+    }
+
+    private void updatePayrollDisplay(PayrollHistoryDTO payroll) {
+        if (payroll == null) {
+            clearAllLabels();
+            return;
+        }
+
+        lblPeriod.setText(payroll.getSalaryPeriod() != null ? 
+            payroll.getSalaryPeriod().toString() : "--");
+        lblBaseSalary.setText(formatCurrency(payroll.getBaseSalary()));
+        lblActualWorkDays.setText(String.valueOf(payroll.getActualWorkDays()));
+        lblOvertimeAmount.setText(formatCurrency(payroll.getOvertimeAmount()));
+        lblTotalAllowance.setText(formatCurrency(payroll.getTotalAllowance()));
+        lblRewardAmount.setText(formatCurrency(payroll.getRewardAmount()));
+        lblViolationAmount.setText(formatCurrency(payroll.getViolationAmount()));
+        lblTotalInsurance.setText(formatCurrency(payroll.getTotalInsurance()));
+        lblTaxableIncome.setText(formatCurrency(payroll.getTaxableIncome()));
+        lblTaxAmount.setText(formatCurrency(payroll.getTaxAmount()));
+        lblNetSalary.setText(formatCurrency(payroll.getNetSalary()));
+    }
+
+    private void clearAllLabels() {
+        lblPeriod.setText("--");
+        lblBaseSalary.setText("--");
+        lblActualWorkDays.setText("--");
+        lblOvertimeAmount.setText("--");
+        lblTotalAllowance.setText("--");
+        lblRewardAmount.setText("--");
+        lblViolationAmount.setText("--");
+        lblTotalInsurance.setText("--");
+        lblTaxableIncome.setText("--");
+        lblTaxAmount.setText("--");
+        lblNetSalary.setText("--");
+    }
+
+    private String formatCurrency(Object value) {
+        if (value == null) {
+            return "--";
+        }
+        try {
+            double amount = Double.parseDouble(value.toString());
+            return String.format("%,.0f đ", amount);
+        } catch (NumberFormatException e) {
+            return "--";
         }
     }
 }
+
+

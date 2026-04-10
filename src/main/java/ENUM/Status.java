@@ -131,6 +131,44 @@ public class Status {
         }
     }
 
+    // Enum cho Trạng thái Phạt
+
+    public enum FineType {
+        REWARD("Khen thưởng", "#28a745"), // Xanh lá
+        DISCIPLINE("Kỷ luật", "#dc3545"); // Đỏ
+
+        private final String label;
+        private final String color;
+
+        FineType(String label, String color) {
+            this.label = label;
+            this.color = color;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getColor() {
+            return color;
+        }
+
+        // Helper: Tìm enum từ chuỗi String (dùng khi đọc từ Database)
+        public static FineType fromString(String text) {
+            for (FineType type : FineType.values()) {
+                if (type.name().equalsIgnoreCase(text) || type.label.equalsIgnoreCase(text)) {
+                    return type;
+                }
+            }
+            return DISCIPLINE; // Giá trị mặc định
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     // Enum cho Phòng ban
     public enum Department {
         ACTIVE, INACTIVE

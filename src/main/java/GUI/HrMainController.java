@@ -37,9 +37,13 @@ public class HrMainController {
     private static final Map<Integer, String> MODULE_FXML_MAP = Map.ofEntries(
             Map.entry(0, "/GUI/EmployeeInfoUI.fxml"), // Thông tin cá nhân (luôn có)
             Map.entry(1, "/GUI/EmployeeUI.fxml"), // Quản lý NV & TK
-            Map.entry(12, "/GUI/EmploymentHistory.fxml"), // Điều chuyển
-            Map.entry(13, "/GUI/DepartmentPositionUI.fxml"), // Phòng ban & Chức vụ
-            Map.entry(14, "/GUI/HrStatisticUI.fxml")); // Thống kê nhân sự
+            Map.entry(12, "/GUI/EmploymentHistory.fxml"), // Quản lý Điều chuyển nhân viên
+            Map.entry(15, "/GUI/DisciplineRewardUI.fxml"), // Khen thưởng & Kỷ luật
+            Map.entry(13, "/GUI/LeaveRequestUI.fxml"), // Đơn nghỉ phép
+            Map.entry(11, "/GUI/AttendanceUI.fxml"), // Chấm công
+            Map.entry(16, "/GUI/PayrollFullUI.fxml"), // Bảng lương toàn công ty
+            Map.entry(17, "/GUI/DepartmentPositionUI.fxml"),
+            Map.entry(18, "/GUI/HrStatisticUI.fxml")); // Thống kê nhân sự
 
     @FXML
     public void initialize() {
@@ -93,9 +97,12 @@ public class HrMainController {
                 new ModuleMetadata(0, "Cá nhân", "employee_info.png"), // ID 0: Luôn cho phép
                 new ModuleMetadata(1, "Nhân viên", "employee.png"), // ID 1
                 new ModuleMetadata(12, "Điều chuyển", "employment_history.png"),
-                new ModuleMetadata(13, "Phòng ban & Chức vụ", "department.png"),
-                new ModuleMetadata(14, "Thống kê nhân sự", "employee.png"));
-
+                new ModuleMetadata(15, "Khen thưởng & Kỷ luật", "discipline.png"), // ID 15
+                new ModuleMetadata(13, "Đơn nghỉ phép", "leave_request.png"), // ID 13
+                new ModuleMetadata(11, "Chấm công", "attendance.png"), // ID 11
+                new ModuleMetadata(16, "Bảng lương", "attendance.png"), // ID 16
+                new ModuleMetadata(17, "Cơ cấu", "department_position.png"), // ID 17
+                new ModuleMetadata(18, "Thống kê nhân sự", "hr_statistic.png")); // ID 18
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : hrModules) {
             // Module 0 luôn hiện, các module khác theo quyền module

@@ -292,18 +292,6 @@
                             </content>
                         </Tab>
 
-                        <Tab text="Trợ cấp">
-                            <content>
-                                <fx:include fx:id="allowanceTab" source="AllowanceTab.fxml" />
-                            </content>
-                        </Tab>
-
-                        <Tab text="Bảo hiểm">
-                            <content>
-                                <fx:include fx:id="deductionTab" source="DeductionTab.fxml" />
-                            </content>
-                        </Tab>
-
                         <Tab text="Bảng lương">
                             <content>
                                 <fx:include fx:id="payrollTab" source="PayrollTab.fxml" />

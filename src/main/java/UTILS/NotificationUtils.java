@@ -1,9 +1,12 @@
 package UTILS;
 
+import java.util.Optional;
+
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -71,5 +74,18 @@ public class NotificationUtils {
             fadeOut.play();
         });
     }
+
+    public static boolean showConfirmAlert(String message) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Xác nhận thao tác");
+            alert.setHeaderText(null); // Để thông báo gọn gàng hơn
+            alert.setContentText(message);
+
+            // Hiển thị và chờ phản hồi từ người dùng
+            Optional<ButtonType> result = alert.showAndWait();
+            
+            // Trả về true chỉ khi người dùng nhấn OK
+            return result.isPresent() && result.get() == ButtonType.OK;
+        }
 
 }

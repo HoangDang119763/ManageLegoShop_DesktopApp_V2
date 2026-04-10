@@ -18,14 +18,8 @@ public class AllowanceDAL extends BaseDAL<AllowanceDTO, Integer> {
     protected AllowanceDTO mapResultSetToObject(ResultSet resultSet) throws SQLException {
         return new AllowanceDTO(
                 resultSet.getInt("id"),
-                resultSet.getInt("employee_id"),
-                resultSet.getDate("salary_period") != null
-                        ? resultSet.getDate("salary_period").toLocalDate()
-                        : null,
-                resultSet.getBigDecimal("attendance_bonus"),
-                resultSet.getBigDecimal("annual_leave_days"),
-                resultSet.getBigDecimal("transportation_support"),
-                resultSet.getBigDecimal("accommodation_support"),
+                resultSet.getString("name"),
+                resultSet.getBigDecimal("amount"),
                 resultSet.getTimestamp("created_at") != null
                         ? resultSet.getTimestamp("created_at").toLocalDateTime()
                         : null,
@@ -48,37 +42,29 @@ public class AllowanceDAL extends BaseDAL<AllowanceDTO, Integer> {
 
     @Override
     protected String getInsertQuery() {
-        return "(employee_id, salary_period, attendance_bonus, annual_leave_days, transportation_support, accommodation_support, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        return "(name, amount, created_at, updated_at) VALUES (?, ?, ?, ?)";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement statement, AllowanceDTO obj) throws SQLException {
-        statement.setInt(1, obj.getEmployeeId());
-        statement.setObject(2, obj.getSalaryPeriod());
-        statement.setObject(3, obj.getAttendanceBonus());
-        statement.setObject(4, obj.getAnnualLeaveDays());
-        statement.setObject(5, obj.getTransportationSupport());
-        statement.setObject(6, obj.getAccommodationSupport());
-        statement.setObject(7, obj.getCreatedAt());
-        statement.setObject(8, obj.getUpdatedAt());
+        statement.setString(1, obj.getName());
+        statement.setObject(2, obj.getAmount());
+        statement.setObject(3, obj.getCreatedAt());
+        statement.setObject(4, obj.getUpdatedAt());
     }
 
     @Override
     protected String getUpdateQuery() {
-        return "SET employee_id = ?, salary_period = ?, attendance_bonus = ?, annual_leave_days = ?, transportation_support = ?, accommodation_support = ?, created_at = ?, updated_at = ? WHERE id = ?";
+        return "SET name = ?, amount = ?, created_at = ?, updated_at = ? WHERE id = ?";
     }
 
     @Override
     protected void setUpdateParameters(PreparedStatement statement, AllowanceDTO obj) throws SQLException {
-        statement.setInt(1, obj.getEmployeeId());
-        statement.setObject(2, obj.getSalaryPeriod());
-        statement.setObject(3, obj.getAttendanceBonus());
-        statement.setObject(4, obj.getAnnualLeaveDays());
-        statement.setObject(5, obj.getTransportationSupport());
-        statement.setObject(6, obj.getAccommodationSupport());
-        statement.setObject(7, obj.getCreatedAt());
-        statement.setObject(8, obj.getUpdatedAt());
-        statement.setInt(9, obj.getId());
+        statement.setString(1, obj.getName());
+        statement.setObject(2, obj.getAmount());
+        statement.setObject(3, obj.getCreatedAt());
+        statement.setObject(4, obj.getUpdatedAt());
+        statement.setInt(5, obj.getId());
     }
 
 }

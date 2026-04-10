@@ -2,6 +2,7 @@ package GUI;
 
 import BUS.TimeSheetBUS;
 import DTO.TimeSheetDTO;
+import ENUM.BUSOperationResult;
 import UTILS.NotificationUtils;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -58,8 +59,8 @@ public class AttendanceModalController {
         btnCancel.setOnAction(event -> closeModal());
     }
 
-    private void saveAttendance() {
-        // Validation
+private void saveAttendance() {
+        // 1. Validation dữ liệu đầu vào (Giữ nguyên logic của bạn)
         if (dpAttendanceDate.getValue() == null) {
             NotificationUtils.showErrorAlert("Lỗi", "Vui lòng chọn ngày chấm công");
             return;
@@ -68,29 +69,20 @@ public class AttendanceModalController {
         LocalDateTime checkInDateTime = null;
         LocalDateTime checkOutDateTime = null;
 
-        // Parse check-in time
-        if (txtCheckIn.getText() != null && !txtCheckIn.getText().isEmpty()) {
-            try {
-                LocalTime checkInTime = LocalTime.parse(txtCheckIn.getText(), DateTimeFormatter.ofPattern("HH:mm"));
-                checkInDateTime = LocalDateTime.of(dpAttendanceDate.getValue(), checkInTime);
-            } catch (Exception e) {
-                NotificationUtils.showErrorAlert("Lỗi", "Giờ vào không hợp lệ (HH:mm)");
-                return;
+        try {
+            if (txtCheckIn.getText() != null && !txtCheckIn.getText().isEmpty()) {
+                LocalTime time = LocalTime.parse(txtCheckIn.getText(), DateTimeFormatter.ofPattern("HH:mm"));
+                checkInDateTime = LocalDateTime.of(dpAttendanceDate.getValue(), time);
             }
+            if (txtCheckOut.getText() != null && !txtCheckOut.getText().isEmpty()) {
+                LocalTime time = LocalTime.parse(txtCheckOut.getText(), DateTimeFormatter.ofPattern("HH:mm"));
+                checkOutDateTime = LocalDateTime.of(dpAttendanceDate.getValue(), time);
+            }
+        } catch (Exception e) {
+            NotificationUtils.showErrorAlert("Lỗi", "Định dạng giờ không hợp lệ (HH:mm)");
+            return;
         }
 
-        // Parse check-out time
-        if (txtCheckOut.getText() != null && !txtCheckOut.getText().isEmpty()) {
-            try {
-                LocalTime checkOutTime = LocalTime.parse(txtCheckOut.getText(), DateTimeFormatter.ofPattern("HH:mm"));
-                checkOutDateTime = LocalDateTime.of(dpAttendanceDate.getValue(), checkOutTime);
-            } catch (Exception e) {
-                NotificationUtils.showErrorAlert("Lỗi", "Giờ ra không hợp lệ (HH:mm)");
-                return;
-            }
-        }
-
-        // Parse overtime hours
         BigDecimal overtimeHours = BigDecimal.ZERO;
         if (txtOvertimeHours.getText() != null && !txtOvertimeHours.getText().isEmpty()) {
             try {
@@ -101,36 +93,47 @@ public class AttendanceModalController {
             }
         }
 
-        // Create DTO using TimeSheetDTO
+        // 2. Tạo DTO
         TimeSheetDTO timeSheet = new TimeSheetDTO();
         timeSheet.setEmployeeId(employeeId);
         timeSheet.setCheckIn(checkInDateTime);
         timeSheet.setCheckOut(checkOutDateTime);
         timeSheet.setOtHours(overtimeHours);
 
-        // Save to database
+        // 3. Thực thi lưu dữ liệu (Sử dụng BUSOperationResult)
         new Thread(() -> {
             try {
-                if (timeSheetBUS.insert(timeSheet, 1, 1)) {
-                    Platform.runLater(() -> {
+                // GỌI BUS: Trả về Enum thay vì boolean
+                BUSOperationResult result = timeSheetBUS.insert(timeSheet);
+
+                Platform.runLater(() -> {
+                    if (result.isSuccess()) {
                         NotificationUtils.showInfoAlert("Thành công", "Thêm chấm công thành công");
                         if (parentController != null) {
                             parentController.loadEmployeeAttendance(employeeId);
                         }
                         closeModal();
-                    });
-                } else {
-                    Platform.runLater(() -> {
-                        NotificationUtils.showErrorAlert("Thất bại", "Không thể thêm chấm công");
-                    });
-                }
+                    } else {
+                        // Xử lý thông báo lỗi chi tiết dựa trên Enum trả về
+                        handleInsertError(result);
+                    }
+                });
             } catch (Exception e) {
                 log.error("Error saving attendance", e);
-                Platform.runLater(() -> {
-                    NotificationUtils.showErrorAlert("Lỗi", "Chi tiết: " + e.getMessage());
-                });
+                Platform.runLater(() -> NotificationUtils.showErrorAlert("Lỗi hệ thống", e.getMessage()));
             }
         }).start();
+    }
+
+    // Hàm phụ trợ để hiển thị lỗi chi tiết
+    private void handleInsertError(BUSOperationResult result) {
+        String message = switch (result) {
+            case INVALID_DATA -> "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại giờ vào/ra.";
+            case UNAUTHORIZED -> "Bạn không có quyền thực hiện thao tác này.";
+            case DB_ERROR -> "Lỗi kết nối cơ sở dữ liệu.";
+            default -> "Không thể thêm chấm công. Vui lòng thử lại.";
+        };
+        NotificationUtils.showErrorAlert("Thất bại", message);
     }
 
     private void closeModal() {

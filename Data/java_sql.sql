@@ -275,6 +275,7 @@ CREATE TABLE `fine` (
   `reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fine_level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `type` ENUM('REWARD', 'DISCIPLINE') NOT NULL DEFAULT 'DISCIPLINE',
   `amount` decimal(15,2) NOT NULL,
   `fine_pay` decimal(15,2) DEFAULT '0.00',
   `employee_id` int NOT NULL,
@@ -584,8 +585,10 @@ CREATE TABLE `time_sheet` (
   `check_out` datetime DEFAULT NULL,
   `work_hours` decimal(10,2) DEFAULT '0.00',
   `ot_hours` decimal(5,2) DEFAULT '0.00',
+  `date` DATE GENERATED ALWAYS AS (DATE(`check_in`)) STORED,
   PRIMARY KEY (`id`),
   KEY `time_sheet_ibfk_1` (`employee_id`),
+  KEY `idx_date_employee` (`date`, `employee_id`),
   CONSTRAINT `time_sheet_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;

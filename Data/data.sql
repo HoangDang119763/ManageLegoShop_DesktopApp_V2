@@ -149,7 +149,6 @@ UNLOCK TABLES;
 
 LOCK TABLES `fine` WRITE;
 /*!40000 ALTER TABLE `fine` DISABLE KEYS */;
-INSERT INTO `fine` VALUES (1,'Làm vỡ bộ LEGO Ferrari','2026-02-24 22:00:04','LEVEL_3',500000.00,0.00,12),(2,'Đi muộn','2026-02-24 22:00:04','LEVEL_1',50000.00,0.00,8);
 /*!40000 ALTER TABLE `fine` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -214,7 +213,11 @@ INSERT INTO `module` (`id`, `name`) VALUES
 (11, 'Quản lý chấm công'),
 (12, 'Quản lý điều chuyển'),
 (13, 'Quản lý đơn'),
-(14, 'Quản lý phúc lợi');
+(14, 'Quản lý phúc lợi'),
+(15, 'Quản lý thưởng & phạt'),
+(16, "Quản lý lương"),
+(17, "Quản lý phòng ban & vị trí"),
+(18, "Thống kê nhân sự");
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -234,84 +237,103 @@ UNLOCK TABLES;
 
 LOCK TABLES `permission` WRITE;
 /*!40000 ALTER TABLE `permission` DISABLE KEYS */;
-INSERT INTO `permission` (`id`, `name`, `permission_key`, `module_id`) VALUES 
+INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 -- Module 1: Quản lý nhân viên & Tài khoản
-(1, 'Xem danh sách nhân viên', 'EMPLOYEE_LIST_VIEW', 1),
-(2, 'Xem hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_VIEW', 1),
-(3, 'Cập nhật hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_UPDATE', 1),
-(4, 'Xem vị trí công tác & lịch sử', 'EMPLOYEE_JOB_VIEW', 1),
-(5, 'Cập nhật vị trí công tác', 'EMPLOYEE_JOB_UPDATE', 1),
-(6, 'Xem lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_VIEW', 1),
-(7, 'Cập nhật lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_UPDATE', 1),
-(8, 'Xem tài khoản hệ thống', 'EMPLOYEE_ACCOUNT_VIEW', 1),
-(9, 'Đặt lại mật khẩu nhân viên', 'EMPLOYEE_ACCOUNT_RESET_PASSWORD', 1),
-(10, 'Cập nhật trạng thái tài khoản', 'EMPLOYEE_ACCOUNT_UPDATE_STATUS', 1),
-(11, 'Thêm mới nhân viên, tài khoản', 'EMPLOYEE_INSERT', 1),
-(12, 'Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
-(13, 'Xem đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_VIEW', 1),
-(14, 'Tạo đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_CREATE', 1),
-(15, 'Quản lý duyệt đơn nghỉ', 'EMPLOYEE_LEAVE_REQUEST_MANAGE', 1),
-(16, 'Xem kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_VIEW', 1),
-(17, 'Quản lý kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_MANAGE', 1),
-(18, 'Xem chấm công', 'EMPLOYEE_ATTENDANCE_VIEW', 1),
-(19, 'Quản lý chấm công', 'EMPLOYEE_ATTENDANCE_MANAGE', 1),
-(20, 'Cập nhật chức vụ thành viên', 'EMPLOYEE_ROLE_POSITION_UPDATE', 1),
+('Xem danh sách nhân viên', 'EMPLOYEE_LIST_VIEW', 1),
+('Xem hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_VIEW', 1),
+('Cập nhật hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_UPDATE', 1),
+('Xem vị trí công tác & lịch sử', 'EMPLOYEE_JOB_VIEW', 1),
+('Cập nhật vị trí công tác', 'EMPLOYEE_JOB_UPDATE', 1),
+('Xem lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_VIEW', 1),
+('Cập nhật lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_UPDATE', 1),
+('Xem tài khoản hệ thống', 'EMPLOYEE_ACCOUNT_VIEW', 1),
+('Đặt lại mật khẩu nhân viên', 'EMPLOYEE_ACCOUNT_RESET_PASSWORD', 1),
+('Cập nhật trạng thái tài khoản', 'EMPLOYEE_ACCOUNT_UPDATE_STATUS', 1),
+('Thêm mới nhân viên, tài khoản', 'EMPLOYEE_INSERT', 1),
+('Xóa nhân viên', 'EMPLOYEE_DELETE', 1),
 
--- Module 2: Quản lý khách hàng (ID: 21-24)
-(21, 'Xem danh sách khách hàng', 'CUSTOMER_LIST_VIEW', 2),
-(22, 'Thêm khách hàng', 'CUSTOMER_INSERT', 2),
-(23, 'Cập nhật khách hàng', 'CUSTOMER_UPDATE', 2),
-(24, 'Xóa khách hàng', 'CUSTOMER_DELETE', 2),
+-- Module 2: Quản lý khách hàng
+('Xem danh sách khách hàng', 'CUSTOMER_LIST_VIEW', 2),
+('Thêm khách hàng', 'CUSTOMER_INSERT', 2),
+('Cập nhật khách hàng', 'CUSTOMER_UPDATE', 2),
+('Xóa khách hàng', 'CUSTOMER_DELETE', 2),
 
--- Module 3: Quản lý sản phẩm (ID: 25-28)
-(25, 'Xem danh sách sản phẩm', 'PRODUCT_LIST_VIEW', 3),
-(26, 'Thêm sản phẩm', 'PRODUCT_INSERT', 3),
-(27, 'Cập nhật sản phẩm', 'PRODUCT_UPDATE', 3),
-(28, 'Xóa sản phẩm', 'PRODUCT_DELETE', 3),
+-- Module 3: Quản lý sản phẩm
+('Xem danh sách sản phẩm', 'PRODUCT_LIST_VIEW', 3),
+('Thêm sản phẩm', 'PRODUCT_INSERT', 3),
+('Cập nhật sản phẩm', 'PRODUCT_UPDATE', 3),
+('Xóa sản phẩm', 'PRODUCT_DELETE', 3),
 
--- Module 4: Quản lý nhà cung cấp (ID: 29-32)
-(29, 'Xem danh sách nhà cung cấp', 'SUPPLIER_LIST_VIEW', 4),
-(30, 'Thêm nhà cung cấp', 'SUPPLIER_INSERT', 4),
-(31, 'Cập nhật nhà cung cấp', 'SUPPLIER_UPDATE', 4),
-(32, 'Xóa nhà cung cấp', 'SUPPLIER_DELETE', 4),
+-- Module 4: Quản lý nhà cung cấp
+('Xem danh sách nhà cung cấp', 'SUPPLIER_LIST_VIEW', 4),
+('Thêm nhà cung cấp', 'SUPPLIER_INSERT', 4),
+('Cập nhật nhà cung cấp', 'SUPPLIER_UPDATE', 4),
+('Xóa nhà cung cấp', 'SUPPLIER_DELETE', 4),
 
--- Module 5: Quản lý bán hàng (ID: 33-34)
-(33, 'Xem danh sách đơn hàng', 'INVOICE_LIST_VIEW', 5),
-(34, 'Tạo đơn hàng mới', 'INVOICE_INSERT', 5),
+-- Module 5: Quản lý bán hàng
+('Xem danh sách đơn hàng', 'INVOICE_LIST_VIEW', 5),
+('Tạo đơn hàng mới', 'INVOICE_INSERT', 5),
 
--- Module 6: Quản lý nhập hàng (ID: 35-37)
-(35, 'Xem danh sách phiếu nhập', 'IMPORT_LIST_VIEW', 6),
-(36, 'Tạo phiếu nhập hàng mới', 'IMPORT_INSERT', 6),
-(37, 'Duyệt phiếu nhập hàng', 'IMPORT_APPROVE', 6),
+-- Module 6: Quản lý nhập hàng
+('Xem danh sách phiếu nhập', 'IMPORT_LIST_VIEW', 6),
+('Tạo phiếu nhập hàng mới', 'IMPORT_INSERT', 6),
+('Duyệt phiếu nhập hàng', 'IMPORT_APPROVE', 6),
 
--- Module 7: Quản lý thể loại (ID: 38-41)
-(38, 'Xem danh mục sản phẩm', 'CATEGORY_LIST_VIEW', 7),
-(39, 'Thêm danh mục sản phẩm', 'CATEGORY_INSERT', 7),
-(40, 'Cập nhật danh mục sản phẩm', 'CATEGORY_UPDATE', 7),
-(41, 'Xóa danh mục sản phẩm', 'CATEGORY_DELETE', 7),
+-- Module 7: Quản lý thể loại
+('Xem danh mục sản phẩm', 'CATEGORY_LIST_VIEW', 7),
+('Thêm danh mục sản phẩm', 'CATEGORY_INSERT', 7),
+('Cập nhật danh mục sản phẩm', 'CATEGORY_UPDATE', 7),
+('Xóa danh mục sản phẩm', 'CATEGORY_DELETE', 7),
 
--- Module 8: Quản lý khuyến mãi (ID: 42-45)
-(42, 'Xem chương trình khuyến mãi', 'DISCOUNT_LIST_VIEW', 8),
-(43, 'Thêm chương trình khuyến mãi', 'DISCOUNT_INSERT', 8),
-(44, 'Cập nhật chương trình khuyến mãi', 'DISCOUNT_UPDATE', 8),
-(45, 'Xóa chương trình khuyến mãi', 'DISCOUNT_DELETE', 8),
+-- Module 8: Quản lý khuyến mãi
+('Xem chương trình khuyến mãi', 'DISCOUNT_LIST_VIEW', 8),
+('Thêm chương trình khuyến mãi', 'DISCOUNT_INSERT', 8),
+('Cập nhật chương trình khuyến mãi', 'DISCOUNT_UPDATE', 8),
+('Xóa chương trình khuyến mãi', 'DISCOUNT_DELETE', 8),
 
--- Module 9: Quản lý chức vụ & Phân quyền (ID: 46-51)
-(46, 'Xem danh sách chức vụ', 'ROLE_LIST_VIEW', 9),
-(47, 'Thêm chức vụ mới', 'ROLE_INSERT', 9),
-(48, 'Cập nhật chức vụ', 'ROLE_UPDATE', 9),
-(49, 'Xóa chức vụ', 'ROLE_DELETE', 9),
-(50, 'Xem bảng phân quyền', 'PERMISSION_VIEW', 9),
-(51, 'Cập nhật cấu hình phân quyền', 'PERMISSION_UPDATE', 9),
+-- Module 9: Quản lý chức vụ & Phân quyền
+('Xem danh sách chức vụ', 'ROLE_LIST_VIEW', 9),
+('Thêm chức vụ mới', 'ROLE_INSERT', 9),
+('Cập nhật chức vụ', 'ROLE_UPDATE', 9),
+('Xóa chức vụ', 'ROLE_DELETE', 9),
+('Xem bảng phân quyền', 'PERMISSION_VIEW', 9),
+('Cập nhật cấu hình phân quyền', 'PERMISSION_UPDATE', 9),
 
--- Module 10: Thống kê (ID: 52)
-(52, 'Xem báo cáo thống kê', 'STATISTICS_VIEW', 10),
+-- Module 10: Thống kê
+('Xem báo cáo thống kê', 'STATISTICS_VIEW', 10),
 
--- Module 12: Quản lý nhân sự (ID: 53-56)
-(53, 'Xem danh sách điều chuyển', 'EMPLOYMENT_HISTORY_LIST_VIEW', 12),
-(54, 'Tạo lệnh điều chuyển mới', 'EMPLOYMENT_HISTORY_INSERT', 12),
-(55, 'Phê duyệt điều chuyển', 'EMPLOYMENT_HISTORY_APPROVE', 12),
-(56, 'Xóa/Hủy lệnh điều chuyển', 'EMPLOYMENT_HISTORY_DELETE', 12);
+-- Module 11: Quản lý chấm công
+('Xem chấm công', 'EMPLOYEE_ATTENDANCE_VIEW', 11),
+('Quản lý chấm công', 'EMPLOYEE_ATTENDANCE_MANAGE', 11),
+
+-- Module 12: Quản lý điều chuyển nhân viên
+('Xem danh sách điều chuyển', 'EMPLOYMENT_HISTORY_LIST_VIEW', 12),
+('Tạo lệnh điều chuyển mới', 'EMPLOYMENT_HISTORY_INSERT', 12),
+('Phê duyệt điều chuyển', 'EMPLOYMENT_HISTORY_APPROVE', 12),
+('Xóa/Hủy lệnh điều chuyển', 'EMPLOYMENT_HISTORY_DELETE', 12),
+
+-- Module 13: Quản lý đơn
+('Xem đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_VIEW', 13),
+('Tạo đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_CREATE', 13),
+('Quản lý duyệt đơn nghỉ', 'EMPLOYEE_LEAVE_REQUEST_MANAGE', 13),
+
+-- Module 14: Quản lý phúc lợi
+
+
+-- Module 15: Quản lý thưởng & phạt
+('Xem kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_VIEW', 15),
+('Quản lý kỷ luật & khen thưởng', 'EMPLOYEE_FINE_REWARD_MANAGE', 15),
+
+-- Module 16: Quản lý lương
+('Xem lịch sử lương', 'EMPLOYEE_PAYROLL_VIEW', 16),
+('Quản lý lương', 'EMPLOYEE_PAYROLL_MANAGE', 16),
+
+-- Module 17: Quản lý phòng ban & vị trí
+('Cập nhật phòng ban & chức vụ nhân viên', 'EMPLOYEE_ROLE_POSITION_UPDATE', 17),
+
+-- Module 18: Thống kê nhân sự
+('Xem thống kê nhân sự', 'HR_STATISTIC_VIEW', 18);
+
 /*!40000 ALTER TABLE `permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -470,7 +492,22 @@ UNLOCK TABLES;
 
 LOCK TABLES `time_sheet` WRITE;
 /*!40000 ALTER TABLE `time_sheet` DISABLE KEYS */;
-INSERT INTO `time_sheet` VALUES (1,1,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(2,2,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(3,3,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(4,4,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(5,5,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(6,7,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(7,8,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(8,9,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(9,10,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(10,11,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(11,12,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(12,13,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(13,6,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),(16,2,'2026-02-02 08:00:00','2026-02-02 19:00:00',10.00,2.00),(17,3,'2026-02-02 08:00:00','2026-02-02 20:00:00',11.00,3.00);
+INSERT INTO `time_sheet` (`employee_id`,`check_in`,`check_out`,`work_hours`,`ot_hours`) VALUES
+(1,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(2,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(3,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(4,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(5,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(7,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(8,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(9,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(10,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(11,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(12,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(13,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(6,'2026-02-01 08:00:00','2026-02-01 17:00:00',8.00,0.00),
+(2,'2026-02-02 08:00:00','2026-02-02 19:00:00',10.00,2.00),
+(3,'2026-02-02 08:00:00','2026-02-02 20:00:00',11.00,3.00);
 /*!40000 ALTER TABLE `time_sheet` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
