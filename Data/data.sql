@@ -244,8 +244,7 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 ('Cập nhật hồ sơ cá nhân', 'EMPLOYEE_PERSONAL_UPDATE', 1),
 ('Xem vị trí công tác & lịch sử', 'EMPLOYEE_JOB_VIEW', 1),
 ('Cập nhật vị trí công tác', 'EMPLOYEE_JOB_UPDATE', 1),
-('Xem lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_VIEW', 1),
-('Cập nhật lương & bảo hiểm', 'EMPLOYEE_PAYROLLINFO_UPDATE', 1),
+
 ('Xem tài khoản hệ thống', 'EMPLOYEE_ACCOUNT_VIEW', 1),
 ('Đặt lại mật khẩu nhân viên', 'EMPLOYEE_ACCOUNT_RESET_PASSWORD', 1),
 ('Cập nhật trạng thái tài khoản', 'EMPLOYEE_ACCOUNT_UPDATE_STATUS', 1),
@@ -316,8 +315,6 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 ('Xem đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_VIEW', 13),
 ('Tạo đơn nghỉ phép', 'EMPLOYEE_LEAVE_REQUEST_CREATE', 13),
 ('Quản lý duyệt đơn nghỉ', 'EMPLOYEE_LEAVE_REQUEST_MANAGE', 13),
-
--- Module 14: Quản lý phúc lợi
 
 
 -- Module 15: Quản lý thưởng & phạt

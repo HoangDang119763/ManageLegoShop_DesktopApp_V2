@@ -35,7 +35,7 @@ public class HROperationsTabController {
 
     // Nested controllers
     private LeaveRequestTabNestedController leaveRequestTabNestedController;
-    private DisciplineTabNestedController disciplineTabNestedController;
+    private DisciplineRewardTabController DisciplineRewardTabController;
     private AttendanceTabNestedController attendanceTabNestedController;
     private DepartmentPositionController departmentPositionController;
 
@@ -78,7 +78,7 @@ public class HROperationsTabController {
             // Load Discipline Tab
             FXMLLoader disciplineLoader = new FXMLLoader(getClass().getResource("/GUI/DisciplineTabNested.fxml"));
             VBox disciplineContent = disciplineLoader.load();
-            disciplineTabNestedController = disciplineLoader.getController();
+            DisciplineRewardTabController = disciplineLoader.getController();
             Tab disciplineTab = new Tab("Kỷ Luật & Khen Thưởng", disciplineContent);
             disciplineTab.setClosable(false);
             tabPaneHROperations.getTabs().add(disciplineTab);
@@ -163,8 +163,8 @@ public class HROperationsTabController {
         }
 
         // Load Discipline data
-        if (disciplineTabNestedController != null) {
-            disciplineTabNestedController.loadEmployeeDisciplines(employeeId);
+        if (DisciplineRewardTabController != null) {
+            DisciplineRewardTabController.loadEmployeeDisciplines(employeeId);
         }
 
         // Load Attendance data
