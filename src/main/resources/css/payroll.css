@@ -1,0 +1,75 @@
+/* Tổng thể nền trắng và đổ bóng cho Content Area */
+.white-bg {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8px;
+}
+
+.shadow {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);
+}
+
+/* Tiêu đề chính */
+.label-header {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 1px;
+}
+
+/* Label mô tả (Kỳ tính, Lương cơ bản, ...) */
+.label-a {
+    -fx-font-size: 14px;
+    -fx-text-fill: #555555;
+    -fx-font-weight: 600;
+}
+
+/* Label chứa giá trị (Số tiền, Ngày tháng) */
+.label-metadata-date {
+    -fx-font-size: 15px;
+    -fx-text-fill: #2c3e50;
+    -fx-font-family: "Consolas", monospace; /* Font đơn cách giúp các con số thẳng hàng */
+}
+
+/* Đặc biệt cho Lương thực nhận */
+#lblNetSalary {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1f7d84; /* Màu chủ đạo xanh teal */
+}
+
+.action-btn:hover {
+    -fx-background-color: #f1f2f6;
+    -fx-border-color: #1f7d84;
+}
+
+.action-btn:pressed {
+    -fx-background-color: #dfe4ea;
+}
+
+/* Tùy chỉnh ComboBox */
+.combo-box {
+    -fx-background-color: white;
+    -fx-border-color: #dcdde1;
+    -fx-border-radius: 5px;
+    -fx-padding: 2px;
+}
+
+.combo-box:focused {
+    -fx-border-color: #1f7d84;
+    -fx-border-width: 1.5px;
+}
+
+/* Tinh chỉnh ScrollPane để ẩn nền xám mặc định */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Line trang trí */
+.line {
+    -fx-stroke: #f1f2f6;
+}
