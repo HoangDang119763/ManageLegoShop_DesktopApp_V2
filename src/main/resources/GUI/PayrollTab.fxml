@@ -7,12 +7,13 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.PayrollTabController">
+<VBox alignment="TOP_CENTER" stylesheets="@../css/payroll.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.PayrollTabController">
     <padding><Insets bottom="15.0" left="20.0" right="20.0" top="10.0" /></padding>
     <children>
         <VBox spacing="12.0" styleClass="white-bg, shadow" VBox.vgrow="ALWAYS">
             <padding><Insets bottom="15.0" left="15.0" right="30.0" top="15.0" /></padding>
             <children>
+                <!-- Header -->
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <children>
                         <FontAwesomeIcon fill="#1f7d84" glyphName="MONEY" size="1.8em" />
@@ -23,6 +24,7 @@
                 </HBox>
                 <Line endX="980.0" stroke="#eee" strokeWidth="2.0" />
 
+                <!-- Bộ lọc -->
                 <HBox alignment="CENTER_LEFT" spacing="20.0">
                     <children>
                         <Label styleClass="label-a" text="Tháng:" />
@@ -41,95 +43,89 @@
                     </children>
                 </HBox>
 
-                <ScrollPane fitToHeight="false" fitToWidth="true" prefHeight="400.0" VBox.vgrow="ALWAYS">
+                <!-- Nội dung chính -->
+                <ScrollPane fitToHeight="false" fitToWidth="true" prefHeight="300.0" VBox.vgrow="ALWAYS">
                     <padding><Insets top="10.0" /></padding>
-                    <!-- 2-Column Vertical Layout -->
                     <GridPane hgap="40.0" vgap="10.0">
                         <columnConstraints>
                             <ColumnConstraints minWidth="300.0" prefWidth="500.0" />
                             <ColumnConstraints minWidth="300.0" prefWidth="500.0" />
                         </columnConstraints>
-                        <rowConstraints>
-                            <RowConstraints />
-                            <RowConstraints />
-                            <RowConstraints />
-                            <RowConstraints />
-                            <RowConstraints />
-                            <RowConstraints />
-                        </rowConstraints>
-
-                        <!-- Column 1 -->
-                        <!-- Row 0: Kỳ tính -->
+                        <!-- (Giữ nguyên các Row hiển thị dữ liệu như cũ của bạn...) -->
                         <HBox spacing="15.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                             <Label styleClass="label-a" text="Kỳ tính:" minWidth="120.0" />
                             <Label fx:id="lblPeriod" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 1: Lương cơ bản -->
                         <HBox spacing="15.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
                             <Label styleClass="label-a" text="Lương cơ bản:" minWidth="120.0" />
                             <Label fx:id="lblBaseSalary" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 2: Ngày công -->
                         <HBox spacing="15.0" GridPane.columnIndex="0" GridPane.rowIndex="2">
                             <Label styleClass="label-a" text="Ngày công:" minWidth="120.0" />
                             <Label fx:id="lblActualWorkDays" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 3: Tăng ca -->
                         <HBox spacing="15.0" GridPane.columnIndex="0" GridPane.rowIndex="3">
                             <Label styleClass="label-a" text="Tăng ca:" minWidth="120.0" />
                             <Label fx:id="lblOvertimeAmount" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 4: Trợ cấp -->
                         <HBox spacing="15.0" GridPane.columnIndex="0" GridPane.rowIndex="4">
                             <Label styleClass="label-a" text="Trợ cấp:" minWidth="120.0" />
                             <Label fx:id="lblTotalAllowance" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 5: Khen thưởng -->
                         <HBox spacing="15.0" GridPane.columnIndex="0" GridPane.rowIndex="5">
                             <Label styleClass="label-a" text="Khen thưởng:" minWidth="120.0" />
                             <Label fx:id="lblRewardAmount" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Column 2 -->
-                        <!-- Row 0: Vi phạm -->
                         <HBox spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                             <Label styleClass="label-a" text="Vi phạm:" minWidth="120.0" />
                             <Label fx:id="lblViolationAmount" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 1: Bảo hiểm -->
                         <HBox spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                             <Label styleClass="label-a" text="Bảo hiểm:" minWidth="120.0" />
                             <Label fx:id="lblTotalInsurance" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 2: Thu nhập chịu thuế -->
                         <HBox spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                             <Label styleClass="label-a" text="Thu nhập chịu thuế:" minWidth="120.0" />
                             <Label fx:id="lblTaxableIncome" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 3: Thuế TNCN -->
                         <HBox spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                             <Label styleClass="label-a" text="Thuế TNCN:" minWidth="120.0" />
                             <Label fx:id="lblTaxAmount" styleClass="label-metadata-date" text="--" />
                         </HBox>
-
-                        <!-- Row 4: Lương thực nhận -->
                         <HBox spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
                             <Label styleClass="label-a" text="Lương thực nhận:" minWidth="120.0" />
                             <Label fx:id="lblNetSalary" styleClass="label-metadata-date" text="--" textFill="#1f7d84" />
                         </HBox>
-
-                        <!-- Row 5: Empty for spacing -->
-                        <HBox spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                     </GridPane>
                 </ScrollPane>
+
+                <!-- [MỚI] Khu vực Giải thích công thức -->
+                <VBox spacing="8.0" style="-fx-background-color: #f9f9f9; -fx-background-radius: 8; -fx-border-color: #eee; -fx-border-radius: 8;">
+                    <padding><Insets bottom="12.0" left="15.0" right="15.0" top="12.0" /></padding>
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <children>
+                                <FontAwesomeIcon fill="#666" glyphName="INFO_CIRCLE" />
+                                <Label text="Ghi chú &amp; Công thức tính" style="-fx-font-weight: bold; -fx-text-fill: #555;" />
+                            </children>
+                        </HBox>
+                        <GridPane hgap="20.0" vgap="5.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                            </columnConstraints>
+                            <children>
+                                <Label text="• Tổng bảo hiểm (10.5%): BHXH (8%) + BHYT (1.5%) + BHTN (1%)" style="-fx-font-size: 12; -fx-text-fill: #777;" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label text="• Thu nhập chịu thuế = Gross - Phụ cấp ăn uống (Miễn thuế)" style="-fx-font-size: 12; -fx-text-fill: #777;" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label text="• Tiền tăng ca = (Lương CB / Ngày công chuẩn / 8) * Giờ OT * 1.5" style="-fx-font-size: 12; -fx-text-fill: #777;" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label text="• Net = Gross - Bảo hiểm - Thuế TNCN - Vi phạm" style="-fx-font-size: 12; -fx-text-fill: #777; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            </children>
+                        </GridPane>
+                        <Label text="* Ngày công chuẩn = Số ngày trong tháng - Chủ nhật - Ngày lễ" style="-fx-font-size: 11; -fx-font-style: italic; -fx-text-fill: #999;">
+                            <VBox.margin><Insets top="5.0" /></VBox.margin>
+                        </Label>
+                    </children>
+                </VBox>
             </children>
         </VBox>
     </children>
