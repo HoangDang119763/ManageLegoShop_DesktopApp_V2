@@ -11,6 +11,8 @@ import ENUM.PermissionKey;
 import ENUM.StatusType;
 import INTERFACE.IController;
 import SERVICE.PrintService;
+import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
 import UTILS.UiUtils;
@@ -97,6 +99,7 @@ public class InvoiceController implements IController {
     private int statusFilter = -1;
     private static final int PAGE_SIZE = 13;
     private boolean isResetting = false;
+    private boolean canView = true;
 
     @FXML
     public void initialize() {
@@ -108,6 +111,9 @@ public class InvoiceController implements IController {
         Platform.runLater(() -> tblDetailInvoice.getSelectionModel().clearSelection());
 
         hideButtonWithoutPermission();
+        if (!canView)
+            return;
+
         loadComboBox();
         setupListeners();
 
@@ -170,7 +176,7 @@ public class InvoiceController implements IController {
         tlb_col_costPrice.setCellValueFactory(
                 cellData -> formatCell(validationUtils.formatCurrency(cellData.getValue().getCostPrice())));
 
-        TaskUtil.executeSecure(null, PermissionKey.DISCOUNT_LIST_VIEW,
+        TaskUtil.executeSecure(null, PermissionKey.INVOICE_LIST_VIEW,
                 () -> DetailInvoiceBUS.getInstance().getAllDetailInvoiceByInvoiceId(invoiceId),
                 result -> {
                     ArrayList<DetailInvoiceDTO> detailInvoices = result.getData();
@@ -287,7 +293,16 @@ public class InvoiceController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
-
+        canView = SessionManagerService.getInstance().hasPermission(PermissionKey.INVOICE_LIST_VIEW);
+        if (!canView) {
+            tblInvoice.setDisable(true);
+            tblDetailInvoice.setDisable(true);
+            txtSearch.setDisable(true);
+            cbStatusFilter.setDisable(true);
+            advanceSearchBtn.setDisable(true);
+            exportPdf.setDisable(true);
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+        }
     }
 
     private void handleAdvanceSearch() {

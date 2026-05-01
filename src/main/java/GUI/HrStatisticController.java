@@ -16,6 +16,7 @@ import DTO.HrStatisticDTO.SalaryRow;
 import DTO.HrStatisticDTO.StatusDistributionItem;
 import ENUM.PermissionKey;
 import INTERFACE.IController;
+import SERVICE.ExcelService;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
@@ -32,7 +33,9 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -136,6 +139,7 @@ public class HrStatisticController implements IController {
 
     private final HrStatisticBUS hrStatisticBUS = HrStatisticBUS.getInstance();
     private List<FineRewardRow> allRows = new ArrayList<>();
+    private HrStatisticDTO lastLoadedStatistic = null;
 
     @FXML
     public void initialize() {
@@ -230,8 +234,7 @@ public class HrStatisticController implements IController {
             loadCurrentMonth();
         });
         btnExport.setOnAction(e ->
-                NotificationUtils.showInfoAlert(
-                        "Chức năng xuất báo cáo nhân sự sẽ được bổ sung sau.", "Thông báo"));
+                handleExportReport());
         cbFilterDept.setOnAction(e -> applyTableFilter());
         cbFilterFineLevel.setOnAction(e -> applyTableFilter());
     }
@@ -250,6 +253,7 @@ public class HrStatisticController implements IController {
         TaskUtil.executeAsync(
                 () -> hrStatisticBUS.getHrStatistic(month, year),
                 dto -> {
+                    lastLoadedStatistic = dto;
                     renderTab1(dto);
                     renderTab2(dto);
                     renderTab3(dto);
@@ -439,6 +443,7 @@ public class HrStatisticController implements IController {
     }
 
     private void clearAll() {
+        lastLoadedStatistic = null;
         headcountChart.getData().clear();
         statusPieChart.getData().clear();
         departmentPieChart.getData().clear();
@@ -476,6 +481,36 @@ public class HrStatisticController implements IController {
         lblReportTotalSalary.setText("—");
         lblReportAttSessions.setText("—");
         lblReportLeaveRequests.setText("—");
+    }
+
+    private void handleExportReport() {
+        Integer month = cbMonth.getValue();
+        Integer year = cbYear.getValue();
+        if (month == null || year == null) {
+            NotificationUtils.showErrorAlert("Vui lòng chọn tháng và năm trước khi xuất.", "Lỗi");
+            return;
+        }
+        if (lastLoadedStatistic == null) {
+            NotificationUtils.showErrorAlert("Chưa có dữ liệu để xuất. Vui lòng bấm Tìm kiếm trước.", "Thông báo");
+            return;
+        }
+
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Chọn nơi lưu báo cáo thống kê nhân sự");
+            fileChooser.setInitialFileName("ThongKe_NhanSu_" + month + "_" + year + ".xlsx");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Excel Files (*.xlsx)", "*.xlsx"));
+            File selectedFile = fileChooser.showSaveDialog(btnExport.getScene().getWindow());
+            if (selectedFile == null) {
+                return;
+            }
+
+            ExcelService.getInstance().exportHrStatisticWorkbook(lastLoadedStatistic, month, year, selectedFile);
+            NotificationUtils.showInfoAlert("Xuất báo cáo nhân sự thành công.", "Thông báo");
+        } catch (Exception ex) {
+            NotificationUtils.showErrorAlert("Xuất báo cáo thất bại: " + ex.getMessage(), "Lỗi");
+        }
     }
 
     @Override

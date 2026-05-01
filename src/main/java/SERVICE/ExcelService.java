@@ -6,14 +6,31 @@ import BUS.ProductBUS;
 import DTO.BUSResult;
 import ENUM.BUSOperationResult;
 import DTO.EmployeeExcelDTO;
+import DTO.HrStatisticDTO;
 import DTO.ProductDTO;
 import DTO.StatisticDTO;
 import UTILS.ValidationUtils;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xddf.usermodel.chart.AxisPosition;
+import org.apache.poi.xddf.usermodel.chart.BarDirection;
+import org.apache.poi.xddf.usermodel.chart.ChartTypes;
+import org.apache.poi.xddf.usermodel.chart.LegendPosition;
+import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
+import org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.*;
 import java.awt.Desktop;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -285,6 +302,456 @@ public class ExcelService {
 
         String fileName = "ThongKe_LegoStore_TK_Employee_" + timestamp + ".xlsx";
         fileHandler.saveAndOpenFile(fileName, workbook);
+    }
+
+    /**
+     * Export báo cáo thống kê sản phẩm theo bộ lọc hiện hành.
+     */
+    public void exportBusinessProductStatisticReport(
+            List<StatisticDTO.ProductRevenue> productRevenuesList,
+            LocalDate start,
+            LocalDate end,
+            String viewByLabel) throws IOException {
+        StatisticDTO dto = new StatisticDTO();
+        dto.setProductRevenues(productRevenuesList);
+        exportBusinessStatisticWorkbook(dto, start, end, viewByLabel);
+    }
+
+    /**
+     * Export báo cáo thống kê kinh doanh đầy đủ theo các tab của module thống kê.
+     */
+    public void exportBusinessStatisticWorkbook(
+            StatisticDTO dto,
+            LocalDate start,
+            LocalDate end,
+            String viewByLabel) throws IOException {
+        exportBusinessStatisticWorkbook(dto, start, end, viewByLabel, null);
+    }
+
+    public void exportBusinessStatisticWorkbook(
+            StatisticDTO dto,
+            LocalDate start,
+            LocalDate end,
+            String viewByLabel,
+            File targetFile) throws IOException {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        String timeStamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss"));
+
+        createOverviewSheet(workbook, dto, start, end, viewByLabel);
+        createRevenueSheet(workbook, dto, start, end, viewByLabel);
+        createCostSheet(workbook, dto, start, end, viewByLabel);
+        createProfitSheet(workbook, dto, start, end, viewByLabel);
+        createSalesSheet(workbook, dto, start, end, viewByLabel);
+        createReportSheet(workbook, dto, start, end, viewByLabel);
+
+        File outputFile = targetFile != null
+                ? targetFile
+                : new File("ThongKe_LegoStore_Full_Statistic_Report_" + timeStamp + ".xlsx");
+        fileHandler.saveAndOpenFile(outputFile, workbook);
+    }
+
+    private void createOverviewSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
+                                     String viewByLabel) {
+        Sheet sheet = workbook.createSheet("TongQuan");
+        fillCommonHeader(sheet, "Tổng quan", start, end, viewByLabel);
+
+        Row header = sheet.createRow(5);
+        header.createCell(0).setCellValue("KPI");
+        header.createCell(1).setCellValue("Giá trị");
+        Row r1 = sheet.createRow(6);
+        r1.createCell(0).setCellValue("Tổng doanh thu");
+        r1.createCell(1).setCellValue(dto.getTotalRevenue().doubleValue());
+        Row r2 = sheet.createRow(7);
+        r2.createCell(0).setCellValue("Tổng chi");
+        r2.createCell(1).setCellValue(dto.getTotalCost().doubleValue());
+        Row r3 = sheet.createRow(8);
+        r3.createCell(0).setCellValue("Lợi nhuận");
+        r3.createCell(1).setCellValue(dto.getProfit().doubleValue());
+        Row r4 = sheet.createRow(9);
+        r4.createCell(0).setCellValue("Số hóa đơn");
+        r4.createCell(1).setCellValue(dto.getTotalInvoiceCount());
+
+        int dataStart = 12;
+        Row timelineHeader = sheet.createRow(dataStart);
+        timelineHeader.createCell(0).setCellValue("Kỳ");
+        timelineHeader.createCell(1).setCellValue("Doanh thu");
+        timelineHeader.createCell(2).setCellValue("Chi phí");
+        int row = dataStart + 1;
+        for (StatisticDTO.ProfitPoint p : dto.getProfitTimeline()) {
+            Row d = sheet.createRow(row++);
+            d.createCell(0).setCellValue(p.getPeriod());
+            d.createCell(1).setCellValue(p.getRevenue().doubleValue());
+            d.createCell(2).setCellValue(p.getTotalCost().doubleValue());
+        }
+        if (row > dataStart + 1) {
+            createLineChart(sheet, "Doanh thu vs Chi phí", dataStart, row - 1, 0, 1, 2, 4, 20, 14, 36);
+        }
+        autosize(sheet, 3);
+    }
+
+    private void createRevenueSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
+                                    String viewByLabel) {
+        Sheet sheet = workbook.createSheet("DoanhThu");
+        fillCommonHeader(sheet, "Doanh thu", start, end, viewByLabel);
+
+        int headerRow = 5;
+        Row h = sheet.createRow(headerRow);
+        h.createCell(0).setCellValue("Kỳ");
+        h.createCell(1).setCellValue("Doanh thu");
+        h.createCell(2).setCellValue("Số hóa đơn");
+        int row = headerRow + 1;
+        for (StatisticDTO.RevenuePoint p : dto.getRevenueTimeline()) {
+            Row d = sheet.createRow(row++);
+            d.createCell(0).setCellValue(p.getPeriod());
+            d.createCell(1).setCellValue(p.getRevenue().doubleValue());
+            d.createCell(2).setCellValue(p.getInvoiceCount());
+        }
+        if (row > headerRow + 1) {
+            createLineChart(sheet, "Doanh thu theo kỳ", headerRow, row - 1, 0, 1, -1, 4, 10, 14, 28);
+        }
+        autosize(sheet, 3);
+    }
+
+    private void createCostSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
+                                 String viewByLabel) {
+        Sheet sheet = workbook.createSheet("Chi");
+        fillCommonHeader(sheet, "Chi phí", start, end, viewByLabel);
+
+        int headerRow = 5;
+        Row h = sheet.createRow(headerRow);
+        h.createCell(0).setCellValue("Kỳ");
+        h.createCell(1).setCellValue("Chi nhập hàng");
+        h.createCell(2).setCellValue("Chi lương");
+        h.createCell(3).setCellValue("Tổng chi");
+        int row = headerRow + 1;
+        for (StatisticDTO.ProfitPoint p : dto.getProfitTimeline()) {
+            Row d = sheet.createRow(row++);
+            d.createCell(0).setCellValue(p.getPeriod());
+            d.createCell(1).setCellValue(p.getImportCost().doubleValue());
+            d.createCell(2).setCellValue(p.getSalaryCost().doubleValue());
+            d.createCell(3).setCellValue(p.getTotalCost().doubleValue());
+        }
+        if (row > headerRow + 1) {
+            createLineChart(sheet, "Chi phí theo kỳ", headerRow, row - 1, 0, 3, -1, 5, 10, 16, 28);
+        }
+        autosize(sheet, 4);
+    }
+
+    private void createProfitSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
+                                   String viewByLabel) {
+        Sheet sheet = workbook.createSheet("LoiNhuan");
+        fillCommonHeader(sheet, "Lợi nhuận", start, end, viewByLabel);
+
+        int headerRow = 5;
+        Row h = sheet.createRow(headerRow);
+        h.createCell(0).setCellValue("Kỳ");
+        h.createCell(1).setCellValue("Doanh thu");
+        h.createCell(2).setCellValue("Tổng chi");
+        h.createCell(3).setCellValue("Lợi nhuận");
+        int row = headerRow + 1;
+        for (StatisticDTO.ProfitPoint p : dto.getProfitTimeline()) {
+            Row d = sheet.createRow(row++);
+            d.createCell(0).setCellValue(p.getPeriod());
+            d.createCell(1).setCellValue(p.getRevenue().doubleValue());
+            d.createCell(2).setCellValue(p.getTotalCost().doubleValue());
+            d.createCell(3).setCellValue(p.getProfit().doubleValue());
+        }
+        if (row > headerRow + 1) {
+            createLineChart(sheet, "Lợi nhuận theo kỳ", headerRow, row - 1, 0, 3, -1, 5, 10, 16, 28);
+        }
+        autosize(sheet, 4);
+    }
+
+    private void createSalesSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
+                                  String viewByLabel) {
+        Sheet sheet = workbook.createSheet("DoanhSo");
+        fillCommonHeader(sheet, "Doanh số", start, end, viewByLabel);
+
+        int headerRow = 5;
+        Row h = sheet.createRow(headerRow);
+        h.createCell(0).setCellValue("Mã sản phẩm");
+        h.createCell(1).setCellValue("Tên sản phẩm");
+        h.createCell(2).setCellValue("Danh mục");
+        h.createCell(3).setCellValue("Số lượng bán");
+        int row = headerRow + 1;
+        for (StatisticDTO.ProductRevenue p : dto.getProductRevenues()) {
+            Row d = sheet.createRow(row++);
+            d.createCell(0).setCellValue(p.getProductId());
+            d.createCell(1).setCellValue(p.getProductName());
+            d.createCell(2).setCellValue(p.getCategoryName());
+            d.createCell(3).setCellValue(p.getTotalQuantity());
+        }
+        if (row > headerRow + 1) {
+            createBarChart(sheet, "Top sản phẩm theo số lượng", headerRow, row - 1, 1, 3, 6, 10, 18, 30);
+        }
+        autosize(sheet, 4);
+    }
+
+    private void createReportSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
+                                   String viewByLabel) {
+        Sheet sheet = workbook.createSheet("BaoCao");
+        fillCommonHeader(sheet, "Báo cáo tổng hợp", start, end, viewByLabel);
+
+        Row header = sheet.createRow(5);
+        header.createCell(0).setCellValue("Chỉ số");
+        header.createCell(1).setCellValue("Giá trị");
+        String profitRate = dto.getTotalRevenue().compareTo(BigDecimal.ZERO) == 0
+                ? "0%"
+                : dto.getProfit()
+                .multiply(BigDecimal.valueOf(100))
+                .divide(dto.getTotalRevenue(), 1, RoundingMode.HALF_UP) + "%";
+        String[][] rows = new String[][]{
+                {"Tổng doanh thu", ValidationUtils.getInstance().formatCurrency(dto.getTotalRevenue())},
+                {"Tổng chi phí", ValidationUtils.getInstance().formatCurrency(dto.getTotalCost())},
+                {"Lợi nhuận", ValidationUtils.getInstance().formatCurrency(dto.getProfit())},
+                {"Tỷ lệ lợi nhuận", profitRate},
+                {"Tổng hóa đơn", String.valueOf(dto.getTotalInvoiceCount())},
+                {"Số loại sản phẩm có doanh số", String.valueOf(dto.getProductRevenues().size())}
+        };
+        int rowIdx = 6;
+        for (String[] item : rows) {
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(item[0]);
+            row.createCell(1).setCellValue(item[1]);
+        }
+        autosize(sheet, 2);
+    }
+
+    private void fillCommonHeader(Sheet sheet, String title, LocalDate start, LocalDate end, String viewByLabel) {
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        Row titleRow = sheet.createRow(0);
+        titleRow.createCell(0).setCellValue("Báo cáo thống kê - " + title);
+        Row periodRow = sheet.createRow(1);
+        periodRow.createCell(0).setCellValue("Kỳ lọc: " + start.format(fmt) + " - " + end.format(fmt));
+        Row viewRow = sheet.createRow(2);
+        viewRow.createCell(0).setCellValue("Xem theo: " + viewByLabel);
+        Row exportAtRow = sheet.createRow(3);
+        exportAtRow.createCell(0).setCellValue(
+                "Thời gian xuất: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
+    }
+
+    private void createLineChart(Sheet sheet, String title, int headerRow, int lastDataRow, int categoryCol,
+                                 int series1Col, int series2Col,
+                                 int fromCol, int fromRow, int toCol, int toRow) {
+        XSSFSheet xssfSheet = (XSSFSheet) sheet;
+        XSSFDrawing drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
+        XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, fromCol, fromRow, toCol, toRow);
+        org.apache.poi.xssf.usermodel.XSSFChart chart = drawing.createChart(anchor);
+        chart.setTitleText(title);
+        chart.setTitleOverlay(false);
+        chart.getOrAddLegend().setPosition(LegendPosition.BOTTOM);
+
+        XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
+        XDDFValueAxis leftAxis = chart.createValueAxis(AxisPosition.LEFT);
+        leftAxis.setCrosses(org.apache.poi.xddf.usermodel.chart.AxisCrosses.AUTO_ZERO);
+
+        XDDFChartData data = chart.createData(ChartTypes.LINE, bottomAxis, leftAxis);
+        XDDFDataSource<String> categories = XDDFDataSourcesFactory.fromStringCellRange(
+                xssfSheet, new CellRangeAddress(headerRow + 1, lastDataRow, categoryCol, categoryCol));
+        XDDFNumericalDataSource<Double> values1 = XDDFDataSourcesFactory.fromNumericCellRange(
+                xssfSheet, new CellRangeAddress(headerRow + 1, lastDataRow, series1Col, series1Col));
+        XDDFChartData.Series s1 = data.addSeries(categories, values1);
+        s1.setTitle(sheet.getRow(headerRow).getCell(series1Col).getStringCellValue(), null);
+
+        if (series2Col >= 0) {
+            XDDFNumericalDataSource<Double> values2 = XDDFDataSourcesFactory.fromNumericCellRange(
+                    xssfSheet, new CellRangeAddress(headerRow + 1, lastDataRow, series2Col, series2Col));
+            XDDFChartData.Series s2 = data.addSeries(categories, values2);
+            s2.setTitle(sheet.getRow(headerRow).getCell(series2Col).getStringCellValue(), null);
+        }
+        chart.plot(data);
+    }
+
+    private void createBarChart(Sheet sheet, String title, int headerRow, int lastDataRow, int categoryCol,
+                                int valueCol, int fromCol, int fromRow, int toCol, int toRow) {
+        XSSFSheet xssfSheet = (XSSFSheet) sheet;
+        XSSFDrawing drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
+        XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, fromCol, fromRow, toCol, toRow);
+        org.apache.poi.xssf.usermodel.XSSFChart chart = drawing.createChart(anchor);
+        chart.setTitleText(title);
+        chart.setTitleOverlay(false);
+        chart.getOrAddLegend().setPosition(LegendPosition.BOTTOM);
+
+        XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
+        XDDFValueAxis leftAxis = chart.createValueAxis(AxisPosition.LEFT);
+        XDDFBarChartData data = (XDDFBarChartData) chart.createData(ChartTypes.BAR, bottomAxis, leftAxis);
+        data.setBarDirection(BarDirection.COL);
+
+        XDDFDataSource<String> categories = XDDFDataSourcesFactory.fromStringCellRange(
+                xssfSheet, new CellRangeAddress(headerRow + 1, lastDataRow, categoryCol, categoryCol));
+        XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange(
+                xssfSheet, new CellRangeAddress(headerRow + 1, lastDataRow, valueCol, valueCol));
+        XDDFChartData.Series series = data.addSeries(categories, values);
+        series.setTitle(sheet.getRow(headerRow).getCell(valueCol).getStringCellValue(), null);
+        chart.plot(data);
+    }
+
+    private void autosize(Sheet sheet, int colCount) {
+        for (int i = 0; i < colCount; i++) {
+            sheet.autoSizeColumn(i);
+        }
+    }
+
+    /**
+     * Export báo cáo thống kê nhân sự theo tháng/năm.
+     */
+    public void exportHrStatisticWorkbook(HrStatisticDTO dto, int month, int year, File targetFile) throws IOException {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+
+        createHrOverviewSheet(workbook, dto, month, year);
+        createHrAttendanceSheet(workbook, dto, month, year);
+        createHrLeaveSheet(workbook, dto, month, year);
+        createHrFineRewardSheet(workbook, dto, month, year);
+        createHrSalarySheet(workbook, dto, month, year);
+        createHrReportSheet(workbook, dto, month, year);
+
+        File outputFile = targetFile != null
+                ? targetFile
+                : new File("ThongKe_NhanSu_" + month + "_" + year + ".xlsx");
+        fileHandler.saveAndOpenFile(outputFile, workbook);
+    }
+
+    private void createHrOverviewSheet(XSSFWorkbook workbook, HrStatisticDTO dto, int month, int year) {
+        Sheet sheet = workbook.createSheet("TongQuanNhanSu");
+        fillHrHeader(sheet, "Tổng quan nhân sự", month, year);
+
+        Row h = sheet.createRow(5);
+        h.createCell(0).setCellValue("Chỉ số");
+        h.createCell(1).setCellValue("Giá trị");
+        Row r1 = sheet.createRow(6);
+        r1.createCell(0).setCellValue("Tổng nhân sự");
+        r1.createCell(1).setCellValue(dto.getTotalEmployees());
+        Row r2 = sheet.createRow(7);
+        r2.createCell(0).setCellValue("Nhân sự mới");
+        r2.createCell(1).setCellValue(dto.getNewEmployees());
+        Row r3 = sheet.createRow(8);
+        r3.createCell(0).setCellValue("Tổng lương đã trả");
+        r3.createCell(1).setCellValue(ValidationUtils.getInstance().formatCurrency(dto.getTotalPaidSalary()));
+        autosize(sheet, 2);
+    }
+
+    private void createHrAttendanceSheet(XSSFWorkbook workbook, HrStatisticDTO dto, int month, int year) {
+        Sheet sheet = workbook.createSheet("ChamCong");
+        fillHrHeader(sheet, "Chấm công", month, year);
+        Row h = sheet.createRow(5);
+        h.createCell(0).setCellValue("Họ tên");
+        h.createCell(1).setCellValue("Phòng ban");
+        h.createCell(2).setCellValue("Số ca");
+        h.createCell(3).setCellValue("Giờ làm");
+        h.createCell(4).setCellValue("Giờ OT");
+        int row = 6;
+        for (HrStatisticDTO.AttendanceRow item : dto.getAttendanceRows()) {
+            Row r = sheet.createRow(row++);
+            r.createCell(0).setCellValue(item.getFullName());
+            r.createCell(1).setCellValue(item.getDeptName());
+            r.createCell(2).setCellValue(item.getSessionCount());
+            r.createCell(3).setCellValue(item.getTotalWork().doubleValue());
+            r.createCell(4).setCellValue(item.getTotalOt().doubleValue());
+        }
+        autosize(sheet, 5);
+    }
+
+    private void createHrLeaveSheet(XSSFWorkbook workbook, HrStatisticDTO dto, int month, int year) {
+        Sheet sheet = workbook.createSheet("NghiPhep");
+        fillHrHeader(sheet, "Nghỉ phép", month, year);
+        Row h = sheet.createRow(5);
+        h.createCell(0).setCellValue("Họ tên");
+        h.createCell(1).setCellValue("Loại nghỉ");
+        h.createCell(2).setCellValue("Từ ngày");
+        h.createCell(3).setCellValue("Đến ngày");
+        h.createCell(4).setCellValue("Số ngày");
+        h.createCell(5).setCellValue("Trạng thái");
+        int row = 6;
+        for (HrStatisticDTO.LeaveRow item : dto.getLeaveRows()) {
+            Row r = sheet.createRow(row++);
+            r.createCell(0).setCellValue(item.getFullName());
+            r.createCell(1).setCellValue(item.getLeaveType());
+            r.createCell(2).setCellValue(item.getStartDate());
+            r.createCell(3).setCellValue(item.getEndDate());
+            r.createCell(4).setCellValue(item.getDays());
+            r.createCell(5).setCellValue(item.getStatus());
+        }
+        autosize(sheet, 6);
+    }
+
+    private void createHrFineRewardSheet(XSSFWorkbook workbook, HrStatisticDTO dto, int month, int year) {
+        Sheet sheet = workbook.createSheet("ThuongPhat");
+        fillHrHeader(sheet, "Khen thưởng - Kỷ luật", month, year);
+        Row h = sheet.createRow(5);
+        h.createCell(0).setCellValue("Mã NV");
+        h.createCell(1).setCellValue("Họ tên");
+        h.createCell(2).setCellValue("Phòng ban");
+        h.createCell(3).setCellValue("Chức vụ");
+        h.createCell(4).setCellValue("Loại");
+        h.createCell(5).setCellValue("Số tiền");
+        h.createCell(6).setCellValue("Ngày");
+        int row = 6;
+        for (HrStatisticDTO.FineRewardRow item : dto.getFineRewardRows()) {
+            Row r = sheet.createRow(row++);
+            r.createCell(0).setCellValue(item.getEmployeeCode());
+            r.createCell(1).setCellValue(item.getFullName());
+            r.createCell(2).setCellValue(item.getDepartmentName());
+            r.createCell(3).setCellValue(item.getPositionName());
+            r.createCell(4).setCellValue(item.getFineLevel());
+            r.createCell(5).setCellValue(item.getAmount().doubleValue());
+            r.createCell(6).setCellValue(item.getCreatedAt());
+        }
+        autosize(sheet, 7);
+    }
+
+    private void createHrSalarySheet(XSSFWorkbook workbook, HrStatisticDTO dto, int month, int year) {
+        Sheet sheet = workbook.createSheet("Luong");
+        fillHrHeader(sheet, "Thống kê lương", month, year);
+        Row h = sheet.createRow(5);
+        h.createCell(0).setCellValue("Họ tên");
+        h.createCell(1).setCellValue("Phòng ban");
+        h.createCell(2).setCellValue("Lương cơ bản");
+        h.createCell(3).setCellValue("Lương NET");
+        h.createCell(4).setCellValue("Bảo hiểm");
+        h.createCell(5).setCellValue("Ngày công");
+        int row = 6;
+        for (HrStatisticDTO.SalaryRow item : dto.getSalaryRows()) {
+            Row r = sheet.createRow(row++);
+            r.createCell(0).setCellValue(item.getFullName());
+            r.createCell(1).setCellValue(item.getDeptName());
+            r.createCell(2).setCellValue(item.getBaseSalary().doubleValue());
+            r.createCell(3).setCellValue(item.getNetSalary().doubleValue());
+            r.createCell(4).setCellValue(item.getTotalInsurance().doubleValue());
+            r.createCell(5).setCellValue(item.getActualWorkDays().doubleValue());
+        }
+        autosize(sheet, 6);
+    }
+
+    private void createHrReportSheet(XSSFWorkbook workbook, HrStatisticDTO dto, int month, int year) {
+        Sheet sheet = workbook.createSheet("BaoCaoNhanSu");
+        fillHrHeader(sheet, "Báo cáo nhân sự", month, year);
+        Row h = sheet.createRow(5);
+        h.createCell(0).setCellValue("Chỉ số");
+        h.createCell(1).setCellValue("Giá trị");
+        String[][] rows = new String[][]{
+                {"Tổng nhân sự", String.valueOf(dto.getTotalEmployees())},
+                {"Nhân sự mới", String.valueOf(dto.getNewEmployees())},
+                {"Tổng lương đã trả", ValidationUtils.getInstance().formatCurrency(dto.getTotalPaidSalary())},
+                {"Tổng lượt chấm công", String.valueOf(dto.getAttendanceStat().getTotalSessions())},
+                {"Tổng đơn nghỉ phép", String.valueOf(dto.getLeaveStat().getTotalRequests())}
+        };
+        int row = 6;
+        for (String[] item : rows) {
+            Row r = sheet.createRow(row++);
+            r.createCell(0).setCellValue(item[0]);
+            r.createCell(1).setCellValue(item[1]);
+        }
+        autosize(sheet, 2);
+    }
+
+    private void fillHrHeader(Sheet sheet, String title, int month, int year) {
+        Row titleRow = sheet.createRow(0);
+        titleRow.createCell(0).setCellValue("Báo cáo thống kê nhân sự - " + title);
+        Row periodRow = sheet.createRow(1);
+        periodRow.createCell(0).setCellValue("Tháng/Năm: " + month + "/" + year);
+        Row exportAtRow = sheet.createRow(2);
+        exportAtRow.createCell(0).setCellValue(
+                "Thời gian xuất: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
     }
 
     /**
