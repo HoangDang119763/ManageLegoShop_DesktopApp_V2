@@ -190,7 +190,7 @@ public class HolidayController implements IController {
             return;
         }
 
-        TaskUtil.executePublic(loadingOverlay,
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.HOLIDAY_DELETE,
                 () -> HolidayBUS.getInstance().delete(selectedHoliday.getId()),
                 result -> {
                     Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
@@ -244,26 +244,26 @@ public class HolidayController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
-        // boolean canView = session.hasPermission(PermissionKey.HOLIDAY_LIST_VIEW);
+        boolean canView = session.hasPermission(PermissionKey.HOLIDAY_LIST_VIEW);
 
-        // if (!canView) {
-        // mainContent.setVisible(false);
-        // mainContent.setManaged(false);
-        // NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED,
-        // AppMessages.DIALOG_TITLE);
-        // return;
-        // }
+        if (!canView) {
+            mainContent.setVisible(false);
+            mainContent.setManaged(false);
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED,
+                    AppMessages.DIALOG_TITLE);
+            return;
+        }
 
-        // boolean canAdd = session.hasPermission(PermissionKey.HOLIDAY_INSERT);
-        // boolean canEdit = session.hasPermission(PermissionKey.HOLIDAY_UPDATE);
-        // boolean canDelete = session.hasPermission(PermissionKey.HOLIDAY_DELETE);
+        boolean canAdd = session.hasPermission(PermissionKey.HOLIDAY_INSERT);
+        boolean canEdit = session.hasPermission(PermissionKey.HOLIDAY_UPDATE);
+        boolean canDelete = session.hasPermission(PermissionKey.HOLIDAY_DELETE);
 
-        // if (!canAdd)
-        // UiUtils.gI().setVisibleItem(addBtn);
-        // if (!canEdit)
-        // UiUtils.gI().setVisibleItem(editBtn);
-        // if (!canDelete)
-        // UiUtils.gI().setVisibleItem(deleteBtn);
+        if (!canAdd)
+            UiUtils.gI().setVisibleItem(addBtn);
+        if (!canEdit)
+            UiUtils.gI().setVisibleItem(editBtn);
+        if (!canDelete)
+            UiUtils.gI().setVisibleItem(deleteBtn);
     }
 
     private boolean isNotSelectedHoliday() {

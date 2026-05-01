@@ -43,7 +43,8 @@ public class HrMainController {
             Map.entry(11, "/GUI/AttendanceUI.fxml"), // Chấm công
             Map.entry(16, "/GUI/PayrollFullUI.fxml"), // Bảng lương toàn công ty
             Map.entry(17, "/GUI/DepartmentPositionUI.fxml"),
-            Map.entry(18, "/GUI/HrStatisticUI.fxml")); // Thống kê nhân sự
+            Map.entry(18, "/GUI/HrStatisticUI.fxml"), // Thống kê nhân sự
+            Map.entry(19, "/GUI/HolidayUI.fxml"));
 
     @FXML
     public void initialize() {
@@ -102,7 +103,8 @@ public class HrMainController {
                 new ModuleMetadata(11, "Chấm công", "calendar-check-regular.png"), // ID 11
                 new ModuleMetadata(16, "Bảng lương", "money-check-solid.png"), // ID 16
                 new ModuleMetadata(17, "Cơ cấu", "discipline.png"), // ID 17
-                new ModuleMetadata(18, "Thống kê nhân sự", "attendance.png")); // ID 18
+                new ModuleMetadata(18, "Thống kê nhân sự", "attendance.png"), // ID 18
+                new ModuleMetadata(19, "Ngày lễ", "holiday.png")); // ID 19
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : hrModules) {
             // Module 0 luôn hiện, các module khác theo quyền module

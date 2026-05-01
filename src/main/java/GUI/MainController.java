@@ -45,8 +45,7 @@ public class MainController {
             Map.entry(7, "/GUI/CategoryUI.fxml"),
             Map.entry(8, "/GUI/DiscountUI.fxml"),
             Map.entry(9, "/GUI/RoleUI.fxml"),
-            Map.entry(10, "/GUI/StatisticUI.fxml"),
-            Map.entry(-1, "/GUI/HolidayUI.fxml"));
+            Map.entry(10, "/GUI/StatisticUI.fxml"));
 
     @FXML
     public void initialize() {
@@ -107,8 +106,7 @@ public class MainController {
                 new ModuleMetadata(5, "Bán hàng", "invoice.png"), // ID 5: Module quan trọng nhất
                 new ModuleMetadata(6, "Nhập hàng", "import.png"), // ID 6
                 new ModuleMetadata(9, "Vai trò", "role.png"), // ID 9
-                new ModuleMetadata(10, "Thống kê", "statistical.png"), // ID 10
-                new ModuleMetadata(-1, "Ngày lễ", "holiday.png")); // ID 10
+                new ModuleMetadata(10, "Thống kê", "statistical.png")); // ID 10
 
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : allModules) {

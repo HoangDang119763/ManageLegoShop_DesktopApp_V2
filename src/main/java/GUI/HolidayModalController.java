@@ -2,6 +2,7 @@ package GUI;
 
 import BUS.HolidayBUS;
 import DTO.HolidayDTO;
+import ENUM.PermissionKey;
 import INTERFACE.IModalController;
 import UTILS.AppMessages;
 import UTILS.NotificationUtils;
@@ -147,7 +148,7 @@ public class HolidayModalController implements IModalController {
 
         HolidayDTO temp = new HolidayDTO(-1, name, date);
 
-        TaskUtil.executePublic(loadingOverlay,
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.HOLIDAY_INSERT,
                 () -> holidayBus.insert(temp),
                 result -> {
                     if (result.isSuccess()) {
@@ -171,7 +172,7 @@ public class HolidayModalController implements IModalController {
         // Giữ nguyên ID cũ để Update
         HolidayDTO temp = new HolidayDTO(holiday.getId(), name, date);
 
-        TaskUtil.executePublic(loadingOverlay,
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.HOLIDAY_UPDATE,
                 () -> holidayBus.update(temp),
                 result -> {
                     if (result.isSuccess()) {
