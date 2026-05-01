@@ -129,6 +129,8 @@ public class ImportProductController implements IController {
         session = SessionManagerService.getInstance();
         importBUS = ImportBUS.getInstance();
 
+        hideButtonWithoutPermission();
+
         updateImportId();
         txtEmployeeFullName.setText(session.getLoggedName());
         // Setup UI
@@ -321,7 +323,7 @@ public class ImportProductController implements IController {
         StackPane overlay = showOverlay ? loadingOverlay : null;
 
         // Chạy task ngầm
-        TaskUtil.executeSecure(overlay, PermissionKey.IMPORT_INSERT,
+        TaskUtil.executeSecure(overlay, PermissionKey.PRODUCT_LIST_VIEW,
                 () -> productBUS.filterProductsPagedForImport(keyword, selectedCategoryId, priceOrder, pageIndex,
                         PAGE_SIZE),
                 result -> {
@@ -902,7 +904,11 @@ public class ImportProductController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hideButtonWithoutPermission'");
+        if (!session.hasPermission(PermissionKey.IMPORT_INSERT)) {
+            btnSubmitImport.setDisable(true);
+            btnGetSupInfo.setDisable(true);
+            btnImportFromExcel.setDisable(true);
+            NotificationUtils.showErrorAlert("Bạn không có quyền nhập hàng.", "Lỗi phân quyền");
+        }
     }
 }

@@ -76,6 +76,7 @@ public class SupForImportModalController implements IModalController {
 
         // Setup listeners
         setupListeners();
+        hideButtonWithoutPermission();
 
         // DO NOT load initial data - use lazy loading (only load when user searches)
         // Ngăn tải dữ liệu ngay khi mở modal - chỉ tải khi người dùng tìm kiếm
@@ -128,7 +129,7 @@ public class SupForImportModalController implements IModalController {
     private void handleSearch() {
         String keyword = txtSearchSupplier.getText().trim();
 
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.IMPORT_INSERT,
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.SUPPLIER_LIST_VIEW,
                 () -> supplierBUS.filterSuppliersByKeywordForImport(keyword),
                 result -> {
                     if (result.isSuccess()) {

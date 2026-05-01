@@ -39,6 +39,20 @@ public class ExcelFileHandler {
      */
     public void saveAndOpenFile(String fileName, Workbook workbook, boolean showSuccess) {
         File file = new File(fileName);
+        saveAndOpenFile(file, workbook, showSuccess);
+    }
+
+    /**
+     * Lưu workbook vào file được chọn và mở nó
+     */
+    public void saveAndOpenFile(File file, Workbook workbook, boolean showSuccess) {
+        if (file == null) {
+            try {
+                workbook.close();
+            } catch (IOException ignored) {
+            }
+            return;
+        }
 
         // Kiểm tra nếu file đang mở
         if (file.exists() && isFileLocked(file)) {
@@ -82,5 +96,9 @@ public class ExcelFileHandler {
      */
     public void saveAndOpenFile(String fileName, Workbook workbook) {
         saveAndOpenFile(fileName, workbook, true);
+    }
+
+    public void saveAndOpenFile(File file, Workbook workbook) {
+        saveAndOpenFile(file, workbook, true);
     }
 }

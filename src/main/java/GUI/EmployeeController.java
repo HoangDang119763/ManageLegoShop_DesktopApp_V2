@@ -233,7 +233,7 @@ public class EmployeeController implements IController {
     @Override
     public void hideButtonWithoutPermission() {
         SessionManagerService session = SessionManagerService.getInstance();
-        boolean canView = session.hasPermission(PermissionKey.PRODUCT_LIST_VIEW);
+        boolean canView = session.hasPermission(PermissionKey.EMPLOYEE_LIST_VIEW);
 
         if (!canView) {
             mainContent.setVisible(false);

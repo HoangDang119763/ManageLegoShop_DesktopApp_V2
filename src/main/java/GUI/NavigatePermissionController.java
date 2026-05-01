@@ -1,7 +1,9 @@
 package GUI;
 
+import ENUM.PermissionKey;
 import SERVICE.SessionManagerService;
 import UTILS.AppMessages;
+import UTILS.NotificationUtils;
 import UTILS.UiUtils;
 import javafx.animation.ParallelTransition;
 import javafx.application.Platform;
@@ -47,18 +49,30 @@ public class NavigatePermissionController {
     }
 
     private void openSelling() {
+        if (!canOpenSelling()) {
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+            return;
+        }
         UiUtils.gI().openStage("/GUI/SellingProduct.fxml", "Bán hàng");
         handleClose();
     }
 
     @FXML
     private void openHrManage() {
+        if (!canOpenHrManage()) {
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+            return;
+        }
         UiUtils.gI().openStage("/GUI/HrMainUI.fxml", "Quản lý nhân sự");
         handleClose();
     }
 
     @FXML
     private void openManage() {
+        if (!canOpenManage()) {
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+            return;
+        }
         UiUtils.gI().openStage("/GUI/MainUI.fxml", "Lego Store");
         handleClose();
     }
@@ -71,21 +85,35 @@ public class NavigatePermissionController {
     }
 
     public void hideButtonWithoutPermission() {
-        // boolean canSelling = SessionManagerService.getInstance().canSelling();
-        // boolean canImport = SessionManagerService.getInstance().canImporting();
-        // boolean canManage = SessionManagerService.getInstance().canManage();
+        applyAccessState(pItemPermissionSelling, canOpenSelling());
+        applyAccessState(pItemPermissionHrManage, canOpenHrManage());
+        applyAccessState(pItemPermissionAuth, canOpenManage());
+    }
 
-        // // Thiết lập trạng thái và độ mờ cho nút quyền bán hàng
-        // pItemPermissionSelling.setDisable(!canSelling);
-        // pItemPermissionSelling.setOpacity(canSelling ? 1.0 : 0.3);
+    private void applyAccessState(Pane pane, boolean allowed) {
+        pane.setDisable(!allowed);
+        pane.setOpacity(allowed ? 1.0 : 0.3);
+    }
 
-        // // Thiết lập trạng thái và độ mờ cho nút quyền nhập hàng
-        // pItemPermissionImporting.setDisable(!canImport);
-        // pItemPermissionImporting.setOpacity(canImport ? 1.0 : 0.3);
+    private boolean canOpenSelling() {
+        return SessionManagerService.getInstance().hasPermission(PermissionKey.INVOICE_INSERT);
+    }
 
-        // // Thiết lập trạng thái và độ mờ cho nút quyền quản lý
-        // pItemPermissionAuth.setDisable(!canManage);
-        // pItemPermissionAuth.setOpacity(canManage ? 1.0 : 0.3);
+    private boolean canOpenHrManage() {
+        return hasAnyModuleAccess(1, 11, 12, 13, 15, 16, 17, 18);
+    }
+
+    private boolean canOpenManage() {
+        return hasAnyModuleAccess(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+    }
+
+    private boolean hasAnyModuleAccess(int... moduleIds) {
+        SessionManagerService session = SessionManagerService.getInstance();
+        for (int moduleId : moduleIds) {
+            if (session.hasModuleAccess(moduleId))
+                return true;
+        }
+        return false;
     }
 
 }

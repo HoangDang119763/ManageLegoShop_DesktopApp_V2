@@ -108,6 +108,7 @@ public class ImportController implements IController {
     private static final int PAGE_SIZE = 10;
     private boolean isResetting = false;
     private SessionManagerService sessionManagerService = SessionManagerService.getInstance();
+    private boolean canView = true;
 
     @FXML
     public void initialize() {
@@ -120,6 +121,9 @@ public class ImportController implements IController {
         Platform.runLater(() -> tblDetailImport.getSelectionModel().clearSelection());
 
         hideButtonWithoutPermission();
+        if (!canView)
+            return;
+
         loadComboBox();
         setupListeners();
 
@@ -173,7 +177,7 @@ public class ImportController implements IController {
                 validationUtils.formatPercent(
                         cellData.getValue().getProfitPercent() != null ? cellData.getValue().getProfitPercent()
                                 : BigDecimal.ZERO)));
-        TaskUtil.executeSecure(null, PermissionKey.DISCOUNT_LIST_VIEW,
+        TaskUtil.executeSecure(null, PermissionKey.IMPORT_LIST_VIEW,
                 () -> DetailImportBUS.getInstance().getAllDetailImportByImportId(importId),
                 result -> {
                     ArrayList<DetailImportDTO> detailImports = result.getData();
@@ -300,7 +304,22 @@ public class ImportController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
+        canView = sessionManagerService.hasPermission(PermissionKey.IMPORT_LIST_VIEW);
+        if (!canView) {
+            tblImport.setDisable(true);
+            tblDetailImport.setDisable(true);
+            txtSearch.setDisable(true);
+            cbStatusFilter.setDisable(true);
+            advanceSearchBtn.setDisable(true);
+            UiUtils.gI().setVisibleItem(functionBtns);
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+            return;
+        }
+
+        boolean canInsert = sessionManagerService.hasPermission(PermissionKey.IMPORT_INSERT);
         boolean canApprove = sessionManagerService.hasPermission(PermissionKey.IMPORT_APPROVE);
+        if (!canInsert)
+            UiUtils.gI().setVisibleItem(addImportBtn);
         if (!canApprove) {
             UiUtils.gI().setVisibleItem(approveImportBtn);
             UiUtils.gI().setVisibleItem(deleteImportBtn);

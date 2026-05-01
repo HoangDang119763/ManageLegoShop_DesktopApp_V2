@@ -1,13 +1,19 @@
 package GUI;
 
 import BUS.StatisticBUS;
+import DTO.BUSResult;
 import DTO.StatisticDTO;
 import DTO.StatisticDTO.CategoryRevenue;
 import DTO.StatisticDTO.ProductRevenue;
 import DTO.StatisticDTO.ProfitPoint;
 import DTO.StatisticDTO.RevenuePoint;
+import ENUM.BUSOperationResult;
+import ENUM.PermissionKey;
 import ENUM.ViewBy;
 import INTERFACE.IController;
+import SERVICE.ExcelService;
+import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
 import UTILS.NotificationUtils;
 import UTILS.TaskUtil;
 import UTILS.ValidationUtils;
@@ -23,7 +29,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -38,6 +46,8 @@ public class StatisticController implements IController {
     private static String savedFromDate = null;
     private static String savedToDate = null;
     private static ViewBy savedViewBy = null;
+    private StatisticDTO lastLoadedStatistic = null;
+    private boolean canView = true;
 
     // ── Bộ lọc chung ──────────────────────────────────────
     @FXML
@@ -167,6 +177,10 @@ public class StatisticController implements IController {
         restoreOrDefaultFilters();
         setupDateAutoFormat(fromDate);
         setupDateAutoFormat(toDate);
+        hideButtonWithoutPermission();
+        if (!canView)
+            return;
+
         loadTable();
         setupListeners();
     }
@@ -205,9 +219,8 @@ public class StatisticController implements IController {
 
     /** Đặt bộ lọc về mặc định (đầu tháng → hôm nay). */
     private void setupDefaultFilters() {
-        LocalDate today = LocalDate.now();
-        fromDate.setText(today.withDayOfMonth(1).format(DATE_FMT));
-        toDate.setText(today.format(DATE_FMT));
+        fromDate.setText(LocalDate.of(2025, 12, 1).format(DATE_FMT));
+        toDate.setText(LocalDate.of(2026, 2, 28).format(DATE_FMT));
     }
 
     /** Khôi phục bộ lọc đã lưu; nếu chưa có thì dùng giá trị mặc định. */
@@ -281,8 +294,7 @@ public class StatisticController implements IController {
             clearAll();
         });
         if (btnExport != null) {
-            btnExport.setOnAction(e -> NotificationUtils.showInfoAlert(
-                    "Chức năng xuất báo cáo sẽ được bổ sung sau.", "Thông báo"));
+            btnExport.setOnAction(e -> handleExportReport());
         }
     }
 
@@ -294,15 +306,17 @@ public class StatisticController implements IController {
 
             saveCurrentFilters();
 
-            TaskUtil.executeAsync(
-                    () -> StatisticBUS.getInstance().getAllStatistic(from, to, viewBy),
-                    this::renderAll);
+            TaskUtil.executeSecure(null, PermissionKey.STATISTICS_VIEW,
+                    () -> new BUSResult(BUSOperationResult.SUCCESS, AppMessages.OPERATION_SUCCESS,
+                            StatisticBUS.getInstance().getAllStatistic(from, to, viewBy)),
+                    result -> renderAll(result.getData()));
         } catch (IllegalArgumentException ex) {
             NotificationUtils.showErrorAlert(ex.getMessage(), "Lỗi nhập liệu");
         }
     }
 
     private void renderAll(StatisticDTO dto) {
+        lastLoadedStatistic = dto;
         renderOverview(dto);
         renderRevenueTab(dto);
         renderCostTab(dto);
@@ -519,6 +533,7 @@ public class StatisticController implements IController {
     }
 
     private void clearAll() {
+        lastLoadedStatistic = null;
         overviewTrendChart.getData().clear();
         overviewCategoryChart.getData().clear();
         revenueLineChart.getData().clear();
@@ -564,6 +579,38 @@ public class StatisticController implements IController {
             lblReportRate.setText("—");
     }
 
+    private void handleExportReport() {
+        if (lastLoadedStatistic == null || lastLoadedStatistic.getProductRevenues().isEmpty()) {
+            NotificationUtils.showErrorAlert("Chưa có dữ liệu để xuất. Vui lòng lọc thống kê trước.", "Thông báo");
+            return;
+        }
+
+        try {
+            LocalDate from = parseDate(fromDate.getText(), "Ngày bắt đầu");
+            LocalDate to = parseDate(toDate.getText(), "Ngày kết thúc");
+            ViewBy viewBy = viewByCombo.getValue() != null ? viewByCombo.getValue() : ViewBy.MONTH;
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Chọn nơi lưu báo cáo thống kê");
+            fileChooser.setInitialFileName("ThongKe_LegoStore_Full_Statistic_Report.xlsx");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Excel Files (*.xlsx)", "*.xlsx"));
+            File selectedFile = fileChooser.showSaveDialog(btnExport.getScene().getWindow());
+            if (selectedFile == null) {
+                return;
+            }
+
+            ExcelService.getInstance().exportBusinessStatisticWorkbook(
+                    lastLoadedStatistic,
+                    from,
+                    to,
+                    viewBy.name(),
+                    selectedFile);
+            NotificationUtils.showInfoAlert("Xuất báo cáo sản phẩm thành công.", "Thông báo");
+        } catch (Exception ex) {
+            NotificationUtils.showErrorAlert("Xuất báo cáo thất bại: " + ex.getMessage(), "Lỗi");
+        }
+    }
+
     @Override
     public void applyFilters() {
         handleFilter();
@@ -578,5 +625,17 @@ public class StatisticController implements IController {
 
     @Override
     public void hideButtonWithoutPermission() {
+        canView = SessionManagerService.getInstance().hasPermission(PermissionKey.STATISTICS_VIEW);
+        if (!canView) {
+            fromDate.setDisable(true);
+            toDate.setDisable(true);
+            viewByCombo.setDisable(true);
+            btnFilter.setDisable(true);
+            btnRefresh.setDisable(true);
+            if (btnExport != null)
+                btnExport.setDisable(true);
+            clearAll();
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+        }
     }
 }
