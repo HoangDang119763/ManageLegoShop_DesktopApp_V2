@@ -47,7 +47,7 @@ public class RoleController implements IController {
     @FXML
     private ComboBox<String> cbSearchBy;
 
-    private String searchBy = "Mã chức vụ";
+    private String searchBy = "Mã vai trò";
     private String keyword = "";
     private RoleDTO selectedRole;
 
@@ -82,7 +82,7 @@ public class RoleController implements IController {
     }
 
     private void loadComboBox() {
-        cbSearchBy.getItems().addAll("Mã chức vụ", "Tên chức vụ");
+        cbSearchBy.getItems().addAll("Mã vai trò", "Tên vai trò");
         cbSearchBy.getSelectionModel().selectFirst();
     }
 
@@ -129,7 +129,7 @@ public class RoleController implements IController {
             if (kw.isEmpty()) {
                 return true;
             }
-            if ("Mã chức vụ".equals(searchBy)) {
+            if ("Mã vai trò".equals(searchBy)) {
                 return String.valueOf(r.getId()).contains(kw);
             }
             String name = r.getName() != null ? r.getName().toLowerCase(Locale.ROOT) : "";
@@ -145,7 +145,7 @@ public class RoleController implements IController {
     public void resetFilters() {
         cbSearchBy.getSelectionModel().selectFirst();
         txtSearch.clear();
-        searchBy = "Mã chức vụ";
+        searchBy = "Mã vai trò";
         keyword = "";
         applyFilters();
     }
@@ -177,7 +177,7 @@ public class RoleController implements IController {
 
     private void handleAuthorize() {
         if (isNotSelectedRole()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn chức vụ", "Thông báo");
+            NotificationUtils.showErrorAlert("Vui lòng chọn vai trò", "Thông báo");
             return;
         }
 
@@ -199,26 +199,26 @@ public class RoleController implements IController {
 
     private void handleDelete() {
         if (isNotSelectedRole()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn chức vụ", "Thông báo");
+            NotificationUtils.showErrorAlert("Vui lòng chọn vai trò", "Thông báo");
             return;
         }
 
         if (selectedRole.getId() == SessionManagerService.getInstance().employeeRoleId()) {
-            NotificationUtils.showErrorAlert("Bạn không thể xóa chức vụ của chính mình.", "Thông báo");
+            NotificationUtils.showErrorAlert("Bạn không thể xóa vai trò của chính mình.", "Thông báo");
             return;
         }
 
         int employeeCount = EmployeeBUS.getInstance().countByRoleId(selectedRole.getId());
         if (employeeCount > 0) {
-            String ask = "Hiện có " + employeeCount + " nhân viên sở hữu chức vụ này!";
-            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa chức vụ này? " + ask, "Thông báo xác nhận")) {
+            String ask = "Hiện có " + employeeCount + " nhân viên sở hữu vai trò này!";
+            if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa vai trò này? " + ask, "Thông báo xác nhận")) {
                 return;
             }
         }
 
         BUSResult result = RoleBUS.getInstance().delete(selectedRole.getId());
         if (result.getCode() == BUSOperationResult.SUCCESS) {
-            NotificationUtils.showInfoAlert("Xóa chức vụ thành công.", "Thông báo");
+            NotificationUtils.showInfoAlert("Xóa vai trò thành công.", "Thông báo");
             resetFilters();
         } else {
             String message = result.getMessage() != null ? result.getMessage() : "Có lỗi khi xóa chức vụ.";
@@ -230,7 +230,7 @@ public class RoleController implements IController {
         RoleModalController modalController = UiUtils.gI().openStageWithController(
                 "/GUI/RoleModal.fxml",
                 controller -> controller.setTypeModal(0),
-                "Thêm chức vụ");
+                "Thêm vai trò");
         if (modalController != null && modalController.isSaved()) {
             NotificationUtils.showInfoAlert("Thêm chức vụ thành công", "Thông báo");
             resetFilters();
@@ -239,7 +239,7 @@ public class RoleController implements IController {
 
     private void handleEdit() {
         if (isNotSelectedRole()) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn chức vụ", "Thông báo");
+            NotificationUtils.showErrorAlert("Vui lòng chọn vai trò", "Thông báo");
             return;
         }
 
@@ -249,10 +249,10 @@ public class RoleController implements IController {
                     controller.setRole(selectedRole);
                     controller.setTypeModal(1);
                 },
-                "Sửa chức vụ");
+                "Sửa vai trò");
 
         if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Sửa chức vụ thành công", "Thông báo");
+            NotificationUtils.showInfoAlert("Sửa vai trò thành công", "Thông báo");
             applyFilters();
         }
     }
