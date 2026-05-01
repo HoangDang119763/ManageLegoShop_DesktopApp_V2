@@ -224,7 +224,7 @@ public class AttendanceTabController {
         javafx.concurrent.Task<Integer> task = new javafx.concurrent.Task<>() {
             @Override protected Integer call() throws Exception {
                 ArrayList<TimeSheetDTO> list = new ArrayList<>();
-                DateTimeFormatter strFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                DateTimeFormatter strFmt = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm");
                 DataFormatter df = new DataFormatter();
                 try (FileInputStream fis = new FileInputStream(file); Workbook wb = new XSSFWorkbook(fis)) {
                     Sheet sheet = wb.getSheetAt(0);
