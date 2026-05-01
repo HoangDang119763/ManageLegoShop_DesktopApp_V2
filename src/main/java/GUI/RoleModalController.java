@@ -44,9 +44,9 @@ public class RoleModalController {
         }
         typeModal = type;
         if (typeModal == 0) {
-            modalName.setText("Thêm chức vụ");
+            modalName.setText("Thêm vai trò");
         } else {
-            modalName.setText("Sửa chức vụ");
+            modalName.setText("Sửa vai trò");
             if (role != null) {
                 bindRoleToForm();
             }
@@ -73,12 +73,12 @@ public class RoleModalController {
         ValidationUtils validator = ValidationUtils.getInstance();
 
         if (roleName.isEmpty()) {
-            NotificationUtils.showErrorAlert("Tên chức vụ không được để trống.", "Thông báo");
+            NotificationUtils.showErrorAlert("Tên vai trò không được để trống.", "Thông báo");
             txtRoleName.requestFocus();
             isValid = false;
         } else if (!validator.validateVietnameseText50(roleName)) {
             NotificationUtils.showErrorAlert(
-                    "Tên chức vụ không hợp lệ (tối đa 50 ký tự, không chứa ký tự đặc biệt).",
+                    "Tên vai trò không hợp lệ (tối đa 50 ký tự, không chứa ký tự đặc biệt).",
                     "Thông báo");
             txtRoleName.requestFocus();
             isValid = false;
@@ -128,4 +128,3 @@ public class RoleModalController {
         }
     }
 }
-

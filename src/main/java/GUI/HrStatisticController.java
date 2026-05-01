@@ -47,93 +47,166 @@ import java.util.stream.IntStream;
 public class HrStatisticController implements IController {
 
     // ── Bộ lọc chung ──────────────────────────────────────
-    @FXML private ComboBox<Integer> cbMonth;
-    @FXML private ComboBox<Integer> cbYear;
-    @FXML private Button btnSearch;
-    @FXML private Button btnRefresh;
-    @FXML private Button btnExport;
+    @FXML
+    private ComboBox<Integer> cbMonth;
+    @FXML
+    private ComboBox<Integer> cbYear;
+    @FXML
+    private Button btnSearch;
+    @FXML
+    private Button btnRefresh;
+    @FXML
+    private Button btnExport;
 
     // ── Tab 1: Tổng quan nhân sự ──────────────────────────
-    @FXML private Label lblTotalEmployees;
-    @FXML private Label lblNewEmployees;
-    @FXML private Label lblTotalPaidSalary;
-    @FXML private BarChart<String, Number> headcountChart;
-    @FXML private PieChart statusPieChart;
-    @FXML private PieChart departmentPieChart;
+    @FXML
+    private Label lblTotalEmployees;
+    @FXML
+    private Label lblNewEmployees;
+    @FXML
+    private Label lblTotalPaidSalary;
+    @FXML
+    private BarChart<String, Number> headcountChart;
+    @FXML
+    private PieChart statusPieChart;
+    @FXML
+    private PieChart departmentPieChart;
 
     // ── Tab 1 – Bảng thay đổi nhân sự ────────────────────
-    @FXML private TableView<HeadcountChangeRow> tblHeadcountChanges;
-    @FXML private TableColumn<HeadcountChangeRow, String> colHcName;
-    @FXML private TableColumn<HeadcountChangeRow, String> colHcFromDept;
-    @FXML private TableColumn<HeadcountChangeRow, String> colHcToDept;
-    @FXML private TableColumn<HeadcountChangeRow, String> colHcFromPos;
-    @FXML private TableColumn<HeadcountChangeRow, String> colHcToPos;
-    @FXML private TableColumn<HeadcountChangeRow, String> colHcDate;
-    @FXML private TableColumn<HeadcountChangeRow, String> colHcStatus;
+    @FXML
+    private TableView<HeadcountChangeRow> tblHeadcountChanges;
+    @FXML
+    private TableColumn<HeadcountChangeRow, String> colHcName;
+    @FXML
+    private TableColumn<HeadcountChangeRow, String> colHcFromDept;
+    @FXML
+    private TableColumn<HeadcountChangeRow, String> colHcToDept;
+    @FXML
+    private TableColumn<HeadcountChangeRow, String> colHcFromPos;
+    @FXML
+    private TableColumn<HeadcountChangeRow, String> colHcToPos;
+    @FXML
+    private TableColumn<HeadcountChangeRow, String> colHcDate;
+    @FXML
+    private TableColumn<HeadcountChangeRow, String> colHcStatus;
 
     // ── Tab 2: Chấm công ──────────────────────────────────
-    @FXML private Label lblTotalSessions;
-    @FXML private Label lblAttendanceEmployees;
-    @FXML private Label lblTotalWorkHours;
-    @FXML private Label lblTotalOtHours;
-    @FXML private BarChart<String, Number> attendanceChart;
-    @FXML private TableView<AttendanceRow> tblAttendance;
-    @FXML private TableColumn<AttendanceRow, String> colAttName;
-    @FXML private TableColumn<AttendanceRow, String> colAttDept;
-    @FXML private TableColumn<AttendanceRow, String> colAttSessions;
-    @FXML private TableColumn<AttendanceRow, String> colAttWork;
-    @FXML private TableColumn<AttendanceRow, String> colAttOt;
+    @FXML
+    private Label lblTotalSessions;
+    @FXML
+    private Label lblAttendanceEmployees;
+    @FXML
+    private Label lblTotalWorkHours;
+    @FXML
+    private Label lblTotalOtHours;
+    @FXML
+    private BarChart<String, Number> attendanceChart;
+    @FXML
+    private TableView<AttendanceRow> tblAttendance;
+    @FXML
+    private TableColumn<AttendanceRow, String> colAttName;
+    @FXML
+    private TableColumn<AttendanceRow, String> colAttDept;
+    @FXML
+    private TableColumn<AttendanceRow, String> colAttSessions;
+    @FXML
+    private TableColumn<AttendanceRow, String> colAttWork;
+    @FXML
+    private TableColumn<AttendanceRow, String> colAttOt;
 
     // ── Tab 3: Nghỉ phép ──────────────────────────────────
-    @FXML private Label lblTotalLeaveRequests;
-    @FXML private Label lblTotalLeaveDays;
-    @FXML private BarChart<String, Number> leaveTypeChart;
-    @FXML private PieChart leaveStatusChart;
-    @FXML private TableView<LeaveRow> tblLeave;
-    @FXML private TableColumn<LeaveRow, String> colLeaveName;
-    @FXML private TableColumn<LeaveRow, String> colLeaveType;
-    @FXML private TableColumn<LeaveRow, String> colLeaveStart;
-    @FXML private TableColumn<LeaveRow, String> colLeaveEnd;
-    @FXML private TableColumn<LeaveRow, String> colLeaveDays;
-    @FXML private TableColumn<LeaveRow, String> colLeaveStatus;
+    @FXML
+    private Label lblTotalLeaveRequests;
+    @FXML
+    private Label lblTotalLeaveDays;
+    @FXML
+    private BarChart<String, Number> leaveTypeChart;
+    @FXML
+    private PieChart leaveStatusChart;
+    @FXML
+    private TableView<LeaveRow> tblLeave;
+    @FXML
+    private TableColumn<LeaveRow, String> colLeaveName;
+    @FXML
+    private TableColumn<LeaveRow, String> colLeaveType;
+    @FXML
+    private TableColumn<LeaveRow, String> colLeaveStart;
+    @FXML
+    private TableColumn<LeaveRow, String> colLeaveEnd;
+    @FXML
+    private TableColumn<LeaveRow, String> colLeaveDays;
+    @FXML
+    private TableColumn<LeaveRow, String> colLeaveStatus;
 
     // ── Tab 4: Khen thưởng – Kỷ luật ─────────────────────
-    @FXML private Label lblTotalAllowance;
-    @FXML private Label lblEmployeesWithAllowance;
-    @FXML private Label lblTotalFine;
-    @FXML private Label lblEmployeesWithFine;
-    @FXML private BarChart<String, Number> allowanceFineChart;
-    @FXML private ComboBox<String> cbFilterDept;
-    @FXML private ComboBox<String> cbFilterFineLevel;
-    @FXML private TableView<FineRewardRow> tblFineReward;
-    @FXML private TableColumn<FineRewardRow, String> colEmpCode;
-    @FXML private TableColumn<FineRewardRow, String> colFullName;
-    @FXML private TableColumn<FineRewardRow, String> colDept;
-    @FXML private TableColumn<FineRewardRow, String> colPosition;
-    @FXML private TableColumn<FineRewardRow, String> colFineLevel;
-    @FXML private TableColumn<FineRewardRow, String> colAmount;
-    @FXML private TableColumn<FineRewardRow, String> colDate;
+    @FXML
+    private Label lblTotalAllowance;
+    @FXML
+    private Label lblEmployeesWithAllowance;
+    @FXML
+    private Label lblTotalFine;
+    @FXML
+    private Label lblEmployeesWithFine;
+    @FXML
+    private BarChart<String, Number> allowanceFineChart;
+    @FXML
+    private ComboBox<String> cbFilterDept;
+    @FXML
+    private ComboBox<String> cbFilterFineLevel;
+    @FXML
+    private TableView<FineRewardRow> tblFineReward;
+    @FXML
+    private TableColumn<FineRewardRow, String> colEmpCode;
+    @FXML
+    private TableColumn<FineRewardRow, String> colFullName;
+    @FXML
+    private TableColumn<FineRewardRow, String> colDept;
+    @FXML
+    private TableColumn<FineRewardRow, String> colPosition;
+    @FXML
+    private TableColumn<FineRewardRow, String> colFineLevel;
+    @FXML
+    private TableColumn<FineRewardRow, String> colAmount;
+    @FXML
+    private TableColumn<FineRewardRow, String> colDate;
 
     // ── Tab 5: Thống kê lương ─────────────────────────────
-    @FXML private Label lblSalaryEmployees;
-    @FXML private Label lblTotalNet;
-    @FXML private Label lblAvgNet;
-    @FXML private Label lblTotalInsurance;
-    @FXML private BarChart<String, Number> salaryTopChart;
-    @FXML private TableView<SalaryRow> tblSalary;
-    @FXML private TableColumn<SalaryRow, String> colSalaryName;
-    @FXML private TableColumn<SalaryRow, String> colSalaryDept;
-    @FXML private TableColumn<SalaryRow, String> colSalaryBase;
-    @FXML private TableColumn<SalaryRow, String> colSalaryNet;
-    @FXML private TableColumn<SalaryRow, String> colSalaryInsurance;
-    @FXML private TableColumn<SalaryRow, String> colSalaryWork;
+    @FXML
+    private Label lblSalaryEmployees;
+    @FXML
+    private Label lblTotalNet;
+    @FXML
+    private Label lblAvgNet;
+    @FXML
+    private Label lblTotalInsurance;
+    @FXML
+    private BarChart<String, Number> salaryTopChart;
+    @FXML
+    private TableView<SalaryRow> tblSalary;
+    @FXML
+    private TableColumn<SalaryRow, String> colSalaryName;
+    @FXML
+    private TableColumn<SalaryRow, String> colSalaryDept;
+    @FXML
+    private TableColumn<SalaryRow, String> colSalaryBase;
+    @FXML
+    private TableColumn<SalaryRow, String> colSalaryNet;
+    @FXML
+    private TableColumn<SalaryRow, String> colSalaryInsurance;
+    @FXML
+    private TableColumn<SalaryRow, String> colSalaryWork;
 
     // ── Tab 6: Báo cáo nhân sự ───────────────────────────
-    @FXML private Label lblReportEmployees;
-    @FXML private Label lblReportNewEmployees;
-    @FXML private Label lblReportTotalSalary;
-    @FXML private Label lblReportAttSessions;
-    @FXML private Label lblReportLeaveRequests;
+    @FXML
+    private Label lblReportEmployees;
+    @FXML
+    private Label lblReportNewEmployees;
+    @FXML
+    private Label lblReportTotalSalary;
+    @FXML
+    private Label lblReportAttSessions;
+    @FXML
+    private Label lblReportLeaveRequests;
 
     // ─────────────────────────────────────────────────────
 
@@ -233,8 +306,9 @@ public class HrStatisticController implements IController {
             clearAll();
             loadCurrentMonth();
         });
-        btnExport.setOnAction(e ->
-                handleExportReport());
+        btnExport.setOnAction(e -> NotificationUtils.showInfoAlert(
+                "Chức năng xuất báo cáo nhân sự sẽ được bổ sung sau.", "Thông báo"));
+        btnExport.setOnAction(e -> handleExportReport());
         cbFilterDept.setOnAction(e -> applyTableFilter());
         cbFilterFineLevel.setOnAction(e -> applyTableFilter());
     }
@@ -261,8 +335,7 @@ public class HrStatisticController implements IController {
                     renderTab5(dto);
                     renderTab6(dto);
                     populateFineTable(dto.getFineRewardRows());
-                }
-        );
+                });
     }
 
     // ── Tab 1 ──────────────────────────────────────────────
@@ -514,7 +587,9 @@ public class HrStatisticController implements IController {
     }
 
     @Override
-    public void applyFilters() { handleSearch(); }
+    public void applyFilters() {
+        handleSearch();
+    }
 
     @Override
     public void resetFilters() {

@@ -329,7 +329,14 @@ INSERT INTO `permission` (`name`, `permission_key`, `module_id`) VALUES
 ('Cập nhật phòng ban & chức vụ nhân viên', 'EMPLOYEE_ROLE_POSITION_UPDATE', 17),
 
 -- Module 18: Thống kê nhân sự
-('Xem thống kê nhân sự', 'HR_STATISTIC_VIEW', 18);
+('Xem thống kê nhân sự', 'HR_STATISTIC_VIEW', 18),
+
+-- Module 19: Quản lý ngày lễ
+('Xem danh sách ngày lễ', 'HOLIDAY_LIST_VIEW', 19),
+('Thêm ngày lễ mới', 'HOLIDAY_INSERT', 19),
+('Cập nhật ngày lễ', 'HOLIDAY_UPDATE', 19),
+('Xóa ngày lễ', 'HOLIDAY_DELETE', 19);
+
 
 /*!40000 ALTER TABLE `permission` ENABLE KEYS */;
 UNLOCK TABLES;

@@ -77,7 +77,8 @@ public class DepartmentPositionController implements IController {
     @Override
     public void loadTable() {
         colDeptId.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getId()));
-        colDeptName.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getName()));
+        colDeptName
+                .setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getName()));
         colDeptDescription.setCellValueFactory(
                 cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getDescription()));
 
@@ -247,7 +248,7 @@ public class DepartmentPositionController implements IController {
         PositionModalController modal = UiUtils.gI().openStageWithController(
                 "/GUI/PositionModal.fxml",
                 controller -> controller.setTypeModal(0),
-                "Thêm chức vụ");
+                "Thêm vị trí");
         if (modal != null && modal.isSaved()) {
             reloadPositions();
         }
@@ -256,7 +257,7 @@ public class DepartmentPositionController implements IController {
     private void handleEditPosition() {
         PositionDTO selected = getSelectedPosition();
         if (selected == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn chức vụ.", AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert("Vui lòng chọn vị trí.", AppMessages.DIALOG_TITLE);
             return;
         }
         PositionModalController modal = UiUtils.gI().openStageWithController(
@@ -272,7 +273,7 @@ public class DepartmentPositionController implements IController {
                             selected.getUpdatedAt()));
                     controller.setTypeModal(1);
                 },
-                "Sửa chức vụ");
+                "Sửa vị trí");
         if (modal != null && modal.isSaved()) {
             reloadPositions();
         }
@@ -281,10 +282,10 @@ public class DepartmentPositionController implements IController {
     private void handleDeletePosition() {
         PositionDTO selected = getSelectedPosition();
         if (selected == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn chức vụ.", AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert("Vui lòng chọn vị trí.", AppMessages.DIALOG_TITLE);
             return;
         }
-        if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa chức vụ này?", AppMessages.DIALOG_TITLE_CONFIRM)) {
+        if (!UiUtils.gI().showConfirmAlert("Bạn chắc muốn xóa vị trí này?", AppMessages.DIALOG_TITLE_CONFIRM)) {
             return;
         }
         BUSResult result = positionBUS.delete(selected.getId());
@@ -297,4 +298,3 @@ public class DepartmentPositionController implements IController {
         }
     }
 }
-
