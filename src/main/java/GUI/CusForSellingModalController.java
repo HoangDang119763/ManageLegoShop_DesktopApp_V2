@@ -134,7 +134,7 @@ public class CusForSellingModalController implements IModalController {
     private void handleSearch() {
         String keyword = txtSearchCustomer.getText().trim();
 
-        TaskUtil.executeSecure(loadingOverlay, PermissionKey.IMPORT_INSERT,
+        TaskUtil.executeSecure(loadingOverlay, PermissionKey.CUSTOMER_LIST_VIEW,
                 () -> CustomerBUS.getInstance().filterCustomersByKeywordForInvoice(keyword),
                 result -> {
                     if (result.isSuccess()) {

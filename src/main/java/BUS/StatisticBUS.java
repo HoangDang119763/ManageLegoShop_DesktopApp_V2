@@ -125,23 +125,23 @@ public class StatisticBUS {
     }
 
     /**
-     * Xây dựng timeline lợi nhuận theo tháng bằng cách gộp:
-     * doanh thu (MONTH), chi nhập hàng (MONTH), và lương nhân viên (MONTH).
+     * Xây dựng timeline lợi nhuận theo viewBy đang chọn bằng cách gộp:
+     * doanh thu, chi nhập hàng, và lương nhân viên cùng granularity.
      */
     private List<ProfitPoint> buildProfitTimeline(LocalDate from, LocalDate to,
                                                    ViewBy viewBy, int completedStatusId) {
-        List<RevenuePoint> revByMonth = StatisticDAL.getInstance()
-                .getRevenueTimeline(from, to, ViewBy.MONTH, completedStatusId);
-        List<ImportCostPoint> costByMonth = StatisticDAL.getInstance()
-                .getImportCostTimeline(from, to, ViewBy.MONTH);
-        List<SalaryPoint> salaryByMonth = StatisticDAL.getInstance()
-                .getSalaryTimelineInRange(from, to);
+        List<RevenuePoint> revByView = StatisticDAL.getInstance()
+                .getRevenueTimeline(from, to, viewBy, completedStatusId);
+        List<ImportCostPoint> costByView = StatisticDAL.getInstance()
+                .getImportCostTimeline(from, to, viewBy);
+        List<SalaryPoint> salaryByView = StatisticDAL.getInstance()
+                .getSalaryTimelineInRange(from, to, viewBy);
 
-        Map<String, BigDecimal> revMap = revByMonth.stream()
+        Map<String, BigDecimal> revMap = revByView.stream()
                 .collect(Collectors.toMap(RevenuePoint::getPeriod, RevenuePoint::getRevenue));
-        Map<String, BigDecimal> costMap = costByMonth.stream()
+        Map<String, BigDecimal> costMap = costByView.stream()
                 .collect(Collectors.toMap(ImportCostPoint::getPeriod, ImportCostPoint::getCost));
-        Map<String, BigDecimal> salaryMap = salaryByMonth.stream()
+        Map<String, BigDecimal> salaryMap = salaryByView.stream()
                 .collect(Collectors.toMap(SalaryPoint::getPeriod, SalaryPoint::getNetSalary));
 
         TreeSet<String> allPeriods = new TreeSet<>();

@@ -38,7 +38,7 @@ public class DisciplineModalController {
 
     private FineBUS fineBUS;
     private int employeeId;
-    private DisciplineTabNestedController parentController;
+    private DisciplineRewardTabController parentController;
 
     @FXML
     public void initialize() {
@@ -46,24 +46,12 @@ public class DisciplineModalController {
         fineBUS = FineBUS.getInstance();
 
         setupButtons();
-        setupDisciplineTypes();
         dpDisciplineDate.setValue(LocalDate.now());
     }
 
     private void setupButtons() {
         btnSave.setOnAction(event -> saveDiscipline());
         btnCancel.setOnAction(event -> closeModal());
-    }
-
-    private void setupDisciplineTypes() {
-        // Bạn có thể giữ danh sách các mức độ kỷ luật này
-        cbDisciplineType.setItems(FXCollections.observableArrayList(
-                "Cảnh cáo",
-                "Nhắc nhở",
-                "Giáng chức",
-                "Tạm dừng hợp đồng",
-                "Chấm dứt hợp đồng"
-        ));
     }
 
     private void saveDiscipline() {
@@ -131,7 +119,7 @@ public class DisciplineModalController {
         this.employeeId = employeeId;
     }
 
-    public void setParentController(DisciplineTabNestedController parentController) {
+    public void setParentController(DisciplineRewardTabController parentController) {
         this.parentController = parentController;
     }
 }

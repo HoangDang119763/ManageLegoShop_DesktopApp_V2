@@ -9,7 +9,9 @@ import ENUM.BUSOperationResult;
 import ENUM.PermissionKey;
 import INTERFACE.IController;
 import SERVICE.SessionManagerService;
+import UTILS.AppMessages;
 import UTILS.NotificationUtils;
+import UTILS.TaskUtil;
 import UTILS.UiUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -20,6 +22,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 
 import java.util.ArrayList;
@@ -28,6 +31,8 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class RoleController implements IController {
+    @FXML
+    private AnchorPane mainContent;
     @FXML
     private TableView<RoleDTO> tblRole;
     @FXML
@@ -50,6 +55,7 @@ public class RoleController implements IController {
     private String searchBy = "Mã vai trò";
     private String keyword = "";
     private RoleDTO selectedRole;
+    private boolean canView = true;
 
     @FXML
     public void initialize() {
@@ -57,6 +63,9 @@ public class RoleController implements IController {
         Platform.runLater(() -> tblRole.getSelectionModel().clearSelection());
 
         hideButtonWithoutPermission();
+        if (!canView)
+            return;
+
         loadComboBox();
         setupListeners();
 
@@ -118,7 +127,13 @@ public class RoleController implements IController {
 
     @Override
     public void applyFilters() {
-        ArrayList<RoleDTO> allRoles = RoleBUS.getInstance().getAllForUI();
+        TaskUtil.executeSecure(null, PermissionKey.ROLE_LIST_VIEW,
+                () -> new BUSResult(BUSOperationResult.SUCCESS, AppMessages.OPERATION_SUCCESS,
+                        RoleBUS.getInstance().getAllForUI()),
+                result -> applyRoleFilters(result.getData()));
+    }
+
+    private void applyRoleFilters(ArrayList<RoleDTO> allRoles) {
         if (allRoles == null) {
             allRoles = new ArrayList<>();
         }
@@ -153,9 +168,18 @@ public class RoleController implements IController {
     @Override
     public void hideButtonWithoutPermission() {
         SessionManagerService session = SessionManagerService.getInstance();
+        canView = session.hasPermission(PermissionKey.ROLE_LIST_VIEW);
+        if (!canView) {
+            mainContent.setVisible(false);
+            mainContent.setManaged(false);
+            NotificationUtils.showErrorAlert(AppMessages.UNAUTHORIZED, AppMessages.DIALOG_TITLE);
+            return;
+        }
+
         boolean canAdd = session.hasPermission(PermissionKey.ROLE_INSERT);
         boolean canEdit = session.hasPermission(PermissionKey.ROLE_UPDATE);
         boolean canDelete = session.hasPermission(PermissionKey.ROLE_DELETE);
+        boolean canAuthorize = session.hasPermission(PermissionKey.PERMISSION_UPDATE);
 
         if (!canAdd) {
             functionBtns.getChildren().remove(addBtn);
@@ -165,6 +189,10 @@ public class RoleController implements IController {
         }
         if (!canDelete) {
             functionBtns.getChildren().remove(deleteBtn);
+        }
+        if (!canAuthorize) {
+            authorizeBtn.setVisible(false);
+            authorizeBtn.setManaged(false);
         }
     }
 
@@ -186,15 +214,19 @@ public class RoleController implements IController {
             return;
         }
 
-        AuthorizeModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/AuthorizeModal.fxml",
-                controller -> controller.setRole(selectedRole),
-                "Phân quyền");
+        TaskUtil.executeSecure(null, PermissionKey.PERMISSION_UPDATE,
+                () -> new BUSResult(BUSOperationResult.SUCCESS, AppMessages.OPERATION_SUCCESS),
+                result -> {
+                    AuthorizeModalController modalController = UiUtils.gI().openStageWithController(
+                            "/GUI/AuthorizeModal.fxml",
+                            controller -> controller.setRole(selectedRole),
+                            "Phân quyền");
 
-        if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Cập nhật phân quyền thành công", "Thông báo");
-            resetFilters();
-        }
+                    if (modalController != null && modalController.isSaved()) {
+                        NotificationUtils.showInfoAlert("Cập nhật phân quyền thành công", "Thông báo");
+                        resetFilters();
+                    }
+                });
     }
 
     private void handleDelete() {
@@ -216,25 +248,32 @@ public class RoleController implements IController {
             }
         }
 
-        BUSResult result = RoleBUS.getInstance().delete(selectedRole.getId());
-        if (result.getCode() == BUSOperationResult.SUCCESS) {
-            NotificationUtils.showInfoAlert("Xóa vai trò thành công.", "Thông báo");
-            resetFilters();
-        } else {
-            String message = result.getMessage() != null ? result.getMessage() : "Có lỗi khi xóa chức vụ.";
-            NotificationUtils.showErrorAlert(message, "Thông báo");
-        }
+        TaskUtil.executeSecure(null, PermissionKey.ROLE_DELETE,
+                () -> RoleBUS.getInstance().delete(selectedRole.getId()),
+                result -> {
+                    if (result.getCode() == BUSOperationResult.SUCCESS) {
+                        NotificationUtils.showInfoAlert("Xóa chức vụ thành công.", "Thông báo");
+                        resetFilters();
+                    } else {
+                        String message = result.getMessage() != null ? result.getMessage() : "Có lỗi khi xóa chức vụ.";
+                        NotificationUtils.showErrorAlert(message, "Thông báo");
+                    }
+                });
     }
 
     private void handleAdd() {
-        RoleModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/RoleModal.fxml",
-                controller -> controller.setTypeModal(0),
-                "Thêm vai trò");
-        if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Thêm chức vụ thành công", "Thông báo");
-            resetFilters();
-        }
+        TaskUtil.executeSecure(null, PermissionKey.ROLE_INSERT,
+                () -> new BUSResult(BUSOperationResult.SUCCESS, AppMessages.OPERATION_SUCCESS),
+                result -> {
+                    RoleModalController modalController = UiUtils.gI().openStageWithController(
+                            "/GUI/RoleModal.fxml",
+                            controller -> controller.setTypeModal(0),
+                            "Thêm chức vụ");
+                    if (modalController != null && modalController.isSaved()) {
+                        NotificationUtils.showInfoAlert("Thêm chức vụ thành công", "Thông báo");
+                        resetFilters();
+                    }
+                });
     }
 
     private void handleEdit() {
@@ -243,18 +282,22 @@ public class RoleController implements IController {
             return;
         }
 
-        RoleModalController modalController = UiUtils.gI().openStageWithController(
-                "/GUI/RoleModal.fxml",
-                controller -> {
-                    controller.setRole(selectedRole);
-                    controller.setTypeModal(1);
-                },
-                "Sửa vai trò");
+        TaskUtil.executeSecure(null, PermissionKey.ROLE_UPDATE,
+                () -> new BUSResult(BUSOperationResult.SUCCESS, AppMessages.OPERATION_SUCCESS),
+                result -> {
+                    RoleModalController modalController = UiUtils.gI().openStageWithController(
+                            "/GUI/RoleModal.fxml",
+                            controller -> {
+                                controller.setRole(selectedRole);
+                                controller.setTypeModal(1);
+                            },
+                            "Sửa chức vụ");
 
-        if (modalController != null && modalController.isSaved()) {
-            NotificationUtils.showInfoAlert("Sửa vai trò thành công", "Thông báo");
-            applyFilters();
-        }
+                    if (modalController != null && modalController.isSaved()) {
+                        NotificationUtils.showInfoAlert("Sửa chức vụ thành công", "Thông báo");
+                        applyFilters();
+                    }
+                });
     }
 }
 

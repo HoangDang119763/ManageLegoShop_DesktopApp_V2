@@ -6,6 +6,7 @@ import DTO.FineDTO;
 import DTO.EmployeeDTO;
 import DTO.BUSResult;
 import ENUM.BUSOperationResult;
+import ENUM.Status.FineLevel;
 import ENUM.Status.FineType; // Import Enum mới của bạn
 import ENUM.PermissionKey;
 import SERVICE.SecureExecutor;
@@ -136,6 +137,7 @@ public class DisciplineRewardTabController {
         SecureExecutor.executeSafeBusResult(PermissionKey.EMPLOYEE_FINE_REWARD_VIEW, () -> {
             allData.clear();
             allData.addAll(fineBUS.getAll());
+            System.out.println("Loaded " + allData.size() + " records from database.");
             return new BUSResult(BUSOperationResult.SUCCESS, "Loaded");
         });
         filterData();
@@ -194,6 +196,9 @@ public class DisciplineRewardTabController {
                 NotificationUtils.showInfoAlert("Thành công", "Thông báo");
                 loadData();
             }
+            else {
+                NotificationUtils.showErrorAlert("Lỗi", res.toString());
+            }
         });
     }
 
@@ -235,7 +240,7 @@ public class DisciplineRewardTabController {
         if (fine != null) cbTypeDlg.setValue(FineType.fromString(fine.getType()));
 
         ComboBox<String> cbLevel = new ComboBox<>();
-        cbLevel.setItems(FXCollections.observableArrayList("CẤP 1", "CẤP 2", "CẤP 3", "ĐẶC BIỆT"));
+        cbLevel.setItems(FXCollections.observableArrayList(FineLevel.values()).stream().map(FineLevel::name).collect(Collectors.toCollection(FXCollections::observableArrayList)));
         if (fine != null) cbLevel.setValue(fine.getFineLevel());
 
         TextArea txtReason = new TextArea(fine != null ? fine.getReason() : "");
@@ -290,4 +295,11 @@ public class DisciplineRewardTabController {
     
     private void showPreviousPage() { if (currentPageIndex > 0) displayPage(--currentPageIndex); }
     private void showNextPage() { if (currentPageIndex < (int) Math.ceil((double) filteredData.size() / PAGE_SIZE) - 1) displayPage(++currentPageIndex); }
+
+    public void loadEmployeeDisciplines(int employeeId) {
+        // Implementation for loading employee disciplines
+        filteredData = fineBUS.getByEmployeeId(employeeId);
+        currentPageIndex = 0;
+        displayPage(0);
+    }
 }

@@ -105,6 +105,8 @@ public class PayrollFullTabController {
         }
         tblPayroll.setItems(FXCollections.observableArrayList(pageData));
         
+        System.out.println(start + ", " + end + ", " + filteredPayrolls.size() + ", " + pageData.size());
+
         // Update page info label
         if (lblPageInfo != null) {
             lblPageInfo.setText(String.format("Trang %d / %d (Tổng: %d nhân viên)", 
@@ -174,30 +176,37 @@ public class PayrollFullTabController {
         Integer selectedMonth = cbMonth.getValue();
         Integer selectedYear = cbYear.getValue();
 
+        System.out.println("Filtering payrolls with searchText='" + searchText + "', month=" + selectedMonth + ", year=" + selectedYear);
+
         filteredPayrolls = allPayrolls.stream()
             .filter(p -> {
-                // Search by employee name or ID
-                EmployeeDTO emp = employeeBUS.getById(p.getEmployeeId());
-                String empName = emp != null ? (emp.getFirstName() + " " + emp.getLastName()).toLowerCase() : "";
-                boolean matchesSearch = empName.contains(searchText) || String.valueOf(p.getEmployeeId()).contains(searchText);
-                
+                if (searchText != null && !searchText.isEmpty()) {
+                    // Search by employee name or ID
+                    EmployeeDTO emp = employeeBUS.getById(p.getEmployeeId());
+                    String empName = emp != null ? (emp.getFirstName() + " " + emp.getLastName()).toLowerCase() : "";
+                    if (!empName.contains(searchText) && !String.valueOf(p.getEmployeeId()).contains(searchText)) {
+                        return false;
+                    }
+                }
                 // Filter by month and year
                 boolean matchesPeriod = true;
                 if (selectedMonth != null && selectedYear != null && p.getSalaryPeriod() != null) {
                     matchesPeriod = p.getSalaryPeriod().getMonthValue() == selectedMonth 
                                  && p.getSalaryPeriod().getYear() == selectedYear;
                 }
-                
-                return matchesSearch && matchesPeriod;
+                return matchesPeriod;
+
             })
             .collect(Collectors.toCollection(ArrayList::new));
 
+            System.out.println("Filtered payroll count: " + filteredPayrolls.size() + " / " + allPayrolls.size());
+
         // Reset to first page and update pagination
-        currentPage = 0;
         if (pagination != null) {
             int totalPages = Math.max(1, (int) Math.ceil(filteredPayrolls.size() / (double) PAGE_SIZE));
             pagination.setPageCount(totalPages);
             pagination.setCurrentPageIndex(0);
+            displayPage(currentPage);
         } else {
             displayPage(0);
         }

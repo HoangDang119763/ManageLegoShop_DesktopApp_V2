@@ -99,6 +99,7 @@ public abstract class BaseDAL<T, K> implements IDAL<T, K> {
 
     @Override
     public boolean update(T obj) {
+        System.out.println("Attempting to update " + table + ": " + obj);
         final String query = "UPDATE " + table + " " + getUpdateQuery();
         if (query.isEmpty())
             throw new UnsupportedOperationException("Update operation not supported for " + table);

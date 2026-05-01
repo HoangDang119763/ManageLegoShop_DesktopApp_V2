@@ -117,6 +117,10 @@ public class StatisticDAL {
                 periodExpression = "DATE_FORMAT(i.created_at, '%Y-%m')";
                 orderByExpression = "DATE_FORMAT(i.created_at, '%Y-%m')";
                 break;
+            case QUARTER:
+                periodExpression = "CONCAT(YEAR(i.created_at), '-Q', QUARTER(i.created_at))";
+                orderByExpression = "CONCAT(YEAR(i.created_at), '-Q', QUARTER(i.created_at))";
+                break;
             case YEAR:
                 periodExpression = "DATE_FORMAT(i.created_at, '%Y')";
                 orderByExpression = "DATE_FORMAT(i.created_at, '%Y')";
@@ -169,6 +173,7 @@ public class StatisticDAL {
         String periodExpr;
         switch (viewBy) {
             case MONTH -> periodExpr = "DATE_FORMAT(i.created_at, '%Y-%m')";
+            case QUARTER -> periodExpr = "CONCAT(YEAR(i.created_at), '-Q', QUARTER(i.created_at))";
             case YEAR  -> periodExpr = "DATE_FORMAT(i.created_at, '%Y')";
             default    -> periodExpr = "DATE(i.created_at)";
         }
@@ -233,15 +238,27 @@ public class StatisticDAL {
     // ===== LƯƠNG NHÂN VIÊN (dùng cho thống kê) =====
 
     public List<StatisticDTO.SalaryPoint> getSalaryTimelineInRange(LocalDate from, LocalDate to) {
+        return getSalaryTimelineInRange(from, to, ViewBy.MONTH);
+    }
+
+    public List<StatisticDTO.SalaryPoint> getSalaryTimelineInRange(LocalDate from, LocalDate to, ViewBy viewBy) {
+        String periodExpr;
+        switch (viewBy) {
+            case DAY -> periodExpr = "DATE(salary_period)";
+            case QUARTER -> periodExpr = "CONCAT(YEAR(salary_period), '-Q', QUARTER(salary_period))";
+            case YEAR -> periodExpr = "DATE_FORMAT(salary_period, '%Y')";
+            case MONTH -> periodExpr = "DATE_FORMAT(salary_period, '%Y-%m')";
+            default -> periodExpr = "DATE_FORMAT(salary_period, '%Y-%m')";
+        }
+
         String sql = """
-                SELECT DATE_FORMAT(salary_period, '%Y-%m') AS period_label,
+                SELECT %s AS period_label,
                        COALESCE(SUM(net_salary), 0) AS net_salary
                 FROM payroll_history
-                WHERE DATE_FORMAT(salary_period, '%Y-%m') >= DATE_FORMAT(?, '%Y-%m')
-                  AND DATE_FORMAT(salary_period, '%Y-%m') <= DATE_FORMAT(?, '%Y-%m')
-                GROUP BY DATE_FORMAT(salary_period, '%Y-%m')
-                ORDER BY DATE_FORMAT(salary_period, '%Y-%m')
-                """;
+                WHERE salary_period >= ? AND salary_period <= ?
+                GROUP BY %s
+                ORDER BY %s
+                """.formatted(periodExpr, periodExpr, periodExpr);
         List<StatisticDTO.SalaryPoint> list = new ArrayList<>();
         try (Connection conn = connectionFactory.newConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

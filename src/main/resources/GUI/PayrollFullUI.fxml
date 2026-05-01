@@ -39,27 +39,23 @@
                         </Button>
                     </children>
                 </HBox>
-
-                <ScrollPane fitToHeight="true" fitToWidth="false" prefHeight="400.0" VBox.vgrow="ALWAYS">
-                    <TableView fx:id="tblPayroll" prefHeight="400.0" prefWidth="1000.0" tableMenuButtonVisible="true">
-                        <columns>
-                            <TableColumn fx:id="colEmployeeId" minWidth="80.0" prefWidth="80.0" text="ID NV" />
-                            <TableColumn fx:id="colEmployeeName" minWidth="150.0" prefWidth="150.0" text="Tên nhân viên" />
-                            <TableColumn fx:id="colPeriod" minWidth="100.0" prefWidth="100.0" text="Kỳ tính" />
-                            <TableColumn fx:id="colBaseSalary" minWidth="120.0" prefWidth="120.0" text="Lương cơ bản" />
-                            <TableColumn fx:id="colActualWorkDays" minWidth="80.0" prefWidth="80.0" text="Ngày công" />
-                            <TableColumn fx:id="colOvertimeAmount" minWidth="100.0" prefWidth="100.0" text="Tăng ca" />
-                            <TableColumn fx:id="colTotalAllowance" minWidth="100.0" prefWidth="100.0" text="Trợ cấp" />
-                            <TableColumn fx:id="colRewardAmount" minWidth="100.0" prefWidth="100.0" text="Khen thưởng" />
-                            <TableColumn fx:id="colViolationAmount" minWidth="100.0" prefWidth="100.0" text="Vi phạm" />
-                            <TableColumn fx:id="colTotalInsurance" minWidth="100.0" prefWidth="100.0" text="Bảo hiểm" />
-                            <TableColumn fx:id="colTaxableIncome" minWidth="120.0" prefWidth="120.0" text="Thu nhập chịu thuế" />
-                            <TableColumn fx:id="colTaxAmount" minWidth="100.0" prefWidth="100.0" text="Thuế TNCN" />
-                            <TableColumn fx:id="colNetSalary" minWidth="120.0" prefWidth="120.0" text="Lương thực nhận" />
-                        </columns>
-                    </TableView>
-                </ScrollPane>
-
+                <TableView fx:id="tblPayroll" prefHeight="400.0" prefWidth="1000.0" tableMenuButtonVisible="true">
+                    <columns>
+                        <TableColumn fx:id="colEmployeeId" minWidth="80.0" prefWidth="80.0" text="ID NV" />
+                        <TableColumn fx:id="colEmployeeName" minWidth="150.0" prefWidth="150.0" text="Tên nhân viên" />
+                        <TableColumn fx:id="colPeriod" minWidth="100.0" prefWidth="100.0" text="Kỳ tính" />
+                        <TableColumn fx:id="colBaseSalary" minWidth="120.0" prefWidth="120.0" text="Lương cơ bản" />
+                        <TableColumn fx:id="colActualWorkDays" minWidth="80.0" prefWidth="80.0" text="Ngày công" />
+                        <TableColumn fx:id="colOvertimeAmount" minWidth="100.0" prefWidth="100.0" text="Tăng ca" />
+                        <TableColumn fx:id="colTotalAllowance" minWidth="100.0" prefWidth="100.0" text="Trợ cấp" />
+                        <TableColumn fx:id="colRewardAmount" minWidth="100.0" prefWidth="100.0" text="Khen thưởng" />
+                        <TableColumn fx:id="colViolationAmount" minWidth="100.0" prefWidth="100.0" text="Vi phạm" />
+                        <TableColumn fx:id="colTotalInsurance" minWidth="100.0" prefWidth="100.0" text="Bảo hiểm" />
+                        <TableColumn fx:id="colTaxableIncome" minWidth="120.0" prefWidth="120.0" text="Thu nhập chịu thuế" />
+                        <TableColumn fx:id="colTaxAmount" minWidth="100.0" prefWidth="100.0" text="Thuế TNCN" />
+                        <TableColumn fx:id="colNetSalary" minWidth="120.0" prefWidth="120.0" text="Lương thực nhận" />
+                    </columns>
+                </TableView>
                 <HBox alignment="CENTER" spacing="20.0">
                     <children>
                         <Label fx:id="lblPageInfo" text="Trang 1 / 1 (Tổng: 0 nhân viên)" textFill="#666" />
