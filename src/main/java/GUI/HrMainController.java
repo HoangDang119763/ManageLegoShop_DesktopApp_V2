@@ -101,8 +101,8 @@ public class HrMainController {
                 new ModuleMetadata(13, "Đơn nghỉ phép", "calendar-days-regular.png"), // ID 13
                 new ModuleMetadata(11, "Chấm công", "calendar-check-regular.png"), // ID 11
                 new ModuleMetadata(16, "Bảng lương", "money-check-solid.png"), // ID 16
-                new ModuleMetadata(17, "Cơ cấu", "department_position.png"), // ID 17
-                new ModuleMetadata(18, "Thống kê nhân sự", "hr_statistic.png")); // ID 18
+                new ModuleMetadata(17, "Cơ cấu", "discipline.png"), // ID 17
+                new ModuleMetadata(18, "Thống kê nhân sự", "attendance.png")); // ID 18
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : hrModules) {
             // Module 0 luôn hiện, các module khác theo quyền module
@@ -144,7 +144,6 @@ public class HrMainController {
                 btn.setGraphic(iconView);
             } else {
                 log.warn("Không tìm thấy icon tại: {}", imagePath);
-                // Có thể set một icon mặc định ở đây nếu muốn
             }
         } catch (Exception e) {
             log.error("Lỗi khi nạp ảnh icon: " + iconPath, e);
