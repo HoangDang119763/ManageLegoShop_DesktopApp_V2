@@ -398,6 +398,38 @@ public class ProductDAL extends BaseDAL<ProductDTO, String> {
     }
 
     /**
+     * Lấy tất cả sản phẩm với thông tin category và status (không phân trang)
+     * Dùng cho export Excel, list toàn bộ sản phẩm
+     * 
+     * @return List of ProductDisplayDTO với category_name và status_description
+     *         JOIN từ DB
+     */
+    public List<ProductDisplayDTO> getAllForDisplay() {
+        List<ProductDisplayDTO> items = new ArrayList<>();
+
+        String sql = "SELECT " +
+                "p.*, " +
+                "c.name as category_name, " +
+                "s.description as status_description " +
+                "FROM product p " +
+                "LEFT JOIN category c ON p.category_id = c.id " +
+                "LEFT JOIN status s ON p.status_id = s.id " +
+                "ORDER BY p.id";
+
+        try (Connection conn = connectionFactory.newConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                items.add(mapResultSetToProductDisplay(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi lấy toàn bộ sản phẩm cho display: " + e.getMessage());
+        }
+        return items;
+    }
+
+    /**
      * Filter sản phẩm cho giao diện nhập hàng
      * Chỉ hiển thị sản phẩm có tồn kho > 0
      * Hỗ trợ tìm kiếm theo tên sản phẩm + lọc theo thể loại

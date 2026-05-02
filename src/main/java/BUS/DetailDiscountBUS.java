@@ -58,7 +58,7 @@ public class DetailDiscountBUS extends BaseBUS<DetailDiscountDTO, String> {
             return false; // (nếu điều kiện không hợp lệ)
         }
 
-        if (amount.compareTo(BigDecimal.ZERO) <= 0 || amount.compareTo(BigDecimal.valueOf(100)) >= 0) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             return false;
         }
 

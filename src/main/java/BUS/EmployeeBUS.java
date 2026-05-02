@@ -3,6 +3,7 @@ package BUS;
 import DAL.AccountDAL;
 import DAL.ConnectApplication;
 import DAL.EmployeeDAL;
+import DAL.EmploymentHistoryDAL;
 import DTO.EmployeeDTO;
 import DTO.EmployeeSessionDTO;
 import DTO.ImportEmployeeExcelDTO;
@@ -20,6 +21,7 @@ import DTO.EmployeeJobHistoryBundle;
 import DTO.BUSResult;
 import DTO.AccountDTO;
 import DTO.StatusDTO;
+import DTO.EmploymentHistoryDTO;
 import ENUM.*;
 import SERVICE.ExcelImportService;
 import SERVICE.SessionManagerService;
@@ -184,6 +186,31 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
                 throw new Exception("EMPLOYEE_FAIL");
             }
 
+            // Bước C: Auto-insert initial employment_history record
+            // Lấy employment EFFECTIVE status (công tác hiệu lực)
+            StatusDTO employmentEffectiveStatus = StatusBUS.getInstance()
+                    .getByTypeAndStatusName(StatusType.EMPLOYMENT_HISTORY, Status.EmploymentHistory.EFFECTIVE);
+            if (employmentEffectiveStatus == null) {
+                throw new Exception("EMPLOYMENT_STATUS_NOT_FOUND");
+            }
+
+            // Tạo employment history record với approver = người dùng hiện tại
+            EmploymentHistoryDTO initialEmpHistory = new EmploymentHistoryDTO(
+                    -1, // ID sẽ auto-increment
+                    employee.getId(),
+                    employee.getDepartmentId(),
+                    employee.getPositionId(),
+                    LocalDate.now(),
+                    SessionManagerService.getInstance().employeeLoginId(), // approver = người dùng hiện tại
+                    employmentEffectiveStatus.getId(),
+                    null, // reason = null
+                    java.time.LocalDateTime.now() // created_at
+            );
+
+            if (!EmploymentHistoryDAL.getInstance().insertWithConn(conn, initialEmpHistory)) {
+                throw new Exception("EMPLOYMENT_HISTORY_FAIL");
+            }
+
             conn.commit();
             finalResult = new BUSResult(BUSOperationResult.SUCCESS, AppMessages.EMPLOYEE_ADD_SUCCESS);
 
@@ -198,7 +225,8 @@ public class EmployeeBUS extends BaseBUS<EmployeeDTO, Integer> {
 
             // Phân loại lỗi
             String errorMsg = e.getMessage();
-            if ("ACCOUNT_FAIL".equals(errorMsg) || "EMPLOYEE_FAIL".equals(errorMsg)) {
+            if ("ACCOUNT_FAIL".equals(errorMsg) || "EMPLOYEE_FAIL".equals(errorMsg)
+                    || "EMPLOYMENT_HISTORY_FAIL".equals(errorMsg) || "EMPLOYMENT_STATUS_NOT_FOUND".equals(errorMsg)) {
                 finalResult = new BUSResult(BUSOperationResult.FAIL, AppMessages.UNKNOWN_ERROR);
             } else {
                 finalResult = new BUSResult(BUSOperationResult.DB_ERROR, AppMessages.DB_ERROR);

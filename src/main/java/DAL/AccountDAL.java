@@ -171,7 +171,7 @@ public class AccountDAL extends BaseDAL<AccountDTO, Integer> {
         String query = "UPDATE account a " +
                 "JOIN employee e ON a.id = e.account_id " +
                 "SET a.require_relogin = ? " +
-                "WHERE e.role_id = ?";
+                "WHERE a.role_id = ?";
 
         try (Connection connection = connectionFactory.newConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
