@@ -168,7 +168,7 @@ BEGIN
     DECLARE done INT DEFAULT FALSE;
     DECLARE emp_id INT;
     DECLARE cur_period DATE;
-    DECLARE cur CURSOR FOR SELECT id FROM employee;
+    DECLARE cur CURSOR FOR SELECT id FROM employee WHERE status_id <> 2;;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
     
     -- Lấy ngày đầu tháng của tháng trước

@@ -11,9 +11,9 @@ import java.sql.SQLException;
 
 @Log4j2
 public class ConnectionFactoryImpl implements ConnectionFactory {
-    private static final String URL = "jdbc:mysql://localhost:3366/java_sql?useAffectedRows=true&useSSL=false&allowPublicKeyRetrieval=true";
+    private static final String URL = "jdbc:mysql://localhost:3306/java_sql?useAffectedRows=true&useSSL=false&allowPublicKeyRetrieval=true";
     private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "admin";
 
     private static HikariDataSource dataSource;
 
