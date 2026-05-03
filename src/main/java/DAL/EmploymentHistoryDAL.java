@@ -50,6 +50,31 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
         }
     }
 
+    /**
+     * Insert employment history record với provided connection
+     * Dùng cho transaction trong BUS layer
+     */
+    public boolean insertWithConn(Connection conn, EmploymentHistoryDTO obj) throws SQLException {
+        if (obj == null || conn == null) {
+            return false;
+        }
+
+        String sql = "INSERT INTO employment_history " + getInsertQuery();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            setInsertParameters(ps, obj);
+            int rowsInserted = ps.executeUpdate();
+
+            if (rowsInserted > 0 && shouldUseGeneratedKeys()) {
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    setGeneratedKey(obj, generatedKeys);
+                }
+            }
+
+            return rowsInserted > 0;
+        }
+    }
+
     @Override
     protected String getInsertQuery() {
         return "(employee_id, department_id, position_id, effective_date, approver_id, status_id, reason) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -237,7 +262,8 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                 "LEFT JOIN position p ON eh.position_id = p.id " +
                 "LEFT JOIN employee app ON eh.approver_id = app.id " +
                 "LEFT JOIN status s ON eh.status_id = s.id " +
-                "WHERE (? = '' OR (" + // Keyword filter
+                "WHERE eh.employee_id != 1 " + // Luôn exclude IT Admin (ID=1)
+                "AND (? = '' OR (" + // Keyword filter
                 "   CAST(eh.id AS CHAR) LIKE ? " +
                 "   OR CAST(eh.employee_id AS CHAR) LIKE ? " +
                 "   OR LOWER(emp.first_name) LIKE ? " +
@@ -349,8 +375,10 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
     // ===== HR STATISTIC HELPERS =====
 
     /**
-     * Lấy danh sách thay đổi nhân sự trong tháng/năm, kèm phòng ban/chức vụ cũ → mới.
-     * "Từ" được lấy từ bản ghi employment_history liền trước (cùng employee_id, effective_date nhỏ hơn).
+     * Lấy danh sách thay đổi nhân sự trong tháng/năm, kèm phòng ban/chức vụ cũ →
+     * mới.
+     * "Từ" được lấy từ bản ghi employment_history liền trước (cùng employee_id,
+     * effective_date nhỏ hơn).
      */
     public java.util.List<HeadcountChangeRow> getHeadcountChanges(int month, int year) {
         String sql = """
@@ -388,7 +416,7 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                 """;
         java.util.List<HeadcountChangeRow> list = new java.util.ArrayList<>();
         try (Connection conn = connectionFactory.newConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, month);
             ps.setInt(2, year);
             try (ResultSet rs = ps.executeQuery()) {

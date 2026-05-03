@@ -49,7 +49,7 @@ public class ProductController implements IController {
     @FXML
     private TableColumn<ProductDisplayDTO, String> tlb_col_status;
     @FXML
-    private Button addBtn, editBtn, deleteBtn, refreshBtn, btnImportExcel;
+    private Button addBtn, editBtn, deleteBtn, refreshBtn, btnExportExcel;
     @FXML
     private TextField txtSearch;
     @FXML
@@ -196,14 +196,11 @@ public class ProductController implements IController {
         addBtn.setOnAction(e -> handleAdd());
         editBtn.setOnAction(e -> handleEdit());
         deleteBtn.setOnAction(e -> handleDelete());
+        btnExportExcel.setOnAction(e -> handleExportExcel());
         tblProduct.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2)
                 handleDetail();
         });
-        // btnImportExcel.setOnMouseClicked(event -> {
-        // Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        // importProductExcel(stage);
-        // });
     }
 
     // =====================
@@ -268,6 +265,19 @@ public class ProductController implements IController {
                     Stage currentStage = (Stage) deleteBtn.getScene().getWindow();
                     NotificationUtils.showToast(currentStage, result.getMessage());
                     loadPageData(0, false);
+                });
+    }
+
+    private void handleExportExcel() {
+        TaskUtil.executePublic(loadingOverlay,
+                () -> SERVICE.ExcelService.getInstance().exportProductListToExcel(),
+                result -> {
+                    Stage currentStage = (Stage) btnExportExcel.getScene().getWindow();
+                    if (result.isSuccess()) {
+                        NotificationUtils.showToast(currentStage, result.getMessage());
+                    } else {
+                        NotificationUtils.showErrorAlert(result.getMessage(), AppMessages.DIALOG_TITLE);
+                    }
                 });
     }
 

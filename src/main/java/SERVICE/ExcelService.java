@@ -8,6 +8,7 @@ import ENUM.BUSOperationResult;
 import DTO.EmployeeExcelDTO;
 import DTO.HrStatisticDTO;
 import DTO.ProductDTO;
+import DTO.ProductDisplayDTO;
 import DTO.StatisticDTO;
 import UTILS.ValidationUtils;
 import org.apache.poi.ss.usermodel.*;
@@ -68,10 +69,20 @@ public class ExcelService {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Source");
 
-        // Tạo header row
+        // Tạo header row với style
         Row headerRow = sheet.createRow(0);
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setColor(IndexedColors.WHITE.getIndex());
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
         for (int i = 0; i < headers.size(); i++) {
-            headerRow.createCell(i).setCellValue(headers.get(i));
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers.get(i));
+            cell.setCellStyle(headerStyle);
         }
 
         // Tạo data rows
@@ -135,6 +146,59 @@ public class ExcelService {
                         row.createCell(12).setCellValue(emp.isTransportationSupport() ? "Có" : "Không");
                         row.createCell(13).setCellValue(emp.isAccommodationSupport() ? "Có" : "Không");
                         row.createCell(14).setCellValue(emp.getNumDependents());
+                    });
+
+            // Mở file
+            File excelFile = new File(fileName);
+            if (excelFile.exists() && Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(excelFile);
+            }
+
+            return new BUSResult(BUSOperationResult.SUCCESS, "Xuất file Excel thành công!");
+        } catch (IOException e) {
+            System.err.println("Lỗi export Excel: " + e.getMessage());
+            return new BUSResult(BUSOperationResult.FAIL, "Lỗi khi xuất file Excel: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Lỗi export Excel: " + e.getMessage());
+            return new BUSResult(BUSOperationResult.DB_ERROR, "Lỗi không xác định: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Export danh sách sản phẩm - trả về BUSResult
+     * Columns: Mã SP, Tên Sản Phẩm, Kho, Giá bán, Trạng thái
+     */
+    public BUSResult exportProductListToExcel() {
+        try {
+            List<ProductDisplayDTO> products = ProductBUS.getInstance().getAllForDisplay();
+
+            if (products.isEmpty()) {
+                return new BUSResult(BUSOperationResult.FAIL, "Không có sản phẩm nào để export");
+            }
+
+            List<String> headers = Arrays.asList(
+                    "Mã SP", "Tên Sản Phẩm", "Kho", "Giá bán", "Trạng thái");
+
+            String folderName = "excel";
+            File folder = new File(folderName);
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss"));
+            String fileName = folderName + File.separator + "product_list_" + timestamp + ".xlsx";
+
+            exportGeneric(
+                    fileName,
+                    headers,
+                    products,
+                    (row, prod) -> {
+                        row.createCell(0).setCellValue(prod.getId());
+                        row.createCell(1).setCellValue(prod.getName());
+                        row.createCell(2).setCellValue(prod.getStockQuantity());
+                        row.createCell(3).setCellValue(
+                                prod.getSellingPrice() != null ? prod.getSellingPrice().doubleValue() : 0);
+                        row.createCell(4).setCellValue(prod.getStatusDescription());
                     });
 
             // Mở file
@@ -351,7 +415,7 @@ public class ExcelService {
     }
 
     private void createOverviewSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
-                                     String viewByLabel) {
+            String viewByLabel) {
         Sheet sheet = workbook.createSheet("TongQuan");
         fillCommonHeader(sheet, "Tổng quan", start, end, viewByLabel);
 
@@ -390,7 +454,7 @@ public class ExcelService {
     }
 
     private void createRevenueSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
-                                    String viewByLabel) {
+            String viewByLabel) {
         Sheet sheet = workbook.createSheet("DoanhThu");
         fillCommonHeader(sheet, "Doanh thu", start, end, viewByLabel);
 
@@ -413,7 +477,7 @@ public class ExcelService {
     }
 
     private void createCostSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
-                                 String viewByLabel) {
+            String viewByLabel) {
         Sheet sheet = workbook.createSheet("Chi");
         fillCommonHeader(sheet, "Chi phí", start, end, viewByLabel);
 
@@ -438,7 +502,7 @@ public class ExcelService {
     }
 
     private void createProfitSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
-                                   String viewByLabel) {
+            String viewByLabel) {
         Sheet sheet = workbook.createSheet("LoiNhuan");
         fillCommonHeader(sheet, "Lợi nhuận", start, end, viewByLabel);
 
@@ -463,7 +527,7 @@ public class ExcelService {
     }
 
     private void createSalesSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
-                                  String viewByLabel) {
+            String viewByLabel) {
         Sheet sheet = workbook.createSheet("DoanhSo");
         fillCommonHeader(sheet, "Doanh số", start, end, viewByLabel);
 
@@ -488,7 +552,7 @@ public class ExcelService {
     }
 
     private void createReportSheet(XSSFWorkbook workbook, StatisticDTO dto, LocalDate start, LocalDate end,
-                                   String viewByLabel) {
+            String viewByLabel) {
         Sheet sheet = workbook.createSheet("BaoCao");
         fillCommonHeader(sheet, "Báo cáo tổng hợp", start, end, viewByLabel);
 
@@ -498,15 +562,15 @@ public class ExcelService {
         String profitRate = dto.getTotalRevenue().compareTo(BigDecimal.ZERO) == 0
                 ? "0%"
                 : dto.getProfit()
-                .multiply(BigDecimal.valueOf(100))
-                .divide(dto.getTotalRevenue(), 1, RoundingMode.HALF_UP) + "%";
-        String[][] rows = new String[][]{
-                {"Tổng doanh thu", ValidationUtils.getInstance().formatCurrency(dto.getTotalRevenue())},
-                {"Tổng chi phí", ValidationUtils.getInstance().formatCurrency(dto.getTotalCost())},
-                {"Lợi nhuận", ValidationUtils.getInstance().formatCurrency(dto.getProfit())},
-                {"Tỷ lệ lợi nhuận", profitRate},
-                {"Tổng hóa đơn", String.valueOf(dto.getTotalInvoiceCount())},
-                {"Số loại sản phẩm có doanh số", String.valueOf(dto.getProductRevenues().size())}
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(dto.getTotalRevenue(), 1, RoundingMode.HALF_UP) + "%";
+        String[][] rows = new String[][] {
+                { "Tổng doanh thu", ValidationUtils.getInstance().formatCurrency(dto.getTotalRevenue()) },
+                { "Tổng chi phí", ValidationUtils.getInstance().formatCurrency(dto.getTotalCost()) },
+                { "Lợi nhuận", ValidationUtils.getInstance().formatCurrency(dto.getProfit()) },
+                { "Tỷ lệ lợi nhuận", profitRate },
+                { "Tổng hóa đơn", String.valueOf(dto.getTotalInvoiceCount()) },
+                { "Số loại sản phẩm có doanh số", String.valueOf(dto.getProductRevenues().size()) }
         };
         int rowIdx = 6;
         for (String[] item : rows) {
@@ -531,8 +595,8 @@ public class ExcelService {
     }
 
     private void createLineChart(Sheet sheet, String title, int headerRow, int lastDataRow, int categoryCol,
-                                 int series1Col, int series2Col,
-                                 int fromCol, int fromRow, int toCol, int toRow) {
+            int series1Col, int series2Col,
+            int fromCol, int fromRow, int toCol, int toRow) {
         XSSFSheet xssfSheet = (XSSFSheet) sheet;
         XSSFDrawing drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
         XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, fromCol, fromRow, toCol, toRow);
@@ -563,7 +627,7 @@ public class ExcelService {
     }
 
     private void createBarChart(Sheet sheet, String title, int headerRow, int lastDataRow, int categoryCol,
-                                int valueCol, int fromCol, int fromRow, int toCol, int toRow) {
+            int valueCol, int fromCol, int fromRow, int toCol, int toRow) {
         XSSFSheet xssfSheet = (XSSFSheet) sheet;
         XSSFDrawing drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
         XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, fromCol, fromRow, toCol, toRow);
@@ -728,12 +792,12 @@ public class ExcelService {
         Row h = sheet.createRow(5);
         h.createCell(0).setCellValue("Chỉ số");
         h.createCell(1).setCellValue("Giá trị");
-        String[][] rows = new String[][]{
-                {"Tổng nhân sự", String.valueOf(dto.getTotalEmployees())},
-                {"Nhân sự mới", String.valueOf(dto.getNewEmployees())},
-                {"Tổng lương đã trả", ValidationUtils.getInstance().formatCurrency(dto.getTotalPaidSalary())},
-                {"Tổng lượt chấm công", String.valueOf(dto.getAttendanceStat().getTotalSessions())},
-                {"Tổng đơn nghỉ phép", String.valueOf(dto.getLeaveStat().getTotalRequests())}
+        String[][] rows = new String[][] {
+                { "Tổng nhân sự", String.valueOf(dto.getTotalEmployees()) },
+                { "Nhân sự mới", String.valueOf(dto.getNewEmployees()) },
+                { "Tổng lương đã trả", ValidationUtils.getInstance().formatCurrency(dto.getTotalPaidSalary()) },
+                { "Tổng lượt chấm công", String.valueOf(dto.getAttendanceStat().getTotalSessions()) },
+                { "Tổng đơn nghỉ phép", String.valueOf(dto.getLeaveStat().getTotalRequests()) }
         };
         int row = 6;
         for (String[] item : rows) {
