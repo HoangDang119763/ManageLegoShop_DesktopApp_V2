@@ -101,6 +101,8 @@ public class HrStatisticController implements IController {
     @FXML private Label lblTotalAllowance;
     @FXML private Label lblEmployeesWithAllowance;
     @FXML private Label lblTotalFine;
+    @FXML private Label lblTotalReward;
+    @FXML private Label lblEmployeesWithReward;
     @FXML private Label lblEmployeesWithFine;
     @FXML private BarChart<String, Number> allowanceFineChart;
     @FXML private ComboBox<String> cbFilterDept;
@@ -351,18 +353,23 @@ public class HrStatisticController implements IController {
         lblTotalAllowance.setText(fmt(s.getTotalAllowance()));
         lblEmployeesWithAllowance.setText(String.valueOf(s.getEmployeesWithAllowance()));
         lblTotalFine.setText(fmt(s.getTotalFine()));
+        lblTotalReward.setText(fmt(s.getTotalReward()));
+        lblEmployeesWithReward.setText(String.valueOf(s.getEmployeesWithReward()));
         lblEmployeesWithFine.setText(String.valueOf(s.getEmployeesWithFine()));
 
         allowanceFineChart.getData().clear();
         XYChart.Series<String, Number> seriesEmp = new XYChart.Series<>();
         seriesEmp.setName("Số nhân viên");
         seriesEmp.getData().add(new XYChart.Data<>("Phụ cấp", s.getEmployeesWithAllowance()));
+        seriesEmp.getData().add(new XYChart.Data<>("Khen thưởng", s.getEmployeesWithReward()));
         seriesEmp.getData().add(new XYChart.Data<>("Vi phạm", s.getEmployeesWithFine()));
 
         XYChart.Series<String, Number> seriesMoney = new XYChart.Series<>();
         seriesMoney.setName("Số tiền (nghìn đ)");
         seriesMoney.getData().add(new XYChart.Data<>("Phụ cấp",
                 s.getTotalAllowance().divide(BigDecimal.valueOf(1000), RoundingMode.HALF_UP).doubleValue()));
+        seriesMoney.getData().add(new XYChart.Data<>("Khen thưởng",
+                s.getTotalReward().divide(BigDecimal.valueOf(1000), RoundingMode.HALF_UP).doubleValue()));
         seriesMoney.getData().add(new XYChart.Data<>("Vi phạm",
                 s.getTotalFine().divide(BigDecimal.valueOf(1000), RoundingMode.HALF_UP).doubleValue()));
 
@@ -471,6 +478,8 @@ public class HrStatisticController implements IController {
         lblTotalAllowance.setText("—");
         lblEmployeesWithAllowance.setText("—");
         lblTotalFine.setText("—");
+        lblTotalReward.setText("—");
+        lblEmployeesWithReward.setText("—");
         lblEmployeesWithFine.setText("—");
         lblSalaryEmployees.setText("—");
         lblTotalNet.setText("—");

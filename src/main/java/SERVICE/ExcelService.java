@@ -682,9 +682,10 @@ public class ExcelService {
         h.createCell(1).setCellValue("Họ tên");
         h.createCell(2).setCellValue("Phòng ban");
         h.createCell(3).setCellValue("Chức vụ");
-        h.createCell(4).setCellValue("Loại");
-        h.createCell(5).setCellValue("Số tiền");
-        h.createCell(6).setCellValue("Ngày");
+        h.createCell(4).setCellValue("Nhóm");
+        h.createCell(5).setCellValue("Loại");
+        h.createCell(6).setCellValue("Số tiền");
+        h.createCell(7).setCellValue("Ngày");
         int row = 6;
         for (HrStatisticDTO.FineRewardRow item : dto.getFineRewardRows()) {
             Row r = sheet.createRow(row++);
@@ -692,11 +693,25 @@ public class ExcelService {
             r.createCell(1).setCellValue(item.getFullName());
             r.createCell(2).setCellValue(item.getDepartmentName());
             r.createCell(3).setCellValue(item.getPositionName());
-            r.createCell(4).setCellValue(item.getFineLevel());
-            r.createCell(5).setCellValue(item.getAmount().doubleValue());
-            r.createCell(6).setCellValue(item.getCreatedAt());
+            r.createCell(4).setCellValue(formatFineRewardGroup(item.getRowType()));
+            r.createCell(5).setCellValue(item.getFineLevel());
+            r.createCell(6).setCellValue(item.getAmount().doubleValue());
+            r.createCell(7).setCellValue(item.getCreatedAt());
         }
-        autosize(sheet, 7);
+        autosize(sheet, 8);
+    }
+
+    private String formatFineRewardGroup(String rowType) {
+        if ("ALLOWANCE".equalsIgnoreCase(rowType)) {
+            return "Phụ cấp";
+        }
+        if ("REWARD".equalsIgnoreCase(rowType)) {
+            return "Khen thưởng";
+        }
+        if ("DISCIPLINE".equalsIgnoreCase(rowType)) {
+            return "Vi phạm";
+        }
+        return rowType != null ? rowType : "";
     }
 
     private void createHrSalarySheet(XSSFWorkbook workbook, HrStatisticDTO dto, int month, int year) {

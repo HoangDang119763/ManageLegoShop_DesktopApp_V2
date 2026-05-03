@@ -361,8 +361,9 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                          FROM employment_history eh2
                          LEFT JOIN department d2 ON d2.id = eh2.department_id
                          WHERE eh2.employee_id = eh.employee_id
-                           AND eh2.effective_date < eh.effective_date
-                         ORDER BY eh2.effective_date DESC LIMIT 1),
+                           AND (eh2.effective_date < eh.effective_date
+                                OR (eh2.effective_date = eh.effective_date AND eh2.id < eh.id))
+                         ORDER BY eh2.effective_date DESC, eh2.id DESC LIMIT 1),
                         'Mới tuyển'
                     ) AS from_dept,
                     COALESCE(d.name, '—') AS to_dept,
@@ -371,8 +372,9 @@ public class EmploymentHistoryDAL extends BaseDAL<EmploymentHistoryDTO, Integer>
                          FROM employment_history eh3
                          LEFT JOIN position p2 ON p2.id = eh3.position_id
                          WHERE eh3.employee_id = eh.employee_id
-                           AND eh3.effective_date < eh.effective_date
-                         ORDER BY eh3.effective_date DESC LIMIT 1),
+                           AND (eh3.effective_date < eh.effective_date
+                                OR (eh3.effective_date = eh.effective_date AND eh3.id < eh.id))
+                         ORDER BY eh3.effective_date DESC, eh3.id DESC LIMIT 1),
                         '—'
                     ) AS from_pos,
                     COALESCE(p.name, '—') AS to_pos,

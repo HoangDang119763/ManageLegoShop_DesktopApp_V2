@@ -164,17 +164,25 @@ public class HrStatisticDTO {
         private String departmentName;
         private String positionName;
         private String fineLevel;
+        private String rowType;
         private BigDecimal amount;
         private String createdAt;
 
         public FineRewardRow(String employeeCode, String fullName, String departmentName,
                              String positionName, String fineLevel,
                              BigDecimal amount, String createdAt) {
+            this(employeeCode, fullName, departmentName, positionName, fineLevel, "DISCIPLINE", amount, createdAt);
+        }
+
+        public FineRewardRow(String employeeCode, String fullName, String departmentName,
+                             String positionName, String fineLevel, String rowType,
+                             BigDecimal amount, String createdAt) {
             this.employeeCode = employeeCode;
             this.fullName = fullName;
             this.departmentName = departmentName;
             this.positionName = positionName;
             this.fineLevel = fineLevel;
+            this.rowType = rowType;
             this.amount = amount != null ? amount : BigDecimal.ZERO;
             this.createdAt = createdAt;
         }
@@ -184,6 +192,7 @@ public class HrStatisticDTO {
         public String getDepartmentName() { return departmentName; }
         public String getPositionName() { return positionName; }
         public String getFineLevel() { return fineLevel; }
+        public String getRowType() { return rowType; }
         public BigDecimal getAmount() { return amount; }
         public String getCreatedAt() { return createdAt; }
     }
@@ -444,6 +453,8 @@ public class HrStatisticDTO {
     public static class RewardFineSummary {
         private BigDecimal totalAllowance = BigDecimal.ZERO;
         private int employeesWithAllowance;
+        private BigDecimal totalReward = BigDecimal.ZERO;
+        private int employeesWithReward;
         private BigDecimal totalFine = BigDecimal.ZERO;
         private int employeesWithFine;
 
@@ -461,6 +472,22 @@ public class HrStatisticDTO {
 
         public void setEmployeesWithAllowance(int employeesWithAllowance) {
             this.employeesWithAllowance = employeesWithAllowance;
+        }
+
+        public BigDecimal getTotalReward() {
+            return totalReward;
+        }
+
+        public void setTotalReward(BigDecimal totalReward) {
+            this.totalReward = totalReward != null ? totalReward : BigDecimal.ZERO;
+        }
+
+        public int getEmployeesWithReward() {
+            return employeesWithReward;
+        }
+
+        public void setEmployeesWithReward(int employeesWithReward) {
+            this.employeesWithReward = employeesWithReward;
         }
 
         public BigDecimal getTotalFine() {
