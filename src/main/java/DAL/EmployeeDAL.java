@@ -420,7 +420,7 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
                 "LEFT JOIN status s ON e.status_id = s.id " +
                 "LEFT JOIN position pos ON e.position_id = pos.id " +
                 "WHERE e.id != ? " + // Loại chính mình
-                "AND acc.role_id >= ? " + // PHÂN QUYỀN: Ẩn cấp trên dựa vào Role
+                "AND acc.role_id != 1 " + // PHÂN QUYỀN: Ẩn cấp trên dựa vào Role
                 "AND (? = '' OR (" +
                 "    CAST(e.id AS CHAR) LIKE ? " +
                 "    OR LOWER(e.first_name) LIKE ? " +
@@ -439,7 +439,6 @@ public class EmployeeDAL extends BaseDAL<EmployeeDTO, Integer> {
 
             int idx = 1;
             ps.setInt(idx++, excludeId);
-            ps.setInt(idx++, currentAccountRoleId);
 
             ps.setString(idx++, cleanKeyword);
             ps.setString(idx++, searchKey);
