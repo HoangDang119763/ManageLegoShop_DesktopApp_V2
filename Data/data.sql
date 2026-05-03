@@ -25,7 +25,7 @@ INSERT INTO `account` VALUES
 (1,  'admin',          '$2a$12$QIBl3fm0aG.SDhGTldUk5eTFgClKWp1HjNP06Er4utLo/kG1dNpCG',          '2026-02-24 22:00:04', '2026-05-03 01:29:49', 4, 1, 0),
 (2,  'huyhoang119763', '$2a$12$ipuwsQs46H2VAcT1hwS/kuCpv.MXEvJ2IlcPWTyss6Gsm5hpsHWmy',          '2026-02-24 22:00:04', '2026-05-03 01:22:23', 4, 2, 1),
 (3,  'vuithii',        '$2a$12$5NqqfSQjPPjRpQiQwO2VVePjnzeHD30.lyzQ93mEucPbcntlv6qfq',          '2026-02-24 22:00:04', '2026-05-02 23:06:57', 4, 4, 1),
-(4,  'lyvan',          '$2a$12$[jdmAK1eKAgRBmjLJHXUbUOMBNZ5Mn6tIUWvkanoFb.EflDyTnW.JO]',        '2026-02-24 22:00:04', NULL,                  4, 5, 1),
+(4,  'lyvan',          '$2a$12$vwjIk63N.ffJ9rVDM0qcAuWUfkgVYbE/4lIqYRNpcsxJ1XAaCl/By',        '2026-02-24 22:00:04', NULL,                  4, 5, 1),
 (5,  'nguyenthanh',    '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua',          '2026-02-24 22:00:04', NULL,                  4, 3, 1),
 (6,  'trinhvan',       '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua',          '2026-02-24 22:00:04', NULL,                  4, 3, 1),
 (7,  'tanthien',       '$2a$12$qRb3nf6c.jQkpzhp7wvHnOSYofcIH2CZlu00ohT/UR61doxanfyua',          '2026-02-24 22:00:04', NULL,                  4, 3, 0),
