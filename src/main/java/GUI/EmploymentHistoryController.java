@@ -307,10 +307,9 @@ public class EmploymentHistoryController implements IController {
         });
         cbFilterStatus.getSelectionModel().selectFirst();
 
-        // Load form comboboxes (only active employees)
+        // Load form comboboxes (only active employees, exclude IT Admin ID=1)
         ArrayList<EmployeeDTO> activeEmployees = EmployeeBUS.getInstance().getActiveEmployees();
-        if (session.employeeLoginId() != 1)
-            activeEmployees.removeIf(e -> e.getId() == 1); // Loại bỏ nhân viên hệ thống (ID=1) nếu k phải là admin
+        activeEmployees.removeIf(e -> e.getId() == 1); // Luôn loại bỏ nhân viên hệ thống (ID=1)
         cbEmployee.getItems().addAll(activeEmployees);
         cbEmployee.setConverter(new javafx.util.StringConverter<EmployeeDTO>() {
             @Override

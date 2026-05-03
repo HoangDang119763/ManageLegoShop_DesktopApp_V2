@@ -77,14 +77,19 @@ BEGIN
     IF v_is_accommodation = 1 THEN SELECT IFNULL(amount, 0) INTO v_accommodation_amount FROM allowance WHERE id = 2; END IF;
     IF v_is_transport = 1 THEN SELECT IFNULL(amount, 0) INTO v_transport_amount FROM allowance WHERE id = 3; END IF;
     
-    SET v_allowance = v_meal_amount + v_accommodation_amount + v_transport_amount;
+    -- Nếu không đủ 1/2 ngày công thì không có phụ cấp
+	IF v_actual_days < (v_standard_days / 2) THEN
+		SET v_allowance = 0;
+	ELSE
+		SET v_allowance = v_meal_amount + v_accommodation_amount + v_transport_amount;
+	END IF;
 
     SELECT IFNULL(SUM(amount), 0) INTO v_violation FROM fine 
     WHERE employee_id = p_employee_id AND MONTH(created_at) = MONTH(p_salary_period) AND YEAR(created_at) = YEAR(p_salary_period);
 
     SELECT IFNULL(SUM(lt.fine_amount), 0) INTO v_leave_fine FROM leave_request lr
     JOIN leave_type lt ON lr.leave_type_id = lt.id
-    WHERE lr.employee_id = p_employee_id AND lr.status_id = 20 
+    WHERE lr.employee_id = p_employee_id AND lr.status_id = 21
     AND MONTH(lr.start_date) = MONTH(p_salary_period) AND YEAR(lr.start_date) = YEAR(p_salary_period);
 
     -- 5. BẢO HIỂM
@@ -128,7 +133,7 @@ BEGIN
     END IF;
 
     -- NET = Gross - Bảo hiểm - Thuế - Phạt vi phạm
-    SET v_net_salary = GREATEST(0, v_gross_income - v_total_insurance - v_tax_amount - v_violation);
+    SET v_net_salary = v_gross_income - v_total_insurance - v_tax_amount + v_violation;
 
     -- 7. LƯU DỮ LIỆU
     INSERT INTO payroll_history (
@@ -168,7 +173,7 @@ BEGIN
     DECLARE done INT DEFAULT FALSE;
     DECLARE emp_id INT;
     DECLARE cur_period DATE;
-    DECLARE cur CURSOR FOR SELECT id FROM employee;
+    DECLARE cur CURSOR FOR SELECT id FROM employee WHERE status_id <> 2;;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
     
     -- Lấy ngày đầu tháng của tháng trước

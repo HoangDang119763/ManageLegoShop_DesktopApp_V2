@@ -44,9 +44,9 @@ public class PositionModalController {
         }
         this.typeModal = type;
         if (type == 0) {
-            modalName.setText("Thêm chức vụ");
+            modalName.setText("Thêm vị trí");
         } else {
-            modalName.setText("Sửa chức vụ");
+            modalName.setText("Sửa vị trí");
             if (position != null) {
                 bindToForm();
             }
@@ -72,12 +72,12 @@ public class PositionModalController {
         ValidationUtils v = ValidationUtils.getInstance();
 
         if (name.isEmpty()) {
-            NotificationUtils.showErrorAlert("Tên chức vụ không được để trống.", AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert("Tên vị trí không được để trống.", AppMessages.DIALOG_TITLE);
             txtPositionName.requestFocus();
             return false;
         }
         if (!v.validateVietnameseText100(name)) {
-            NotificationUtils.showErrorAlert("Tên chức vụ không hợp lệ.", AppMessages.DIALOG_TITLE);
+            NotificationUtils.showErrorAlert("Tên vị trí không hợp lệ.", AppMessages.DIALOG_TITLE);
             txtPositionName.requestFocus();
             return false;
         }
@@ -137,4 +137,3 @@ public class PositionModalController {
         }
     }
 }
-

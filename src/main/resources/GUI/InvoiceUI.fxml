@@ -32,10 +32,10 @@
 
                         <ComboBox fx:id="cbStatusFilter" layoutX="250.0" layoutY="15.0" prefHeight="26.0" prefWidth="140.0" promptText="Trạng thái" AnchorPane.leftAnchor="250.0" AnchorPane.topAnchor="15.0" />
 
-                        <Button fx:id="advanceSearchBtn" layoutX="1010.0" layoutY="12.0" mnemonicParsing="false" prefHeight="38.4" prefWidth="40.0" styleClass="action-btn" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                        <Button fx:id="advanceSearchBtn" disable="true" layoutX="1010.0" layoutY="12.0" mnemonicParsing="false" prefHeight="38.4" prefWidth="40.0" styleClass="action-btn" visible="false" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                             <graphic><FontAwesomeIcon glyphName="FILTER" size="1.2em" styleClass="action-icon" /></graphic>
                         </Button>
-                              <Button fx:id="exportPdf" layoutX="879.0" layoutY="10.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="121.0" styleClass="action-btn" text="XUẤT PDF" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="10.0">
+                              <Button fx:id="exportPdf" layoutX="879.0" layoutY="10.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="121.0" styleClass="action-btn" text="XUẤT PDF" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                                   <graphic>
                         <FontAwesomeIcon fill="WHITE" glyphName="FILE_TEXT" size="1.2em" />
                      </graphic>

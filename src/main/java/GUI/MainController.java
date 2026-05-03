@@ -111,7 +111,7 @@ public class MainController {
         // 2. Lọc và tạo Button dựa trên quyền thực tế trong Session
         for (ModuleMetadata meta : allModules) {
             // Module 0 luôn hiện, các module khác phải có ID trong allowedModules của DTO
-            if (meta.id() == 0 || sessionService.hasModuleAccess(meta.id())) {
+            if (meta.id() == 0 || meta.id() == -1 || sessionService.hasModuleAccess(meta.id())) {
                 Button btn = createModuleButton(meta.name(), meta.icon(), () -> {
                     handleModuleClick(meta.id(), meta.name());
                 });

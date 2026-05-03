@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="300.0" prefWidth="450.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.RoleModalController">
+<AnchorPane prefHeight="300.0" prefWidth="450.0" styleClass="white-bg" stylesheets="@../css/base.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.RoleModalController">
     <children>
         <BorderPane prefHeight="425.0" prefWidth="600.0" style="-fx-border-color: #30bac4; -fx-border-width: 2px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -30,7 +30,7 @@
                      <children>
                         <HBox alignment="CENTER" prefHeight="61.0" prefWidth="422.0" spacing="10.0">
                            <children>
-                              <Label prefHeight="22.0" prefWidth="140.0" text="Tên chức vụ" textFill="#30bac4">
+                              <Label prefHeight="22.0" prefWidth="140.0" text="Tên vai trò" textFill="#30bac4">
                                  <font>
                                     <Font name="Arial Bold" size="18.0" />
                                  </font>
@@ -40,7 +40,7 @@
                                     <Font size="20.0" />
                                  </font>
                               </Label>
-                              <TextField fx:id="txtRoleName" promptText="Tên chức vụ" styleClass="textfield-1">
+                              <TextField fx:id="txtRoleName" promptText="Tên vai trò" styleClass="textfield-1">
                                  <font>
                                     <Font size="16.0" />
                                  </font>

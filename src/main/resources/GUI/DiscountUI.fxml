@@ -29,10 +29,10 @@
                   <FontAwesomeIcon fill="#58c9c9" glyphName="SEARCH" layoutX="175.0" layoutY="35.0" size="1.8em" AnchorPane.leftAnchor="175.0" AnchorPane.topAnchor="15.0" />
                   <Line endX="85.0" layoutX="115.0" layoutY="45.0" startX="-100.0" stroke="#58c9c9" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="45.0" />
 
-                  <Button fx:id="advanceSearchBtn" layoutX="215.0" layoutY="12.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="40.0" styleClass="action-btn" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                  <Button fx:id="advanceSearchBtn" disable="true" focusTraversable="false" layoutX="215.0" layoutY="12.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="40.0" styleClass="action-btn" visible="false" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
                      <graphic><FontAwesomeIcon glyphName="FILTER" size="1.2em" styleClass="action-icon" /></graphic>
                   </Button>
-                  <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="727.0" layoutY="1.0" prefHeight="50.0" spacing="12.0" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="4.0">
+                  <HBox fx:id="functionBtns" alignment="CENTER_RIGHT" layoutX="727.0" layoutY="1.0" prefHeight="50.0" spacing="12.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="4.0">
                      <children>
                         <Button fx:id="addBtn" mnemonicParsing="false" prefHeight="38.0" prefWidth="82.0" styleClass="action-btn" text="Thêm">
                            <graphic>
