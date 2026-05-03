@@ -6,6 +6,7 @@ import BUS.EmployeeBUS;
 import DTO.LeaveRequestDTO;
 import DTO.LeaveTypeDTO;
 import ENUM.BUSOperationResult;
+import ENUM.PermissionKey;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -149,7 +150,8 @@ public class LeaveRequestTabController {
 
     private void loadLeaveRequests() {
         ArrayList<LeaveRequestDTO> leaves;
-        if (currentEmployeeRoleId == 1) {
+        boolean canApprove = SessionManagerService.getInstance().hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE);
+        if (canApprove) {
             leaves = leaveRequestBUS.getAll();
         } else {
             leaves = leaveRequestBUS.getByEmployeeId(currentEmployeeId);

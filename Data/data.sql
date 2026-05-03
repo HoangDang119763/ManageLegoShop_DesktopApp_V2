@@ -216,7 +216,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `leave_type` WRITE;
 /*!40000 ALTER TABLE `leave_type` DISABLE KEYS */;
-INSERT INTO `leave_type` VALUES (1,'Nghỉ có phép',500000.00);
+INSERT INTO `leave_type` VALUES (1,'Nghỉ có phép',0.00),(2,'Nghỉ không phép',500000.00);
 /*!40000 ALTER TABLE `leave_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
