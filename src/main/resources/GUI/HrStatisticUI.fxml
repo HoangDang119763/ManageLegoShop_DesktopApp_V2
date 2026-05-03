@@ -86,7 +86,7 @@
                                         <HBox alignment="CENTER_LEFT" spacing="16.0">
                                             <VBox alignment="CENTER" spacing="4.0" prefWidth="190.0" minHeight="90.0"
                                                   style="-fx-background-color: white; -fx-background-radius: 10;
-                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-color: #e57373; -fx-border-radius: 10;
                                                          -fx-border-width: 1.5; -fx-padding: 12;
                                                          -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
                                                 <Label text="Tổng nhân sự" textFill="#006A71"
@@ -364,9 +364,9 @@
                                           style="-fx-padding: 14 12 18 12; -fx-background-color: white;">
 
                                         <!-- KPI Cards -->
-                                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
                                             <VBox alignment="CENTER" spacing="4.0"
-                                                  prefWidth="165.0" minHeight="82.0"
+                                                  prefWidth="145.0" minHeight="82.0"
                                                   style="-fx-background-color: white; -fx-background-radius: 10;
                                                          -fx-border-color: #9ACBD0; -fx-border-radius: 10;
                                                          -fx-border-width: 1.5; -fx-padding: 10;
@@ -375,22 +375,22 @@
                                                        style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
                                                 <Label fx:id="lblTotalAllowance" text="—" textFill="#1F7D84"
                                                        style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
-                                                <Label text="trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                                <Label text="hiện tại" textFill="#888" style="-fx-font-size: 11px;"/>
                                             </VBox>
                                             <VBox alignment="CENTER" spacing="4.0"
-                                                  prefWidth="165.0" minHeight="82.0"
+                                                  prefWidth="145.0" minHeight="82.0"
                                                   style="-fx-background-color: white; -fx-background-radius: 10;
                                                          -fx-border-color: #9ACBD0; -fx-border-radius: 10;
                                                          -fx-border-width: 1.5; -fx-padding: 10;
                                                          -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
-                                                <Label text="NV có phụ cấp" textFill="#006A71"
+                                                <Label text="NV được phụ cấp" textFill="#006A71"
                                                        style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
                                                 <Label fx:id="lblEmployeesWithAllowance" text="—" textFill="#1F7D84"
                                                        style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
                                                 <Label text="người" textFill="#888" style="-fx-font-size: 11px;"/>
                                             </VBox>
                                             <VBox alignment="CENTER" spacing="4.0"
-                                                  prefWidth="165.0" minHeight="82.0"
+                                                  prefWidth="145.0" minHeight="82.0"
                                                   style="-fx-background-color: white; -fx-background-radius: 10;
                                                          -fx-border-color: #e57373; -fx-border-radius: 10;
                                                          -fx-border-width: 1.5; -fx-padding: 10;
@@ -402,7 +402,31 @@
                                                 <Label text="trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
                                             </VBox>
                                             <VBox alignment="CENTER" spacing="4.0"
-                                                  prefWidth="165.0" minHeight="82.0"
+                                                  prefWidth="145.0" minHeight="82.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 10;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="Tổng khen thưởng" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblTotalReward" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                                                <Label text="trong kỳ" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0"
+                                                  prefWidth="145.0" minHeight="82.0"
+                                                  style="-fx-background-color: white; -fx-background-radius: 10;
+                                                         -fx-border-color: #9ACBD0; -fx-border-radius: 10;
+                                                         -fx-border-width: 1.5; -fx-padding: 10;
+                                                         -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.09), 5, 0, 0, 2);">
+                                                <Label text="NV khen thưởng" textFill="#006A71"
+                                                       style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                                <Label fx:id="lblEmployeesWithReward" text="—" textFill="#1F7D84"
+                                                       style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+                                                <Label text="người" textFill="#888" style="-fx-font-size: 11px;"/>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="4.0"
+                                                  prefWidth="145.0" minHeight="82.0"
                                                   style="-fx-background-color: white; -fx-background-radius: 10;
                                                          -fx-border-color: #e57373; -fx-border-radius: 10;
                                                          -fx-border-width: 1.5; -fx-padding: 10;

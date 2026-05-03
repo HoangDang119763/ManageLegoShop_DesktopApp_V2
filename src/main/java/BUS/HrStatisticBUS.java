@@ -28,6 +28,9 @@ import java.util.stream.Collectors;
 public class HrStatisticBUS {
 
         private static final HrStatisticBUS INSTANCE = new HrStatisticBUS();
+        private static final int MEAL_ALLOWANCE_ID = 1;
+        private static final int ACCOMMODATION_ALLOWANCE_ID = 2;
+        private static final int TRANSPORT_ALLOWANCE_ID = 3;
 
         private HrStatisticBUS() {
         }
@@ -71,12 +74,10 @@ public class HrStatisticBUS {
                 dto.setDailyWorkPoints(TimeSheetDAL.getInstance().getDailyWorkPoints(month, year));
 
                 // Nghỉ phép
-                // dto.setLeaveStat(LeaveRequestDAL.getInstance().getLeaveStat(month, year));
-                // dto.setLeaveByType(LeaveRequestDAL.getInstance().getLeaveByType(month,
-                // year));
-                // dto.setLeaveByStatus(LeaveRequestDAL.getInstance().getLeaveByStatus(month,
-                // year));
-                // dto.setLeaveRows(LeaveRequestDAL.getInstance().getLeaveRows(month, year));
+                dto.setLeaveStat(LeaveRequestDAL.getInstance().getLeaveStat(month, year));
+                dto.setLeaveByType(LeaveRequestDAL.getInstance().getLeaveByType(month, year));
+                dto.setLeaveByStatus(LeaveRequestDAL.getInstance().getLeaveByStatus(month, year));
+                dto.setLeaveRows(LeaveRequestDAL.getInstance().getLeaveRows(month, year));
 
                 // Thống kê lương
                 dto.setSalaryStat(PayrollHistoryDAL.getInstance().getSalaryStatForMonth(month, year));
@@ -86,27 +87,46 @@ public class HrStatisticBUS {
         }
 
         private RewardFineSummary buildRewardFineSummary(int month, int year) {
-                ArrayList<AllowanceDTO> allAllowances = AllowanceBUS.getInstance().getAll();
-                BigDecimal totalAllowance = allAllowances.stream()
-                                .map(a -> a.getAmount() != null ? a.getAmount() : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
                 List<FineDTO> finesInMonth = FineBUS.getInstance().getAll().stream()
                                 .filter(f -> f.getCreatedAt() != null
                                                 && f.getCreatedAt().getYear() == year
                                                 && f.getCreatedAt().getMonthValue() == month)
                                 .collect(Collectors.toList());
+                Map<Integer, BigDecimal> allowanceAmountById = getAllowanceAmountById();
+                List<EmployeeDTO> employees = EmployeeDAL.getInstance().getAll();
+
+                BigDecimal totalAllowance = employees.stream()
+                                .map(e -> calculateEmployeeAllowance(e, allowanceAmountById))
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                long employeesWithAllowance = employees.stream()
+                                .filter(this::hasAnyAllowanceSupport)
+                                .count();
+
+                BigDecimal totalReward = finesInMonth.stream()
+                                .filter(f -> "REWARD".equalsIgnoreCase(f.getType()))
+                                .map(f -> safeAmount(f.getAmount()).abs())
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                long employeesWithReward = finesInMonth.stream()
+                                .filter(f -> "REWARD".equalsIgnoreCase(f.getType()))
+                                .map(FineDTO::getEmployeeId)
+                                .distinct()
+                                .count();
+
                 BigDecimal totalFine = finesInMonth.stream()
-                                .map(f -> f.getAmount() != null ? f.getAmount() : BigDecimal.ZERO)
+                                .filter(f -> "DISCIPLINE".equalsIgnoreCase(f.getType()))
+                                .map(f -> safeAmount(f.getAmount()).abs())
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
                 long employeesWithFine = finesInMonth.stream()
+                                .filter(f -> "DISCIPLINE".equalsIgnoreCase(f.getType()))
                                 .map(FineDTO::getEmployeeId)
                                 .distinct()
                                 .count();
 
                 RewardFineSummary summary = new RewardFineSummary();
                 summary.setTotalAllowance(totalAllowance);
-                summary.setEmployeesWithAllowance(allAllowances.size());
+                summary.setEmployeesWithAllowance((int) employeesWithAllowance);
+                summary.setTotalReward(totalReward);
+                summary.setEmployeesWithReward((int) employeesWithReward);
                 summary.setTotalFine(totalFine);
                 summary.setEmployeesWithFine((int) employeesWithFine);
                 return summary;
@@ -133,11 +153,36 @@ public class HrStatisticBUS {
                                 .stream().collect(Collectors.toMap(PositionDTO::getId, PositionDTO::getName,
                                                 (a, b) -> a));
 
-                return finesInMonth.stream().map(f -> {
+                Map<Integer, BigDecimal> allowanceAmountById = getAllowanceAmountById();
+                List<FineRewardRow> rows = new ArrayList<>();
+
+                EmployeeDAL.getInstance().getAll().stream()
+                                .filter(this::hasAnyAllowanceSupport)
+                                .forEach(emp -> {
+                                        BigDecimal allowanceAmount = calculateEmployeeAllowance(emp, allowanceAmountById);
+                                        if (allowanceAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                                                return;
+                                        }
+                                        rows.add(new FineRewardRow(
+                                                        formatEmployeeCode(emp),
+                                                        emp.getFullName().trim(),
+                                                        emp.getDepartmentId() != null
+                                                                        ? deptMap.getOrDefault(emp.getDepartmentId(), "—")
+                                                                        : "—",
+                                                        emp.getPositionId() != null
+                                                                        ? posMap.getOrDefault(emp.getPositionId(), "—")
+                                                                        : "—",
+                                                        "Phụ cấp",
+                                                        "ALLOWANCE",
+                                                        allowanceAmount,
+                                                        "Hiện tại"));
+                                });
+
+                rows.addAll(finesInMonth.stream().map(f -> {
                         EmployeeDTO emp = empMap.get(f.getEmployeeId());
-                        String code = emp != null ? String.format("NV%05d", emp.getId()) : "—";
+                        String code = emp != null ? formatEmployeeCode(emp) : "—";
                         String name = emp != null
-                                        ? (emp.getFirstName() + " " + emp.getLastName()).trim()
+                                        ? emp.getFullName().trim()
                                         : "—";
                         String dept = (emp != null && emp.getDepartmentId() != null)
                                         ? deptMap.getOrDefault(emp.getDepartmentId(), "—")
@@ -148,9 +193,55 @@ public class HrStatisticBUS {
                         String date = f.getCreatedAt() != null
                                         ? f.getCreatedAt().format(fmt)
                                         : "—";
+                        String type = f.getType() != null ? f.getType() : "DISCIPLINE";
+                        String typeLabel = "REWARD".equalsIgnoreCase(type) ? "Khen thưởng" : "Vi phạm";
+                        String level = f.getFineLevel() != null && !f.getFineLevel().isBlank()
+                                        ? typeLabel + " - " + f.getFineLevel()
+                                        : typeLabel;
                         return new FineRewardRow(code, name, dept, pos,
-                                        f.getFineLevel() != null ? f.getFineLevel() : "—",
-                                        f.getAmount(), date);
-                }).collect(Collectors.toList());
+                                        level,
+                                        type.toUpperCase(),
+                                        safeAmount(f.getAmount()).abs(), date);
+                }).collect(Collectors.toList()));
+
+                return rows;
+        }
+
+        private Map<Integer, BigDecimal> getAllowanceAmountById() {
+                return AllowanceBUS.getInstance().getAll().stream()
+                                .collect(Collectors.toMap(AllowanceDTO::getId,
+                                                a -> safeAmount(a.getAmount()),
+                                                (a, b) -> a));
+        }
+
+        private boolean hasAnyAllowanceSupport(EmployeeDTO employee) {
+                return employee != null && (employee.isMealSupport()
+                                || employee.isAccommodationSupport()
+                                || employee.isTransportationSupport());
+        }
+
+        private BigDecimal calculateEmployeeAllowance(EmployeeDTO employee, Map<Integer, BigDecimal> allowanceAmountById) {
+                if (employee == null) {
+                        return BigDecimal.ZERO;
+                }
+                BigDecimal total = BigDecimal.ZERO;
+                if (employee.isMealSupport()) {
+                        total = total.add(allowanceAmountById.getOrDefault(MEAL_ALLOWANCE_ID, BigDecimal.ZERO));
+                }
+                if (employee.isAccommodationSupport()) {
+                        total = total.add(allowanceAmountById.getOrDefault(ACCOMMODATION_ALLOWANCE_ID, BigDecimal.ZERO));
+                }
+                if (employee.isTransportationSupport()) {
+                        total = total.add(allowanceAmountById.getOrDefault(TRANSPORT_ALLOWANCE_ID, BigDecimal.ZERO));
+                }
+                return total;
+        }
+
+        private BigDecimal safeAmount(BigDecimal value) {
+                return value != null ? value : BigDecimal.ZERO;
+        }
+
+        private String formatEmployeeCode(EmployeeDTO employee) {
+                return employee != null ? String.format("NV%05d", employee.getId()) : "—";
         }
 }
