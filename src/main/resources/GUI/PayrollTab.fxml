@@ -40,6 +40,15 @@
                         <Button fx:id="btnNext" mnemonicParsing="false" prefHeight="34.0" styleClass="action-btn" text="Sau">
                             <graphic><FontAwesomeIcon glyphName="CHEVRON_RIGHT" /></graphic>
                         </Button>
+                        <Separator orientation="VERTICAL" prefHeight="30.0" />
+
+                        <Button fx:id="btnExportMonth" mnemonicParsing="false" prefHeight="34.0" styleClass="action-btn" style="-fx-background-color: #e67e22;" text="Xuất Tháng">
+                            <graphic><FontAwesomeIcon fill="WHITE" glyphName="FILE_PDF_ALT" /></graphic>
+                        </Button>
+                        
+                        <Button fx:id="btnExportYear" mnemonicParsing="false" prefHeight="34.0" styleClass="action-btn" style="-fx-background-color: #27ae60;" text="Xuất Năm">
+                            <graphic><FontAwesomeIcon fill="WHITE" glyphName="FILE_EXCEL_ALT" /></graphic>
+                        </Button>
                     </children>
                 </HBox>
 
@@ -116,9 +125,12 @@
                             </columnConstraints>
                             <children>
                                 <Label text="• Tổng bảo hiểm (10.5%): BHXH (8%) + BHYT (1.5%) + BHTN (1%)" style="-fx-font-size: 12; -fx-text-fill: #777;" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                                <Label text="• Thu nhập chịu thuế = Gross - Phụ cấp ăn uống (Miễn thuế)" style="-fx-font-size: 12; -fx-text-fill: #777;" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label text="• Gross = (Lương CB/Ngày chuẩn * Ngày thực) + OT + Phụ cấp - Phạt nghỉ" style="-fx-font-size: 12; -fx-text-fill: #333; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                
                                 <Label text="• Tiền tăng ca = (Lương CB / Ngày công chuẩn / 8) * Giờ OT * 1.5" style="-fx-font-size: 12; -fx-text-fill: #777;" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                                <Label text="• Net = Gross - Bảo hiểm - Thuế TNCN - Vi phạm" style="-fx-font-size: 12; -fx-text-fill: #777; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="• Thu nhập chịu thuế = Gross - Phụ cấp ăn uống (Miễn thuế)" style="-fx-font-size: 12; -fx-text-fill: #777;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                
+                                <Label text="• Net = Gross - Bảo hiểm - Thuế TNCN - Vi phạm hành chính" style="-fx-font-size: 12; -fx-text-fill: #e67e22; -fx-font-weight: bold;" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2" />
                             </children>
                         </GridPane>
                         <Label text="* Ngày công chuẩn = Số ngày trong tháng - Chủ nhật - Ngày lễ" style="-fx-font-size: 11; -fx-font-style: italic; -fx-text-fill: #999;">

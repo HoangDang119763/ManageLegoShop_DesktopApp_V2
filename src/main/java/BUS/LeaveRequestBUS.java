@@ -3,10 +3,10 @@ package BUS;
 import DAL.LeaveRequestDAL;
 import DTO.LeaveRequestDTO;
 import ENUM.BUSOperationResult;
-import ENUM.Status;
 import UTILS.ValidationUtils;
-
 import java.util.ArrayList;
+import SERVICE.SessionManagerService;
+import ENUM.PermissionKey;
 
 public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
 
@@ -18,20 +18,16 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
         return INSTANCE;
     }
 
-    // =========================================================
-    // GET OPERATIONS
-    // =========================================================
+    // ================= GET =================
 
     @Override
     public ArrayList<LeaveRequestDTO> getAll() {
-        // DAL đã Join với bảng Status và LeaveType, lấy trực tiếp về dùng
         return LeaveRequestDAL.getInstance().getAll();
     }
 
     @Override
     public LeaveRequestDTO getById(Integer id) {
         if (id == null || id <= 0) return null;
-        // Tận dụng phương thức kế thừa từ BaseDAL qua DAL Singleton
         return LeaveRequestDAL.getInstance().getById(id);
     }
 
@@ -40,44 +36,39 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
         return LeaveRequestDAL.getInstance().getByEmployeeId(employeeId);
     }
 
-    // =========================================================
-    // WRITE OPERATIONS
-    // =========================================================
+    // ================= INSERT =================
 
     public BUSOperationResult insert(LeaveRequestDTO obj) {
-        // Chặn insert nếu dữ liệu không hợp lệ
-        if (!isValidLeaveRequestInput(obj)) {
-            return BUSOperationResult.INVALID_DATA;
-        }
+        if (!isValid(obj)) return BUSOperationResult.INVALID_DATA;
 
-        // Normalize nội dung trước khi lưu
+        obj.setStatusId(20); // pending
+
         if (obj.getContent() != null) {
-            obj.setContent(ValidationUtils.getInstance().normalizeWhiteSpace(obj.getContent()));
+            obj.setContent(ValidationUtils.getInstance()
+                    .normalizeWhiteSpace(obj.getContent()));
         }
-
-        // Luôn gán trạng thái mặc định là Pending (20) cho đơn mới
-        obj.setStatusId(20); 
 
         boolean success = LeaveRequestDAL.getInstance().insert(obj);
         return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
     }
 
+    // ================= UPDATE =================
+
     public BUSOperationResult update(LeaveRequestDTO obj) {
         if (obj == null || obj.getId() <= 0) return BUSOperationResult.INVALID_PARAMS;
 
-        LeaveRequestDTO existing = getById(obj.getId());
-        if (existing == null) return BUSOperationResult.NOT_FOUND;
+        LeaveRequestDTO old = getById(obj.getId());
+        if (old == null) return BUSOperationResult.NOT_FOUND;
 
-        // Chỉ cho phép sửa đơn nếu đang ở trạng thái PENDING (20)
-        if (existing.getStatusId() != 20) {
-            return BUSOperationResult.CONFLICT; // Đơn đã duyệt/hủy không được sửa
-        }
+        if (old.getStatusId() != 20) return BUSOperationResult.CONFLICT;
 
-        if (!isValidLeaveRequestInput(obj)) return BUSOperationResult.INVALID_DATA;
+        if (!isValid(obj)) return BUSOperationResult.INVALID_DATA;
 
         boolean success = LeaveRequestDAL.getInstance().update(obj);
         return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
     }
+
+    // ================= DELETE =================
 
     public BUSOperationResult delete(Integer id) {
         if (id == null || id <= 0) return BUSOperationResult.INVALID_PARAMS;
@@ -89,59 +80,66 @@ public class LeaveRequestBUS extends BaseBUS<LeaveRequestDTO, Integer> {
         return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
     }
 
-    // =========================================================
-    // STATUS TRANSITION OPERATIONS (Duyệt/Hủy)
-    // =========================================================
+    // ================= STATUS =================
 
     public BUSOperationResult approve(int id) {
+        if (!SessionManagerService.getInstance()
+                .hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE)) {
+            return BUSOperationResult.UNAUTHORIZED;
+        }
+
         LeaveRequestDTO existing = getById(id);
         if (existing == null) return BUSOperationResult.NOT_FOUND;
 
-        // Gọi phương thức approve (ID 21) từ DAL
+        if (existing.getStatusId() != 20) return BUSOperationResult.CONFLICT;
+
         boolean success = LeaveRequestDAL.getInstance().approve(id);
         return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
     }
 
     public BUSOperationResult reject(int id) {
+        if (!SessionManagerService.getInstance()
+                .hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE)) {
+            return BUSOperationResult.UNAUTHORIZED;
+        }
+
         LeaveRequestDTO existing = getById(id);
         if (existing == null) return BUSOperationResult.NOT_FOUND;
 
-        // Gọi phương thức reject (ID 22) từ DAL
+        if (existing.getStatusId() != 20) return BUSOperationResult.CONFLICT;
+
         boolean success = LeaveRequestDAL.getInstance().reject(id);
         return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
     }
 
-    public BUSOperationResult cancel(int id, int employeeLoginId) {
+    public BUSOperationResult cancel(int id, int employeeId) {
         LeaveRequestDTO existing = getById(id);
         if (existing == null) return BUSOperationResult.NOT_FOUND;
 
-        // Kiểm tra quyền sở hữu đơn
-        if (existing.getEmployeeId() != employeeLoginId) {
+        if (existing.getEmployeeId() != employeeId) {
             return BUSOperationResult.UNAUTHORIZED;
         }
 
-        // Gọi phương thức cancel (ID 23) từ DAL
+        if (existing.getStatusId() != 20) return BUSOperationResult.CONFLICT;
+
         boolean success = LeaveRequestDAL.getInstance().cancel(id);
         return success ? BUSOperationResult.SUCCESS : BUSOperationResult.DB_ERROR;
     }
 
-    // =========================================================
-    // VALIDATION HELPER
-    // =========================================================
+    // ================= VALIDATION =================
 
-    private boolean isValidLeaveRequestInput(LeaveRequestDTO obj) {
-        if (obj == null || obj.getStartDate() == null || obj.getEndDate() == null) {
-            return false;
-        }
+    private boolean isValid(LeaveRequestDTO obj) {
+        if (obj == null) return false;
 
-        // Ngày bắt đầu không được sau ngày kết thúc
-        if (obj.getEndDate().isBefore(obj.getStartDate())) {
-            return false;
-        }
+        if (obj.getLeaveTypeId() <= 0) return false;
 
-        // Validate nội dung tiếng Việt tối đa 255 ký tự
+        if (obj.getStartDate() == null || obj.getEndDate() == null) return false;
+
+        if (obj.getEndDate().isBefore(obj.getStartDate())) return false;
+
         if (obj.getContent() != null && !obj.getContent().isEmpty()) {
-            return ValidationUtils.getInstance().validateVietnameseText255(obj.getContent());
+            return ValidationUtils.getInstance()
+                    .validateVietnameseText255(obj.getContent());
         }
 
         return true;

@@ -2,14 +2,15 @@ package BUS;
 
 import DTO.PayrollHistoryDTO;
 import DAL.PayrollHistoryDAL;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class PayrollHistoryBUS extends BaseBUS<PayrollHistoryDTO, Integer> {
     public static final PayrollHistoryBUS INSTANCE = new PayrollHistoryBUS();
 
-    private PayrollHistoryBUS() {
-    }
+    private PayrollHistoryBUS() {}
 
     public static PayrollHistoryBUS getInstance() {
         return INSTANCE;
@@ -29,68 +30,77 @@ public class PayrollHistoryBUS extends BaseBUS<PayrollHistoryDTO, Integer> {
         return PayrollHistoryDAL.getInstance().getById(id);
     }
 
+    // ✅ FIX: gọi trực tiếp DAL thay vì filter Java
     public ArrayList<PayrollHistoryDTO> getByEmployeeId(int employeeId) {
-        ArrayList<PayrollHistoryDTO> allPayrolls = getAll();
-        ArrayList<PayrollHistoryDTO> result = new ArrayList<>();
-        for (PayrollHistoryDTO payroll : allPayrolls) {
-            if (payroll.getEmployeeId() == employeeId) {
-                result.add(payroll);
-            }
-        }
-        // Sort by salary period descending (newest first)
-        result.sort((p1, p2) -> {
-            if (p1.getSalaryPeriod() == null || p2.getSalaryPeriod() == null) return 0;
-            return p2.getSalaryPeriod().compareTo(p1.getSalaryPeriod());
-        });
+        ArrayList<PayrollHistoryDTO> result = PayrollHistoryDAL.getInstance().getByEmployeeId(employeeId);
+
+        // sort newest first
+        result.sort((p1, p2) -> Comparator
+                .nullsLast(LocalDate::compareTo)
+                .reversed()
+                .compare(p1.getSalaryPeriod(), p2.getSalaryPeriod()));
+
         return result;
     }
 
     public PayrollHistoryDTO getByEmployeeAndPeriod(int employeeId, LocalDate salaryPeriod) {
-        ArrayList<PayrollHistoryDTO> allPayrolls = getAll();
-        for (PayrollHistoryDTO payroll : allPayrolls) {
-            if (payroll.getEmployeeId() == employeeId &&
-                    payroll.getSalaryPeriod() != null &&
-                    payroll.getSalaryPeriod().equals(salaryPeriod)) {
-                return payroll;
-            }
-        }
-        return null;
+        return PayrollHistoryDAL.getInstance().getByEmployeeAndPeriod(employeeId, salaryPeriod);
     }
 
+    // ✅ FIX: thêm validate role
     public boolean insert(PayrollHistoryDTO obj, int employeeRoleId, int employeeLoginId) {
-        if (!isValidPayrollInput(obj)) {
-            return false;
-        }
+        if (!isValidPayrollInput(obj)) return false;
+
+        if (!hasPermission(employeeRoleId)) return false;
+
         return PayrollHistoryDAL.getInstance().insert(obj);
     }
 
     public boolean update(PayrollHistoryDTO obj, int employeeRoleId, int employeeLoginId) {
-        if (!isValidPayrollInput(obj)) {
-            return false;
-        }
+        if (!isValidPayrollInput(obj)) return false;
+
+        if (!hasPermission(employeeRoleId)) return false;
+
         return PayrollHistoryDAL.getInstance().update(obj);
     }
 
     public boolean delete(Integer id, int employeeRoleId, int employeeLoginId) {
-        if (id == null || id <= 0) {
-            return false;
-        }
+        if (id == null || id <= 0) return false;
+
+        if (!hasPermission(employeeRoleId)) return false;
+
         return PayrollHistoryDAL.getInstance().delete(id);
     }
 
+    // ✅ đơn giản hóa permission (bạn có thể thay bằng Role enum)
+    private boolean hasPermission(int roleId) {
+        return roleId == 1; // ví dụ: 1 = admin
+    }
+
     private boolean isValidPayrollInput(PayrollHistoryDTO obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj.getEmployeeId() <= 0) {
-            return false;
-        }
-        if (obj.getSalaryPeriod() == null) {
-            return false;
-        }
-        if (obj.getNetSalary() == null || obj.getNetSalary().signum() < 0) {
-            return false;
-        }
+        if (obj == null) return false;
+        if (obj.getEmployeeId() <= 0) return false;
+        if (obj.getSalaryPeriod() == null) return false;
+        if (obj.getNetSalary() == null || obj.getNetSalary().signum() < 0) return false;
         return true;
     }
+
+    public ArrayList<PayrollHistoryDTO> getByEmployeeAndYear(int employeeId, int year) {
+        ArrayList<PayrollHistoryDTO> result = PayrollHistoryDAL.getInstance()
+                .getByEmployeeAndYear(employeeId, year);
+
+        // sort theo tháng tăng dần
+        result.sort(Comparator.comparing(PayrollHistoryDTO::getSalaryPeriod,
+                Comparator.nullsLast(LocalDate::compareTo)));
+
+        return result;
+    }
+
+    public ArrayList<PayrollHistoryDTO> getByEmployeeAndMonth(int empId, int month, int year) {
+    ArrayList<PayrollHistoryDTO> result =
+            PayrollHistoryDAL.getInstance().getByEmployeeAndMonth(empId, month, year);
+
+    result.sort(Comparator.comparing(PayrollHistoryDTO::getSalaryPeriod));
+    return result;
+}
 }

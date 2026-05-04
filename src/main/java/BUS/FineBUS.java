@@ -37,13 +37,24 @@ public class FineBUS extends BaseBUS<FineDTO, Integer> {
 
     // VỊ TRÍ SỬA: Thực thi gọi DAL thay vì return false
     public boolean insert(FineDTO obj, int roleId, int loginId) {
-        System.err.println("Attempting to insert fine: " + obj);
         if (!isValidFineInput(obj)) return false;
+
+        // ✅ ÉP luôn số dương
+        if (obj.getAmount() != null) {
+            obj.setAmount(obj.getAmount().abs());
+        }
+
         return FineDAL.getInstance().insert(obj);
     }
 
     public boolean update(FineDTO obj, int roleId, int loginId) {
         if (!isValidFineInput(obj) || obj.getId() <= 0) return false;
+
+        // ✅ ÉP luôn số dương
+        if (obj.getAmount() != null) {
+            obj.setAmount(obj.getAmount().abs());
+        }
+
         return FineDAL.getInstance().update(obj);
     }
 
