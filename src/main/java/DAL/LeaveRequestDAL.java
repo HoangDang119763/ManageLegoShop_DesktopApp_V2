@@ -1,9 +1,12 @@
 package DAL;
 
+import DTO.HrStatisticDTO;
 import DTO.LeaveRequestDTO;
+
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
 
@@ -17,6 +20,9 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
         return INSTANCE;
     }
 
+    // =========================
+    // MAP RESULT (SAFE)
+    // =========================
     @Override
     protected LeaveRequestDTO mapResultSetToObject(ResultSet rs) throws SQLException {
 
@@ -41,10 +47,12 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
         );
 
         dto.setEmployeeName(employeeName != null ? employeeName : "");
-
         return dto;
     }
 
+    // =========================
+    // INSERT / UPDATE
+    // =========================
     @Override
     protected String getInsertQuery() {
         return "(leave_type_id, content, start_date, end_date, status_id, employee_id) VALUES (?, ?, ?, ?, ?, ?)";
@@ -53,11 +61,8 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
     @Override
     protected void setInsertParameters(PreparedStatement ps, LeaveRequestDTO obj) throws SQLException {
 
-        if (obj.getLeaveTypeId() > 0) {
-            ps.setInt(1, obj.getLeaveTypeId());
-        } else {
-            ps.setNull(1, Types.INTEGER);
-        }
+        if (obj.getLeaveTypeId() > 0) ps.setInt(1, obj.getLeaveTypeId());
+        else ps.setNull(1, Types.INTEGER);
 
         ps.setString(2, obj.getContent());
         ps.setDate(3, obj.getStartDate() != null ? Date.valueOf(obj.getStartDate()) : null);
@@ -78,9 +83,8 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
     }
 
     // =========================
-    // CUSTOM QUERY (FIX LỖI)
+    // GET DATA
     // =========================
-
     @Override
     public ArrayList<LeaveRequestDTO> getAll() {
         String sql = """
@@ -147,9 +151,8 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
     }
 
     // =========================
-    // STATUS UPDATE
+    // STATUS
     // =========================
-
     private boolean updateStatus(int id, int status) {
         String sql = "UPDATE leave_request SET status_id=? WHERE id=?";
 
@@ -167,70 +170,70 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
         }
     }
 
-    // Approve = 21 (Đã duyệt)
-    public boolean approve(int leaveRequestId) {
-        return updateStatus(leaveRequestId, 21);
-    }
+    public boolean approve(int id) { return updateStatus(id, 21); }
+    public boolean reject(int id) { return updateStatus(id, 22); }
+    public boolean cancel(int id) { return updateStatus(id, 23); }
 
-    // Reject = 22 (Từ chối)
-    public boolean reject(int leaveRequestId) {
-        return updateStatus(leaveRequestId, 22);
-    }
-
-    // Cancel = 23 (Hủy)
-    public boolean cancel(int leaveRequestId) {
-        return updateStatus(leaveRequestId, 23);
-    }
-
-    // ===== HR STATISTIC HELPERS =====
-
+    // =========================
+    // STATISTICS
+    // =========================
     public HrStatisticDTO.LeaveStat getLeaveStat(int month, int year) {
         String sql = """
-                SELECT COUNT(*) AS total_requests,
-                       COALESCE(SUM(
-                           CASE
-                               WHEN lr.start_date IS NOT NULL AND lr.end_date IS NOT NULL
-                               THEN DATEDIFF(lr.end_date, lr.start_date) + 1
-                               ELSE 0
-                           END
-                       ), 0) AS total_days
-                FROM leave_request lr
-                WHERE lr.start_date <= ? AND lr.end_date >= ?
-                """;
+            SELECT COUNT(*) AS total_requests,
+                   COALESCE(SUM(
+                       CASE
+                           WHEN lr.start_date IS NOT NULL AND lr.end_date IS NOT NULL
+                           THEN DATEDIFF(lr.end_date, lr.start_date) + 1
+                           ELSE 0
+                       END
+                   ), 0) AS total_days
+            FROM leave_request lr
+            WHERE lr.start_date <= ? AND lr.end_date >= ?
+        """;
+
         HrStatisticDTO.LeaveStat stat = new HrStatisticDTO.LeaveStat();
         LocalDate[] range = getMonthRange(month, year);
+
         try (Connection conn = connectionFactory.newConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setDate(1, Date.valueOf(range[1]));
             ps.setDate(2, Date.valueOf(range[0]));
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     stat.setTotalRequests(rs.getInt("total_requests"));
                     stat.setTotalDays(rs.getInt("total_days"));
                 }
             }
+
         } catch (SQLException e) {
-            System.err.println("Error getting leave stat: " + e.getMessage());
+            e.printStackTrace();
         }
+
         return stat;
     }
 
-    public java.util.List<HrStatisticDTO.LeaveByTypeItem> getLeaveByType(int month, int year) {
+    public List<HrStatisticDTO.LeaveByTypeItem> getLeaveByType(int month, int year) {
         String sql = """
-                SELECT COALESCE(lt.name, 'Không xác định') AS leave_type,
-                       COUNT(*) AS total
-                FROM leave_request lr
-                LEFT JOIN leave_type lt ON lt.id = lr.leave_type_id
-                WHERE lr.start_date <= ? AND lr.end_date >= ?
-                GROUP BY COALESCE(lt.name, 'Không xác định')
-                ORDER BY total DESC, leave_type
-                """;
-        java.util.List<HrStatisticDTO.LeaveByTypeItem> list = new java.util.ArrayList<>();
+            SELECT COALESCE(lt.name, 'Không xác định') AS leave_type,
+                   COUNT(*) AS total
+            FROM leave_request lr
+            LEFT JOIN leave_type lt ON lt.id = lr.leave_type_id
+            WHERE lr.start_date <= ? AND lr.end_date >= ?
+            GROUP BY leave_type
+            ORDER BY total DESC
+        """;
+
+        List<HrStatisticDTO.LeaveByTypeItem> list = new ArrayList<>();
         LocalDate[] range = getMonthRange(month, year);
+
         try (Connection conn = connectionFactory.newConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setDate(1, Date.valueOf(range[1]));
             ps.setDate(2, Date.valueOf(range[0]));
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new HrStatisticDTO.LeaveByTypeItem(
@@ -238,28 +241,34 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
                             rs.getInt("total")));
                 }
             }
+
         } catch (SQLException e) {
-            System.err.println("Error getting leave by type: " + e.getMessage());
+            e.printStackTrace();
         }
+
         return list;
     }
 
-    public java.util.List<HrStatisticDTO.LeaveStatusItem> getLeaveByStatus(int month, int year) {
+    public List<HrStatisticDTO.LeaveStatusItem> getLeaveByStatus(int month, int year) {
         String sql = """
-                SELECT COALESCE(s.description, s.name, 'Không xác định') AS status_name,
-                       COUNT(*) AS total
-                FROM leave_request lr
-                LEFT JOIN status s ON s.id = lr.status_id
-                WHERE lr.start_date <= ? AND lr.end_date >= ?
-                GROUP BY COALESCE(s.description, s.name, 'Không xác định')
-                ORDER BY total DESC, status_name
-                """;
-        java.util.List<HrStatisticDTO.LeaveStatusItem> list = new java.util.ArrayList<>();
+            SELECT COALESCE(s.description, s.name, 'Không xác định') AS status_name,
+                   COUNT(*) AS total
+            FROM leave_request lr
+            LEFT JOIN status s ON s.id = lr.status_id
+            WHERE lr.start_date <= ? AND lr.end_date >= ?
+            GROUP BY status_name
+            ORDER BY total DESC
+        """;
+
+        List<HrStatisticDTO.LeaveStatusItem> list = new ArrayList<>();
         LocalDate[] range = getMonthRange(month, year);
+
         try (Connection conn = connectionFactory.newConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setDate(1, Date.valueOf(range[1]));
             ps.setDate(2, Date.valueOf(range[0]));
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new HrStatisticDTO.LeaveStatusItem(
@@ -267,9 +276,11 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
                             rs.getInt("total")));
                 }
             }
+
         } catch (SQLException e) {
-            System.err.println("Error getting leave by status: " + e.getMessage());
+            e.printStackTrace();
         }
+
         return list;
     }
 
@@ -317,6 +328,6 @@ public class LeaveRequestDAL extends BaseDAL<LeaveRequestDTO, Integer> {
 
     private LocalDate[] getMonthRange(int month, int year) {
         LocalDate start = LocalDate.of(year, month, 1);
-        return new LocalDate[] { start, start.withDayOfMonth(start.lengthOfMonth()) };
+        return new LocalDate[]{start, start.withDayOfMonth(start.lengthOfMonth())};
     }
 }

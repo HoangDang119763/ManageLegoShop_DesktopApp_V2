@@ -2,11 +2,9 @@ package GUI;
 
 import BUS.LeaveRequestBUS;
 import BUS.LeaveTypeBUS;
-import BUS.EmployeeBUS;
 import DTO.LeaveRequestDTO;
 import DTO.LeaveTypeDTO;
 import ENUM.BUSOperationResult;
-import ENUM.PermissionKey;
 import ENUM.PermissionKey;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 public class LeaveRequestTabController {
+
     @FXML private TableView<LeaveRequestDTO> tblLeaveRequest;
     @FXML private TableColumn<LeaveRequestDTO, Integer> colId;
     @FXML private TableColumn<LeaveRequestDTO, String> colEmployeeName;
@@ -45,13 +44,11 @@ public class LeaveRequestTabController {
     private final SessionManagerService sessionManager = SessionManagerService.getInstance();
 
     private int currentEmployeeId;
-    private int currentEmployeeRoleId;
     private ObservableList<LeaveRequestDTO> masterData = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         currentEmployeeId = sessionManager.employeeLoginId();
-        currentEmployeeRoleId = sessionManager.employeeRoleId();
 
         setupTable();
         setupStatusFilter();
@@ -61,9 +58,7 @@ public class LeaveRequestTabController {
     }
 
     private void hideButtonWithoutPermission() {
-        var session = SessionManagerService.getInstance();
-
-        boolean canView = session.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_VIEW);
+        boolean canView = sessionManager.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_VIEW);
 
         if (!canView) {
             tblLeaveRequest.setVisible(false);
@@ -72,11 +67,11 @@ public class LeaveRequestTabController {
             return;
         }
 
-        if (!session.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_CREATE)) {
+        if (!sessionManager.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_CREATE)) {
             btnAdd.setVisible(false);
         }
 
-        if (!session.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE)) {
+        if (!sessionManager.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE)) {
             if (btnApprove != null) btnApprove.setVisible(false);
             if (btnReject != null) btnReject.setVisible(false);
         }
@@ -94,7 +89,6 @@ public class LeaveRequestTabController {
         colDays.setCellValueFactory(cellData -> {
             LeaveRequestDTO dto = cellData.getValue();
             if (dto.getStartDate() != null && dto.getEndDate() != null) {
-                // +1 để tính cả ngày bắt đầu (ví dụ: nghỉ từ mùng 1 đến mùng 1 là 1 ngày)
                 long days = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate()) + 1;
                 return new javafx.beans.property.SimpleLongProperty(days).asObject();
             }
@@ -107,19 +101,13 @@ public class LeaveRequestTabController {
             private final HBox pane = new HBox(5, approveBtn, rejectBtn);
 
             {
-                approveBtn.getStyleClass().add("btn-approve");
-                rejectBtn.getStyleClass().add("btn-reject");
                 pane.setStyle("-fx-alignment: CENTER;");
+                approveBtn.setOnAction(e -> handleStatusUpdate(getCurrentId(), true));
+                rejectBtn.setOnAction(e -> handleStatusUpdate(getCurrentId(), false));
+            }
 
-                approveBtn.setOnAction(e -> {
-                    LeaveRequestDTO data = getTableView().getItems().get(getIndex());
-                    handleStatusUpdate(data.getId(), true);
-                });
-
-                rejectBtn.setOnAction(e -> {
-                    LeaveRequestDTO data = getTableView().getItems().get(getIndex());
-                    handleStatusUpdate(data.getId(), false);
-                });
+            private int getCurrentId() {
+                return getTableView().getItems().get(getIndex()).getId();
             }
 
             @Override
@@ -127,14 +115,11 @@ public class LeaveRequestTabController {
                 super.updateItem(item, empty);
                 if (empty || !sessionManager.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE)) {
                     setGraphic(null);
-                } else {
-                    LeaveRequestDTO data = getTableView().getItems().get(getIndex());
-                    if (data != null && data.getStatusId() == 20) {
-                        setGraphic(pane);
-                    } else {
-                        setGraphic(null);
-                    }
+                    return;
                 }
+
+                LeaveRequestDTO data = getTableView().getItems().get(getIndex());
+                setGraphic(data.getStatusId() == 20 ? pane : null);
             }
         });
     }
@@ -147,21 +132,23 @@ public class LeaveRequestTabController {
     private void setupListeners() {
         if (btnAdd != null) btnAdd.setOnAction(e -> handleAdd());
         if (btnRefresh != null) btnRefresh.setOnAction(e -> loadLeaveRequests());
-        
-        // Cũ: Duyệt theo nút rời bên ngoài (Chống lỗi Null nếu FXML mới không có)
+
         if (btnApprove != null) btnApprove.setOnAction(e -> handleStatusTransition(true));
         if (btnReject != null) btnReject.setOnAction(e -> handleStatusTransition(false));
 
         if (cbStatus != null) cbStatus.setOnAction(e -> applyFilters());
+
         if (txtSearch != null) {
-            txtSearch.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+            txtSearch.textProperty().addListener((obs, o, n) -> applyFilters());
         }
     }
 
-    // HÀM BỔ SUNG: Xử lý cập nhật trạng thái từ nút bấm trong TableCell
     private void handleStatusUpdate(int id, boolean isApprove) {
-        BUSOperationResult result = isApprove ? leaveRequestBUS.approve(id) : leaveRequestBUS.reject(id);
-        handleBUSResult(result, isApprove ? "Duyệt đơn thành công" : "Đã từ chối đơn");
+        BUSOperationResult result = isApprove
+                ? leaveRequestBUS.approve(id)
+                : leaveRequestBUS.reject(id);
+
+        handleBUSResult(result, isApprove ? "Duyệt thành công" : "Đã từ chối");
     }
 
     private void loadLeaveRequests() {
@@ -177,41 +164,39 @@ public class LeaveRequestTabController {
         applyFilters();
     }
 
-    // HÀM BỔ SUNG: Bộ lọc kết hợp giữa Search và ComboBox Status
     private void applyFilters() {
-        String keyword = txtSearch.getText() == null ? "" : txtSearch.getText().toLowerCase().trim();
+        String keyword = txtSearch.getText() == null ? "" : txtSearch.getText().toLowerCase();
         String statusFilter = cbStatus.getValue();
 
-        FilteredList<LeaveRequestDTO> filteredList = masterData.filtered(item -> {
-            // 1. Lọc theo trạng thái
-            boolean matchesStatus = true;
-            if (statusFilter != null && !"Tất cả".equals(statusFilter)) {
-                if ("Chờ duyệt".equals(statusFilter)) matchesStatus = item.getStatusId() == 20;
-                else if ("Đã duyệt".equals(statusFilter)) matchesStatus = item.getStatusId() == 21;
-                else if ("Từ chối".equals(statusFilter)) matchesStatus = item.getStatusId() == 22;
+        FilteredList<LeaveRequestDTO> filtered = masterData.filtered(item -> {
+            boolean matchStatus = true;
+
+            if (!"Tất cả".equals(statusFilter)) {
+                matchStatus = switch (statusFilter) {
+                    case "Chờ duyệt" -> item.getStatusId() == 20;
+                    case "Đã duyệt" -> item.getStatusId() == 21;
+                    case "Từ chối" -> item.getStatusId() == 22;
+                    default -> true;
+                };
             }
 
-            // 2. Lọc theo từ khóa tìm kiếm (Tên nhân viên hoặc nội dung)
-            boolean matchesSearch = true;
-            if (!keyword.isEmpty()) {
-                String empName = item.getEmployeeName() != null ? item.getEmployeeName().toLowerCase() : "";
-                String reason = item.getContent() != null ? item.getContent().toLowerCase() : "";
-                matchesSearch = empName.contains(keyword) || reason.contains(keyword);
-            }
+            boolean matchSearch = item.getEmployeeName().toLowerCase().contains(keyword)
+                    || item.getContent().toLowerCase().contains(keyword);
 
-            return matchesStatus && matchesSearch;
+            return matchStatus && matchSearch;
         });
 
-        tblLeaveRequest.setItems(filteredList);
+        tblLeaveRequest.setItems(filtered);
     }
 
-    // Giữ nguyên các hàm handle đã có
     private void handleStatusTransition(boolean isApprove) {
         LeaveRequestDTO selected = tblLeaveRequest.getSelectionModel().getSelectedItem();
+
         if (selected == null) {
-            NotificationUtils.showErrorAlert("Vui lòng chọn đơn", "Cảnh báo");
+            NotificationUtils.showErrorAlert("Chọn đơn", "Cảnh báo");
             return;
         }
+
         handleStatusUpdate(selected.getId(), isApprove);
     }
 
@@ -220,23 +205,13 @@ public class LeaveRequestTabController {
             NotificationUtils.showInfoAlert(successMsg, "Thành công");
             loadLeaveRequests();
         } else {
-            String msg = switch (result) {
-                case NOT_FOUND -> "Không tìm thấy đơn.";
-                case CONFLICT -> "Đơn đã được xử lý trước đó.";
-                case UNAUTHORIZED -> "Bạn không có quyền.";
-                default -> "Lỗi hệ thống database.";
-            };
-            NotificationUtils.showErrorAlert(msg, "Lỗi");
+            NotificationUtils.showErrorAlert("Lỗi hệ thống", "Lỗi");
         }
     }
 
     private void handleAdd() {
         showLeaveRequestDialog(null);
     }
-
-    // Hàm bổ sung các logic lọc còn thiếu bạn yêu cầu
-    private void filterByStatus() { applyFilters(); }
-    private void filterBySearch(String newVal) { applyFilters(); }
 
     private void showLeaveRequestDialog(LeaveRequestDTO editingLeave) {
 
@@ -252,18 +227,15 @@ public class LeaveRequestTabController {
                 FXCollections.observableArrayList(leaveTypeBUS.getAll())
         );
 
-        // ✅ FIX HIỂN THỊ NAME
-        cbType.setCellFactory(param -> new ListCell<>() {
-            @Override
-            protected void updateItem(LeaveTypeDTO item, boolean empty) {
+        cbType.setCellFactory(lv -> new ListCell<>() {
+            @Override protected void updateItem(LeaveTypeDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.getName());
             }
         });
 
         cbType.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(LeaveTypeDTO item, boolean empty) {
+            @Override protected void updateItem(LeaveTypeDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.getName());
             }
@@ -297,45 +269,27 @@ public class LeaveRequestTabController {
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         dialog.setResultConverter(btn -> {
-            if (btn == ButtonType.OK) {
+            if (btn != ButtonType.OK) return null;
 
-                if (cbType.getValue() == null) {
-                    NotificationUtils.showErrorAlert("Chọn loại nghỉ", "Lỗi");
-                    return null;
-                }
+            if (cbType.getValue() == null) return null;
+            if (dpStart.getValue().isAfter(dpEnd.getValue())) return null;
 
-                if (dpStart.getValue() == null || dpEnd.getValue() == null) {
-                    NotificationUtils.showErrorAlert("Chọn ngày", "Lỗi");
-                    return null;
-                }
+            LeaveRequestDTO dto = editingLeave != null ? editingLeave : new LeaveRequestDTO();
+            dto.setEmployeeId(currentEmployeeId);
+            dto.setLeaveTypeId(cbType.getValue().getId());
+            dto.setStartDate(dpStart.getValue());
+            dto.setEndDate(dpEnd.getValue());
+            dto.setContent(taReason.getText());
 
-                if (dpEnd.getValue().isBefore(dpStart.getValue())) {
-                    NotificationUtils.showErrorAlert("Ngày không hợp lệ", "Lỗi");
-                    return null;
-                }
-
-                LeaveRequestDTO dto = (editingLeave != null)
-                        ? editingLeave
-                        : new LeaveRequestDTO();
-
-                dto.setEmployeeId(currentEmployeeId);
-                dto.setLeaveTypeId(cbType.getValue().getId());
-                dto.setStartDate(dpStart.getValue());
-                dto.setEndDate(dpEnd.getValue());
-                dto.setContent(taReason.getText());
-
-                return dto;
-            }
-            return null;
+            return dto;
         });
 
         dialog.showAndWait().ifPresent(dto -> {
-            BUSOperationResult res = (editingLeave == null)
+            BUSOperationResult res = editingLeave == null
                     ? leaveRequestBUS.insert(dto)
                     : leaveRequestBUS.update(dto);
 
-            handleBUSResult(res,
-                    editingLeave == null ? "Tạo thành công" : "Cập nhật thành công");
+            handleBUSResult(res, "Thành công");
         });
     }
 }
