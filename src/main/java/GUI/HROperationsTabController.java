@@ -38,6 +38,7 @@ public class HROperationsTabController {
     private DisciplineRewardTabController DisciplineRewardTabController;
     private AttendanceTabNestedController attendanceTabNestedController;
     private DepartmentPositionController departmentPositionController;
+    private PayrollTabController payrollTabController;
 
     private EmployeeBUS employeeBUS;
     private ObservableList<EmployeeDTO> allEmployees;
@@ -90,6 +91,16 @@ public class HROperationsTabController {
             Tab attendanceTab = new Tab("Chấm Công", attendanceContent);
             attendanceTab.setClosable(false);
             tabPaneHROperations.getTabs().add(attendanceTab);
+
+            // Load Payroll Tab
+            FXMLLoader payrollLoader = new FXMLLoader(getClass().getResource("/GUI/PayrollTab.fxml"));
+            VBox payrollContent = payrollLoader.load();
+            payrollTabController = payrollLoader.getController();
+
+            Tab payrollTab = new Tab("Bảng Lương", payrollContent);
+            payrollTab.setClosable(false);
+
+            tabPaneHROperations.getTabs().add(payrollTab);
 
             log.info("Successfully loaded all nested HR tabs");
         } catch (IOException e) {
@@ -170,6 +181,10 @@ public class HROperationsTabController {
         // Load Attendance data
         if (attendanceTabNestedController != null) {
             attendanceTabNestedController.loadEmployeeAttendance(employeeId);
+        }
+
+        if (payrollTabController != null) {
+            payrollTabController.loadEmployeePayroll(employeeId);
         }
     }
 

@@ -77,6 +77,15 @@ public class DisciplineModalController {
             String amountStr = txtFineAmount.getText().replace(",", "").trim();
             if (!amountStr.isEmpty()) {
                 fineAmount = new BigDecimal(amountStr);
+                
+                // ✅ FIX: Chỉ cho nhập số dương
+                if (fineAmount.signum() <= 0) {
+                    NotificationUtils.showErrorAlert("Lỗi", "Số tiền phạt phải là số dương (> 0)");
+                    return;
+                }
+            } else {
+                NotificationUtils.showErrorAlert("Lỗi", "Vui lòng nhập số tiền phạt");
+                return;
             }
         } catch (Exception e) {
             NotificationUtils.showErrorAlert("Lỗi", "Số tiền không hợp lệ");

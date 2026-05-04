@@ -368,12 +368,19 @@ CREATE TABLE `leave_request` (
   `status_id` int NOT NULL,
   `employee_id` int NOT NULL,
   PRIMARY KEY (`id`),
+
   KEY `leave_request_ibfk_1` (`status_id`),
   KEY `leave_request_ibfk_2` (`employee_id`),
   KEY `leave_type_idx` (`leave_type_id`),
-  CONSTRAINT `leave_request_ibfk_1` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`),
-  CONSTRAINT `leave_request_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`),
-  CONSTRAINT `leave_type` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_type` (`id`) ON DELETE SET NULL
+
+  CONSTRAINT `fk_leave_type`
+    FOREIGN KEY (`leave_type_id`) REFERENCES `leave_type` (`id`) ON DELETE SET NULL,
+
+  CONSTRAINT `leave_request_ibfk_1`
+    FOREIGN KEY (`status_id`) REFERENCES `status` (`id`),
+
+  CONSTRAINT `leave_request_ibfk_2`
+    FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

@@ -189,7 +189,14 @@ UNLOCK TABLES;
 
 LOCK TABLES `leave_type` WRITE;
 /*!40000 ALTER TABLE `leave_type` DISABLE KEYS */;
-INSERT INTO `leave_type` VALUES (1,'Nghỉ có phép',500000.00);
+INSERT INTO `leave_type` VALUES (1,'Nghỉ có phép', 00.00);
+
+INSERT INTO `leave_type` VALUES
+(2, 'Nghỉ phép năm', 00.00),
+(3, 'Nghỉ bệnh', 00.00),
+(4, 'Nghỉ không lương', 500000.00),
+(5, 'Nghỉ thai sản', 00.00);
+
 /*!40000 ALTER TABLE `leave_type` ENABLE KEYS */;
 UNLOCK TABLES;
 

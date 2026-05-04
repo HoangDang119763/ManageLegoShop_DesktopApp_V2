@@ -6,6 +6,7 @@ import BUS.EmployeeBUS;
 import DTO.LeaveRequestDTO;
 import DTO.LeaveTypeDTO;
 import ENUM.BUSOperationResult;
+import ENUM.PermissionKey;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -54,8 +55,30 @@ public class LeaveRequestTabController {
         setupTable();
         setupStatusFilter();
         setupListeners();
-        setupPermissions();
         loadLeaveRequests();
+        hideButtonWithoutPermission();
+    }
+
+    private void hideButtonWithoutPermission() {
+        var session = SessionManagerService.getInstance();
+
+        boolean canView = session.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_VIEW);
+
+        if (!canView) {
+            tblLeaveRequest.setVisible(false);
+            tblLeaveRequest.setManaged(false);
+            NotificationUtils.showErrorAlert("Bạn không có quyền truy cập", "Unauthorized");
+            return;
+        }
+
+        if (!session.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_CREATE)) {
+            btnAdd.setVisible(false);
+        }
+
+        if (!session.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE)) {
+            if (btnApprove != null) btnApprove.setVisible(false);
+            if (btnReject != null) btnReject.setVisible(false);
+        }
     }
 
     private void setupTable() {
@@ -101,11 +124,10 @@ public class LeaveRequestTabController {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || sessionManager.employeeRoleId() != 1) {
+                if (empty || !sessionManager.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE)) {
                     setGraphic(null);
                 } else {
                     LeaveRequestDTO data = getTableView().getItems().get(getIndex());
-                    // Chỉ hiện nút duyệt/từ chối nếu đơn đang ở trạng thái Chờ duyệt (20)
                     if (data != null && data.getStatusId() == 20) {
                         setGraphic(pane);
                     } else {
@@ -135,12 +157,6 @@ public class LeaveRequestTabController {
         }
     }
 
-    private void setupPermissions() {
-        boolean isAdmin = (currentEmployeeRoleId == 1);
-        if (btnApprove != null) btnApprove.setVisible(isAdmin);
-        if (btnReject != null) btnReject.setVisible(isAdmin);
-    }
-
     // HÀM BỔ SUNG: Xử lý cập nhật trạng thái từ nút bấm trong TableCell
     private void handleStatusUpdate(int id, boolean isApprove) {
         BUSOperationResult result = isApprove ? leaveRequestBUS.approve(id) : leaveRequestBUS.reject(id);
@@ -149,11 +165,13 @@ public class LeaveRequestTabController {
 
     private void loadLeaveRequests() {
         ArrayList<LeaveRequestDTO> leaves;
-        if (currentEmployeeRoleId == 1) {
+
+        if (sessionManager.hasPermission(PermissionKey.EMPLOYEE_LEAVE_REQUEST_MANAGE)) {
             leaves = leaveRequestBUS.getAll();
         } else {
             leaves = leaveRequestBUS.getByEmployeeId(currentEmployeeId);
         }
+
         masterData.setAll(leaves);
         applyFilters();
     }
@@ -220,51 +238,103 @@ public class LeaveRequestTabController {
     private void filterBySearch(String newVal) { applyFilters(); }
 
     private void showLeaveRequestDialog(LeaveRequestDTO editingLeave) {
+
         Dialog<LeaveRequestDTO> dialog = new Dialog<>();
         dialog.setTitle(editingLeave == null ? "Tạo đơn" : "Sửa đơn");
 
         GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10); grid.setPadding(new Insets(20));
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20));
 
-        ComboBox<LeaveTypeDTO> cbType = new ComboBox<>(FXCollections.observableArrayList(leaveTypeBUS.getAll()));
-        DatePicker dpStart = new DatePicker(editingLeave != null ? editingLeave.getStartDate() : LocalDate.now());
-        DatePicker dpEnd = new DatePicker(editingLeave != null ? editingLeave.getEndDate() : LocalDate.now());
-        TextArea taReason = new TextArea(editingLeave != null ? editingLeave.getContent() : "");
-        taReason.setPrefRowCount(3);
+        ComboBox<LeaveTypeDTO> cbType = new ComboBox<>(
+                FXCollections.observableArrayList(leaveTypeBUS.getAll())
+        );
+
+        // ✅ FIX HIỂN THỊ NAME
+        cbType.setCellFactory(param -> new ListCell<>() {
+            @Override
+            protected void updateItem(LeaveTypeDTO item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getName());
+            }
+        });
+
+        cbType.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(LeaveTypeDTO item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getName());
+            }
+        });
+
+        DatePicker dpStart = new DatePicker(LocalDate.now());
+        DatePicker dpEnd = new DatePicker(LocalDate.now());
+        TextArea taReason = new TextArea();
 
         if (editingLeave != null) {
+            dpStart.setValue(editingLeave.getStartDate());
+            dpEnd.setValue(editingLeave.getEndDate());
+            taReason.setText(editingLeave.getContent());
+
             cbType.getItems().stream()
-                  .filter(t -> t.getId() == editingLeave.getLeaveTypeId())
-                  .findFirst()
-                  .ifPresent(cbType::setValue);
+                    .filter(t -> t.getId() == editingLeave.getLeaveTypeId())
+                    .findFirst()
+                    .ifPresent(cbType::setValue);
         }
 
-        grid.add(new Label("Loại nghỉ:"), 0, 0); grid.add(cbType, 1, 0);
-        grid.add(new Label("Từ ngày:"), 0, 1); grid.add(dpStart, 1, 1);
-        grid.add(new Label("Đến ngày:"), 0, 2); grid.add(dpEnd, 1, 2);
-        grid.add(new Label("Lý do:"), 0, 3); grid.add(taReason, 1, 3);
+        grid.add(new Label("Loại nghỉ:"), 0, 0);
+        grid.add(cbType, 1, 0);
+        grid.add(new Label("Từ ngày:"), 0, 1);
+        grid.add(dpStart, 1, 1);
+        grid.add(new Label("Đến ngày:"), 0, 2);
+        grid.add(dpEnd, 1, 2);
+        grid.add(new Label("Lý do:"), 0, 3);
+        grid.add(taReason, 1, 3);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         dialog.setResultConverter(btn -> {
             if (btn == ButtonType.OK) {
-                if (cbType.getValue() == null) return null;
-                LeaveRequestDTO dto = (editingLeave != null) ? editingLeave : new LeaveRequestDTO();
+
+                if (cbType.getValue() == null) {
+                    NotificationUtils.showErrorAlert("Chọn loại nghỉ", "Lỗi");
+                    return null;
+                }
+
+                if (dpStart.getValue() == null || dpEnd.getValue() == null) {
+                    NotificationUtils.showErrorAlert("Chọn ngày", "Lỗi");
+                    return null;
+                }
+
+                if (dpEnd.getValue().isBefore(dpStart.getValue())) {
+                    NotificationUtils.showErrorAlert("Ngày không hợp lệ", "Lỗi");
+                    return null;
+                }
+
+                LeaveRequestDTO dto = (editingLeave != null)
+                        ? editingLeave
+                        : new LeaveRequestDTO();
+
                 dto.setEmployeeId(currentEmployeeId);
                 dto.setLeaveTypeId(cbType.getValue().getId());
                 dto.setStartDate(dpStart.getValue());
                 dto.setEndDate(dpEnd.getValue());
                 dto.setContent(taReason.getText());
+
                 return dto;
             }
             return null;
         });
 
         dialog.showAndWait().ifPresent(dto -> {
-            BUSOperationResult res = (editingLeave == null) ? 
-                    leaveRequestBUS.insert(dto) : leaveRequestBUS.update(dto);
-            handleBUSResult(res, editingLeave == null ? "Tạo đơn thành công" : "Cập nhật thành công");
+            BUSOperationResult res = (editingLeave == null)
+                    ? leaveRequestBUS.insert(dto)
+                    : leaveRequestBUS.update(dto);
+
+            handleBUSResult(res,
+                    editingLeave == null ? "Tạo thành công" : "Cập nhật thành công");
         });
     }
 }

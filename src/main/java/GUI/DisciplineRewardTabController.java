@@ -23,6 +23,7 @@ import javafx.scene.layout.GridPane;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -70,7 +71,20 @@ public class DisciplineRewardTabController {
         colLevel.setCellValueFactory(new PropertyValueFactory<>("fineLevel"));
         colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
-        
+        colDate.setCellFactory(column -> new TableCell<>() {
+            private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.format(formatter));
+                }
+            }
+        });
         // Hiển thị Loại có màu sắc dựa trên Enum
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
         colType.setCellFactory(column -> new TableCell<>() {
@@ -264,14 +278,21 @@ public class DisciplineRewardTabController {
             TextField tfA = (TextField) grid.getChildren().get(9);
 
             BigDecimal amount = new BigDecimal(tfA.getText());
-            if (cbT.getValue() == FineType.DISCIPLINE) amount = amount.negate();
+
+            if (amount.signum() <= 0) {
+                NotificationUtils.showErrorAlert("Số tiền phải > 0", "Lỗi");
+                return null;
+            }
 
             FineDTO f = (existing == null) ? new FineDTO() : existing;
             f.setEmployeeId(cbEmp.getValue().getId());
             f.setType(cbT.getValue().name());
             f.setFineLevel(cbL.getValue());
             f.setReason(taR.getText());
-            f.setAmount(amount);
+
+            // ✅ LUÔN LƯU DƯƠNG
+            f.setAmount(amount.abs());
+
             if (existing == null) {
                 f.setFinePay(BigDecimal.ZERO);
                 f.setCreatedAt(LocalDateTime.now());
