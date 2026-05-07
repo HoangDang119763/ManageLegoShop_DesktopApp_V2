@@ -4,6 +4,8 @@ import BUS.FineBUS;
 import BUS.EmployeeBUS;
 import DTO.FineDTO;
 import DTO.EmployeeDTO;
+import UTILS.ValidationUtils;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -27,7 +29,7 @@ public class FineTabController {
     @FXML
     private TableColumn<FineDTO, String> colLevel;
     @FXML
-    private TableColumn<FineDTO, BigDecimal> colAmount;
+    private TableColumn<FineDTO, String> colAmount;
 
     @FXML
     private Button btnAdd, btnEdit, btnDelete, btnRefresh;
@@ -44,6 +46,7 @@ public class FineTabController {
     private FineBUS fineBUS;
     private EmployeeBUS employeeBUS;
     private int currentEmployeeId;
+    private ValidationUtils validationUtils = ValidationUtils.getInstance();
 
     @FXML
     public void initialize() {
@@ -60,7 +63,10 @@ public class FineTabController {
         colReason.setCellValueFactory(new PropertyValueFactory<>("reason"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
         colLevel.setCellValueFactory(new PropertyValueFactory<>("fineLevel"));
-        colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        // colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        colAmount.setCellValueFactory(cellData -> new SimpleStringProperty(
+                validationUtils.formatCurrency(cellData.getValue().getAmount())));
+
     }
 
     private void setupLevelCombo() {
@@ -87,6 +93,7 @@ public class FineTabController {
     private void loadFines() {
         ArrayList<FineDTO> fines = fineBUS.getByEmployeeId(currentEmployeeId);
         tblFine.setItems(FXCollections.observableArrayList(fines));
+        tblFine.refresh();
     }
 
     private void loadSelectedFine() {

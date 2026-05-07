@@ -13,6 +13,8 @@ import SERVICE.SecureExecutor;
 import SERVICE.SessionManagerService;
 import UTILS.NotificationUtils;
 import UTILS.UiUtils;
+import UTILS.ValidationUtils;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -36,7 +38,7 @@ public class DisciplineRewardTabController {
     @FXML private TableColumn<FineDTO, String> colType; // Hiển thị loại khen thưởng/kỷ luật
     @FXML private TableColumn<FineDTO, String> colReason;
     @FXML private TableColumn<FineDTO, String> colLevel;
-    @FXML private TableColumn<FineDTO, BigDecimal> colAmount;
+    @FXML private TableColumn<FineDTO, String> colAmount;
     @FXML private TableColumn<FineDTO, LocalDateTime> colDate;
     @FXML private TableColumn<FineDTO, Void> colAction;
 
@@ -51,7 +53,7 @@ public class DisciplineRewardTabController {
     private ArrayList<FineDTO> allData;
     private ArrayList<FineDTO> filteredData;
     private int currentPageIndex = 0;
-
+    private ValidationUtils validationUtils = ValidationUtils.getInstance();
     @FXML
     public void initialize() {
         fineBUS = FineBUS.getInstance();
@@ -69,7 +71,8 @@ public class DisciplineRewardTabController {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colReason.setCellValueFactory(new PropertyValueFactory<>("reason"));
         colLevel.setCellValueFactory(new PropertyValueFactory<>("fineLevel"));
-        colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        colAmount.setCellValueFactory(cellData -> new SimpleStringProperty(
+                validationUtils.formatCurrency(cellData.getValue().getAmount())));
         colDate.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
         colDate.setCellFactory(column -> new TableCell<>() {
             private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
