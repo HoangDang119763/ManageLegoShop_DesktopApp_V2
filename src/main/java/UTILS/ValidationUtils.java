@@ -2,6 +2,8 @@
 package UTILS;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -139,8 +141,10 @@ public class ValidationUtils {
     public String formatCurrency(BigDecimal price) {
         if (price == null)
             return "0";
-        NumberFormat currencyFormat = NumberFormat.getNumberInstance(Locale.of("vi", "VN"));
-        return currencyFormat.format(price);
+        DecimalFormat df = new DecimalFormat("#,###");
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
+        df.setDecimalFormatSymbols(symbols);
+        return df.format(price);
     }
 
     public String formatPercent(BigDecimal value) {
